@@ -619,7 +619,11 @@ export const ModuleResult = z.object({
   mark: z.number().min(0).max(100),
   /** Per-question marks, when the mark sheet shows them; needed for tailored exam feedback. */
   questionMarks: z
-    .array(z.object({ questionId: z.string(), mark: z.number().min(0), maxMarks: z.number().positive() }))
+    .array(
+      z
+        .object({ questionId: z.string(), mark: z.number().min(0), maxMarks: z.number().positive() })
+        .refine((q) => q.mark <= q.maxMarks, { message: 'a question mark cannot exceed its maximum', path: ['mark'] }),
+    )
     .default([]),
   matched: z.boolean(),
   source: z.enum(['transcript-pdf', 'transcript-image', 'pasted-text', 'manual']),
@@ -643,7 +647,11 @@ export const ResultsUploadBody = z
       .object({
         mediaType: z.enum(['application/pdf', 'image/png', 'image/jpeg']),
         /** Base64 file contents, at most about 6 MB once decoded. */
-        base64: z.string().max(8_000_000),
+        base64: z
+          .string()
+          .min(4)
+          .max(8_000_000)
+          .regex(/^[A-Za-z0-9+/]+={0,2}$/, 'file must be non-empty base64'),
       })
       .optional(),
   })
@@ -697,7 +705,11 @@ export const ExamFeedbackForm = z.object({
   id: z.string(),
   moduleId: z.string(),
   examLabel: z.string().min(1),
-  questions: z.array(ExamQuestion).min(1),
+  // Student marks refer to questions by id, so ids must be unique within a form.
+  questions: z
+    .array(ExamQuestion)
+    .min(1)
+    .refine((qs) => new Set(qs.map((q) => q.id)).size === qs.length, 'question ids must be unique'),
   generalComments: z.string(),
   status: z.enum(['draft', 'published']),
   /** 'ai-draft' until an examiner edits or publishes it; drafts are never shown to students. */
