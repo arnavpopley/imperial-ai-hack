@@ -1,0 +1,2311 @@
+{
+  "_note": "Sample of public module descriptions from imperial.ac.uk pages fetched on 2026-11-14, not an official catalogue. Descriptions are the published module aims (or the public summary for I-Explore and BPES modules), lightly trimmed: the administrative sentence \"This is a level 6 version of the enhanced level 7 ... module\" was removed, and learning-outcome numbering was dropped. assessment and publishedSlot are copied from the same pages where published. Fields not published are assumptions, listed in _assumptions.",
+  "_assumptions": [
+    "capacity: not published for any module. Values are illustrative guesses; Automotive Design with Motorsport A (60) and Embedded C for Microcontrollers A (48) are lower because the ME3 module selection page lists them as capped. Core modules have capacity null.",
+    "terms: not published per module. Modules whose page describes teaching in two terms (Thermodynamics 3A, Mechatronics 3A, Tribology A, Computational Fluid Dynamics) run autumn and spring; the core-theme modules (Mechatronics 3A, Machine Dynamics and Vibrations A, Fluid Mechanics 3A, Thermodynamics 3A, Stress Analysis 3A, Fracture Mechanics A), the Year 1 and 2 core modules, the Year 3 and 4 projects and the 10-ECTS Year 4 modules are also assumed to run autumn and spring. Other Mechanical Engineering electives are assumed to run in one term.",
+    "terms and times of BPES and I-Explore modules are as published: BPES timetable 2026-27 on the BPES page, and the module details on each I-Explore page (all Year 3 I-Explore modules run Thursdays 16:00-18:00). Business Economics runs Monday or Thursday 16:00-18:00; the Monday iteration is used.",
+    "prerequisites: published codes such as ME1-hSAN and ME2-hFMX are mapped to the matching module in this sample (for example ME1-hSAN is MECH40005 Stress Analysis 1). Dynamics (MECH50008) lists ME1-HMCX, which is not in this sample, so it has no prerequisites here. Thermodynamics 3A, Mechatronics 3A and Embedded C for Microcontrollers A describe themselves as continuations of the Year 1 and 2 modules, so those modules are listed as prerequisites.",
+    "I-Explore module codes are not published on the I-Explore pages, so their id and code are stable placeholders (IEX-...).",
+    "ects: Biomaterials for Bioengineers (BIOE96071) does not publish its ECTS on the page; 5 is assumed. BPES modules are taken as 5 ECTS, the I-Explore standard.",
+    "type: BPES modules count as electives for MEng Mechanical Engineering Year 3 (the ME3 module selection page allows up to two BPES electives). Year 4 modules are electives for Year 4 except the Individual Project, which is core.",
+    "level is the year of study in which the module is normally taken (MECH4xxxx Year 1, MECH5xxxx Year 2, MECH6xxxx Year 3, MECH7xxxx Year 4; I-Explore and BPES modules are Year 3 options)."
+  ],
+  "modules": [
+    {
+      "id": "MECH40002",
+      "code": "MECH40002",
+      "title": "Fluid Mechanics 1",
+      "department": "Mechanical Engineering",
+      "level": 1,
+      "ects": 5,
+      "type": "core",
+      "terms": [
+        "autumn",
+        "spring"
+      ],
+      "description": "The aims of the ME1 Fluid mechanics course is to establish a strong foundation and understanding of elementary fluid mechanics, on which subsequent courses will build on. Emphasis is on fundamentals. After extablishing the basics of the mathematical description of fluids, fluid statics and dynamics are covered, the latter employing control volume analysis. The knowledge is put to application, particularly in the last part of the course on internal flows.",
+      "learningOutcomes": [
+        "Explain the concept of the continuum description of matter and the description of fluids in terms of fields, and related concepts such as streamlines and pathlines.",
+        "Describe in mathematical terms the main forces in fluids, such as pressure, viscous force and gravity.",
+        "Solve some basic hydrostatic problems.",
+        "Explain and use the equations of continuity, conservation of momentum and conservation of energy, and Reynolds' transport theorem and be able to employ them to derive the conservation laws for a control volume starting from those for a system.",
+        "Explain the physical meaning and assumptions of the Bernoulli equation and be able to solve some basic fluid flow problems.",
+        "Derive the differential equation for internal flow problems and be able to solve it to obtain the velocity profile.",
+        "Explain qualitatively the basic features of turbulent flow."
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH40002&year=26_27",
+      "prerequisites": [],
+      "capacity": null,
+      "assessment": [
+        {
+          "type": "examination",
+          "description": "1.5 Hour exam",
+          "weighting": 1.0
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH40003",
+      "code": "MECH40003",
+      "title": "Thermodynamics 1",
+      "department": "Mechanical Engineering",
+      "level": 1,
+      "ects": 5,
+      "type": "core",
+      "terms": [
+        "autumn",
+        "spring"
+      ],
+      "description": "The principal aim is to give students a basic understanding of the fundamental laws of thermodynamics and the ability to use them in solving a range of simple engineering problems. The pace of the course attempts to take account of students' lack of familiarity with the subject from pre-university studies. The aim of the lectures and tutorials is to develop analytical skills and some design appreciation, involving awareness of the interaction between thermodynamics and considerations of energy resources, materials, solid mechanics, economics, the environment etc.",
+      "learningOutcomes": [
+        "Explain the laws and principles of thermodynamics and the principal thermodynamic properties of steam and ideal substances.",
+        "Analyse thermodynamic processes by applying the laws of thermodynamics to systems and control volumes.",
+        "Classify a complex thermodynamic process into the main fundamental components.",
+        "Solve problems relating to steam and ideal substances undergoing such processes."
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH40003&year=26_27",
+      "prerequisites": [],
+      "capacity": null,
+      "assessment": [
+        {
+          "type": "examination",
+          "description": "1.5 Hour exam",
+          "weighting": 1.0
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH40004",
+      "code": "MECH40004",
+      "title": "Mechatronics 1",
+      "department": "Mechanical Engineering",
+      "level": 1,
+      "ects": 5,
+      "type": "core",
+      "terms": [
+        "autumn",
+        "spring"
+      ],
+      "description": "The aim of this module is to introduce Mechatronics as a fundamental concept for modelling and designing machine systems, and to encourage electrical systems to be modelled in a manner compatible with mechanical systems using 'system' concepts; to develop an ability to design, and select components for simple electromechanical systems; to develop mastery of modelling concepts which have direct equivalents in mechanical systems theory, e.g. equivalent characteristics, operating diagrams, complex impedance.",
+      "learningOutcomes": [
+        "Explain the principal characteristics of common electrical components, networks, logic gates, sensors and actuators",
+        "Explain the basis on which information is represented and processed electronically in analogue or binary form",
+        "Analyse simple electrical networks using Kirchhoff's laws to determine voltage, currents and energy exchanges under d.c. and a.c. excitation",
+        "Model a network of sources and impedances as a Thévenin source",
+        "Derive, in the form of a truth table, the input-output behaviour of a given network of basic logic gates",
+        "Express the structure of a simple analogue or digital network as a circuit diagram, using standard symbols"
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH40004&year=26_27",
+      "prerequisites": [],
+      "capacity": null,
+      "assessment": [
+        {
+          "type": "examination",
+          "description": "1.5 Hour exam",
+          "weighting": 1.0
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH40005",
+      "code": "MECH40005",
+      "title": "Stress Analysis 1",
+      "department": "Mechanical Engineering",
+      "level": 1,
+      "ects": 5,
+      "type": "core",
+      "terms": [
+        "autumn",
+        "spring"
+      ],
+      "description": "This module introduces the basic concepts and methods of stress analysis. It explains the mathematical descriptions of stress analysis and demonstrates the physical significance of stress and strain and the importance and application of Hooke's Law. We introduce the fundamental concepts of elasticity including Youngs Modulus and Poission ratio. We use these descriptions to show how to solve a range of stress analysis problems including plane frames, stress and strain, pressure vessels and beams.",
+      "learningOutcomes": [
+        "Derive from first principles the mathematical descriptions of stress analysis.",
+        "Explain the physical significance of stress and strain and the importance and application of Hooke's Law",
+        "Explain the fundamental concepts of elasticity including Youngs Modulus and Poission ratio",
+        "Use these descriptions to solve a range of stress analysis problems including plane frames, stress and strain, pressure vessels and beams."
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH40005&year=26_27",
+      "prerequisites": [],
+      "capacity": null,
+      "assessment": [
+        {
+          "type": "examination",
+          "description": "1.5 Hour exam",
+          "weighting": 1.0
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH40006",
+      "code": "MECH40006",
+      "title": "Materials 1",
+      "department": "Mechanical Engineering",
+      "level": 1,
+      "ects": 5,
+      "type": "core",
+      "terms": [
+        "autumn",
+        "spring"
+      ],
+      "description": "To introduce students to the important mechanical properties that mechanical engineers require knowledge of and to introduce the concept and practice of materials selection. The links between material structure, processing and properties are emphasised. Topics include tensile and fracture properties, material selection, atomic bonding, crystal structure and strengthening. Also included is a focus on the four classes of engineering material: metals, ceramics, polymers and composites, considering the structure, properties and engineering applications of each. Practice in testing of materials is included.",
+      "learningOutcomes": [
+        "Select appropriate materials for common applications, based upon simple selection criteria, and by using Ashby maps.",
+        "Describe how selected material properties can be measured and to interpret the common format in which this information is presented.",
+        "Explain atomic structure, and types of interatomic bonding and how atoms pack together to form the HCP, FCC and BCC structures.",
+        "Explain the difference between elastic and plastic deformation in atomic terms and be able to identify the slip systems in each structure, relating this to brittle or ductile behaviour.",
+        "Describe why alloys are used, and how they work, and to draw and interpret an equilibrium phase diagram.",
+        "Explain the various ways in which a metal can be strengthened, including non ferrous metals and carbon steels.",
+        "Explain the main structural and property differences between metals, ceramics, polymers and composites, the strengths and limitations of each material class and state typical applications of each.",
+        "Explain the key issues regarding the sustainability of man's use of materials."
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH40006&year=26_27",
+      "prerequisites": [],
+      "capacity": null,
+      "assessment": [
+        {
+          "type": "examination",
+          "description": "1.5 Hour exam",
+          "weighting": 1.0
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH40008",
+      "code": "MECH40008",
+      "title": "Mathematics and Computing 1",
+      "department": "Mechanical Engineering",
+      "level": 1,
+      "ects": 15,
+      "type": "core",
+      "terms": [
+        "autumn",
+        "spring"
+      ],
+      "description": "This module develops key mathematical and computational skills relevant to the wider mechanical engineering programme. Topics include vector algebra, real analysis, limits, curve sketching, series, applications of integration, complex analysis, functions of more than one variable, matrix algebra, second order ordinary differential equations, and vector calculus . Practical implementation through programming is studied to solve problems selected from the topic areas. These skills are in support of ME1, ME2, ME3 and ME4 modules.",
+      "learningOutcomes": [
+        "Use vector algebra and calculus to solve simple geometric and engineering problems.",
+        "Express and manipulate functions of one real variable, two real variables and one complex variable.",
+        "Determine the limiting behaviour of functions of one variable, and apply the concept of the limit to differentiation, integration and series expansions.",
+        "Sketch functions of one and two variables, including all characteristic features.",
+        "Determine Taylor and Fourier series expansions for functions of one variable, by applying the concepts of convergence and orthogonality.",
+        "Apply the concept of integration to solve fundamental problems in engineering analysis.",
+        "Apply matrix algebra to the solution of systems of linear algebraic equations and eigenvalue problems.",
+        "Classify and solve second order ordinary differential equations.",
+        "Create python code to implement numerical methods and solve problems selected from the topic areas."
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH40008&year=26_27",
+      "prerequisites": [],
+      "capacity": null,
+      "assessment": [
+        {
+          "type": "examination",
+          "description": "3 Hour exam",
+          "weighting": 0.8
+        },
+        {
+          "type": "coursework",
+          "description": "Programming coursework (formative)",
+          "weighting": 0.04
+        },
+        {
+          "type": "coursework",
+          "description": "Programming coursework (summative)",
+          "weighting": 0.16
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH50001",
+      "code": "MECH50001",
+      "title": "Heat Transfer",
+      "department": "Mechanical Engineering",
+      "level": 2,
+      "ects": 5,
+      "type": "core",
+      "terms": [
+        "autumn",
+        "spring"
+      ],
+      "description": "To develop an understanding of the physics of heat transfer and to quantify them. Topics include steady conduction, transient conduction, convection, radiation, and heat exchangers. For all of these topics, practical implementation through solving small design-like problems is studied.",
+      "learningOutcomes": [
+        "Solve simple problems involving heat conduction, convection and radiation for solids and fluids in simple geometries.",
+        "Apply design methods to simple engineering calculations on: wall conduction, fins, cooling or heating of bodies immersed in a fluid, transient heat transfer, convection boundary layers and heat exchangers.",
+        "Evaluate and explain the significance of dimensionless groups used to characterise heat transfer problems and data.",
+        "Translate simple problems involving components, systems and heat exchangers into a form which can be solved using mathematical methods.",
+        "Augment and integrate the study of a technical subject, in this case Heat Transfer, by making extensive and efficient use of a comprehensive textbook, such as Incropera’s."
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH50001&year=26_27",
+      "prerequisites": [],
+      "capacity": null,
+      "assessment": [
+        {
+          "type": "examination",
+          "description": "1.5 Hour exam",
+          "weighting": 1.0
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH50002",
+      "code": "MECH50002",
+      "title": "Stress Analysis 2",
+      "department": "Mechanical Engineering",
+      "level": 2,
+      "ects": 5,
+      "type": "core",
+      "terms": [
+        "autumn",
+        "spring"
+      ],
+      "description": "This course builds on the ME1 Stress Analysis Course by extending the concepts of linear elasticity to two and three dimensions, as the basis for advanced stress analysis. Topics covered include complex stresses and strains, Mohr’s circle, failure criteria, shear stresses in beams, thick-walled cylinders, plastic failure and buckling of struts. The course should enable students to develop sufficient familiarity with stress analysis and strength of materials to design a safe and reliable load-bearing component of simple geometry (or to assess the safety of an existing one).",
+      "learningOutcomes": [
+        "Explain how stresses at a point vary and combine in different directions.",
+        "Apply direct stress and shear stress transformation and related equations along with a mathematical understanding of how these equations arise.",
+        "Use and explain Mohr's circle to represent complex stresses and strains and solve problems.",
+        "Explain how to apply different failure criteria for ductile and brittle materials, along with an appreciation of safety factors.",
+        "Solve problems and design components involving stress variations in beams and thick-walled pressure vessels.",
+        "Solve problems involving elastic-plastic, fully-plastic bending and residual stress behaviour in beams.",
+        "Derive and use Euler buckling theory for different boundary conditions."
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH50002&year=26_27",
+      "prerequisites": [
+        "MECH40005"
+      ],
+      "capacity": null,
+      "assessment": [
+        {
+          "type": "examination",
+          "description": "1.5 Hour exam",
+          "weighting": 1.0
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH50003",
+      "code": "MECH50003",
+      "title": "Mathematics and Computing 2",
+      "department": "Mechanical Engineering",
+      "level": 2,
+      "ects": 10,
+      "type": "core",
+      "terms": [
+        "autumn",
+        "spring"
+      ],
+      "description": "This module continues the development of key mathematical and computational skills relevant to the wider mechanical engineering programme. Topics include the analytical solution of partial differential equations, basic numerical methods (interpolation, differentiation, integration), discrete methods for the solution of PDEs (finite difference, finite volume) and the iterative solution of systems of equations. For all of these topics, practical implementation through programming is studied. These skills and techniques are in support of ME2, ME3 and ME4 modules.",
+      "learningOutcomes": [
+        "Solve some simple linear 2D partial differential equations using the method of separation of variables",
+        "Employ interpolation in the representation of fields and to write python code to interpolate fields on triangulated 2D domains",
+        "Develop finite difference schemes for differential forms of PDE an finite volume schemes for integral forms of PDE",
+        "Create python code to solve some simple 2D PDEs using finite difference and finite volume methods",
+        "Explain the concepts of convergence and consistency in the context of numerical methods",
+        "Create python code for the direct and iterative solution of systems of linear equations",
+        "Explain and apply fourier transforms and be able to apply discrete fourier transforms to data using python"
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH50003&year=26_27",
+      "prerequisites": [
+        "MECH40008"
+      ],
+      "capacity": null,
+      "assessment": [
+        {
+          "type": "examination",
+          "description": "2 Hour exam",
+          "weighting": 0.64
+        },
+        {
+          "type": "coursework",
+          "description": "Computing quizzes",
+          "weighting": 0.18
+        },
+        {
+          "type": "coursework",
+          "description": "Computing Final test",
+          "weighting": 0.18
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH50004",
+      "code": "MECH50004",
+      "title": "Mechatronics 2",
+      "department": "Mechanical Engineering",
+      "level": 2,
+      "ects": 5,
+      "type": "core",
+      "terms": [
+        "autumn",
+        "spring"
+      ],
+      "description": "This module aims at building up from basic knowledge of Mechatronics acquired in the first year module, to develop real-life circuits with advanced electronics components. Students will also learn about the fundamentals of Control Theory.",
+      "learningOutcomes": [
+        "Solve basic linear and non-linear circuits by applying the fundamental laws of electronics",
+        "Derive electrical equivalents of linear and non-linear circuits",
+        "Analyse an analog-to-digital converter and a digital-to-analog converter",
+        "Analyse and design circuit elements such as BJT transistor, operational amplifiers and first order passive and active filters",
+        "Determine the behaviour of first and second order dynamic systems in the Laplace domain and develop closed loop control systems, with proportional, integral and derivative control"
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH50004&year=26_27",
+      "prerequisites": [
+        "MECH40004"
+      ],
+      "capacity": null,
+      "assessment": [
+        {
+          "type": "examination",
+          "description": "1.5 Hour exam",
+          "weighting": 1.0
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH50005",
+      "code": "MECH50005",
+      "title": "Materials 2",
+      "department": "Mechanical Engineering",
+      "level": 2,
+      "ects": 5,
+      "type": "core",
+      "terms": [
+        "autumn",
+        "spring"
+      ],
+      "description": "This module develops an understanding, securely based on materials science, of various common failure modes, the reasons for their occurrence and how we seek to avoid failure by design. This module provides the tools and understanding to predict component failures under multiaxial loading conditions due to yielding, fracture, fatigue and creep mechanisms and to identify these failure mechanisms in practice, and to design against them.",
+      "learningOutcomes": [
+        "Explain the basic dislocation behaviours in single crystals and polycrystals",
+        "Explain the key strengthening processing in alloys",
+        "Explain the common corrosion types and their mechanisms",
+        "Discuss, using appropriate terminology, the factors leading to failure of materials and the procedures needed to avoid it",
+        "Solve problems involving the prediction of fracture, fatigue and creep failure of engineering materials under multiaxial stress conditions",
+        "Correlate possible failure modes with experimental conditions and material properties"
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH50005&year=26_27",
+      "prerequisites": [
+        "MECH40006"
+      ],
+      "capacity": null,
+      "assessment": [
+        {
+          "type": "examination",
+          "description": "1.5 Hour exam",
+          "weighting": 1.0
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH50006",
+      "code": "MECH50006",
+      "title": "Thermodynamics 2",
+      "department": "Mechanical Engineering",
+      "level": 2,
+      "ects": 5,
+      "type": "core",
+      "terms": [
+        "autumn",
+        "spring"
+      ],
+      "description": "This module builds on ME1 Thermodynamics to develop an understanding of the principles of a variety of industrially-significant processes concerned with energy conversion and use, and of the design and operation of plant relying on those processes including gas and steam turbines, boilers and heat exchangers, reciprocating engines, refrigeration and air-conditioning plant.",
+      "learningOutcomes": [
+        "Explain the principles of a variety of industrially-significant processes concerned with energy conversion and use",
+        "Analyse the design and operation of plant relying on thermodynamic processes",
+        "Conduct thermodynamic analyses of the processes involved and select and apply rational performance criteria and parameters.",
+        "Explain the constraints on thermodynamic systems imposed by materials, stressing, economics and the environment."
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH50006&year=26_27",
+      "prerequisites": [
+        "MECH40003"
+      ],
+      "capacity": null,
+      "assessment": [
+        {
+          "type": "examination",
+          "description": "1.5 Hour exam",
+          "weighting": 1.0
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH50008",
+      "code": "MECH50008",
+      "title": "Dynamics",
+      "department": "Mechanical Engineering",
+      "level": 2,
+      "ects": 5,
+      "type": "core",
+      "terms": [
+        "autumn",
+        "spring"
+      ],
+      "description": "This module aims to enable students to master the essential basic topics in vibrations and dynamics. Vibration can be a key feature of an engineering system or a source of system failure and this module studies the free vibration of single-degree-of-freedom undamped and damped systems and an introduction to multi-degree-of-freedom systems. In dynamics topics include work-done-energy equation, general plane motion , impulse-linear momentum, angular impulse-angular momentum, impact, generalized angular impulse-angular momentum, simple gyroscopic motion.",
+      "learningOutcomes": [
+        "Derive and explain the dynamical behaviour of one-degree-of-freedom dynamical systems in general terms, using the concepts of natural frequency, damping, free response, forced response, transmissibility, isolation, phasor diagrams and Bode plots",
+        "Derive and explain the dynamical behaviour of multi-degree-of-freedom systems in terms of natural frequencies and associated mode shapes, using the concept of modal summation",
+        "Explain the concepts of energy-work done, linear momentum-linear impulse, angular momentum-angular impulse and simple gyroscopic motion",
+        "Model relatively simple engineering structures as single- and two-degree-of-freedom systems with translational and rotational co-ordinates",
+        "Determine the dynamic response of such systems for free and forced vibration",
+        "Solve dynamics problems using the concepts of linear impulse-linear momentum and angular impulse-angular momentum"
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH50008&year=26_27",
+      "prerequisites": [],
+      "capacity": null,
+      "assessment": [
+        {
+          "type": "examination",
+          "description": "1.5 Hour exam",
+          "weighting": 1.0
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH50010",
+      "code": "MECH50010",
+      "title": "Fluid Mechanics 2",
+      "department": "Mechanical Engineering",
+      "level": 2,
+      "ects": 5,
+      "type": "core",
+      "terms": [
+        "autumn",
+        "spring"
+      ],
+      "description": "The ME2 Fluid Mechanics module aims to continue the development of key aspects of engineering fluid mechanics. Topics include dimensional analysis, the mass-conservation and momentum-balance principles applied to a fluid particle, the differential form of the governing equations (Navier-Stokes), incompressible flows, exact (Couette-Poiseuille flows) and approximate (boundary layers, Blasius solution, lubrication) solutions, turbulent channel/pipe flows and the time-averaged governing equations (RANS), compressible flows (speed of sound, Mach cone, isentropic-flow relations and converging-diverging nozzles).",
+      "learningOutcomes": [
+        "Select appropriate dimensionless groups and solve scaling problems",
+        "Select an equation of motion, such as Euler, isentropic flow, Cauchy, Navier-Stokes, as appropriate to solve a problem",
+        "Simplify and/or approximate the equations of motion to aid solution",
+        "Apply appropriate boundary conditions and solve the equations",
+        "Evaluate the forces exerted by a fluid on its boundaries\"",
+        "Explain, in terms of dimensionless groups, the requirements for complete and incomplete similarity between model (e.g. wind tunnel) and prototype flows",
+        "Explain the origins and nature of lift and drag relevant to aero- and hydro-dynamic design of transport vehicles",
+        "Solve fluid mechanics problems using the force-momentum equation in integral and differential forms",
+        "Derive — using an Eulerian control volume — the equations of continuity for special cases (e.g. boundary layer flow) in both Cartesian and cylindrical polar coordinates",
+        "Solve fluid mechanics problems describing one-dimensional compressible flow nozzles and diffusers"
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH50010&year=26_27",
+      "prerequisites": [
+        "MECH40002"
+      ],
+      "capacity": null,
+      "assessment": [
+        {
+          "type": "examination",
+          "description": "1.5 Hour exam",
+          "weighting": 1.0
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH60003",
+      "code": "MECH60003",
+      "title": "Design, Make and Test Project",
+      "department": "Mechanical Engineering",
+      "level": 3,
+      "ects": 20,
+      "type": "core",
+      "terms": [
+        "autumn",
+        "spring"
+      ],
+      "description": "This module will be one of the most important in your degree course. Firstly, it aims to reinforce and integrate the knowledge, understanding and skills that you have acquired in engineering science, design, manufacturing and management modules. Secondly - and just as importantly - it sets you to work in a realistic engineering project environment, with rigorous time and budget constraints. When you begin to apply for a job, employers will take your engineering knowledge and analytical skills for granted. It's your team-working and organisational skills which they will need to be convinced of and will set out to test in 'assessment centres'. As part of this module, therefore, Assessment Centre Skills Workshops are offered to raise your awareness of the broader, transferable skills it can help you acquire.",
+      "learningOutcomes": [
+        "Derive and explore the relationship between customer requirements and engineering attributes",
+        "Design machine systems and select elements to meet specified objectives",
+        "Analyse a given design formally, against specified requirements, and refine it appropriately",
+        "Prepare appropriate formal Quality Plan, Budget, Health & Safety and Test plans for a small engineering project",
+        "Realise the manufacture of their design using appropriate engineering drawings and appropriate resources",
+        "Exercise the key skills needed for team working on a realistic Design, Make and Test project",
+        "Record and evaluate progress and decisions in a clear and accurate manner using a logbook"
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH60003&year=26_27",
+      "prerequisites": [],
+      "capacity": null,
+      "assessment": [],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH60015",
+      "code": "MECH60015",
+      "title": "Professional Engineering Skills 3",
+      "department": "Mechanical Engineering",
+      "level": 3,
+      "ects": 10,
+      "type": "core",
+      "terms": [
+        "autumn",
+        "spring"
+      ],
+      "description": "This module is comprised of two parts: (a) Engineering in a commercial environment which aims to provide an awareness and basic understanding of some of the non-engineering aspects that will be encountered by professional engineers working in a professional environment. The main topics include: engineering finance; project management;ethics; sustainability; security; professional responsibillity and intellectual property. (b) A literature research project which aims to develop efficient use of the extensive facilities available for research on a given subject, to develop a critical attitude to information sources, an ethical attitude to attributing them and a systematic method for citing them and to stimulate interest in a given engineering-related, technical subject by studying it in depth.",
+      "learningOutcomes": [
+        "Explain the importance of ethical standards and be able to discuss some example ethical situations.",
+        "Explain the principles of sustainability and methods for applying them in practical situations.",
+        "Choose and apply appropriate tools to the management of projects and project teams.",
+        "Justify and apply different methods for assessing the financial implications of decisions and projects.",
+        "Explain the importance of intellectual property and methods for its protection and exploitation.",
+        "Explain the importance of physical and electronic security, especially of data, and methods to implement it.",
+        "Critique the overall state of knowledge on a topic of direct relevance to mechanical engineering.",
+        "Summarise the ideas of others in original language and with full attribution in standard (e.g. Harvard) form.",
+        "Differentiate between literature of reliable and unreliable provenance.",
+        "Synthesise information from a wide range of sources, selecting key information to arrive at appropriate conclusions on a technical subject of relevance to Mechanical Engineering into a coherent written review."
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH60015&year=26_27",
+      "prerequisites": [],
+      "capacity": null,
+      "assessment": [
+        {
+          "type": "examination",
+          "description": "3 Hour exam",
+          "weighting": 0.5
+        },
+        {
+          "type": "coursework",
+          "description": "Literature Research Project",
+          "weighting": 0.5
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH60001",
+      "code": "MECH60001",
+      "title": "Machine Dynamics and Vibrations A",
+      "department": "Mechanical Engineering",
+      "level": 3,
+      "ects": 5,
+      "type": "elective",
+      "terms": [
+        "autumn",
+        "spring"
+      ],
+      "description": "This module aims to enable students to evaluate the dynamic response requirements of a proposed machine design and to produce workable proposals for its safe and effective operation. It will build on the second year Mechatronics and Solid Mechanics modules, introducing a greater range of examples where the dynamic response of a machine must be controlled and making the link between vibration and fatigue failure. This will involve some new subject matter in the vibration of continuous systems, rotor dynamics, signal processing and control analysis. A key aspect of the module is to demonstrate practical vibration measurements and to compare them to solutions of an idealised system in MATLAB. They will also deal with realistic problems involving the assessment of the fatigue life of structures subject to vibration and static loading.",
+      "learningOutcomes": [
+        "Describe simple mechanical systems as lumped parameter models and derive their equations of motion (EOM)",
+        "Predict the natural frequencies and mode shapes of multi-degree of freedom (MDOF) vibration systems and of bending, torsion and axial vibration of simple continuous systems such as beams",
+        "Explain the importance of avoiding shaft whirl and be able to calculate critical speeds",
+        "Explain the significance of vibration loading in generating high cycle fatigue",
+        "Predict fatigue life of components by linking their vibration response to alternating stress and using this as input to fatigue calculations",
+        "Use MATLAB to obtain solutions to MDOF vibration problems",
+        "Use Fourier analysis to convert both single and dual channel time domain measurements in the frequency domain"
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH60001&year=26_27",
+      "prerequisites": [
+        "MECH50008",
+        "MECH50002",
+        "MECH50004",
+        "MECH40008",
+        "MECH50003"
+      ],
+      "capacity": 120,
+      "assessment": [
+        {
+          "type": "examination",
+          "description": "3 Hour exam",
+          "weighting": 0.8
+        },
+        {
+          "type": "coursework",
+          "description": "MATLAB exercise",
+          "weighting": 0.2
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH60002",
+      "code": "MECH60002",
+      "title": "Fracture Mechanics A",
+      "department": "Mechanical Engineering",
+      "level": 3,
+      "ects": 5,
+      "type": "elective",
+      "terms": [
+        "autumn",
+        "spring"
+      ],
+      "description": "Fracture mechanics concerns the design and analysis of structures which contain cracks or defects/flaws. Fracture mechanics answers questions such as: What is the largest sized crack that a structure can contain or the largest load the structure can bear for failure to be avoided? How long before a crack which was safe becomes unsafe? What material should be used in a certain application to ensure safety?",
+      "learningOutcomes": [
+        "Explain the foundations, principles, application and limitations (both qualitative and quantitative) of linear elastic fracture mechanics, using appropriate terminology",
+        "Explain the micro-mechanisms of crack tip failure in metals, ceramics, polymers and fibre composite materials",
+        "Calculate the fracture toughness or fracture energy of a given material from data measured using a standard or well-defined specimen geometry",
+        "Formulate problems involving the static, fatigue or impact loading of flawed structures in terms of fracture mechanics",
+        "Predict - using fracture mechanics analysis - the residual strength or service live of a flawed structure or the critical size of a defect contained within"
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH60002&year=26_27",
+      "prerequisites": [
+        "MECH50002",
+        "MECH50005"
+      ],
+      "capacity": 120,
+      "assessment": [
+        {
+          "type": "examination",
+          "description": "3 Hour exam",
+          "weighting": 1.0
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH60004",
+      "code": "MECH60004",
+      "title": "Introduction to Nuclear Energy A",
+      "department": "Mechanical Engineering",
+      "level": 3,
+      "ects": 5,
+      "type": "elective",
+      "terms": [
+        "autumn"
+      ],
+      "description": "This module aims provide a basic introduction to the engineering, safety, socio-economic context and prospects for nuclear energy. This module also provides the basic knowledge necessary for more advanced nuclear modules.",
+      "learningOutcomes": [
+        "Demonstrate a broad understanding of the issues surrounding the use of nuclear energy.",
+        "Explain the course that nuclear power development has taken, and its present position.",
+        "Explain the underlying physical basis of the generation of energy from nuclear processes.",
+        "Explain the main engineering issues in capturing this energy and using it to generate electricity.",
+        "Perform basic reactor physics and thermal hydraulic calculations"
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH60004&year=26_27",
+      "prerequisites": [],
+      "capacity": 100,
+      "assessment": [
+        {
+          "type": "examination",
+          "description": "3 Hour exam",
+          "weighting": 1.0
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH60006",
+      "code": "MECH60006",
+      "title": "Fluid Mechanics 3A",
+      "department": "Mechanical Engineering",
+      "level": 3,
+      "ects": 5,
+      "type": "elective",
+      "terms": [
+        "autumn",
+        "spring"
+      ],
+      "description": "An advanced fluid mechanics module, general and fundamental in nature and spanning subsonic, transonic and supersonic flows. Topics include derivation of conservation equations for incompressible and compressible flows, methods for solving them in simplified cases, turbulence, energy and work and normal and oblique shocks.",
+      "learningOutcomes": [
+        "Describe the physical features of a flow in terms of the rate of strain, rotation and vorticity",
+        "Describe the physical features of turbulence, and the basis for models of it",
+        "Derive the fundamental differential conservation equation of mass",
+        "Manipulate the tensor forms of the conservation equations of mass, momentum energy and energy",
+        "Simplify the fundamental differential conservation equations with appropriate assumptions and find, where appropriate, an exact solution",
+        "Identify the dimensionless groups that determine the behaviour of fluid flow from the fundamental differential conservation equations",
+        "Describe the fundamental features of fluid flow from an analysis of numerical solutions"
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH60006&year=26_27",
+      "prerequisites": [
+        "MECH40002",
+        "MECH50010"
+      ],
+      "capacity": 150,
+      "assessment": [
+        {
+          "type": "examination",
+          "description": "3 Hour exam",
+          "weighting": 1.0
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH60007",
+      "code": "MECH60007",
+      "title": "Finite Element Analysis and Applications A",
+      "department": "Mechanical Engineering",
+      "level": 3,
+      "ects": 5,
+      "type": "elective",
+      "terms": [
+        "spring"
+      ],
+      "description": "The aim of the module is to teach the students to be able to use Finite Element programs in a practical way to solve problems in linear elastic stress analysis. A student who has studied the module should be able, in a later industrial setting, to undertake the analysis of real problems with a fair understanding of sensible modelling procedures. In support of this, the module is split into two stages: (1) Theoretical study of the Finite Element method, with emphasis on understanding what goes on inside a typical, modern, commercial program; (2) Practical experience in analysis using an industry-standard, interactive, Finite Element program.",
+      "learningOutcomes": [
+        "Explain the basic theoretical principles of the Finite Element Method,",
+        "Employ industry standard software for interactive FE model generation, analysis and post processing of results.",
+        "Interpret the output from this software critically and intelligently in order to yield the required information,",
+        "Formulate the boundary conditions of a problem in a suitable form for correct analysis",
+        "Assess alternative strategies (of element type, mesh design, boundary condition defintion etc) for economical and accurate FE modelling of specific 2D, 3D and axisymmetric structural problems."
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH60007&year=26_27",
+      "prerequisites": [
+        "MECH40005",
+        "MECH50002"
+      ],
+      "capacity": 90,
+      "assessment": [
+        {
+          "type": "examination",
+          "description": "2 Hour exam",
+          "weighting": 0.8
+        },
+        {
+          "type": "coursework",
+          "description": "4 small task reports",
+          "weighting": 0.2
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH60009",
+      "code": "MECH60009",
+      "title": "Embedded C for Microcontrollers A",
+      "department": "Mechanical Engineering",
+      "level": 3,
+      "ects": 5,
+      "type": "elective",
+      "terms": [
+        "spring"
+      ],
+      "description": "This module aims to introduce students who are proficient in MATLAB programming to the C programming language: amongst the most widely-used ever amongst programming languages, and one which provides an excellent foundation for learning others (e.g. C++ and JavaScript). It also aims to develop, from the basic knowledge of mechatronics provided in ME2, an ability to build mechatronic systems containing typical sensors and actuators that are controlled by a microcontroller programmed in C.",
+      "learningOutcomes": [
+        "Explain the principal components of, and terminology used in, embedded computer hardware and software",
+        "Write simple C programs to manipulate numerical bit-pattern data and text, perform calculations and interface with external hardware",
+        "Design, make, test and document a functional mechatronic system containing an embedded microcontroller",
+        "Assemble working microcontroller-based mechatronic systems on a prototype board"
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH60009&year=26_27",
+      "prerequisites": [
+        "MECH50004",
+        "MECH40008"
+      ],
+      "capacity": 48,
+      "assessment": [
+        {
+          "type": "coursework",
+          "description": "Project",
+          "weighting": 0.8
+        },
+        {
+          "type": "practical",
+          "description": "Labs",
+          "weighting": 0.2
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH60011",
+      "code": "MECH60011",
+      "title": "Thermodynamics 3A",
+      "department": "Mechanical Engineering",
+      "level": 3,
+      "ects": 5,
+      "type": "elective",
+      "terms": [
+        "autumn",
+        "spring"
+      ],
+      "description": "This module is a continuation of the ME1 and ME2 modules in thermodynamics. The first term deals with the fundamentals of equilibrium thermodynamics. The second term will introduce students to the kinetic theory and how the concepts of pressure, temperature (among others) and transport properties arise from molecular motions.",
+      "learningOutcomes": [
+        "Explain advanced concepts in thermodynamics including non-ideal behaviour, phase change, electro-chemistry, radiation and critical phenomena.",
+        "Determine the thermodynamic limitations of an engineering process",
+        "Derive the fundamental thermodynamic equations in thermofluids and other branches of engineering.",
+        "Explain the kinetic theory of a gas and how the concepts of pressure, temperature (among others) and transport properties arise from molecular motions"
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH60011&year=26_27",
+      "prerequisites": [
+        "MECH50006"
+      ],
+      "capacity": 150,
+      "assessment": [
+        {
+          "type": "examination",
+          "description": "3 Hour exam",
+          "weighting": 0.95
+        },
+        {
+          "type": "coursework",
+          "description": "Quiz",
+          "weighting": 0.05
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH60013",
+      "code": "MECH60013",
+      "title": "Structure, Properties and Applications of Polymers A",
+      "department": "Mechanical Engineering",
+      "level": 3,
+      "ects": 5,
+      "type": "elective",
+      "terms": [
+        "spring"
+      ],
+      "description": "This module aims to develop an understanding of the mechanical properties, processing characteristics and failure modes of the principal classes of polymers, in terms of their structure and to use such data for material selection.The module develops familiarity with available processing technologies, and how they influence the design and properties of plastic components. The module also develops understanding of the viscoelastic nature of polymers, and to account for time- and temperature-dependent behaviour.",
+      "learningOutcomes": [
+        "Explain the relationship between structure, processing and properties of engineering polymers.",
+        "Select a polymer for given service conditions, accounting for processing and recycling limitations.",
+        "Propose a method for processing a specified polymer to a given shape.",
+        "Explain viscoelastic behaviour in terms of simple spring-dashpot models.",
+        "Explain the failure mechanisms of polymers in given service conditions."
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH60013&year=26_27",
+      "prerequisites": [],
+      "capacity": 80,
+      "assessment": [
+        {
+          "type": "examination",
+          "description": "3 Hour exam",
+          "weighting": 1.0
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH60014",
+      "code": "MECH60014",
+      "title": "Stress Analysis 3A",
+      "department": "Mechanical Engineering",
+      "level": 3,
+      "ects": 5,
+      "type": "elective",
+      "terms": [
+        "autumn",
+        "spring"
+      ],
+      "description": "The course aims to reinforce the student's knowledge of stress analysis, to extend this knowledge to more advanced theories and techniques and to apply these to practical problems. Most of these will be developments of methods which have been previously acquired but to more sophisticated problems. New areas of thermal stresses, plastic deformation and residual stresses will be treated and a new technique of analysis using energy methods will also be introduced and developed.",
+      "learningOutcomes": [
+        "Solve a wide range of axi-symmetric elastic problems involving monobloc cylinders, compound cylinders, plates, thin walled shells. Problems will include the effects of temperature, rotation and gravity.",
+        "Solve problems relating to non-workhardening, plastic behaviour of monobloc cylinders, the generation of residual stresses and interference mechanisms.",
+        "Solve problems including statically indeterminate pin jointed structures and deflections of curved beams using energy methods.",
+        "Explain the basic requirements needed to solve elasticity problems."
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH60014&year=26_27",
+      "prerequisites": [
+        "MECH40005",
+        "MECH50002"
+      ],
+      "capacity": 120,
+      "assessment": [
+        {
+          "type": "examination",
+          "description": "3 Hour exam",
+          "weighting": 1.0
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH60016",
+      "code": "MECH60016",
+      "title": "Mathematics A",
+      "department": "Mechanical Engineering",
+      "level": 3,
+      "ects": 5,
+      "type": "elective",
+      "terms": [
+        "autumn"
+      ],
+      "description": "The ME1 and ME2 mathematics and computing modules focus on predominantly linear systems. The main aim of this module is to show how mathematics can be used to characterise and model the qualitative behaviour of a non-linear systems without solving in detail the equations controlling the evolution of the system. We use the technique of phase-plane analysis to analyze the behaviour of coupled sets of autonomous differential equations and travelling wave solutions of partial differential equations. We use the techniques of Fourier transforms and generalized function theory to analyze the energy and power of signals. We also use double Fourier transforms to investigate the solutions of some partial differential equations. Finally we introduce the ideas of chaotic systems via a study of one-dimensional maps, looking in detail at the phenomenon of period-doubling. Throughout the module the ideas are illustrated using examples relevant to Mechanical engineers, including the simple pendulum and harmonic oscillator.",
+      "learningOutcomes": [
+        "Analyse and obtain travelling wave solutions of PDEs",
+        "Perform phase plane analysis and critical point analysis of non-linear systems of differential equations",
+        "Extract asymptotic behaviour from non-linear ordinary differential equations",
+        "Analyse chaotic systems via the study of one-dimensional maps and period-doubling using examples relevant to mechanical engineers, including the simple pendulum and harmonic oscillator",
+        "Use Fourier transforms to find particular solutions of linear ordinary differential equations."
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH60016&year=26_27",
+      "prerequisites": [
+        "MECH40008",
+        "MECH50003"
+      ],
+      "capacity": 90,
+      "assessment": [
+        {
+          "type": "examination",
+          "description": "3 Hour exam",
+          "weighting": 1.0
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH60017",
+      "code": "MECH60017",
+      "title": "Statistics A",
+      "department": "Mechanical Engineering",
+      "level": 3,
+      "ects": 5,
+      "type": "elective",
+      "terms": [
+        "spring"
+      ],
+      "description": "This module aims to develop statistical methods and procedures that can be confidently applied and the results reported in a professional manner revealing both good understanding and interpretation.",
+      "learningOutcomes": [
+        "Use R or Python for data processing, visualization, simulation and analysis",
+        "Apply probability models, estimate their parameters and test their fit to data",
+        "Apply reliability theory to devices and networks",
+        "Perform predictive modelling tasks using regression and time series analysis."
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH60017&year=26_27",
+      "prerequisites": [],
+      "capacity": 120,
+      "assessment": [
+        {
+          "type": "examination",
+          "description": "3 Hour exam",
+          "weighting": 0.9
+        },
+        {
+          "type": "coursework",
+          "description": "Report on applied statistics problem",
+          "weighting": 0.1
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH60018",
+      "code": "MECH60018",
+      "title": "Mechatronics 3A",
+      "department": "Mechanical Engineering",
+      "level": 3,
+      "ects": 5,
+      "type": "elective",
+      "terms": [
+        "autumn",
+        "spring"
+      ],
+      "description": "This module is a continuation of the ME1 and ME2 modules in Mechatronics. The first term focuses on further concepts of Control Theory, following the introductory part taught in ME2 course. In the second term advanced electronic components are introduced, which are not taught in ME1 and ME2 courses. These further topics will provide students with a comprehensive knoweldge, theoretical and applied, enough to be able to design and realise a full mechatronic system.",
+      "learningOutcomes": [
+        "Formulate mathematical models of a a wide range of dynamic systems.",
+        "Analyse and design control systems using Laplace and frequency domain methods.",
+        "Design electronic circuits for signal processing and power amplification.",
+        "Analyse and select actuation systems."
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH60018&year=26_27",
+      "prerequisites": [
+        "MECH50004"
+      ],
+      "capacity": 150,
+      "assessment": [
+        {
+          "type": "examination",
+          "description": "3 Hour exam",
+          "weighting": 0.7
+        },
+        {
+          "type": "coursework",
+          "description": "Quizzes",
+          "weighting": 0.3
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH60019",
+      "code": "MECH60019",
+      "title": "Tribology A",
+      "department": "Mechanical Engineering",
+      "level": 3,
+      "ects": 5,
+      "type": "elective",
+      "terms": [
+        "autumn",
+        "spring"
+      ],
+      "description": "The overall aim of the Tribology module is to provide students with a general and useful introduction to the main concepts and principles of Tribology (friction, lubrication and wear), with particular emphasis on lubricated systems. It is recognised that the field of Tribology is very large and multidisciplinary and that it is thus impossible to cover all aspects of the subject adequately. Instead the Tribology module focuses on those areas of Tribology particularly relevant to the design and performance of lubricated machine components. The module covers the underlying principles and provides an extensive set of handout notes and references aimed at assisting students comprehend and address tribological problems that they may meeting in their future engineering careers, even those outside the areas directly covered by the module.",
+      "learningOutcomes": [
+        "Discuss - making appropriate use of technical terminology - the main laws and concepts of tribology and their historical development",
+        "Explain the origins and characteristics of the main lubrication regimes and the machine components and conditions in which each is likely to be prevalent",
+        "Describe the main materials used in plain bearings, rolling element bearings and gears and the reasons for the materials being used and the composition, specification and performance of liquid lubricants",
+        "Identify the main types of tribologically-induced surface damage from photographs",
+        "Describe the mechanisms and origins of the main forms of tribological damage, and of current ways of predicting the onset or accumulation of such damage",
+        "Solve problems concerning the pressure, temperature, contact area and friction between rough and smooth bearing surfaces in machine components",
+        "Derive the Reynolds equation, and list and explain the main assumptions underlying this equation and its subsequent approximations",
+        "Solve problems concerning the hydrodynamic film thickness and friction of plain thrust and journal bearings and other lubricated conformal contacts, the elastohydrodynamic film thickness in rolling element bearings and other lubricated non-conformal contacts and problems concerning prediction of the wear and fatigue life of bearings"
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH60019&year=26_27",
+      "prerequisites": [],
+      "capacity": 80,
+      "assessment": [
+        {
+          "type": "examination",
+          "description": "2 Hour exam",
+          "weighting": 0.6
+        },
+        {
+          "type": "coursework",
+          "description": "Worked solution of six of the tutorial sheets",
+          "weighting": 0.4
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH60021",
+      "code": "MECH60021",
+      "title": "Computational Continuum Mechanics A",
+      "department": "Mechanical Engineering",
+      "level": 3,
+      "ects": 5,
+      "type": "elective",
+      "terms": [
+        "autumn"
+      ],
+      "description": "This module is designed to introduce the fundamentals of continuum mechanics that underpin the theoretical understanding of many engineering disciplines and to demonstrate how problems in continuum mechanics can be solved using numerical techniques. Particular attention is paid to the theory and implementation of the finite element method. The module provides the theoretical basis for level 7 modules on applications of finite element methods and finite volume methods and is a companion module to level 6 Fluid Mechanics and Stress Analysis.",
+      "learningOutcomes": [
+        "Use index notation to solve tensor algebra and calculus problems.",
+        "Derive, explain and use the basic concepts of continua, including kinematics, kinetics, conservation and constitutive laws.",
+        "Solve simple solid and fluid problems using analytical methods, in terms of deformation, strain, stress, velocity and its gradient, using Lagrangian and Eulerian frameworks.",
+        "Formulate the finite element method for a linear, elastic isotropic solid from the principle of virtual work and the finite element discretisation.",
+        "Solve simple finite element problems using analytical methods, and outline more complex problems in a suitable form for numerical solution."
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH60021&year=26_27",
+      "prerequisites": [],
+      "capacity": 90,
+      "assessment": [
+        {
+          "type": "examination",
+          "description": "3 Hour exam",
+          "weighting": 1.0
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH60024",
+      "code": "MECH60024",
+      "title": "Automotive Design with Motorsport A",
+      "department": "Mechanical Engineering",
+      "level": 3,
+      "ects": 5,
+      "type": "elective",
+      "terms": [
+        "autumn"
+      ],
+      "description": "This module builds on material taught in previous years and aims to focus on the application of knowledge on automotive design problems. It is intended to develop students’ skills in various engineering science disciplines into a capability to design and analyse automotive systems. Students will further expand their understanding of automotive system development, machine element design, manufacturing/testing and applied electronic control. The module also aims to put the delivered content in context via a series of hands-on laboratory activities. It is intended to give an insight to practical engineering decision making in relation to automotive and motorsport design tasks.",
+      "learningOutcomes": [
+        "Apply skills and knowledge gained in previous years to tackle real-life automotive design problems",
+        "Derive to key design and operation parameters for combustion and electronic powertrain design for a given application",
+        "Apply thermodynamics, fluid mechanics and structural analysis to typical components and specify loads",
+        "Carry out detailed design and sizing including the creation of detailed manufacturing documentation",
+        "Recommend adjustments and modifications to the suspension set-up of a race vehicle to improve its performance"
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH60024&year=26_27",
+      "prerequisites": [],
+      "capacity": 60,
+      "assessment": [
+        {
+          "type": "examination",
+          "description": "2.0 Hour exam",
+          "weighting": 0.4
+        },
+        {
+          "type": "coursework",
+          "description": "Group design task",
+          "weighting": 0.5
+        },
+        {
+          "type": "coursework",
+          "description": "Individual laboratory report",
+          "weighting": 0.1
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH70007",
+      "code": "MECH70007",
+      "title": "Mechanical Engineering Individual Project",
+      "department": "Mechanical Engineering",
+      "level": 4,
+      "ects": 25,
+      "type": "core",
+      "terms": [
+        "autumn",
+        "spring"
+      ],
+      "description": "The individual project is an open, often research-based activity spread over the final year. The project is supervised by an academic member of staff and is normally conducted within that staff member’s research group. Projects can be experimental, computer-based or analytical, or any combination of these. All projects should have a strong engineering content and employ skills acquired in previous years of the Mechanical Engineering course. They may also involve non-technological aspects such as economics, safety and ecological implications.",
+      "learningOutcomes": [
+        "Apply fundamental engineering principles to complex engineering problems.",
+        "Undertake problem identification, formulation and solution, and manage their time.",
+        "Create, select and apply appropriate techniques, and explain their limitations.",
+        "Communicate effectively with engineers and the wider community in written and oral forms.",
+        "Demonstrate the knowledge, skills and attitudes of a professional engineer."
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH70007&year=26_27",
+      "prerequisites": [],
+      "capacity": null,
+      "assessment": [
+        {
+          "type": "coursework",
+          "description": "Project Plan Report",
+          "weighting": 0.05
+        },
+        {
+          "type": "coursework",
+          "description": "Project Progress Report",
+          "weighting": 0.05
+        },
+        {
+          "type": "coursework",
+          "description": "Project Final Report",
+          "weighting": 0.55
+        },
+        {
+          "type": "practical",
+          "description": "Project Seminar",
+          "weighting": 0.1
+        },
+        {
+          "type": "practical",
+          "description": "Project Poster",
+          "weighting": 0.05
+        },
+        {
+          "type": "coursework",
+          "description": "Project Logbook",
+          "weighting": 0.1
+        },
+        {
+          "type": "practical",
+          "description": "Project Conduct of Task",
+          "weighting": 0.1
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH70002",
+      "code": "MECH70002",
+      "title": "Nuclear Reactor Physics",
+      "department": "Mechanical Engineering",
+      "level": 4,
+      "ects": 5,
+      "type": "elective",
+      "terms": [
+        "autumn"
+      ],
+      "description": "This module provides a basic introduction to the reactor physics of nuclear reactors, including neutron conservation, neutron diffusion, criticality for spheres cylinders and cuboids, reflected spheres, point kinetics with delayed neutrons, xenon poisoning, and other reactivity feedback mechanisms.",
+      "learningOutcomes": [
+        "Perform basic reactor physics algebraic analysis and numerical computations, including solutions of the neutron diffusion equation, and the assessment of criticality for the principal reactor geometries.",
+        "Derive and use simple point kinetics models of reactor transient behaviour.",
+        "Explain the role of neutron reflectors, and an ability to perform analyses of simple reflected geometries.",
+        "Explain the significance of reactive feedback, and perform calculations and analysis of this in the case of xenon poisoning."
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH70002&year=26_27",
+      "prerequisites": [
+        "MECH60004"
+      ],
+      "capacity": 60,
+      "assessment": [
+        {
+          "type": "examination",
+          "description": "3 Hour exam",
+          "weighting": 1.0
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH70003",
+      "code": "MECH70003",
+      "title": "Future Clean Transport Technology",
+      "department": "Mechanical Engineering",
+      "level": 4,
+      "ects": 10,
+      "type": "elective",
+      "terms": [
+        "autumn",
+        "spring"
+      ],
+      "description": "FCTT has 2 main sub-modules. Thermal Propusion Systems covers design and underlying thermofluid and combustion processes in IC engines, and the need for reduced CO2 and pollutant emissions. Hybrid-Electric Propulsion Systems and control covers design of hybrid, electric powered vehicles and underlying engineering science. Although selecting the ME4 Batteries module alongside FCTT is not a prerequisite for this module, it is nevertheless strongly encouraged.",
+      "learningOutcomes": [
+        "Construct simple physical and computational models of processes occurring in IC engines, hybrid-electric powertrains and energy storage systems.",
+        "Discuss, using appropriate terminology, drivers for development in thermal and hybrid-electric propulsion systems and the extent to which available technologies provide appropriate solutions.",
+        "Assess the future of competing propulsion systems in the land transport sector.",
+        "Organise and gather information and solve problems using information technology within individual and group projects."
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH70003&year=26_27",
+      "prerequisites": [],
+      "capacity": 80,
+      "assessment": [
+        {
+          "type": "examination",
+          "description": "3 Hour exam",
+          "weighting": 0.5
+        },
+        {
+          "type": "coursework",
+          "description": "Project 1 (group project on gas cycle analysis)",
+          "weighting": 0.1666
+        },
+        {
+          "type": "coursework",
+          "description": "Project 2 (group project on turbocharger matching",
+          "weighting": 0.1666
+        },
+        {
+          "type": "coursework",
+          "description": "Project 3 (group project on hybrid-electric propulsion systems)",
+          "weighting": 0.1666
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH70014",
+      "code": "MECH70014",
+      "title": "Design, Art and Creativity B",
+      "department": "Mechanical Engineering",
+      "level": 4,
+      "ects": 5,
+      "type": "elective",
+      "terms": [
+        "autumn"
+      ],
+      "description": "DAC will nurture inquisitiveness, curiosity, exploration and expression. Blue-sky thinking, to approach problems without being bound by constraints. Learning not to say no. To keep an open mind. To consider the possibilities. What if that really was possible? Learning how to brainstorm effectively is a skill that needs to be practised. It can be difficult to diverge from logical and linear thought processes after honing this skill for so many years, but you will be given the opportunity to learn and practise. Extrospective exploration of art and design and introspective responses and expression. You will be given the opportunity to interpret and convey. Communication in various forms will be a common and important thread throughout the module. A hands-on approach. You will be expected to make and create!",
+      "learningOutcomes": [
+        "Formulate an appropriate brief and process for a design project.",
+        "Resolve a design opportunity into concepts.",
+        "Demonstrate verbal and visual communication skills.",
+        "Discuss your object’s attributes in terms of colour, material, finish (CMF), form, function and usability.",
+        "Critique a selected existing design against a range of attributes"
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH70014&year=26_27",
+      "prerequisites": [],
+      "capacity": 30,
+      "assessment": [
+        {
+          "type": "coursework",
+          "description": "Infographic: progress and delivery",
+          "weighting": 0.15
+        },
+        {
+          "type": "coursework",
+          "description": "Project: progress, delivery, presentation",
+          "weighting": 0.5
+        },
+        {
+          "type": "coursework",
+          "description": "Essay",
+          "weighting": 0.15
+        },
+        {
+          "type": "coursework",
+          "description": "Daily drawing sketchbook",
+          "weighting": 0.2
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH70015",
+      "code": "MECH70015",
+      "title": "Computational Fluid Dynamics",
+      "department": "Mechanical Engineering",
+      "level": 4,
+      "ects": 5,
+      "type": "elective",
+      "terms": [
+        "autumn",
+        "spring"
+      ],
+      "description": "The Computational Fluid Dynamics (CFD) module deals with the governing equations for heat and fluid flow problems and with the numerical methods that cover domain and equation discretisation, including sources and sinks, with the main focus on the finite volume approach. Topics include numerical schemes for steady and unsteady diffusion and convection problems, pressure correction algorithms, iteration and convergence, errors and accuracy, benefits and limitations. Overview of commercial CFD packages and their applications is also provided.",
+      "learningOutcomes": [
+        "Discuss in depth — using appropriate terminology — the principles and methods of Computational Fluid Dynamics techniques and their implications on the accuracy and stability of their result.",
+        "Discuss the thermo-fluids phenomena illustrated in specific problems for CFD solution, and their practical applications.",
+        "Solve a theoretical thermo-fluids problem, developing a simple code in Matlab.",
+        "Solve a practical thermo-fluids problems using an industry-standard software package.",
+        "Interpret the output from the two codes critically and intelligently in order to yield the required information.",
+        "Communicate the results of a CFD study in a formal written report and a presentation."
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH70015&year=26_27",
+      "prerequisites": [],
+      "capacity": 100,
+      "assessment": [
+        {
+          "type": "examination",
+          "description": "1.5 Hour exam",
+          "weighting": 0.375
+        },
+        {
+          "type": "coursework",
+          "description": "Individual MATLAB Project report",
+          "weighting": 0.275
+        },
+        {
+          "type": "coursework",
+          "description": "Group STAR-CCM+ Project",
+          "weighting": 0.275
+        },
+        {
+          "type": "practical",
+          "description": "Group presentation",
+          "weighting": 0.075
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH70021",
+      "code": "MECH70021",
+      "title": "Aircraft Engine Technology",
+      "department": "Mechanical Engineering",
+      "level": 4,
+      "ects": 10,
+      "type": "elective",
+      "terms": [
+        "autumn",
+        "spring"
+      ],
+      "description": "The aim of this module is to get small groups designing, in outline, a jet engine for a civil airliner. The design will focus on the thermodynamics and aerodynamics, but a small part will be devoted to stress and vibration aspects to underpin the aerodynamic design choices.",
+      "learningOutcomes": [
+        "Discuss, in an industrial context and in appropriate vocabulary, technical issues related to current practice in the design of aircraft powerplant",
+        "Interpret a definition of civil or military aircraft duty and mission as a specification for its propulsion system",
+        "Apply thermodynamics, fluid mechanics and structural analysis to the design of jet engine components",
+        "Organise and gather information and solve problems using information technology within individual and group projects"
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH70021&year=26_27",
+      "prerequisites": [],
+      "capacity": 60,
+      "assessment": [
+        {
+          "type": "examination",
+          "description": "3 Hour exam",
+          "weighting": 0.5
+        },
+        {
+          "type": "coursework",
+          "description": "Task 1: Specification of engine pressure ratios and temperature. Report 15 pages",
+          "weighting": 0.15
+        },
+        {
+          "type": "coursework",
+          "description": "Task 2: Engine sizing, key dimensions, number of compressor and turbine stages, sketch of engine. Report 10 pages",
+          "weighting": 0.1
+        },
+        {
+          "type": "coursework",
+          "description": "Task 3:Final report, with blade designs and some stress calulations for discs. Report: 35 pages + 10 pages of appendices.",
+          "weighting": 0.25
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH70022",
+      "code": "MECH70022",
+      "title": "Advanced Control",
+      "department": "Mechanical Engineering",
+      "level": 4,
+      "ects": 5,
+      "type": "elective",
+      "terms": [
+        "autumn"
+      ],
+      "description": "The principal aim of the module is to give the students understanding and working knowledge of modelling, analysis and design methods in relation to continuous and discrete control systems. Introduction to state variable analysis is also provided. It is assumed that the students have some knowledge of classical control theory, including frequency response methods and complex frequency methods. A level of understanding of linear algebra is also assumed. The coursework assignments are designed to give the student an opportunity to develop skills in carrying out realistic control designs using modern simulation and analysis tools.",
+      "learningOutcomes": [
+        "Explain the principles on which continuous and discrete-time control systems are modelled, analysed and designed",
+        "Discuss the modelling and analysis of dynamics systems using state variable theory",
+        "Analyse a continuous control system using Bode diagrams and Root Locus methods",
+        "Design a closed-loop continuous control system for specified transient and steady state performance",
+        "Develop discrete-time models of sampled data systems using the z-transform methods",
+        "Perform stability analysis and closed loop control system design for sampled data systems system using Root Locus method in the z-domain",
+        "Develop state variable models of linear dynamic systems"
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH70022&year=26_27",
+      "prerequisites": [],
+      "capacity": 80,
+      "assessment": [
+        {
+          "type": "examination",
+          "description": "3 Hour exam",
+          "weighting": 1.0
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH70025",
+      "code": "MECH70025",
+      "title": "Machine Learning",
+      "department": "Mechanical Engineering",
+      "level": 4,
+      "ects": 5,
+      "type": "elective",
+      "terms": [
+        "spring"
+      ],
+      "description": "This module aims to introduce engineering students to Machine Learning (ML). ML is an increasingly high-profile technology, having huge impact across a number of areas. Future engineers are likely to come across ML in some form in their careers; they could be required to solve problems where ML may provide a solution, or may have to assess an existing ML approach which has been developed. This course therefore aims to provide today's engineering graduates with an understanding of ML techniques, including being able to critically assess whether or not ML is suitable for a problem, as well as what type of algorithm would be best and what may be required to implement it.",
+      "learningOutcomes": [
+        "Select a suitable machine learning approach (model and data collection) for a particular problem, including assessing whether machine learning is the best solution at all",
+        "Write Python code to implement a basic demonstration ML algorithm",
+        "Investigate the performance of different machine learning algorithms for engineering problems",
+        "Explain the concepts of machine learning techinques and the corresponding terminology"
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH70025&year=26_27",
+      "prerequisites": [],
+      "capacity": 120,
+      "assessment": [
+        {
+          "type": "coursework",
+          "description": "Project",
+          "weighting": 0.4
+        },
+        {
+          "type": "examination",
+          "description": "Exam",
+          "weighting": 0.6
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH70026",
+      "code": "MECH70026",
+      "title": "Energy Systems",
+      "department": "Mechanical Engineering",
+      "level": 4,
+      "ects": 5,
+      "type": "elective",
+      "terms": [
+        "autumn"
+      ],
+      "description": "The overall aims of the module are to develop understanding of energy systems, their environmental impact and possible strategies to reduce it; to develop the ability to perform life cycle analysis of energy systems to evaluate the environmental impact associated with all the stages of their life cycle; to explore the most common power and renewable energy systems; to develop understanding of the energy supply in the context of reduction of carbon dioxide emissions.",
+      "learningOutcomes": [
+        "Describe the most important energy systems and their challenges.",
+        "Analyse the material, energy and environmental costs of a range of individual energy engineering processes.",
+        "Evaluate a range of key energy systems using life cycle analysis.",
+        "Create and evaluate engineering system strategies for the reduction of carbon dioxide emissions."
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH70026&year=26_27",
+      "prerequisites": [],
+      "capacity": 100,
+      "assessment": [
+        {
+          "type": "examination",
+          "description": "3 Hour exam",
+          "weighting": 1.0
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH70055",
+      "code": "MECH70055",
+      "title": "Sustainable Engineering Design",
+      "department": "Mechanical Engineering",
+      "level": 4,
+      "ects": 5,
+      "type": "elective",
+      "terms": [
+        "spring"
+      ],
+      "description": "Sustainability is essential when designing and manufacturing products, processes and systems. Mechanical engineers utilise energy and resources and have a duty to do this in an ethical and environmentally friendly manner. Based on the UN Sustainable Development Goals, the module introduces concepts and frameworks for sustainability assessment, and developing solutions that minimise harm and promote long-term viability.",
+      "learningOutcomes": [
+        "Outline the roles of engineers in sustainability, both on a global and on a local scale",
+        "Critically discuss the importance and ethics of sustainable design, development and manufacturing, and the impact they have on the natural and built environment",
+        "Evaluate design and manufacturing methods and material suitability for a given product",
+        "Create a life cycle assessment for a product or process"
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH70055&year=26_27",
+      "prerequisites": [],
+      "capacity": 60,
+      "assessment": [
+        {
+          "type": "coursework",
+          "description": "Design optimisation",
+          "weighting": 0.1
+        },
+        {
+          "type": "coursework",
+          "description": "Life cycle assessment exercise",
+          "weighting": 0.3
+        },
+        {
+          "type": "coursework",
+          "description": "Sustainable design assessment part I",
+          "weighting": 0.2
+        },
+        {
+          "type": "coursework",
+          "description": "Sustainable design assessment part II",
+          "weighting": 0.4
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH70057",
+      "code": "MECH70057",
+      "title": "Robot dynamics and control",
+      "department": "Mechanical Engineering",
+      "level": 4,
+      "ects": 5,
+      "type": "elective",
+      "terms": [
+        "spring"
+      ],
+      "description": "This module aims at introducing the fundamental theoretical concepts of robot dynamics and control and initiating students to use them with applied problems. The module will also initiate students to the control of rigid multibody systems and flexible structures through applied problems.",
+      "learningOutcomes": [
+        "Understand and implement Lagrangian and Hamiltonian dynamics for robotic systems",
+        "Understand fundamental concepts in nonlinear control, such as stability criteria",
+        "Implement position control (regulation and tracking) for serial robots",
+        "Apply established control methods relevant to robotics, including inverse-dynamics, sliding-mode control, passivity-based control, adaptive control",
+        "Understand and apply active vibration control in flexible structures"
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH70057&year=26_27",
+      "prerequisites": [],
+      "capacity": 60,
+      "assessment": [
+        {
+          "type": "examination",
+          "description": "2 Hour exam",
+          "weighting": 0.6
+        },
+        {
+          "type": "coursework",
+          "description": "4 submissions (simulations and symbolic computing in MATLAB)",
+          "weighting": 0.4
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "MECH70058",
+      "code": "MECH70058",
+      "title": "Batteries - from applications to fundamentals",
+      "department": "Mechanical Engineering",
+      "level": 4,
+      "ects": 5,
+      "type": "elective",
+      "terms": [
+        "spring"
+      ],
+      "description": "Introduction to battery modelling and experimentation, from materials, to cells, to modules and packs. The course includes pack design considerations, including thermal performance, and adds layers of fundamental understanding and modelling and data analysis tools, linking performance of batteries with system design decisions. The module develops understanding of effects of experimentation and modelling choices, familiarising students with two main types of battery models used for prediction of performance: equivalent circuit models and physics-based models. The coursework is designed to give first hand experience in building models and using data analysis tools for real battery cell experiments to parametrise and validate models for beginning of life and throughout degradation.",
+      "learningOutcomes": [
+        "To understand the underlying mechanisms leading to battery performance and degradation",
+        "To be able to create and use battery models for beginning of life and degradation prediction",
+        "To critically evaluate limitations in instrumentation and experimental design and relate them to model parametrisation and validation",
+        "To solve complex problems in designing battery modules and packs to meet target performance specifications",
+        "To become familiar with next generation battery solutions"
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH70058&year=26_27",
+      "prerequisites": [],
+      "capacity": 60,
+      "assessment": [
+        {
+          "type": "examination",
+          "description": "1.5 Hour exam",
+          "weighting": 0.5
+        },
+        {
+          "type": "coursework",
+          "description": "Coursework reports",
+          "weighting": 0.39
+        },
+        {
+          "type": "coursework",
+          "description": "Tutorial sheets in-person",
+          "weighting": 0.11
+        }
+      ],
+      "publishedSlot": null
+    },
+    {
+      "id": "BIOE96071",
+      "code": "BIOE96071",
+      "title": "Biomaterials for Bioengineers",
+      "department": "Bioengineering",
+      "level": 4,
+      "ects": 5,
+      "type": "elective",
+      "terms": [
+        "spring"
+      ],
+      "description": "This module will introduce major classes of biomedical implant materials including metals, ceramics and polymers. We will focus of how these classes of materials have been used clinically to replace body parts or tissues within the body as implanted devices, the types and reasons for failure and introduce biomaterials as tissue engineering constructs to regenerate diseased tissues to restore organ function.",
+      "learningOutcomes": [
+        "Identify various tissues and organs within the human body and explain the effects of ageing and disease on the structure and mechanical properties of these tissues.",
+        "Describe the major classes of biomedical implant materials, their basic properties, means of fixation, stability and advantages and disadvantages when used as implant devices.",
+        "Explain the types of failure of implants and devices in various clincial applications and reasons for failure.",
+        "Describe the physiological principles involved in the replacement of various parts of the body with artificail organs, transplants or tissue engineered constructs and the clinical compromises involved.",
+        "Defend the relative merits of replacing a body part with a tissue engineering construct, discuss the principles involved in growing tissues in vitro and describe the physiological and clinical limitations involved.",
+        "Be capable of rapidly researching the literature for new developments in replacement of tissues and organs.",
+        "Be able to communicate alternative means to repair or replace parts of the body to both healthcare professionals and patients."
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=BIOE96071&year=26_27",
+      "prerequisites": [],
+      "capacity": 40,
+      "assessment": [],
+      "publishedSlot": null
+    },
+    {
+      "id": "BUSI60038",
+      "code": "BUSI60038",
+      "title": "Business Economics",
+      "department": "Imperial Business School",
+      "level": 3,
+      "ects": 5,
+      "type": "elective",
+      "terms": [
+        "autumn"
+      ],
+      "description": "Economics provides a useful set of tools for analysing the world and aiding decision-making by businesses and governments. This module aims to give you an overview of several of these tools and of the insights that can be obtained with them. We will particularly focus on the tools most relevant to businesses. We will pay particular attention to the actions of firms and individuals in the context of market interaction and strategic (game theoretic) interactions in business contexts.",
+      "learningOutcomes": [],
+      "sourceUrl": "https://www.imperial.ac.uk/business-school/undergraduate/bpes/",
+      "prerequisites": [],
+      "capacity": 100,
+      "assessment": [],
+      "publishedSlot": {
+        "day": "mon",
+        "start": "16:00",
+        "end": "18:00"
+      }
+    },
+    {
+      "id": "BUSI60041",
+      "code": "BUSI60041",
+      "title": "Entrepreneurship",
+      "department": "Imperial Business School",
+      "level": 3,
+      "ects": 5,
+      "type": "elective",
+      "terms": [
+        "autumn"
+      ],
+      "description": "Entrepreneurship is the process of identifying and exploiting a new business opportunity. An entrepreneur must understand the competitive landscape, estimate the potential demand for their products or services, assess risks and returns, and develop and execute the possible ways to deliver their claims to the best set of consumers. The entrepreneur also needs to acquire resources (funding), compile a team, and generate a vision for the fledgling enterprise.",
+      "learningOutcomes": [],
+      "sourceUrl": "https://www.imperial.ac.uk/business-school/undergraduate/bpes/",
+      "prerequisites": [],
+      "capacity": 100,
+      "assessment": [],
+      "publishedSlot": {
+        "day": "thu",
+        "start": "16:00",
+        "end": "18:00"
+      }
+    },
+    {
+      "id": "BUSI60043",
+      "code": "BUSI60043",
+      "title": "Finance & Financial Management",
+      "department": "Imperial Business School",
+      "level": 3,
+      "ects": 5,
+      "type": "elective",
+      "terms": [
+        "spring"
+      ],
+      "description": "The aim of this module is to enable students to understand of of the core purposed of finance: the setting of prices in a market. The first half of the course works at a market-level, dealing with risk-management and diversification. The second half of the course works at the security-level, thinking about bond, stock, and derivative valuation.",
+      "learningOutcomes": [],
+      "sourceUrl": "https://www.imperial.ac.uk/business-school/undergraduate/bpes/",
+      "prerequisites": [],
+      "capacity": 100,
+      "assessment": [],
+      "publishedSlot": {
+        "day": "thu",
+        "start": "16:00",
+        "end": "18:00"
+      }
+    },
+    {
+      "id": "IEX-CLIMATE",
+      "code": "IEX-CLIMATE",
+      "title": "Technologies to Combat Climate Change",
+      "department": "I-Explore (Chemical Engineering)",
+      "level": 3,
+      "ects": 5,
+      "type": "i-explore",
+      "terms": [
+        "autumn"
+      ],
+      "description": "This module will enable you to appreciate the challenge posed by climate change, and the technologies and systems that will be required to mitigate it. This will be achieved by introducing you to key mitigation technologies and giving you skills to perform basic economic analysis of the options. Lectures will also cover technoeconomic assessment and emissions estimation methods, possible future technology developments and approaches to systems thinking, as well as the policy background on climate change. You will learn about the technologies and systems for combating climate change and calculate performance metrics for these technologies. The module will also teach you how energy systems are interconnected, and how interdisciplinary approaches are needed to combat climate change. On completion of the course, you will be able to develop and analyse technical approaches to tackle climate change, while considering policy, regulatory, and social aspects.",
+      "learningOutcomes": [
+        "List and describe the key functions of technologies and systems that can be used to combat climate change.",
+        "Calculate key economic and environmental performance metrics for technologies that can combat climate change.",
+        "Describe how energy systems are interconnected, and how changes in one part of the system influence other parts across technical, economic and social aspects.",
+        "Analyse, understand and critique approaches to combatting climate change from a range of disciplinary backgrounds.",
+        "Plan holistic approaches to combating climate change, undertaking a robust techno-economic assessment and communicate this plan to a diverse audience in a convincing and inclusive manner."
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/centre-for-languages-culture-and-communication/i-explore/stemm-modules/technologies-to-combat-climate-change/",
+      "prerequisites": [],
+      "capacity": 60,
+      "assessment": [
+        {
+          "type": "coursework",
+          "description": "Online Quiz - individual assessment",
+          "weighting": 0.1
+        },
+        {
+          "type": "practical",
+          "description": "Debate/Presentation - group assessment",
+          "weighting": 0.9
+        }
+      ],
+      "publishedSlot": {
+        "day": "thu",
+        "start": "16:00",
+        "end": "18:00"
+      }
+    },
+    {
+      "id": "IEX-CROWDS",
+      "code": "IEX-CROWDS",
+      "title": "The Science of Crowds: Movement, Behaviour and Design",
+      "department": "I-Explore (Civil and Environmental Engineering)",
+      "level": 3,
+      "ects": 5,
+      "type": "i-explore",
+      "terms": [
+        "autumn"
+      ],
+      "description": "Why do crowds move in the way that they do? Can we predict this behaviour? Will this change during emergencies such as fires or terrorist attacks? Crowd science - also known as 'pedestrian dynamics' - is able to answer these questions by combining concepts from maths, physics, engineering and design, computing, sociology and psychology. In this module you will be introduced to the basic principles of pedestrian dynamics, such as crowd movement theory, computer modelling, human behaviour, and experimental design. You will also work on a group project, using pedestrian dynamics principles to develop solutions to a real-word design problem. The course will be provided through online video and face-to-face workshops.",
+      "learningOutcomes": [
+        "Define the topics of pedestrian and evacuation dynamics, and explain how these concepts are important to consider when designing infrastructure.",
+        "Identify the main emergent properties of crowd behaviour.",
+        "Describe the main theories of human behaviour in emergencies.",
+        "Explain the different algorithms used for pedestrian dynamics simulation models, including their advantages and disadvantages.",
+        "Evaluate the design of pedestrian dynamics and evacuation experiments.",
+        "Generate pedestrian dynamics based design solutions for real-world problems.",
+        "Communicate design solutions effectively to scientifically literate, multidisciplinary audiences."
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/centre-for-languages-culture-and-communication/i-explore/stemm-modules/the-science-of-crowds-movement-behaviour-and-design/",
+      "prerequisites": [],
+      "capacity": 40,
+      "assessment": [
+        {
+          "type": "coursework",
+          "description": "Quizzes based on lecture material",
+          "weighting": 0.2
+        },
+        {
+          "type": "coursework",
+          "description": "Group project",
+          "weighting": 0.2
+        },
+        {
+          "type": "coursework",
+          "description": "Reflective account",
+          "weighting": 0.05
+        },
+        {
+          "type": "coursework",
+          "description": "Test after VR session",
+          "weighting": 0.1
+        },
+        {
+          "type": "practical",
+          "description": "Attendance and contribution",
+          "weighting": 0.1
+        },
+        {
+          "type": "practical",
+          "description": "Presentation of Group project",
+          "weighting": 0.35
+        }
+      ],
+      "publishedSlot": {
+        "day": "thu",
+        "start": "16:00",
+        "end": "18:00"
+      }
+    },
+    {
+      "id": "IEX-INNOVATE",
+      "code": "IEX-INNOVATE",
+      "title": "Innovation, Communication and Teamwork across Disciplines",
+      "department": "I-Explore (Dyson School of Design Engineering)",
+      "level": 3,
+      "ects": 5,
+      "type": "i-explore",
+      "terms": [
+        "autumn"
+      ],
+      "description": "This I-Explore module invites students to work in multidisciplinary teams with peers from across Imperial College London to tackle open-ended, real-world challenges. Whether rooted in health, sustainability, technology, or social impact, these challenges are framed and developed into strategic, well-communicated proposals. Over ten weeks, students progress through the core stages of concept development—defining the problem, understanding user and system dynamics, refining solutions, and communicating their work through two key outputs: a live, in-class pitch deck presentation and a 1-minute video optimised for public or online audiences. No prior experience in design or media is required; students are supported through collaborative workshops and guided feedback. These skills are developed progressively through structured activities and peer interaction, helping students build clarity, confidence, and presence. The module is designed to help students build core skills in framing innovation, working across disciplinary boundaries, and communicating ideas with purpose. These are relevant for any future pathway—academic, professional, or entrepreneurial. Past cohorts have shown strong engagement, with A/B-level performance and over 92% attendance, reflecting the module’s energy and collaborative learning culture.",
+      "learningOutcomes": [
+        "Students will learn how to identify opportunities for innovation, understand stakeholder perspectives, and develop user-centred proposals. They will apply behavioural and design thinking methods to shape interventions and communicate their ideas with clarity and impact. Particular emphasis is placed on both verbal and visual presentation skills—preparing students to engage confidently with a range of future collaborators and professional stakeholders."
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/centre-for-languages-culture-and-communication/i-explore/stemm-modules/innovation-communication-teamwork/",
+      "prerequisites": [],
+      "capacity": 60,
+      "assessment": [
+        {
+          "type": "coursework",
+          "description": "Pitch deck presentation",
+          "weighting": 0.3
+        },
+        {
+          "type": "coursework",
+          "description": "1-minute video",
+          "weighting": 0.3
+        },
+        {
+          "type": "coursework",
+          "description": "Peer Assessment of other groups’ project videos",
+          "weighting": 0.2
+        },
+        {
+          "type": "coursework",
+          "description": "Tutor reports of student participation and engagement",
+          "weighting": 0.2
+        }
+      ],
+      "publishedSlot": {
+        "day": "thu",
+        "start": "16:00",
+        "end": "18:00"
+      }
+    },
+    {
+      "id": "IEX-QUANTUM",
+      "code": "IEX-QUANTUM",
+      "title": "An Accessible Introduction to Quantum Technologies",
+      "department": "I-Explore (Materials)",
+      "level": 3,
+      "ects": 5,
+      "type": "i-explore",
+      "terms": [
+        "autumn"
+      ],
+      "description": "Quantum technologies will drive the next major technological revolution. This module combines interdisciplinary technical knowledge with insights into the broader implications of quantum advancements. You will gain an accessible introduction to the phenomena that underpin quantum computation, imaging, and sensing, and understand the differences between classical and quantum physics. We'll review global initiatives like the UK's National Quantum Strategy, discuss ethical and regulatory considerations, and examine the challenges associated with commercialising deep technologies. By the end of the module, you will be able to discern whether reports of quantum technology represent hype or reality. You will have enhanced your skills in collaboration, public speaking and critical analysis, ready to tackle the future shaped by quantum innovation.",
+      "learningOutcomes": [
+        "Explain how concepts from quantum science enable a range of different technologies (e.g. computing, sensing, imaging).",
+        "Describe the opportunities and applications of quantum technologies, and the size/scale of the global quantum ecosystem.",
+        "Assess national and international importance of QTs for the economy, national security and wider society.",
+        "Outline the challenges of realising robust and resilient quantum technologies, including any ethical implications.",
+        "Reflect how your own expertise can contribute to technological development, and the interdisciplinary skills required for quantum careers.",
+        "Critically compare alternate, unconventional approaches to computing and sensing, and debate whether quantum offers a technological leap or too much hype."
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/centre-for-languages-culture-and-communication/i-explore/stemm-modules/quantum-technologies/",
+      "prerequisites": [],
+      "capacity": 40,
+      "assessment": [
+        {
+          "type": "coursework",
+          "description": "Group presentation",
+          "weighting": 0.25
+        },
+        {
+          "type": "coursework",
+          "description": "Debate",
+          "weighting": 0.4
+        },
+        {
+          "type": "coursework",
+          "description": "Reflective journal",
+          "weighting": 0.35
+        }
+      ],
+      "publishedSlot": {
+        "day": "thu",
+        "start": "16:00",
+        "end": "18:00"
+      }
+    },
+    {
+      "id": "IEX-ML",
+      "code": "IEX-ML",
+      "title": "Demystifying Machine Learning: Theory and Applications",
+      "department": "I-Explore (Computing)",
+      "level": 3,
+      "ects": 5,
+      "type": "i-explore",
+      "terms": [
+        "spring"
+      ],
+      "description": "What is Machine Learning really? And how can it be applicable to you and others around you? This module aims to provide you with an intuitive understanding of the foundations of Machine Learning and how it can be applied to different disciplines. Besides learning the theory behind basic Machine Learning concepts, you will also apply what you have learnt to identify a user problem that can potentially be solved using Machine Learning and deliver a proof of concept of your proposed solution. By the end of the module, you will be able to cut through the Machine Learning hype in the mass media and explain to others what Machine Learning really is all about! You will learn about the dynamics of machine learning and the different learning systems that this technology employs. You will look at this topic through two lenses; theory and application. You will work both independently and in a group setting and utilize your presentation and research skills.",
+      "learningOutcomes": [
+        "Describe core machine learning principles, models and algorithms.",
+        "Explain basic machine learning concepts to different audiences, such as laypeople, domain experts, and those with a more technical background.",
+        "Identify problems and opportunities in multiple disciplines, including your own, that might benefit from machine learning.",
+        "Apply machine learning principles and algorithms to solve a problem in an applied discipline, and critically evaluate other people’s solutions.",
+        "Reflect on how machine learning is applicable to you at a personal level, within your surrounding context and the wider context."
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/centre-for-languages-culture-and-communication/i-explore/stemm-modules/demystifying-machine-learning-theory-and-applications/",
+      "prerequisites": [],
+      "capacity": 60,
+      "assessment": [
+        {
+          "type": "coursework",
+          "description": "Self-reflection document",
+          "weighting": 0.1
+        },
+        {
+          "type": "practical",
+          "description": "Project Milestone 1: Pitch",
+          "weighting": 0.15
+        },
+        {
+          "type": "practical",
+          "description": "Project Milestone 2: Promotional material",
+          "weighting": 0.25
+        },
+        {
+          "type": "practical",
+          "description": "Project Milestone 3: Proof of concept",
+          "weighting": 0.5
+        }
+      ],
+      "publishedSlot": {
+        "day": "thu",
+        "start": "16:00",
+        "end": "18:00"
+      }
+    },
+    {
+      "id": "IEX-SPACE",
+      "code": "IEX-SPACE",
+      "title": "Space Mining",
+      "department": "I-Explore (Earth Science and Engineering)",
+      "level": 3,
+      "ects": 5,
+      "type": "i-explore",
+      "terms": [
+        "spring"
+      ],
+      "description": "The use of space resources will transform human space exploration and create a new economy. In this module, you will explore the legal, technical and economic basis for resource use in space. You will be introduced to the potential target resources (e.g., oxygen), consider the legal aspects of using space resources, and propose a space resource extraction operation. The economic case for your proposed operation will be determined. You will address the challenges of developing new technology for space as well as the potential crossover into terrestrial resource use. This module will teach you to evaluate critically the feasibility of space mining from a legal, technical and economic perspective. You will learn about current activity in this field, using this knowledge to identify limitations in technology, and to propose creative solutions. This module will encourage discussion within and between groups, and you will communicate outcomes to students and experts in the field.",
+      "learningOutcomes": [
+        "Evaluate critically the feasibility of space mining from a legal, technical and economic perspective.",
+        "Identify limitations in knowledge and technology and propose creative solutions.",
+        "Communicate effectively the outcomes as a group to other students and experts.",
+        "Reflect on the potential for the transfer of ideas and technology to terrestrial resources."
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/centre-for-languages-culture-and-communication/i-explore/stemm-modules/space-mining/",
+      "prerequisites": [],
+      "capacity": 40,
+      "assessment": [
+        {
+          "type": "coursework",
+          "description": "Legal Framework document - short written document submitted as a group",
+          "weighting": 0.3
+        },
+        {
+          "type": "practical",
+          "description": "nteractive Poster Presentation submitted as a group",
+          "weighting": 0.7
+        }
+      ],
+      "publishedSlot": {
+        "day": "thu",
+        "start": "16:00",
+        "end": "18:00"
+      }
+    },
+    {
+      "id": "IEX-VR",
+      "code": "IEX-VR",
+      "title": "Virtual Reality: from Concept to Creation",
+      "department": "I-Explore (Centre for Higher Education Research and Scholarship)",
+      "level": 3,
+      "ects": 5,
+      "type": "i-explore",
+      "terms": [
+        "spring"
+      ],
+      "description": "In this module you will explore various Virtual Reality applications before creating your own simple Virtual Reality experience relating to your Imperial College student experience. You will work within a multidisciplinary group of students and specialise in the development area of your interest, e.g. user experience/interaction design, graphics, or coding. By the end of the module, you will have enhanced your collaboration, project management, and technical skills and developed a unique Virtual Reality experience.",
+      "learningOutcomes": [
+        "Critically reflect on the strengths and limitations of Virtual Reality for different applications.",
+        "Identify and apply the key elements that contribute to a high-quality Virtual Reality experience, focusing on the design of graphics, interactivity and user experience.",
+        "Apply basic technical skills and creative approaches in your chosen area of design to help create a component of a Virtual Reality experience.",
+        "Plan, manage and execute a Virtual Reality project by defining the scope, breaking down tasks, and adhering to a project timeline.",
+        "Work effectively in a multidisciplinary team, negotiating responsibilities and using everyone’s skills to achieve an inventive, common goal."
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/centre-for-languages-culture-and-communication/i-explore/stemm-modules/virtual-reality/",
+      "prerequisites": [],
+      "capacity": 40,
+      "assessment": [
+        {
+          "type": "coursework",
+          "description": "Group presentation",
+          "weighting": 0.5
+        },
+        {
+          "type": "coursework",
+          "description": "Individual journal",
+          "weighting": 0.5
+        }
+      ],
+      "publishedSlot": {
+        "day": "thu",
+        "start": "16:00",
+        "end": "18:00"
+      }
+    },
+    {
+      "id": "IEX-DECISIONS",
+      "code": "IEX-DECISIONS",
+      "title": "Management and Decision-Making: Making Smart Decisions",
+      "department": "I-Explore (Imperial Horizons)",
+      "level": 3,
+      "ects": 5,
+      "type": "i-explore",
+      "terms": [
+        "autumn",
+        "spring"
+      ],
+      "description": "The module is designed to equip you to make effective decisions in a wide variety of contexts. The primary context will be in the workplace, whether that be in the private, public or third sector, including government. Many of the methods covered will also be of service in your private lives. Emphasis will be given to broad approaches to decision making, such as Systems Thinking, the PROACT method and understanding common psychological biases in decision making. This will enable you to be intelligent about the process by which decisions are arrived at. In addition, several central decision-making tools will be explained and evaluated, which can support effective decision making within the framework of a well-designed decision process.",
+      "learningOutcomes": [
+        "Select and use appropriate systems methods, to address complex issues.",
+        "Select and apply appropriate decision-support tools.",
+        "Critically evaluate alternative solutions and strategies for addressing complex problems.",
+        "Integrate concepts and ideas from your wider knowledge and viewpoints in a coherent fashion, to address real world problems.",
+        "Undertake independent, critically-analytical and reflexive research."
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/horizons/module-options/years-3--4-undergraduates/management-and-decision-making/",
+      "prerequisites": [],
+      "capacity": 50,
+      "assessment": [
+        {
+          "type": "coursework",
+          "description": "Individual written assignment (500 words)",
+          "weighting": 0.2
+        },
+        {
+          "type": "coursework",
+          "description": "Individual written assignment (500 words)",
+          "weighting": 0.2
+        },
+        {
+          "type": "coursework",
+          "description": "Individual coursework project (2,500 words)",
+          "weighting": 0.6
+        }
+      ],
+      "publishedSlot": {
+        "day": "thu",
+        "start": "16:00",
+        "end": "18:00"
+      }
+    },
+    {
+      "id": "IEX-GLOBALECON",
+      "code": "IEX-GLOBALECON",
+      "title": "Global Economics",
+      "department": "I-Explore (Imperial Horizons)",
+      "level": 3,
+      "ects": 5,
+      "type": "i-explore",
+      "terms": [
+        "autumn",
+        "spring"
+      ],
+      "description": "Global economics is a key contemporary topic, which also bears on a range of pressing political, social and environmental issues. This module provides a comprehensive treatment of the key contemporary issues in global economics and the leading models deployed by global economics institutions such as the WTO, United Nations, IMF and World Bank, as well as by global companies. It will equip you with the conceptual tools to analyse global economic environment of business, both from the corporate and public policy perspectives. The module also provides an opportunity to conduct policy analysis of a global economic issue.",
+      "learningOutcomes": [
+        "Explain the key issues in global economics.",
+        "Apply economic analysis tools to a rapidly-changing landscape of international business, and produce recommendations for business strategy.",
+        "Apply theory and principles to analyse a key policy issue, and produce a reasoned recommendation for policy intervention.",
+        "Present individual work to peers and respond to constructive feedback from facilitator and other learners."
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/horizons/module-options/years-3--4-undergraduates/global-economics/",
+      "prerequisites": [],
+      "capacity": 50,
+      "assessment": [
+        {
+          "type": "practical",
+          "description": "Group presentation (10 min) and participation in a classroom debate on a specific global economics issue. Group report (12-15 slides).",
+          "weighting": 0.4
+        },
+        {
+          "type": "coursework",
+          "description": "Individual report (two pages) analysing a global economic environment for a selected company, with a critical review of business strategy options.",
+          "weighting": 0.3
+        },
+        {
+          "type": "coursework",
+          "description": "Individual report, submitted as a six-slide deck following a given template, on global economic risks and regulation for a selected area of technology. Topic selected by yourself and approved by module leader.",
+          "weighting": 0.3
+        }
+      ],
+      "publishedSlot": {
+        "day": "thu",
+        "start": "16:00",
+        "end": "18:00"
+      }
+    },
+    {
+      "id": "IEX-HISTSCI",
+      "code": "IEX-HISTSCI",
+      "title": "History of Science, Technology and Industry",
+      "department": "I-Explore (Imperial Horizons)",
+      "level": 3,
+      "ects": 5,
+      "type": "i-explore",
+      "terms": [
+        "autumn",
+        "spring"
+      ],
+      "description": "This innovative module situates the histories of science, technology and industry within global history, from ancient times to the present day. The concepts of historical time, social and economic development, and even progress, will be examined throughout. Continuity, change and the diffusion of knowledge and practices are central themes. We will cover a variety of activities, such as innovation, research, development, production, distribution, maintenance, and disposal. In so doing, we’ll draw on a diverse array of historical sources and research gathered around themes such as power, control, empire, (de)globalisation, autarchy, logistics, gender, organisation, and work. The module considers older social science thinkers such as Marx, Weber, and Foucault, as well as more recent commentators.",
+      "learningOutcomes": [
+        "Examine key concepts across the discipline of history of science and technology.",
+        "Explore concepts using self-directed primary and secondary research.",
+        "Integrate concepts studied, research, and feedback received.",
+        "Communicate relevant academic concepts and findings in at least two formats."
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/horizons/module-options/years-3--4-undergraduates/history-of-science-technology-and-industry/",
+      "prerequisites": [],
+      "capacity": 40,
+      "assessment": [
+        {
+          "type": "coursework",
+          "description": "Written task (1,200-1,500 words).",
+          "weighting": 0.3
+        },
+        {
+          "type": "practical",
+          "description": "Individual presentation (5 minutes).",
+          "weighting": 0.15
+        },
+        {
+          "type": "coursework",
+          "description": "Written task (1,500-2,000 words).",
+          "weighting": 0.55
+        }
+      ],
+      "publishedSlot": {
+        "day": "thu",
+        "start": "16:00",
+        "end": "18:00"
+      }
+    },
+    {
+      "id": "IEX-PHILMIND",
+      "code": "IEX-PHILMIND",
+      "title": "Philosophy of Mind",
+      "department": "I-Explore (Imperial Horizons)",
+      "level": 3,
+      "ects": 5,
+      "type": "i-explore",
+      "terms": [
+        "autumn",
+        "spring"
+      ],
+      "description": "The module will explore a range of topics in the philosophy of mind, such as the nature of consciousness and thought, the nature of human action and the problem of determinism, the relation between mind (or mental phenomena) and body (or physical phenomena), and the possibility of artificial intelligence. You will gain a deeper understanding of the interplay between philosophical research in these areas and research across a broad range of scientific disciplines, such as neuroscience, life sciences, medicine and computing. By comparing the work of thinkers as diverse as Dennett, Davidson, Putnam, the Churchlands, Fodor, Ryle, Wittgenstein and Heidegger, you will encounter and critically evaluate the cutting edge of modern thinking about the mind, and the issues that must be resolved before embarking on any scientific exploration of the mind.",
+      "learningOutcomes": [
+        "Analyse the structure of some of the major debates within the philosophy of mind.",
+        "Communicate verbally, and in writing, the contrasting arguments in the philosophy of mind.",
+        "Use creativity and innovation in approaching practical and conceptual problems.",
+        "Evaluate and analyse the relevance of complex conceptual issues to your area of degree study.",
+        "Select and use a range of sources to critically evaluate and compare the merits of philosophical positions through independent research."
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/horizons/module-options/years-3--4-undergraduates/philosophy-of-mind/",
+      "prerequisites": [],
+      "capacity": 40,
+      "assessment": [
+        {
+          "type": "coursework",
+          "description": "1,500-2,000 word essay, due after the end of autumn term",
+          "weighting": 0.4
+        },
+        {
+          "type": "coursework",
+          "description": "1,500-2,000 word essay, due after the end of spring term",
+          "weighting": 0.6
+        }
+      ],
+      "publishedSlot": {
+        "day": "thu",
+        "start": "16:00",
+        "end": "18:00"
+      }
+    },
+    {
+      "id": "IEX-PSYCHPERF",
+      "code": "IEX-PSYCHPERF",
+      "title": "Psychology of Performance",
+      "department": "I-Explore (Imperial Horizons)",
+      "level": 3,
+      "ects": 5,
+      "type": "i-explore",
+      "terms": [
+        "autumn",
+        "spring"
+      ],
+      "description": "Do you want to perform at your best? To understand how the greats in business, science, music, sport, medicine, theatre, and countless areas achieve what they achieve? This module will lead you through the latest science examining what it means to perform at the highest level. Looking across disciplines, we will examine the psychology behind leadership, teamwork, motivation, creativity and, very importantly, the psychology of relating to self. We will question whether 10,000 hours of practice is really all it takes to become an expert. We will explore how performance is assessed and valued, and how unconscious biases can affect judges. We will confront the dreaded stage-fright, and how it can be managed. Throughout the module, you will be given the opportunity to experience and reflect on your own performance.",
+      "learningOutcomes": [
+        "Critically evaluate the efficacy of, and scientific evidence underpinning, approaches to performance in your domain.",
+        "Compare your areas of performance with others, assessing parallels and differences.",
+        "Plan concrete steps to enhance your own performance (including communication and collaboration), based on evidence and best practice.",
+        "Design and produce high-impact individual and team performance."
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/horizons/module-options/years-3--4-undergraduates/psychology-of-performance/",
+      "prerequisites": [],
+      "capacity": 40,
+      "assessment": [
+        {
+          "type": "coursework",
+          "description": "Group presentation (15 minutes)",
+          "weighting": 0.4
+        },
+        {
+          "type": "coursework",
+          "description": "Reflective commentary (1,800-2,000 words)",
+          "weighting": 0.6
+        }
+      ],
+      "publishedSlot": {
+        "day": "thu",
+        "start": "16:00",
+        "end": "18:00"
+      }
+    },
+    {
+      "id": "IEX-SCIPOLICY",
+      "code": "IEX-SCIPOLICY",
+      "title": "Science, Policy and Power",
+      "department": "I-Explore (Imperial Horizons)",
+      "level": 3,
+      "ects": 5,
+      "type": "i-explore",
+      "terms": [
+        "autumn",
+        "spring"
+      ],
+      "description": "With guest lecturers from Silicon Valley, politics, think tanks and activist groups, this module explores the intersection between science and policy using multidisciplinary methods. We explore the question of why policy does not always ‘follow the science’ using case studies where science and policy interact such as abortion law, stem cell research, AI development and climate change, looking at the balance of power between the media, public opinion, social norms, and scientific evidence. We also take a deep dive into innovation policy. How do governments and companies foster innovation in science and technology? What is the secret sauce that has made Silicon Valley so successful? This module is taught interactively, requiring students to be engaged and active throughout, whether verbally or in a support role. Two sessions are completely student led.",
+      "learningOutcomes": [
+        "Appreciate the role played by social and ethical values, alongside scientific evidence, in evidence-based policy making.",
+        "Use self-directed primary and secondary research, to inform debate on key science funding issues.",
+        "Summarise complex scientific research and adapt it to the needs of policy makers.",
+        "Analyse science policy topics and persuasively communicate complex concepts."
+      ],
+      "sourceUrl": "https://www.imperial.ac.uk/horizons/module-options/years-3--4-undergraduates/science-and-policy/",
+      "prerequisites": [],
+      "capacity": 40,
+      "assessment": [
+        {
+          "type": "coursework",
+          "description": "Science briefing (1,000 words)",
+          "weighting": 0.3
+        },
+        {
+          "type": "coursework",
+          "description": "Analytical essay (2,000 words)",
+          "weighting": 0.5
+        },
+        {
+          "type": "practical",
+          "description": "Module performance",
+          "weighting": 0.2
+        }
+      ],
+      "publishedSlot": {
+        "day": "thu",
+        "start": "16:00",
+        "end": "18:00"
+      }
+    }
+  ]
+}
