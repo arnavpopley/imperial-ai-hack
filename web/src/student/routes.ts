@@ -1,7 +1,12 @@
 import type { Mode } from '@modulematch/shared';
 
 export const paths = {
+  /** The landing page for a new student. */
   onboard: '/',
+  /** The landing page for anyone, including a returning student. */
+  welcome: '/welcome',
+  /** Programme, year and completed modules: the form that creates a session. */
+  start: '/start',
   interview: '/interview',
   catalogue: '/catalogue',
   timetable: '/timetable',

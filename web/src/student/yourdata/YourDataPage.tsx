@@ -479,7 +479,7 @@ function DangerZone() {
     setError(null);
     try {
       await api.deleteProfile(session.id);
-      navigate(paths.onboard, { state: DELETED_STATE });
+      navigate(paths.start, { state: DELETED_STATE });
       forget();
     } catch (err) {
       setError(errorMessage(err));
