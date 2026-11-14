@@ -16,7 +16,7 @@ import {
   type TimetableView,
 } from '@modulematch/shared';
 import { randomUUID } from 'node:crypto';
-import { loadPathways, loadSocieties, rulesFor } from '../db/catalogue.ts';
+import { loadModuleResources, loadPathways, loadSocieties, rulesFor } from '../db/catalogue.ts';
 import * as repo from '../db/repo.ts';
 import { buildTimetable, checkShortlist, completeness, findClashes, profileHash, rankModules, suggestSwaps } from '../engines/index.ts';
 import type { Tracer } from '../trace/tracer.ts';
@@ -24,7 +24,11 @@ import { explain } from './matcher.ts';
 import { canTransition } from './modes.ts';
 
 export const catalogue = {
-  modules: () => repo.listModules(),
+  /** Modules with their staff-provided resources (past papers, reading) merged in from data/module-resources.json. */
+  modules: () => {
+    const resources = loadModuleResources();
+    return repo.listModules().map((m) => ({ ...m, resources: resources[m.id] ?? m.resources }));
+  },
   slots: () => repo.listSlots(),
   pathways: () => loadPathways(),
   societies: () => loadSocieties(),
