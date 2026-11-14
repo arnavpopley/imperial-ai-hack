@@ -47,11 +47,14 @@ interface Topic {
   askLead: boolean;
 }
 
-/** In priority order: the first topic the text mentions becomes the one thing to check. */
+/**
+ * In priority order: the first topic the text mentions becomes the one thing to check. Topics match words, never a
+ * bare percentage, because workload and intensity figures are percentages too.
+ */
 const TOPICS: readonly Topic[] = [
   {
     id: 'assessment',
-    pattern: /\b(assess\w*|exams?|examinations?|coursework|weight\w*|grades?|graded|marks?|quiz\w*|tests?)\b|%/i,
+    pattern: /\b(assess\w*|exams?|examinations?|coursework|weightings?|weighted|grades?|graded|marks?|quiz\w*|tests?)\b/i,
     label: 'The assessment weightings',
     how: 'Compare each assessment item and its percentage with the public module page. Weightings can change between years.',
     askLead: true,
@@ -79,7 +82,7 @@ const TOPICS: readonly Topic[] = [
   },
   {
     id: 'workload',
-    pattern: /\b(workload|hours|ects|credits?|independent study)\b/i,
+    pattern: /\b(workload|hours|intensity|ects|credits?|independent study)\b/i,
     label: 'The credits and workload',
     how: 'Check the ECTS value and the expected study hours on the public module page.',
     askLead: false,

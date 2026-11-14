@@ -7,9 +7,14 @@ const URL = 'https://www.imperial.ac.uk/example-module/';
 const plan = (kind: ClaimKind, text: string) => buildClaimCheck({ kind, text, sourceUrl: URL });
 
 describe('buildClaimCheck', () => {
-  it('picks the assessment weightings when the content mentions an exam or a percentage', () => {
+  it('picks the assessment weightings when the content mentions an exam or coursework', () => {
     expect(plan('answer', 'It is assessed by a written exam.').check.label).toBe('The assessment weightings');
     expect(plan('answer', 'Coursework is worth 30%.').check.label).toBe('The assessment weightings');
+  });
+
+  it('does not treat a workload percentage as an assessment weighting', () => {
+    const text = 'From the module record: maths intensity 40%, coding 20%, workload 60%. Source: the public module page.';
+    expect(plan('answer', text).check.label).toBe('The credits and workload');
   });
 
   it('picks the prerequisites when the content mentions what you need beforehand', () => {
