@@ -79,7 +79,7 @@ function AppHeader({ role }: { role: Role }) {
           >
             <Icon name="compass" size={20} />
           </span>
-          <span className="text-[17px] font-semibold tracking-tight max-[400px]:sr-only">ModuleMatch</span>
+          <span className="text-[17px] font-semibold tracking-tight max-sm:sr-only">ModuleMatch</span>
         </Link>
         {/* No authentication this weekend (spec 5): the staff console sits behind this role switch. */}
         <nav aria-label="Role" className="ml-auto">
