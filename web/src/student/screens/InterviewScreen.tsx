@@ -2,13 +2,14 @@
 // right. Phones get a compact progress bar and a toggle between the conversation and the profile.
 // The optional extras (CV, societies) open in place of the conversation, which stays mounted underneath.
 import { AnimatePresence, motion, MotionConfig } from 'motion/react';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Button } from '../../components/Button.tsx';
 import { cx } from '../../components/cx.ts';
 import { SegmentedControl } from '../../components/SegmentedControl.tsx';
 import { ChatPanel } from '../chat/ChatPanel.tsx';
 import { AvatarPicker } from '../interview/AvatarPicker.tsx';
+import { clearExamplePrefill, readExamplePrefill } from '../example.ts';
 import { CvPanel } from '../interview/CvPanel.tsx';
 import { InterviewProgressBar, InterviewTimeline } from '../interview/InterviewTimeline.tsx';
 import { SocietiesPanel } from '../interview/SocietiesPanel.tsx';
@@ -31,6 +32,9 @@ export function InterviewScreen() {
   const [activeExtra, setActiveExtra] = useState<ExtraId | null>(null);
   const [cvSlots, setCvSlots] = useState<ReadonlySet<string>>(() => new Set());
   const [doneExtras, markExtraDone] = useCompletedExtras(session.id);
+  // The example student's first answer, waiting in the message box when the example was just started.
+  const [examplePrefill] = useState(readExamplePrefill);
+  useEffect(clearExamplePrefill, []);
   const { depth, confirmed } = session.interview;
   const learned = Object.keys(session.profile.interests).length;
 
@@ -115,6 +119,7 @@ export function InterviewScreen() {
           >
             <ChatPanel
               variant="interview"
+              prefill={examplePrefill}
               onAddCv={() => openExtra('cv')}
               className={cx('h-full', activeExtra && 'invisible')}
             />

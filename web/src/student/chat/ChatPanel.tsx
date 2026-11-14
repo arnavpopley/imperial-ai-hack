@@ -10,6 +10,7 @@ import { FeedbackControls } from '../../components/FeedbackControls.tsx';
 import { GuardrailNotice } from '../../components/GuardrailNotice.tsx';
 import { Icon } from '../../components/Icon.tsx';
 import { InterviewerAvatar } from '../interview/InterviewerAvatar.tsx';
+import { InterviewerStage } from '../interview/InterviewerStage.tsx';
 import { useInterviewer, type Persona } from '../interview/personas.ts';
 import { humanise } from '../labels.ts';
 import { paths } from '../routes.ts';
@@ -60,6 +61,7 @@ export function ChatPanel({ variant, prefill = '', className, onAddCv }: ChatPan
   const interview = variant === 'interview';
 
   const lastTurn = turns.at(-1);
+  const speaking = turns.some((t) => t.role === 'assistant' && t.status === 'streaming');
   const lastAssistant = turns.findLast((t) => t.role === 'assistant' && t.status === 'done' && t.content);
   // The interviewer's latest message is the question on screen, so it is set larger than the history.
   const latestAssistantId = turns.findLast((t) => t.role === 'assistant')?.id;
@@ -100,6 +102,10 @@ export function ChatPanel({ variant, prefill = '', className, onAddCv }: ChatPan
   return (
     <MotionConfig reducedMotion="user">
       <div className={cx('flex min-h-0 flex-col', className)}>
+        {/* Face to face: once the interview is under way, the interviewer stays in view above the conversation. */}
+        {interview && turns.length > 0 && (
+          <InterviewerStage persona={persona} speaking={speaking} layout="strip" className="shrink-0 border-b border-line" />
+        )}
         <div
           ref={scrollRef}
           onScroll={(event) => {
@@ -282,24 +288,8 @@ function EmptyConversation({
   }
   return (
     <motion.div {...ENTER} className="mx-auto grid max-w-md justify-items-center py-6 text-center sm:py-10">
-      <div className="relative">
-        <div className="mm-photo h-40 w-64 overflow-hidden rounded-[1.5rem] shadow-soft sm:h-44 sm:w-80">
-          <img
-            src="/images/interview-conversation.jpg"
-            alt="Two people chatting over coffee"
-            className="size-full object-cover"
-          />
-        </div>
-        <motion.span
-          initial={{ scale: 0.6, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.25, type: 'spring', stiffness: 300, damping: 18 }}
-          className="absolute -bottom-7 left-1/2 -translate-x-1/2 rounded-full bg-surface p-1 shadow-lift"
-        >
-          <InterviewerAvatar persona={persona} size={64} />
-        </motion.span>
-      </div>
-      <p className="mt-11 text-2xl font-semibold tracking-tight">Hi, I&rsquo;m {persona.name}.</p>
+      <InterviewerStage persona={persona} speaking={false} layout="hero" />
+      <p className="mt-8 text-2xl font-semibold tracking-tight">Hi, I&rsquo;m {persona.name}.</p>
       <p className="mt-2 text-[15px] leading-relaxed text-muted">
         A few easy questions about what you enjoy. No right answers.
       </p>

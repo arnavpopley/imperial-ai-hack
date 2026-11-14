@@ -10,8 +10,10 @@ import { Icon, type IconName } from '../../components/Icon.tsx';
 import { ModeChip } from '../../components/ModeChip.tsx';
 import { MultiSelect } from '../../components/MultiSelect.tsx';
 import { SampleDataLabel } from '../../components/SampleDataLabel.tsx';
+import { SegmentedControl } from '../../components/SegmentedControl.tsx';
 import { errorMessage } from '../../components/StateViews.tsx';
 import { Dropdown, type DropdownOption } from '../interview/Dropdown.tsx';
+import { clearExamplePrefill, EXAMPLE_STUDENT, markExampleStart } from '../example.ts';
 import '../interview/interview.css';
 import { wasProfileDeleted } from '../shell/YourDataDrawer.tsx';
 import { useReferenceData } from '../state/ReferenceDataProvider.tsx';
@@ -46,6 +48,12 @@ const DEPTHS: readonly { value: Depth; title: string; detail: string }[] = [
   { value: 'deep', title: 'Deep', detail: 'Up to 30 minutes, sharper matches' },
 ];
 
+type StartMode = 'fresh' | 'example';
+const START_MODES = [
+  { value: 'fresh', label: 'Start fresh' },
+  { value: 'example', label: 'Try an example' },
+] as const;
+
 const YEAR_OF: Record<YearValue, YearOfStudy> = { '1': 1, '2': 2, '3': 3, '4': 4 };
 
 const PROMISES: readonly { icon: IconName; text: string }[] = [
@@ -63,15 +71,27 @@ export function OnboardScreen() {
   const [year, setYear] = useState<YearValue>('3');
   const [completed, setCompleted] = useState<string[]>([]);
   const [depth, setDepth] = useState<Depth>('quick');
+  const [startMode, setStartMode] = useState<StartMode>('fresh');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const options = (modules.data ?? []).map((m) => ({ value: m.id, label: m.title, detail: m.code }));
 
+  // The example fills the form with a synthetic student; switching back clears it for the student's own details.
+  const chooseStartMode = (mode: StartMode) => {
+    setStartMode(mode);
+    const example = mode === 'example';
+    setProgramme(example ? EXAMPLE_STUDENT.programme : DEFAULT_PROGRAMME);
+    setYear(example ? EXAMPLE_STUDENT.year : '3');
+    setCompleted(example ? [...EXAMPLE_STUDENT.completedModuleIds] : []);
+    setDepth(example ? EXAMPLE_STUDENT.depth : 'quick');
+  };
+
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     setSubmitting(true);
     setError(null);
+    if (startMode === 'example') markExampleStart();
     try {
       await start({
         programme,
@@ -80,6 +100,7 @@ export function OnboardScreen() {
         interviewDepth: depth,
       });
     } catch (err) {
+      clearExamplePrefill();
       setError(errorMessage(err));
       setSubmitting(false);
     }
@@ -159,6 +180,51 @@ export function OnboardScreen() {
             <p className="mt-1 text-[14px] text-muted">Three details, then a short chat.</p>
           </div>
 
+          <SegmentedControl
+            legend="How to start"
+            hideLegend
+            options={START_MODES}
+            value={startMode}
+            onChange={chooseStartMode}
+          />
+          <AnimatePresence initial={false}>
+            {startMode === 'example' && (
+              <motion.div
+                key="example"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3, ease: EASE }}
+                className="overflow-hidden"
+              >
+                <div className="flex gap-4 rounded-2xl bg-gradient-to-br from-brand-soft to-surface-2 p-4 ring-1 ring-brand/20">
+                  <span
+                    aria-hidden="true"
+                    className="grid size-12 shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand to-mode-explain text-lg font-semibold text-on-brand"
+                  >
+                    {EXAMPLE_STUDENT.name[0]}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="font-semibold">
+                      Meet {EXAMPLE_STUDENT.name} <span className="font-normal text-muted">(an invented student)</span>
+                    </p>
+                    <p className="mt-0.5 text-[13px] text-muted">{EXAMPLE_STUDENT.summary}</p>
+                    <ul className="mt-2.5 flex flex-wrap gap-1.5">
+                      {EXAMPLE_STUDENT.tags.map((tag) => (
+                        <li key={tag} className="rounded-full bg-surface px-2.5 py-0.5 text-[12px] font-medium shadow-soft">
+                          {tag}
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="mt-2.5 text-[12px] text-muted">
+                      The form is filled in, and {EXAMPLE_STUDENT.name}&rsquo;s first answer will be waiting in the chat.
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <div className="grid gap-5">
             <Dropdown label="Programme" options={PROGRAMMES} value={programme} onChange={setProgramme} />
             <Dropdown label="Year of study" options={YEARS} value={year} onChange={setYear} />
@@ -220,7 +286,7 @@ export function OnboardScreen() {
             </p>
           )}
           <Button type="submit" variant="primary" busy={submitting} className="h-12 w-full rounded-2xl text-[15px]">
-            Start the interview
+            {startMode === 'example' ? `Start as ${EXAMPLE_STUDENT.name}` : 'Start the interview'}
             <Icon name="arrow-right" size={16} />
           </Button>
         </motion.form>
