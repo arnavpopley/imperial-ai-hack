@@ -1,6 +1,6 @@
 // Fixture responses for every route in spec section 13 (WS0).
 // The web app and API route stubs use these until real engines and data land.
-// Every fixture is validated against its schema in api/tests/fixtures.test.ts.
+// Every fixture is validated against its schema in server/tests/contracts.test.ts.
 import { DEFAULT_WEIGHTS } from './constants.ts';
 import { combineFit } from './fit.ts';
 import type {

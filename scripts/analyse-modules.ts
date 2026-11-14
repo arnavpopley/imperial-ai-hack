@@ -7,7 +7,7 @@ import { resolve } from 'node:path';
 import Anthropic from '@anthropic-ai/sdk';
 import { type Module, taxonomy } from '@modulematch/shared';
 import { z } from 'zod';
-import { stripInjection } from '../api/src/guardrails/g3-injection.ts';
+import { stripInjection } from '../server/src/guardrails/g3-injection.ts';
 import {
   DATA_DIR,
   REPO_ROOT,
@@ -17,7 +17,7 @@ import {
   type RawModule,
   RawModulesFile,
   readDataset,
-} from '../api/src/db/datasets.ts';
+} from '../server/src/db/datasets.ts';
 import {
   type AnalystOutput,
   analystOutputSchema,

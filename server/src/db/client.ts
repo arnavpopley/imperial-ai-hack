@@ -124,7 +124,7 @@ CREATE INDEX IF NOT EXISTS trace_events_session ON trace_events(session_id);
 `;
 
 /** Default database file, relative to the repository root (spec section 5). */
-const DEFAULT_DATABASE_PATH = 'api/modulematch.db';
+const DEFAULT_DATABASE_PATH = 'server/modulematch.db';
 
 /** DATABASE_PATH if set, else the default; relative paths resolve against the repo root, not the cwd. */
 export function databasePath(): string {

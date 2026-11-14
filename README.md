@@ -25,12 +25,12 @@ Students choose modules from a flat catalogue where everyone sees the same descr
 
 | Piece | Where |
 |---|---|
-| Supervisor, Interviewer, Profile Extractor, Matcher, Timetabler and Insights agents | `api/src/agents` |
+| Supervisor, Interviewer, Profile Extractor, Matcher, Timetabler and Insights agents | `server/src/agents` |
 | Module Analyst agent (offline batch) | `scripts/analyse-modules.ts` |
-| Scoring, rules, timetable, insights, pathway and society engines | `api/src/engines` |
-| Guardrail pipeline (G1–G8) | `api/src/guardrails` |
-| Session state, SSE chat and the REST API (Hono) | `api/src/routes` |
-| SQLite database (better-sqlite3 and Drizzle) | `api/src/db` |
+| Scoring, rules, timetable, insights, pathway and society engines | `server/src/engines` |
+| Guardrail pipeline (G1–G8) | `server/src/guardrails` |
+| Session state, SSE chat and the REST API (Hono) | `server/src/routes` |
+| SQLite database (better-sqlite3 and Drizzle) | `server/src/db` |
 | Shared zod contracts used by the API and the web app | `packages/shared` |
 | React, Vite and Tailwind web app | `web/src` |
 
@@ -56,7 +56,7 @@ Open http://localhost:5173. The database seeds itself from `data/` on first star
 | `npm run build` | Builds the web app |
 | `npm run deploy:vercel` | Builds the Vercel bundle and deploys it to production (needs `vercel login`) |
 
-**Public demo.** https://modulematch.vercel.app runs the same app on Vercel. Every merge to `main` deploys it through `.github/workflows/deploy.yml`, which needs a `VERCEL_TOKEN` secret and `VERCEL_ORG_ID` and `VERCEL_PROJECT_ID` repository variables. `npm run deploy:vercel` deploys from your machine. Vercel's own git builds are off in `vercel.json`, because they would turn every file under `api/` into a separate function. Either way: `scripts/build-vercel.ts` writes a Build Output API bundle, with the web app as static files and the API as one Node function. The function keeps SQLite in its instance's `/tmp`, seeded from `data/` on each cold start, so sessions last only while the instance is warm. The live demo for judging runs locally. To use live models there, add `ANTHROPIC_API_KEY` in the Vercel project settings and redeploy.
+**Public demo.** https://modulematch.vercel.app is deployed by Vercel's GitHub integration: every push to `main` deploys to production and every pull request gets a preview. `vercel.json` sets the build command to `npm run build:vercel`. `scripts/build-vercel.ts` writes a Build Output API bundle, with the web app as static files and the API as one Node function. The function keeps SQLite in its instance's `/tmp`, seeded from `data/` on each cold start, so sessions last only while the instance is warm. The backend lives in `server/`, not `api/`, because Vercel would treat every file in a top-level `api/` folder as a separate function. `npm run deploy:vercel` still deploys from your machine. To use live models on the site, add `ANTHROPIC_API_KEY` in the Vercel project settings.
 
 **Offline mode.** Without `ANTHROPIC_API_KEY`, or with `MODULEMATCH_OFFLINE=1`, every agent uses its deterministic path: keyword extraction, templated questions and explanations, and pattern-only guardrails. The full journey works this way, and the tests and evaluations always run like this.
 

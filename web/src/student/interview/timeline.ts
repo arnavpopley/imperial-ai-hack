@@ -6,7 +6,7 @@ import type { IconName } from '../../components/Icon.tsx';
 
 export type StepStatus = 'done' | 'current' | 'upcoming';
 
-/** The server's quick-mode plan step ids (api/src/agents/interviewer.ts), in order. */
+/** The server's quick-mode plan step ids (server/src/agents/interviewer.ts), in order. */
 type PlanStepId = 'love' | 'avoid' | 'career' | 'assessment' | 'comfort' | 'team' | 'breadth' | 'timetable';
 
 interface PlanStepMeta {
