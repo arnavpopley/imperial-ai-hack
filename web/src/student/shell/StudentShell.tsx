@@ -1,20 +1,19 @@
-// Persistent frame for every post-onboarding screen: mode chip, sub-navigation with the shortlist
-// count, the escalation tray, the "Ask the advisor" drawer and the "Your data" panel.
+// Persistent frame for every post-onboarding screen: mode chip, sub-navigation with the shortlist count and
+// the "Your data" link, the escalation tray, and the floating "Ask the advisor" launcher.
+import { motion } from 'motion/react';
 import { createContext, useCallback, useContext, useMemo, useState } from 'react';
-import { NavLink, Outlet, useMatch } from 'react-router';
-import { Button } from '../../components/Button.tsx';
+import { NavLink, Outlet, useLocation, useMatch } from 'react-router';
 import { cx } from '../../components/cx.ts';
-import { Drawer } from '../../components/Drawer.tsx';
 import { Icon, type IconName } from '../../components/Icon.tsx';
 import { ModeChip } from '../../components/ModeChip.tsx';
-import { ChatPanel } from '../chat/ChatPanel.tsx';
 import { paths } from '../routes.ts';
 import { useReadySession } from '../state/SessionProvider.tsx';
+import { yourDataPath } from '../yourdata/paths.ts';
+import { AdvisorLauncher, type AdvisorState } from './AdvisorLauncher.tsx';
 import { EscalationTray } from './EscalationTray.tsx';
-import { YourDataDrawer } from './YourDataDrawer.tsx';
 
 interface AdvisorContextValue {
-  /** Open the advisor drawer, optionally with a message ready in the composer. */
+  /** Open the advisor chat window, optionally with a message ready in the composer. */
   openAdvisor: (prefill?: string) => void;
 }
 
@@ -31,12 +30,13 @@ const TABS: readonly { to: string; label: string; icon: IconName }[] = [
   { to: paths.catalogue, label: 'Catalogue', icon: 'grid' },
   { to: paths.timetable, label: 'Timetable', icon: 'calendar' },
   { to: paths.pathways, label: 'Pathways', icon: 'compass' },
+  { to: yourDataPath, label: 'Your data', icon: 'lock' },
 ];
 
 export function StudentShell() {
   const { session } = useReadySession();
-  const [advisor, setAdvisor] = useState({ open: false, prefill: '', opened: 0 });
-  const [dataOpen, setDataOpen] = useState(false);
+  const { pathname } = useLocation();
+  const [advisor, setAdvisor] = useState<AdvisorState>({ open: false, prefill: '', opened: 0 });
   const onInterview = useMatch(paths.interview) !== null;
   const onModule = useMatch('/modules/:moduleId') !== null;
   const shortlistCount = session.shortlist.length;
@@ -45,18 +45,19 @@ export function StudentShell() {
     (prefill = '') => setAdvisor((current) => ({ open: true, prefill, opened: current.opened + 1 })),
     [],
   );
+  const closeAdvisor = useCallback(() => setAdvisor((current) => ({ ...current, open: false })), []);
   const advisorValue = useMemo(() => ({ openAdvisor }), [openAdvisor]);
 
   return (
     <AdvisorContext.Provider value={advisorValue}>
-      <div className="grid grid-cols-1 gap-5 sm:gap-6">
+      <div className="grid grid-cols-1 gap-6 sm:gap-8">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
           <ModeChip variant={session.mode} />
           <nav
             aria-label="Student sections"
-            className="order-last -mx-4 w-[calc(100%+2rem)] overflow-x-auto px-4 [scrollbar-width:none] md:order-none md:mx-0 md:w-auto md:px-0"
+            className="order-last -mx-4 w-[calc(100%+2rem)] overflow-x-auto px-4 [scrollbar-width:none] sm:-mx-6 sm:w-[calc(100%+3rem)] sm:px-6 lg:order-none lg:mx-0 lg:w-auto lg:px-0"
           >
-            <ul className="flex gap-1 border-b border-line md:border-0">
+            <ul className="flex gap-1 border-b border-line lg:rounded-full lg:border-0 lg:bg-surface-2 lg:p-1 lg:ring-1 lg:ring-line">
               {TABS.map((tab) => (
                 <li key={tab.to}>
                   <NavLink
@@ -64,54 +65,58 @@ export function StudentShell() {
                     className={({ isActive }) => {
                       const active = isActive || (tab.to === paths.catalogue && onModule);
                       return cx(
-                        'relative flex h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium whitespace-nowrap transition md:h-9',
-                        active ? 'text-ink md:bg-surface md:shadow-soft md:ring-1 md:ring-line' : 'text-muted hover:text-ink',
-                        active &&
-                          'after:absolute after:inset-x-2 after:-bottom-px after:h-0.5 after:rounded-full after:bg-brand md:after:hidden',
+                        'relative flex h-11 items-center gap-2 rounded-full px-3.5 text-sm font-medium whitespace-nowrap transition-colors lg:h-10',
+                        active ? 'text-ink' : 'text-muted hover:text-ink',
                       );
                     }}
                   >
-                    <Icon name={tab.icon} size={15} />
-                    {tab.label}
-                    {tab.to === paths.timetable && shortlistCount > 0 && (
-                      <span className="grid h-5 min-w-5 place-items-center rounded-full bg-brand px-1.5 text-[11px] font-semibold text-on-brand tabular-nums">
-                        {shortlistCount}
-                        <span className="sr-only"> shortlisted</span>
-                      </span>
-                    )}
+                    {({ isActive }) => {
+                      const active = isActive || (tab.to === paths.catalogue && onModule);
+                      return (
+                        <>
+                          {active && (
+                            <motion.span
+                              layoutId="student-tab"
+                              aria-hidden="true"
+                              transition={{ type: 'spring', stiffness: 420, damping: 36 }}
+                              className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-brand lg:inset-0 lg:h-auto lg:bg-surface lg:shadow-soft lg:ring-1 lg:ring-line"
+                            />
+                          )}
+                          <span className="relative flex items-center gap-2">
+                            <Icon name={tab.icon} size={16} />
+                            {tab.label}
+                            {tab.to === paths.timetable && shortlistCount > 0 && (
+                              <span className="grid h-5 min-w-5 place-items-center rounded-full bg-brand px-1.5 text-[11px] font-semibold text-on-brand tabular-nums">
+                                {shortlistCount}
+                                <span className="sr-only"> shortlisted</span>
+                              </span>
+                            )}
+                          </span>
+                        </>
+                      );
+                    }}
                   </NavLink>
                 </li>
               ))}
             </ul>
           </nav>
-          <div className="ml-auto flex items-center gap-2">
-            {!onInterview && (
-              <Button variant="primary" size="sm" icon="chat" onClick={() => openAdvisor()}>
-                <span className="sm:hidden">Ask</span>
-                <span className="max-sm:hidden">Ask the advisor</span>
-              </Button>
-            )}
-            <Button size="sm" icon="user" onClick={() => setDataOpen(true)}>
-              Your data
-            </Button>
-          </div>
         </div>
 
         <EscalationTray className="max-w-3xl" />
 
-        <Outlet />
+        {/* Each screen fades and rises in; keyed by path so the animation replays on navigation. */}
+        <motion.div
+          key={pathname}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.32, ease: [0.2, 0.8, 0.2, 1] }}
+          className="min-w-0"
+        >
+          <Outlet />
+        </motion.div>
       </div>
 
-      <Drawer
-        open={advisor.open}
-        onClose={() => setAdvisor((current) => ({ ...current, open: false }))}
-        title="Ask the advisor"
-        subtitle="Explains scores and checks the rules. It never changes a number."
-        headerExtra={<ModeChip variant={session.mode} className="max-sm:hidden" />}
-      >
-        <ChatPanel key={advisor.opened} variant="advisor" prefill={advisor.prefill} className="h-full" />
-      </Drawer>
-      <YourDataDrawer open={dataOpen} onClose={() => setDataOpen(false)} />
+      <AdvisorLauncher state={advisor} onOpen={() => openAdvisor()} onClose={closeAdvisor} showBubble={!onInterview} />
     </AdvisorContext.Provider>
   );
 }

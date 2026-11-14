@@ -5,6 +5,7 @@
 //   /modules/:moduleId   explanation with evidence
 //   /timetable           weekly grid, clashes and swaps
 //   /pathways            pathways, progress and societies
+//   /your-data           what we hold, the quotes behind it, edit and delete (spec 20.3)
 import { Navigate, Route, Routes } from 'react-router';
 import { Button } from '../components/Button.tsx';
 import { ErrorState, LoadingState } from '../components/StateViews.tsx';
@@ -20,6 +21,8 @@ import { StudentShell } from './shell/StudentShell.tsx';
 import { CatalogueProvider } from './state/CatalogueProvider.tsx';
 import { ReferenceDataProvider } from './state/ReferenceDataProvider.tsx';
 import { SessionProvider, useSession } from './state/SessionProvider.tsx';
+import { yourDataPath } from './yourdata/paths.ts';
+import { YourDataPage } from './yourdata/YourDataPage.tsx';
 
 export function StudentApp() {
   return (
@@ -33,6 +36,7 @@ export function StudentApp() {
             <Route path="modules/:moduleId" element={<ModuleDetailScreen />} />
             <Route path="timetable" element={<TimetableScreen />} />
             <Route path="pathways" element={<PathwaysScreen />} />
+            <Route path={yourDataPath.slice(1)} element={<YourDataPage />} />
           </Route>
           <Route path="*" element={<Navigate to={paths.onboard} replace />} />
         </Routes>

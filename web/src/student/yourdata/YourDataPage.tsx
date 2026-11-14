@@ -1,0 +1,544 @@
+// Spec 20.3 as a page of its own: what we know about the student, the words it came from, an edit form and
+// a "Delete everything" danger zone. Interests, goals and preferences only; never grades, health or background.
+import { confidenceLabel, type Evidence, type StudentProfile } from '@modulematch/shared';
+import { AnimatePresence, motion } from 'motion/react';
+import { useId, useState, type ReactNode } from 'react';
+import { useNavigate } from 'react-router';
+import { api } from '../../api.ts';
+import { Button } from '../../components/Button.tsx';
+import { ConfidenceBadge } from '../../components/ConfidenceBadge.tsx';
+import { cx } from '../../components/cx.ts';
+import { Icon, type IconName } from '../../components/Icon.tsx';
+import { errorMessage } from '../../components/StateViews.tsx';
+import {
+  DAY_NAMES,
+  formatEvidenceValue,
+  percent,
+  slotLabel,
+  STYLE_KEYS,
+  STYLE_META,
+  styleValueText,
+  topicLabel,
+  WEEKDAYS,
+} from '../labels.ts';
+import { ProfileEditor } from '../profile/ProfileEditor.tsx';
+import { useProfileActions } from '../profile/useProfileActions.ts';
+import { paths } from '../routes.ts';
+import { useModuleTitle, useReferenceData } from '../state/ReferenceDataProvider.tsx';
+import { useReadySession } from '../state/SessionProvider.tsx';
+import { DELETED_STATE } from './paths.ts';
+
+const rise = {
+  initial: { opacity: 0, y: 12 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.4, ease: [0.2, 0.8, 0.2, 1] },
+} as const;
+
+export function YourDataPage() {
+  const { session } = useReadySession();
+  const { profile, evidence } = session;
+  const [editing, setEditing] = useState(false);
+
+  return (
+    <div className="mx-auto grid max-w-5xl gap-section">
+      <Hero profile={profile} quoteCount={evidence.length} />
+
+      <section aria-labelledby="known-heading" className="grid gap-6">
+        <SectionHeading id="known-heading" eyebrow="What we know" title="Your profile, as the matcher sees it">
+          Each card shows the words it came from. Nothing else is used to rank modules.
+        </SectionHeading>
+        <div className="grid gap-5 md:grid-cols-2">
+          <InterestsCard profile={profile} evidence={evidence} />
+          <StyleCard profile={profile} evidence={evidence} />
+          <PathwaysCard profile={profile} evidence={evidence} />
+          <TimetableCard profile={profile} evidence={evidence} />
+        </div>
+      </section>
+
+      <section aria-labelledby="edit-heading" className="grid gap-6">
+        <SectionHeading id="edit-heading" eyebrow="Edit" title="Correct anything we got wrong">
+          Changes re-rank your catalogue straight away.
+        </SectionHeading>
+        <EditSection editing={editing} onEditingChange={setEditing} />
+      </section>
+
+      <DangerZone />
+    </div>
+  );
+}
+
+function Hero({ profile, quoteCount }: { profile: StudentProfile; quoteCount: number }) {
+  const moduleTitle = useModuleTitle();
+  const completed = profile.completedModuleIds;
+  return (
+    <motion.header {...rise} className="overflow-hidden rounded-panel bg-surface shadow-soft ring-1 ring-line">
+      <div className="grid gap-8 p-card-lg md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+        <div className="grid gap-4">
+          <p className="inline-flex items-center gap-2 text-sm font-medium text-brand">
+            <Icon name="lock" size={16} /> Private to you
+          </p>
+          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Your data</h1>
+          <p className="max-w-xl text-base text-muted text-pretty">
+            Only your interests, goals and preferences. Never grades, health or background. Staff only ever see
+            totals for groups of five or more.
+          </p>
+          <ul className="flex flex-wrap gap-2 text-sm">
+            <Fact icon="tutor">{profile.programme}</Fact>
+            <Fact icon="calendar">Year {profile.yearOfStudy}</Fact>
+            <Fact icon="check">
+              {completed.length > 0 ? `${completed.length} completed: ${completed.map(moduleTitle).join(', ')}` : 'No completed modules listed'}
+            </Fact>
+          </ul>
+        </div>
+        <CompletenessRing value={profile.completeness} quoteCount={quoteCount} />
+      </div>
+    </motion.header>
+  );
+}
+
+function Fact({ icon, children }: { icon: IconName; children: ReactNode }) {
+  return (
+    <li className="inline-flex max-w-full items-center gap-2 rounded-full bg-surface-2 px-3.5 py-1.5 text-ink">
+      <Icon name={icon} size={15} className="shrink-0 text-muted" />
+      <span className="min-w-0 break-words">{children}</span>
+    </li>
+  );
+}
+
+function CompletenessRing({ value, quoteCount }: { value: number; quoteCount: number }) {
+  const r = 52;
+  const c = 2 * Math.PI * r;
+  return (
+    <div className="flex items-center gap-5 md:flex-col md:gap-3">
+      <div className="relative size-36 shrink-0">
+        <svg viewBox="0 0 120 120" className="size-full -rotate-90" aria-hidden="true">
+          <circle cx="60" cy="60" r={r} fill="none" strokeWidth="10" className="stroke-surface-2" />
+          <motion.circle
+            cx="60"
+            cy="60"
+            r={r}
+            fill="none"
+            strokeWidth="10"
+            strokeLinecap="round"
+            className="stroke-brand"
+            strokeDasharray={c}
+            initial={{ strokeDashoffset: c }}
+            animate={{ strokeDashoffset: c * (1 - value) }}
+            transition={{ duration: 1.1, ease: [0.2, 0.8, 0.2, 1], delay: 0.2 }}
+          />
+        </svg>
+        <div className="absolute inset-0 grid place-content-center text-center">
+          <span className="text-3xl font-semibold tabular-nums">{percent(value)}</span>
+          <span className="text-xs text-muted">complete</span>
+        </div>
+      </div>
+      <div className="grid justify-items-start gap-2 md:justify-items-center">
+        <ConfidenceBadge variant={confidenceLabel(value)} />
+        <p className="text-sm text-muted">{quoteCount === 1 ? '1 quote kept' : `${quoteCount} quotes kept`}</p>
+      </div>
+    </div>
+  );
+}
+
+function SectionHeading({ id, eyebrow, title, children }: { id: string; eyebrow: string; title: string; children?: ReactNode }) {
+  return (
+    <div className="grid gap-1.5">
+      <p className="text-xs font-semibold tracking-[0.12em] text-brand uppercase">{eyebrow}</p>
+      <h2 id={id} className="text-2xl font-semibold tracking-tight">
+        {title}
+      </h2>
+      {children && <p className="max-w-2xl text-sm text-muted">{children}</p>}
+    </div>
+  );
+}
+
+function DataCard({
+  icon,
+  title,
+  tint,
+  quotes,
+  children,
+}: {
+  icon: IconName;
+  title: string;
+  tint: string;
+  quotes: readonly Evidence[];
+  children: ReactNode;
+}) {
+  const headingId = useId();
+  return (
+    <motion.article
+      {...rise}
+      aria-labelledby={headingId}
+      className="flex flex-col gap-5 rounded-panel bg-surface p-card shadow-soft ring-1 ring-line sm:p-card-lg"
+    >
+      <header className="flex items-center gap-3">
+        <span aria-hidden="true" className={cx('grid size-11 place-items-center rounded-2xl', tint)}>
+          <Icon name={icon} size={22} />
+        </span>
+        <h3 id={headingId} className="text-lg font-semibold tracking-tight">
+          {title}
+        </h3>
+      </header>
+      <div className="flex-1">{children}</div>
+      <Quotes quotes={quotes} />
+    </motion.article>
+  );
+}
+
+/** The student's own words behind a card, collapsed to the first two. */
+function Quotes({ quotes }: { quotes: readonly Evidence[] }) {
+  const [all, setAll] = useState(false);
+  if (quotes.length === 0)
+    return <p className="border-t border-line pt-4 text-sm text-muted">No quote yet: this came from a default or an edit.</p>;
+  const shown = all ? quotes : quotes.slice(0, 2);
+  return (
+    <div className="grid gap-3 border-t border-line pt-4">
+      <p className="text-xs font-semibold tracking-[0.08em] text-muted uppercase">In your words</p>
+      <ul className="grid gap-2.5">
+        {shown.map((e) => (
+          <li key={e.id} className="rounded-2xl bg-surface-2 px-4 py-3">
+            <q className="text-sm leading-relaxed text-ink">{e.quote}</q>
+            <p className="mt-1 text-xs text-muted">
+              {slotLabel(e.slot)}: {formatEvidenceValue(e.value)}
+            </p>
+          </li>
+        ))}
+      </ul>
+      {quotes.length > 2 && (
+        <button
+          type="button"
+          onClick={() => setAll((v) => !v)}
+          aria-expanded={all}
+          className="justify-self-start rounded-lg text-sm font-medium text-brand hover:underline"
+        >
+          {all ? 'Show fewer' : `Show all ${quotes.length} quotes`}
+        </button>
+      )}
+    </div>
+  );
+}
+
+const quotesFor = (evidence: readonly Evidence[], test: (slot: string) => boolean) =>
+  evidence.filter((e) => test(e.slot)).toReversed();
+
+function InterestsCard({ profile, evidence }: { profile: StudentProfile; evidence: readonly Evidence[] }) {
+  const interests = Object.entries(profile.interests).sort((a, b) => b[1] - a[1]);
+  return (
+    <DataCard
+      icon="heart"
+      title="Interests"
+      tint="bg-module-6/10 text-module-6"
+      quotes={quotesFor(evidence, (s) => s.startsWith('interest:'))}
+    >
+      {interests.length === 0 ? (
+        <p className="text-sm text-muted">No interests yet. Tell the interviewer what you enjoy.</p>
+      ) : (
+        <ul className="grid gap-3.5">
+          {interests.map(([topic, weight], i) => (
+            <li key={topic} className="grid gap-1.5">
+              <span className="flex items-baseline justify-between gap-3 text-sm">
+                <span className="font-medium">{topicLabel(topic)}</span>
+                <span className="text-muted tabular-nums">{percent(weight)}</span>
+              </span>
+              <Bar value={weight} delay={i * 0.06} label={`Interest in ${topicLabel(topic)}`} />
+            </li>
+          ))}
+        </ul>
+      )}
+    </DataCard>
+  );
+}
+
+function Bar({ value, delay, label }: { value: number; delay: number; label: string }) {
+  const pct = Math.round(Math.min(1, Math.max(0, value)) * 100);
+  return (
+    <div
+      role="meter"
+      aria-label={label}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={pct}
+      className="h-2.5 overflow-hidden rounded-full bg-surface-2"
+    >
+      <motion.div
+        className="h-full rounded-full bg-gradient-to-r from-brand to-mode-explain"
+        initial={{ width: 0 }}
+        animate={{ width: `${pct}%` }}
+        transition={{ duration: 0.8, delay, ease: [0.2, 0.8, 0.2, 1] }}
+      />
+    </div>
+  );
+}
+
+function StyleCard({ profile, evidence }: { profile: StudentProfile; evidence: readonly Evidence[] }) {
+  const known = STYLE_KEYS.filter((k) => profile.style[k] !== null);
+  return (
+    <DataCard
+      icon="sliders"
+      title="How you like to learn"
+      tint="bg-mode-explain/10 text-mode-explain"
+      quotes={quotesFor(evidence, (s) => s.startsWith('style.') || s === 'breadthAppetite')}
+    >
+      {known.length === 0 && profile.breadthAppetite === null ? (
+        <p className="text-sm text-muted">Nothing yet. The interview asks about exams, teamwork and workload.</p>
+      ) : (
+        <ul className="grid gap-4">
+          {known.map((key) => {
+            const value = profile.style[key] ?? 0.5;
+            const meta = STYLE_META[key];
+            return (
+              <li key={key} className="grid gap-1.5">
+                <span className="flex items-baseline justify-between gap-3 text-sm">
+                  <span className="font-medium">{meta.label}</span>
+                  <span className="text-muted">{styleValueText(key, value)}</span>
+                </span>
+                <Scale value={value} low={meta.low} high={meta.high} label={meta.label} />
+              </li>
+            );
+          })}
+          {profile.breadthAppetite !== null && (
+            <li className="grid gap-1.5">
+              <span className="flex items-baseline justify-between gap-3 text-sm">
+                <span className="font-medium">Appetite for breadth</span>
+                <span className="text-muted tabular-nums">{percent(profile.breadthAppetite)}</span>
+              </span>
+              <Scale value={profile.breadthAppetite} low="Focused" high="Broad" label="Appetite for breadth" />
+            </li>
+          )}
+        </ul>
+      )}
+    </DataCard>
+  );
+}
+
+/** A two-ended scale with a dot where the student sits. */
+function Scale({ value, low, high, label }: { value: number; low: string; high: string; label: string }) {
+  const pct = Math.round(value * 100);
+  return (
+    <div>
+      <div
+        role="meter"
+        aria-label={label}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={pct}
+        aria-valuetext={`${pct}% towards ${high.toLowerCase()}`}
+        className="relative h-2.5 rounded-full bg-surface-2"
+      >
+        <motion.span
+          aria-hidden="true"
+          className="absolute top-1/2 size-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-mode-explain ring-4 ring-surface"
+          initial={{ left: '50%' }}
+          animate={{ left: `${pct}%` }}
+          transition={{ type: 'spring', stiffness: 120, damping: 18 }}
+        />
+      </div>
+      <div className="mt-1 flex justify-between text-xs text-muted">
+        <span>{low}</span>
+        <span>{high}</span>
+      </div>
+    </div>
+  );
+}
+
+function PathwaysCard({ profile, evidence }: { profile: StudentProfile; evidence: readonly Evidence[] }) {
+  const { pathwayById } = useReferenceData();
+  return (
+    <DataCard
+      icon="compass"
+      title="Career pathways"
+      tint="bg-mode-plan/10 text-mode-plan"
+      quotes={quotesFor(evidence, (s) => s === 'pathways' || s === 'pathwaysSkipped')}
+    >
+      {profile.pathways.length === 0 ? (
+        <p className="text-sm text-muted">
+          {profile.pathwaysSkipped ? 'You chose to skip pathways for now.' : 'No pathway chosen yet.'}
+        </p>
+      ) : (
+        <ul className="flex flex-wrap gap-2.5">
+          {profile.pathways.map((id) => (
+            <li key={id} className="inline-flex items-center gap-2 rounded-full bg-mode-plan/10 px-4 py-2 text-sm font-medium text-mode-plan">
+              <Icon name="compass" size={15} />
+              {pathwayById.get(id)?.title ?? id}
+            </li>
+          ))}
+        </ul>
+      )}
+    </DataCard>
+  );
+}
+
+function TimetableCard({ profile, evidence }: { profile: StudentProfile; evidence: readonly Evidence[] }) {
+  const { avoidDays, earliestStart } = profile.timetablePrefs;
+  const avoid = new Set(avoidDays);
+  return (
+    <DataCard
+      icon="calendar"
+      title="Timetable preferences"
+      tint="bg-module-2/10 text-module-2"
+      quotes={quotesFor(evidence, (s) => s.startsWith('timetablePrefs.'))}
+    >
+      <div className="grid gap-5">
+        <div>
+          <p className="mb-2.5 text-sm font-medium">Days to keep free</p>
+          <ul className="grid grid-cols-5 gap-2">
+            {WEEKDAYS.map((d) => {
+              const free = avoid.has(d);
+              return (
+                <li
+                  key={d}
+                  className={cx(
+                    'grid place-items-center gap-1 rounded-2xl py-3 text-sm font-medium',
+                    free ? 'bg-module-2 text-on-brand' : 'bg-surface-2 text-muted',
+                  )}
+                >
+                  <span aria-hidden="true">{DAY_NAMES[d].slice(0, 3)}</span>
+                  <span className="sr-only">
+                    {DAY_NAMES[d]}: {free ? 'keep free' : 'available'}
+                  </span>
+                  <Icon name={free ? 'ban' : 'check'} size={14} />
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+        <p className="flex items-center gap-2 text-sm">
+          <Icon name="clock" size={16} className="text-muted" />
+          {earliestStart ? (
+            <span>
+              Nothing before <span className="font-semibold tabular-nums">{earliestStart}</span>
+            </span>
+          ) : (
+            <span className="text-muted">No earliest start time</span>
+          )}
+        </p>
+      </div>
+    </DataCard>
+  );
+}
+
+function EditSection({ editing, onEditingChange }: { editing: boolean; onEditingChange: (v: boolean) => void }) {
+  const { session } = useReadySession();
+  const { save, saving, error } = useProfileActions();
+  const [saved, setSaved] = useState(false);
+
+  return (
+    <div className="rounded-panel bg-surface p-card shadow-soft ring-1 ring-line sm:p-card-lg">
+      <AnimatePresence mode="wait" initial={false}>
+        {editing ? (
+          <motion.div key="editor" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}>
+            <ProfileEditor
+              profile={session.profile}
+              saving={saving}
+              error={error}
+              onCancel={() => onEditingChange(false)}
+              onSave={(body) => {
+                void save(body).then((ok) => {
+                  if (ok) {
+                    setSaved(true);
+                    onEditingChange(false);
+                  }
+                });
+              }}
+            />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="closed"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex flex-wrap items-center justify-between gap-4"
+          >
+            <div className="grid gap-1">
+              <p className="font-medium">Interests, learning style and timetable preferences</p>
+              <p className="text-sm text-muted">
+                {saved ? 'Saved. Your catalogue is re-ranked.' : 'Adjust a slider, add a topic or free up a day.'}
+              </p>
+            </div>
+            <Button variant="primary" icon="edit" onClick={() => onEditingChange(true)}>
+              Edit my profile
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function DangerZone() {
+  const { session, forget } = useReadySession();
+  const navigate = useNavigate();
+  const [confirming, setConfirming] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const remove = async () => {
+    setDeleting(true);
+    setError(null);
+    try {
+      await api.deleteProfile(session.id);
+      navigate(paths.onboard, { state: DELETED_STATE });
+      forget();
+    } catch (err) {
+      setError(errorMessage(err));
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <section
+      aria-labelledby="danger-heading"
+      className="grid gap-4 rounded-panel border-2 border-dashed border-fit-low/40 bg-fit-low/5 p-card sm:p-card-lg"
+    >
+      <div className="flex items-start gap-4">
+        <span aria-hidden="true" className="grid size-11 shrink-0 place-items-center rounded-2xl bg-fit-low/15 text-fit-low">
+          <Icon name="trash" size={22} />
+        </span>
+        <div className="grid gap-1">
+          <h2 id="danger-heading" className="text-lg font-semibold tracking-tight">
+            Delete everything
+          </h2>
+          <p className="text-sm text-muted">
+            Removes your profile and every quote above, then starts over. This cannot be undone.
+          </p>
+        </div>
+      </div>
+      {error && (
+        <p role="alert" className="text-sm text-fit-low">
+          {error}
+        </p>
+      )}
+      <AnimatePresence mode="wait" initial={false}>
+        {confirming ? (
+          <motion.div
+            key="confirm"
+            role="group"
+            aria-label="Confirm deletion"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex flex-wrap items-center gap-3 rounded-2xl bg-surface p-4 ring-1 ring-fit-low/30"
+          >
+            <span className="font-medium">Delete everything we hold about you?</span>
+            <div className="flex flex-wrap gap-2 sm:ml-auto">
+              <Button variant="danger" icon="trash" busy={deleting} onClick={() => void remove()}>
+                Yes, delete everything
+              </Button>
+              <Button variant="ghost" onClick={() => setConfirming(false)} disabled={deleting}>
+                Keep my data
+              </Button>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div key="ask" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <Button variant="danger" icon="trash" onClick={() => setConfirming(true)}>
+              Delete everything
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </section>
+  );
+}
