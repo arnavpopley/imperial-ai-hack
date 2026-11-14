@@ -1,6 +1,7 @@
 // Zod schemas for every contract in MODULE_MATCHER_SPEC.md sections 7, 9 and 13.
 // Types are inferred from these schemas in ./types.ts, so each contract is defined once.
 import { z } from 'zod';
+import taxonomy from '../../../data/taxonomy.json' with { type: 'json' };
 
 // ---------- primitives ----------
 
@@ -8,8 +9,9 @@ export const Fraction = z.number().min(0).max(1);
 export const HHMM = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'expected HH:MM');
 export const IsoDate = z.string();
 
-export const TopicId = z.string().min(1);
-export const SkillId = z.string().min(1);
+/** Controlled vocabulary (spec 7.1): only taxonomy keys pass validation. */
+export const TopicId = z.string().refine((k) => Object.hasOwn(taxonomy.topics, k), 'unknown taxonomy topic');
+export const SkillId = z.string().refine((k) => Object.hasOwn(taxonomy.skills, k), 'unknown taxonomy skill');
 export const PathwayId = z.string().min(1);
 export const Term = z.enum(['autumn', 'spring', 'summer']);
 export const Weekday = z.enum(['mon', 'tue', 'wed', 'thu', 'fri']);
@@ -48,12 +50,41 @@ export const StudentProfile = z.object({
   updatedAt: IsoDate,
 });
 
+/**
+ * A profile slot name the Profile Extractor may write (spec 10.3): `interest:<topicId>`, `style.<dimension>`,
+ * `breadthAppetite`, `pathways`, `pathwaysSkipped`, `timetablePrefs.avoidDays` or `timetablePrefs.earliestStart`.
+ */
+export const SlotName = z.string().refine((slot) => slotValueSchema(slot) !== null, 'slot is not whitelisted');
+
+/** Any value a slot can hold. Use `slotValueSchema(slot)` to validate the value for one specific slot. */
+export const SlotValue = z.union([z.number(), z.string(), z.boolean(), z.array(z.string())]);
+
+/** The schema for one slot's value, or null when the slot is not whitelisted. */
+export function slotValueSchema(slot: string): z.ZodType | null {
+  if (slot.startsWith('interest:')) return TopicId.safeParse(slot.slice('interest:'.length)).success ? Fraction : null;
+  if (slot.startsWith('style.')) return slot.slice('style.'.length) in Style.shape ? Fraction : null;
+  switch (slot) {
+    case 'breadthAppetite':
+      return Fraction;
+    case 'pathways':
+      return z.array(PathwayId).max(3);
+    case 'pathwaysSkipped':
+      return z.boolean();
+    case 'timetablePrefs.avoidDays':
+      return z.array(Weekday);
+    case 'timetablePrefs.earliestStart':
+      return HHMM;
+    default:
+      return null;
+  }
+}
+
 export const Evidence = z.object({
   id: z.string(),
   sessionId: z.string(),
   turnId: z.string(),
-  slot: z.string(),
-  value: z.union([z.number(), z.string()]),
+  slot: SlotName,
+  value: SlotValue,
   quote: z.string().max(200),
   confidence: Fraction,
 });
@@ -350,12 +381,17 @@ export const IntentResult = z.object({
   moduleIds: z.array(z.string()).default([]),
 });
 
-export const ProfileUpdate = z.object({
-  slot: z.string(),
-  value: z.union([z.number(), z.string()]),
-  quote: z.string().max(200),
-  confidence: Fraction,
-});
+export const ProfileUpdate = z
+  .object({
+    slot: SlotName,
+    value: SlotValue,
+    quote: z.string().max(200),
+    confidence: Fraction,
+  })
+  .refine((u) => slotValueSchema(u.slot)?.safeParse(u.value).success === true, {
+    message: 'value does not match its slot',
+    path: ['value'],
+  });
 
 export const ExtractorOutput = z.object({ updates: z.array(ProfileUpdate) });
 

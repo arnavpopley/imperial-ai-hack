@@ -1,4 +1,5 @@
 import taxonomyJson from '../../../data/taxonomy.json' with { type: 'json' };
+import { slotValueSchema } from './schemas.ts';
 import type { Confidence, Weights } from './types.ts';
 
 /** Spec 8.5 default weights. The what-if sliders change these four numbers and nothing else. */
@@ -57,8 +58,7 @@ export const PROFILE_SLOTS = [
 ] as const;
 
 export function isAllowedSlot(slot: string): boolean {
-  if (slot.startsWith('interest:')) return slot.slice('interest:'.length) in taxonomyJson.topics;
-  return (PROFILE_SLOTS as readonly string[]).includes(slot);
+  return slotValueSchema(slot) !== null;
 }
 
 export const MODE_LABELS = {

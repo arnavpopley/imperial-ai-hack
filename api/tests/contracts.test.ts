@@ -34,6 +34,13 @@ describe('fixtures match schemas', () => {
   });
 });
 
+describe('fixture swaps', () => {
+  it('only suggest eligible modules', () => {
+    const eligible = new Set(fx.fixtureRecommendations.recommendations.filter((r) => r.eligible).map((r) => r.moduleId));
+    for (const swap of fx.fixtureTimetable.swaps) expect(eligible.has(swap.withModuleId)).toBe(true);
+  });
+});
+
 describe('every route returns a valid response', () => {
   const sid = fx.fixtureSession.id;
   const routes: [string, RequestInit | undefined, z.ZodType][] = [

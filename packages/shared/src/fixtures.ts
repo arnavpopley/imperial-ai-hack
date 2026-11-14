@@ -2,6 +2,7 @@
 // The web app and API route stubs use these until real engines and data land.
 // Every fixture is validated against its schema in api/tests/fixtures.test.ts.
 import { DEFAULT_WEIGHTS } from './constants.ts';
+import { combineFit } from './fit.ts';
 import type {
   ClashPriority,
   Escalation,
@@ -67,6 +68,22 @@ export const fixtureModules: Module[] = [
     skills: { coding: 0.6, teamwork: 0.6, 'design-cad': 0.3 },
     pathwayRelevance: { 'robotics-automation': 0.95 },
     demand: { examShare: 0.3, groupShare: 0.7, applied: 0.8, mathsIntensity: 0.6, codingIntensity: 0.7, workload: 0.6 },
+  },
+  {
+    ...baseModule,
+    id: 'IEX-SUS',
+    code: 'IEXP50002',
+    title: 'Sustainable Futures',
+    department: 'I-Explore',
+    level: 2,
+    type: 'i-explore',
+    terms: ['autumn'],
+    description: 'Explore climate solutions with students from other faculties through a group policy brief.',
+    sourceUrl: 'https://www.imperial.ac.uk/i-explore/',
+    topics: { 'sustainability-climate': 0.9, 'policy-ethics': 0.5, 'communication-writing': 0.3 },
+    skills: { communication: 0.7, research: 0.5, teamwork: 0.5 },
+    pathwayRelevance: { 'energy-transition': 0.5, consulting: 0.4 },
+    demand: { examShare: 0, groupShare: 0.6, applied: 0.6, mathsIntensity: 0.1, codingIntensity: 0, workload: 0.4 },
   },
   {
     ...baseModule,
@@ -157,37 +174,33 @@ export const fixtureSession: SessionState = {
   updatedAt: NOW,
 };
 
+type FixtureRec = Omit<RecommendationsResponse['recommendations'][number], 'fit'>;
+const rec = (r: FixtureRec) => ({ ...r, fit: combineFit(r.sub, DEFAULT_WEIGHTS) });
+const eligible: Pick<FixtureRec, 'eligible' | 'ineligibleReasons' | 'confidence'> = {
+  eligible: true,
+  ineligibleReasons: [],
+  confidence: 'high',
+};
+
 export const fixtureRecommendations: RecommendationsResponse = {
   weights: DEFAULT_WEIGHTS,
   confidence: 'high',
   completeness: 0.82,
   recommendations: [
-    {
-      moduleId: 'ME3-CFD',
-      fit: 84,
-      sub: { interest: 0.82, goal: 0.9, style: 0.86, breadth: 0.05 },
-      eligible: true,
-      ineligibleReasons: [],
-      confidence: 'high',
-    },
-    {
-      moduleId: 'IEX-ENT',
-      fit: 61,
-      sub: { interest: 0.3, goal: 0.0, style: 0.8, breadth: 0.45 },
-      eligible: true,
-      ineligibleReasons: [],
-      confidence: 'high',
-    },
-    {
+    rec({ moduleId: 'ME3-CFD', sub: { interest: 0.82, goal: 0.9, style: 0.86, breadth: 0.05 }, ...eligible }),
+    rec({ moduleId: 'IEX-SUS', sub: { interest: 0.35, goal: 0.1, style: 0.75, breadth: 0.5 }, ...eligible }),
+    rec({ moduleId: 'IEX-ENT', sub: { interest: 0.3, goal: 0, style: 0.8, breadth: 0.45 }, ...eligible }),
+    rec({
       moduleId: 'ME3-ROB',
-      fit: 48,
-      sub: { interest: 0.1, goal: 0.0, style: 0.75, breadth: 0.2 },
+      sub: { interest: 0.1, goal: 0, style: 0.75, breadth: 0.2 },
       eligible: false,
       ineligibleReasons: ['Requires ME2-CTRL (Control Systems), which is not completed.'],
       confidence: 'high',
-    },
-  ],
+    }),
+  ].sort((a, b) => b.fit - a.fit),
 };
+
+const fitOf = (moduleId: string) => fixtureRecommendations.recommendations.find((r) => r.moduleId === moduleId)?.fit ?? 0;
 
 export const fixtureExplanation: Explanation = {
   moduleId: 'ME3-CFD',
@@ -216,6 +229,7 @@ export const fixtureSlots: Slot[] = [
   slot('ME3-CFD', 'tue', '10:00', '12:00'),
   slot('IEX-ENT', 'tue', '11:00', '13:00'),
   slot('ME3-ROB', 'wed', '14:00', '16:00', { term: 'spring' }),
+  slot('IEX-SUS', 'thu', '14:00', '16:00'),
 ];
 
 export const fixtureTimetable: TimetableView = {
@@ -233,7 +247,15 @@ export const fixtureTimetable: TimetableView = {
       overlaps: [{ a: fixtureSlots[0]!, b: fixtureSlots[1]! }],
     },
   ],
-  swaps: [{ replaceModuleId: 'IEX-ENT', withModuleId: 'ME3-ROB', fit: 52, fitDelta: -9 }],
+  // IEX-SUS is eligible, clashes with nothing on the shortlist and is within the 10-point tolerance (spec 9.2).
+  swaps: [
+    {
+      replaceModuleId: 'IEX-ENT',
+      withModuleId: 'IEX-SUS',
+      fit: fitOf('IEX-SUS'),
+      fitDelta: fitOf('IEX-SUS') - fitOf('IEX-ENT'),
+    },
+  ],
   rules: { ok: true, violations: [], warnings: [] },
 };
 
@@ -277,8 +299,8 @@ export const fixtureStaffModules: StaffModuleSummary[] = fixtureModules.map((m, 
   title: m.title,
   type: m.type,
   capacity: m.capacity,
-  shortlisted: [64, 12, 31][i] ?? 0,
-  averageFit: [71, 58, 49][i] ?? 0,
+  shortlisted: [64, 12, 9, 31][i] ?? 0,
+  averageFit: [71, 58, 44, 49][i] ?? 0,
   fitHistogram: [0, 1, 4, 9, 18, 30, 42, 50, 32, 14],
   cohortSize: 200,
 }));

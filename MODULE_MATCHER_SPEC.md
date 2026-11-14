@@ -125,7 +125,7 @@ Design rule: **numbers come from code, words come from models.** Scores, clashes
 | Layer | Choice | Why |
 |---|---|---|
 | Web | React, Vite, TypeScript, Tailwind | Matches what Figma Make generates, so the Make build can be pushed into `web/`. |
-| API | Node 20, TypeScript, Hono | One language across the repo. Simple SSE streaming. |
+| API | Node 22.12 or newer, TypeScript, Hono | One language across the repo. Simple SSE streaming. |
 | Database | SQLite via better-sqlite3 and Drizzle | Zero setup. The demo runs on a laptop. |
 | Validation | zod, shared between web and API | One schema per contract. |
 | Models | Anthropic API through the official TypeScript SDK | Streaming and tool use. |
@@ -136,7 +136,7 @@ Model IDs are environment variables, never hard-coded:
 ```
 ANTHROPIC_API_KEY=
 MODEL_SMART=claude-sonnet-5-5   # interviewer, matcher explanations, analyst, insights
-MODEL_FAST=claude-haiku-4-5-20251001  # intent, extraction, guardrail classifiers (no Haiku 5.5 exists; Haiku 4.5 is current)
+MODEL_FAST=claude-haiku-4-5  # intent, extraction, guardrail classifiers (no Haiku 5.5 exists; Haiku 4.5 is current)
 ```
 
 Confirm the current model IDs and SDK usage at https://docs.claude.com/en/api/overview before the first call.
