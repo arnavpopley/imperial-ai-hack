@@ -11,6 +11,7 @@ import { SampleDataLabel } from '../../components/SampleDataLabel.tsx';
 import { SegmentedControl } from '../../components/SegmentedControl.tsx';
 import { EmptyState, ErrorState, Skeleton } from '../../components/StateViews.tsx';
 import { ModuleCard } from '../catalogue/ModuleCard.tsx';
+import { PhotoBanner } from '../catalogue/PhotoBanner.tsx';
 import { WeightPanel } from '../catalogue/WeightPanel.tsx';
 import { useChat } from '../chat/ChatProvider.tsx';
 import { useFlip } from '../hooks/useFlip.ts';
@@ -56,18 +57,19 @@ export function CatalogueScreen() {
   const filtered = type !== 'all' || term !== 'all' || onlyShortlisted;
 
   return (
-    <div className="grid grid-cols-1 gap-5">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Your modules</h1>
-          <p className="mt-1 text-sm text-muted">Ranked by fit for you. Open any module to see exactly why.</p>
-        </div>
-        <SampleDataLabel />
-      </header>
+    <div className="grid grid-cols-1 gap-6">
+      <PhotoBanner
+        image="catalogue-study-group"
+        alt="A group of students studying together around a table"
+        title="Your modules"
+        subtitle="Ranked by how well each one fits you. Open any module to see why, read a summary or ask about it."
+        aside={<SampleDataLabel />}
+        focus="center 35%"
+      />
 
       {recs.data && confidence !== 'high' && <ConfidenceNotice level={confidence} />}
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[19rem_minmax(0,1fr)] lg:items-start">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[19rem_minmax(0,1fr)] lg:items-start">
         <div className="grid gap-4 lg:sticky lg:top-20">
           <WeightPanel goalUsed={goalUsed} />
           <section aria-label="Filters" className="grid gap-3 rounded-card border border-line bg-surface p-4 shadow-soft">
@@ -86,7 +88,7 @@ export function CatalogueScreen() {
         </div>
 
         <section aria-labelledby="ranked-heading" className="min-w-0">
-          <div className="mb-3 flex items-center justify-between gap-3">
+          <div className="mb-4 flex items-center justify-between gap-3">
             <h2 id="ranked-heading" className="text-[13px] font-medium text-muted" aria-live="polite">
               {recs.data ? `${visible.length} modules · ${eligibleCount} open to you` : 'Loading your ranking'}
             </h2>
@@ -124,7 +126,7 @@ export function CatalogueScreen() {
             </EmptyState>
           )}
           {visible.length > 0 && (
-            <ol className="relative grid gap-3">
+            <ol className="relative grid gap-4">
               {visible.map((item, index) => (
                 <RankedRow key={item.moduleId} first={index === eligibleCount && !item.eligible}>
                   <ModuleCard
@@ -135,6 +137,7 @@ export function CatalogueScreen() {
                     onToggleShortlist={() => void shortlist.toggle(item.moduleId)}
                     onAsk={openAdvisor}
                     listRef={flipRef(item.moduleId)}
+                    index={index}
                   />
                 </RankedRow>
               ))}
