@@ -20,3 +20,24 @@ describe('database schema', () => {
     expect(Object.keys(tables)).toHaveLength(12);
   });
 });
+
+describe('legacy database location', () => {
+  it('moves the database and its WAL files from api/ to server/ once, and never overwrites', async () => {
+    const { mkdtempSync, writeFileSync, existsSync, readFileSync } = await import('node:fs');
+    const { join } = await import('node:path');
+    const { tmpdir } = await import('node:os');
+    const { migrateLegacyDatabase } = await import('../src/db/client.ts');
+    const dir = mkdtempSync(join(tmpdir(), 'mm-db-'));
+    const legacy = join(dir, 'legacy.db');
+    const target = join(dir, 'target.db');
+    writeFileSync(legacy, 'old');
+    writeFileSync(`${legacy}-wal`, 'wal');
+    expect(migrateLegacyDatabase(legacy, target)).toBe(true);
+    expect(readFileSync(target, 'utf8')).toBe('old');
+    expect(readFileSync(`${target}-wal`, 'utf8')).toBe('wal');
+    expect(existsSync(legacy)).toBe(false);
+    writeFileSync(legacy, 'another');
+    expect(migrateLegacyDatabase(legacy, target)).toBe(false);
+    expect(readFileSync(target, 'utf8')).toBe('old');
+  });
+});
