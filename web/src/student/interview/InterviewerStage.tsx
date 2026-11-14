@@ -39,7 +39,8 @@ interface InterviewerStageProps {
 export function InterviewerStage({ persona, speaking, layout, className }: InterviewerStageProps) {
   const hero = layout === 'hero';
   // MotionConfig only stops transforms, so the opacity pulse is switched off here for reduced motion.
-  const pulse = speaking && !useReducedMotion();
+  const reducedMotion = useReducedMotion();
+  const pulse = speaking && !reducedMotion;
   return (
     <div
       className={cx(
