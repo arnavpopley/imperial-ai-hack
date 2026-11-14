@@ -86,8 +86,9 @@ TypeScript, React, Vite, Tailwind CSS, Motion, Hono, Node.js, SQLite, Drizzle OR
 | API or model | How it is used |
 |---|---|
 | Anthropic API, `claude-opus-5-5` (`MODEL_SMART`) | Interviewer (streamed), Matcher explanations and refusals, Catalogue agent (tool use, at most four tool rounds), module knowledge agent (summaries and Q&A), Insights wording, the offline Module Analyst |
-| Anthropic API, `claude-sonnet-5-5` at low effort (`MODEL_FAST`) | Intent classification, profile and CV extraction (structured output), the G1–G4 guardrail classifiers, timetable wording |
-| Anthropic API, `claude-fable-5-1` (`MODEL_JUDGE`) | The independent grader in the live evaluation |
+| Anthropic API, `claude-sonnet-5-5` at low effort (`MODEL_FAST`) | Profile and CV extraction (structured output) and G2 sensitive-span finding |
+| Anthropic API, `claude-haiku-4-5` (`MODEL_LIGHT`) | Intent classification, the G1, G3 and G4 guardrail classifiers, timetable wording |
+| Anthropic API, `claude-fable-5-1` (`MODEL_JUDGE`) | The independent grader in the live evaluation and the ranking benchmark |
 | Anthropic TypeScript SDK (`@anthropic-ai/sdk`) | Streaming, tool use, zod-validated structured outputs, prompt caching on system prompts, and server-side refusal fallbacks on Sonnet-tier calls (`server/src/agents/llm.ts`) |
 | Adaption API (Adaptive Data) | Expands a hand-reviewed seed set of student answers paired with the profile slots they should fill, to give the Profile Extractor more test data. Write-up: [`adaption.md`](adaption.md) (in progress) |
 

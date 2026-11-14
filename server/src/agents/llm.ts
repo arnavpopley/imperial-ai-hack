@@ -5,12 +5,13 @@ import Anthropic from '@anthropic-ai/sdk';
 import { betaZodOutputFormat } from '@anthropic-ai/sdk/helpers/beta/zod';
 import type { z } from 'zod';
 
-export type ModelTier = 'smart' | 'fast';
+export type ModelTier = 'smart' | 'fast' | 'light';
 
-const MODEL_ENV: Record<ModelTier, string> = { smart: 'MODEL_SMART', fast: 'MODEL_FAST' };
-// Opus 5.5 for what the student reads (questions, explanations, answers); Sonnet 5.5 at low effort for the quick
-// classification and extraction calls. Haiku is no longer the default: its extraction and classification quality was lower.
-const MODEL_DEFAULT: Record<ModelTier, string> = { smart: 'claude-opus-5-5', fast: 'claude-sonnet-5-5' };
+const MODEL_ENV: Record<ModelTier, string> = { smart: 'MODEL_SMART', fast: 'MODEL_FAST', light: 'MODEL_LIGHT' };
+// Opus 5.5 for what the student reads (questions, explanations, answers). Sonnet 5.5 at low effort where quality
+// matters but speed does too (profile extraction, finding sensitive spans). Haiku 4.5 for simple yes/no
+// classification and short wording, where it is accurate enough and much cheaper.
+const MODEL_DEFAULT: Record<ModelTier, string> = { smart: 'claude-opus-5-5', fast: 'claude-sonnet-5-5', light: 'claude-haiku-4-5' };
 
 export function modelId(tier: ModelTier): string {
   return process.env[MODEL_ENV[tier]] || MODEL_DEFAULT[tier];

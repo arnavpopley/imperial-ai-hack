@@ -79,8 +79,9 @@ Model IDs are configuration, set in `.env`.
 | Variable | Default | Used for |
 |---|---|---|
 | `MODEL_SMART` | `claude-opus-5-5` | Interviewer, Matcher explanations and refusals, Catalogue agent (tool loop), module knowledge agent (summaries and Q&A), Insights wording, Module Analyst |
-| `MODEL_FAST` | `claude-sonnet-5-5` (low effort) | Intent classification, profile and CV extraction, guardrail classifiers (G1–G4), timetable wording |
-| `MODEL_JUDGE` | `claude-fable-5-1` | The grader in `npm run eval:live`, stronger than the models it grades |
+| `MODEL_FAST` | `claude-sonnet-5-5` (low effort) | Profile and CV extraction, and finding sensitive spans for G2 redaction |
+| `MODEL_LIGHT` | `claude-haiku-4-5` | Simple classifiers: intent, G1 scope, G3 injection, G4 wellbeing, and timetable wording |
+| `MODEL_JUDGE` | `claude-fable-5-1` | The grader in `npm run eval:live` and `npm run benchmark`, stronger than the models it grades |
 
 Calls go through the official Anthropic TypeScript SDK (`@anthropic-ai/sdk`). They use token streaming for the interviewer, tool use for the catalogue agent, structured outputs validated with zod, and prompt caching on system prompts. Sonnet-tier calls use server-side refusal fallbacks. Scoring makes no model calls. Explanations are cached by profile and module, and the top ten are precomputed when recommendations open.
 
@@ -134,13 +135,13 @@ The two ranking misses ("startup founder" and "data scientist") each get two of 
 
 | Test | Method | Target | Latest |
 |---|---|---|---|
-| Module facts | 12 questions generated from published data; answers must quote the exact assessment weightings and prerequisite codes | 90% | 12/12 |
+| Module facts | 12 questions generated from published data; answers must quote the exact assessment weightings and prerequisite codes | 90% | 11/12 |
 | Declines unknowns | Questions the data cannot answer (lecturer, average mark, failure rate, job guarantee); graded by a model judge | 100% | 4/4 |
-| Live extraction | The 4 scripted interviews through the live extractor | 85% | 32/33 |
+| Live extraction | The 4 scripted interviews through the live extractor | 85% | 33/33 |
 | Live guardrails | 7 subtle cases for the model classifiers: indirect grade and health disclosures, injection without keywords, distress without keywords | 100% | 7/7 |
 | Grounded explanations | Explanations for 5 personas, graded by a model judge that sees everything the Matcher saw | 80% | 4/5 |
 
-The misses: the live extractor left one slot empty (a maths interest for the "undecided theorist"). The judge also failed one explanation, for Fluid Mechanics 3A, whose watch-out said the module would not draw on the student's interest in computational simulation, which the module data does not support.
+Models: Opus 5.5 answers and explains, Sonnet 5.5 extracts, Haiku 4.5 runs the simple classifiers, and Fable 5.1 judges. The misses: one assessment answer said "a weighting of 1" instead of "100%", and the judge failed one explanation (Mathematics A) for over-interpreting the breadth sub-score and assuming "no coursework".
 
 ## Known limits
 

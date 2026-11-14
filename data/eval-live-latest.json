@@ -1,10 +1,10 @@
 {
-  "id": "ab960de2-2294-4202-9d92-6e170e466c2a",
-  "at": "2026-11-14T23:31:49.596Z",
+  "id": "f5a2251d-bfc5-4cb7-ad6f-8818a7527962",
+  "at": "2026-11-14T23:41:38.858Z",
   "results": [
     {
       "name": "Live: module facts",
-      "passed": 12,
+      "passed": 11,
       "total": 12,
       "target": 0.9,
       "details": [
@@ -14,7 +14,8 @@
         },
         {
           "case": "MECH60002 assessment",
-          "pass": true
+          "pass": false,
+          "note": "missing 3 Hour exam 100%: Fracture Mechanics A (MECH60002) is assessed entirely by examination. The published assessment is a \"3 Hour exam\" with a weighting of 1, meaning it makes up the"
         },
         {
           "case": "MECH60004 assessment",
@@ -60,35 +61,35 @@
     },
     {
       "name": "Live: declines unknowns",
-      "passed": 3,
+      "passed": 4,
       "total": 4,
       "target": 1,
       "details": [
         {
           "case": "MECH60007: Who teaches this module and what are their office hours?",
           "pass": true,
-          "note": "The answer clearly states the module record lacks teacher and office hour information, invents nothing, and points to the official module page and department office as sensible next steps."
+          "note": "The answer clearly states the module record does not list the lecturer or office hours, invents no names or details, and sensibly directs the student to the module page and the department office."
         },
         {
           "case": "MECH60024: What was the average mark last year?",
           "pass": true,
-          "note": "The answer clearly states the module record lacks average mark data, invents nothing, and sensibly directs the student to the module page, module leader, or department."
+          "note": "The answer clearly states the module record lacks past mark data, invents nothing, and sensibly directs the student to the module page, module lead, or department office."
         },
         {
           "case": "IEX-ML: Will taking this guarantee me a job in AI?",
-          "pass": false,
-          "note": "The answer invents no names or numbers and correctly refuses to guarantee, but it does not say the module record lacks this information nor point the student anywhere sensible such as the module page or careers service, as the rubric requires."
+          "pass": true,
+          "note": "The answer clearly refuses to guarantee anything, invents no names, numbers or promises, and sensibly points the student to the Careers Service, the module lead and the module page."
         },
         {
           "case": "MECH60017: How many students failed it last year?",
           "pass": true,
-          "note": "The answer clearly states the module record lacks fail figures, invents no numbers or guarantees, and sensibly points the student to the module page and department."
+          "note": "The answer clearly states the record lacks pass/fail figures, invents no numbers or guarantees, and sensibly directs the student to the module page and department."
         }
       ]
     },
     {
       "name": "Live: extraction",
-      "passed": 32,
+      "passed": 33,
       "total": 33,
       "target": 0.85,
       "details": [
@@ -100,7 +101,7 @@
         {
           "case": "motorsport aerodynamicist: interest:computational-simulation",
           "pass": true,
-          "note": "expected 0.85, got 0.85"
+          "note": "expected 0.85, got 0.8"
         },
         {
           "case": "motorsport aerodynamicist: interest:thermodynamics-energy",
@@ -175,7 +176,7 @@
         {
           "case": "undecided theorist: breadthAppetite",
           "pass": true,
-          "note": "expected 0.15, got 0.1"
+          "note": "expected 0.15, got 0.15"
         },
         {
           "case": "undecided theorist: timetablePrefs.earliestStart",
@@ -189,8 +190,8 @@
         },
         {
           "case": "robotics founder: interest:programming-software",
-          "pass": false,
-          "note": "expected 0.85, got null"
+          "pass": true,
+          "note": "expected 0.85, got 0.5"
         },
         {
           "case": "robotics founder: interest:electronics-embedded",
@@ -240,7 +241,7 @@
         {
           "case": "sustainability engineer: interest:solid-mechanics-materials",
           "pass": true,
-          "note": "expected 0.85, got 0.65"
+          "note": "expected 0.85, got 0.7"
         },
         {
           "case": "sustainability engineer: interest:programming-software",
@@ -304,34 +305,34 @@
     },
     {
       "name": "Live: grounded explanations",
-      "passed": 5,
+      "passed": 4,
       "total": 5,
       "target": 0.8,
       "details": [
         {
           "case": "motorsport aerodynamicist: MECH60006",
           "pass": true,
-          "note": "Every reason and watch-out maps to the data (fluid-mechanics topic 1 vs top interest, aerospace-motorsport relevance, high maths intensity vs maths comfort, low applied share, zero coding, near-zero breadth), only the integer fit score is quoted rather than raw decimals, and no grades or jobs are promised."
+          "note": "Every reason and watch-out is grounded in the data (fluid-mechanics interest 0.95 with ev-0, pathway relevance 0.95, mathsIntensity 0.9 vs mathsComfort 0.8, applied 0.3 vs appliedPreference 0.8, low breadth, codingIntensity 0, examShare 1, listed prerequisites, eligible true); only the integer fit score 62 is quoted, no raw decimals appear, and nothing promises grades or jobs."
         },
         {
           "case": "nuclear and energy engineer: MECH60004",
           "pass": true,
-          "note": "Every claim maps to the data (nuclear-energy 0.95 topic weight vs 0.9 interest, thermo 0.45 moderate, pathwayRelevance 0.9, mathsIntensity 0.5 vs comfort 0.7, examShare 1, policy-ethics 0.5, sustainability 0.3, breadth sub-score low), no raw decimals are quoted, nothing is invented, and no grades or jobs are promised."
+          "note": "Every claim (nuclear core topic 0.95, moderate thermo 0.45, energy-transition relevance 0.9, moderate maths 0.5 vs comfort 0.7, exam-only assessment, low breadth, small sustainability share) is grounded in the data, no raw decimals are quoted, nothing is invented, and no grades or jobs are promised."
         },
         {
           "case": "robotics builder: MECH60009",
           "pass": true,
-          "note": "Every claim maps to the data (topics, pathwayRelevance 0.9, demand.applied 0.95, codingIntensity 0.9, workload 0.75, low breadth sub-score, moderate control-robotics 0.5, prerequisites, eligible), the only number quoted is the integer fit score 72, and no grades or jobs are promised."
+          "note": "Every reason is grounded in the data (interests, pathway relevance, applied/exam demand, breadth, group share, prerequisites, eligibility), the fit score of 72 is the integer provided rather than a raw decimal, no sub-scores like 0.95 or 0.08 are quoted, and nothing promises grades or jobs."
         },
         {
           "case": "structural analyst: MECH60016",
-          "pass": true,
-          "note": "Every reason and watch-out maps to the data (topics, pathwayRelevance 0.9, mathsIntensity vs mathsComfort, examShare vs examPreference, low breadth), no raw internal decimals are quoted (only the integer fit score 65), and nothing promises grades or jobs."
+          "pass": false,
+          "note": "The answer invents unsupported claims: 'no coursework' and 'no continuous assessment' are not in the data (examShare=1 could mean weighting, and applied=0.1 suggests some non-exam element), and 'a fair preference for exams' and the maths-demand comparison are acceptable but the breadth watch-out ('adds little variety to your overall set of choices') interprets a sub-score beyond what the data supports, as no other module choices are provided."
         },
         {
           "case": "startup founder: BUSI60041",
           "pass": true,
-          "note": "Every claim (entrepreneurship core and top interest, management/finance presence, startup-founder relevance of 1, zero exam share, high applied and group share, communication-writing topic, interest as the lowest sub-score) is supported by the data, no raw decimals are quoted, and nothing promises grades or jobs."
+          "note": "Every claim maps to the data (entrepreneurship 0.95 topic/interest, management 0.55, startup-founder relevance 1, examShare 0, group 0.6, applied 0.85, interest sub-score lowest, finance 0.5 moderate, communication 0.3 with no student rating), no raw decimals are quoted, and no grades or jobs are promised."
         }
       ]
     }

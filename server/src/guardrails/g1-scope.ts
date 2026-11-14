@@ -27,7 +27,7 @@ export async function scopeCheck(text: string, ctx: InputContext): Promise<Stage
   let outOfScope = anyMatch(OUT_OF_SCOPE, text);
   if (!outOfScope && isLive() && ctx.mode !== 'INTERVIEW') {
     const result = await structured(Verdict, {
-      tier: 'fast',
+      tier: 'light',
       system: SYSTEM,
       messages: [{ role: 'user', content: asData('student', text) }],
       maxTokens: 200,
