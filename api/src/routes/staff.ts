@@ -2,6 +2,7 @@
 import { DEFAULT_WEIGHTS, MIN_COHORT, schemas, type Insight, type StaffEscalation, type StaffModuleSummary } from '@modulematch/shared';
 import { Hono } from 'hono';
 import { wordInsight } from '../agents/insights.ts';
+import { clearSummaryCache } from '../agents/knowledge.ts';
 import { catalogue, clearExplanationCache, rulesForProfile, setMode, tracerSink } from '../agents/session.ts';
 import { rulesFor } from '../db/catalogue.ts';
 import * as repo from '../db/repo.ts';
@@ -57,6 +58,7 @@ export const staffRoutes = new Hono()
     const module = repo.updateModuleDerived(c.req.param('id'), c.req.valid('json'));
     if (!module) return c.json({ error: 'module not found' }, 404);
     clearExplanationCache();
+    clearSummaryCache();
     return c.json(module);
   })
   .get('/timetable/clash-priorities', (c) => {

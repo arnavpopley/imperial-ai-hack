@@ -1,12 +1,19 @@
 // Student routes (spec 13). Every body is validated with the shared zod schemas.
-import { schemas, type Evidence, type ProfileEditBody, type SessionState } from '@modulematch/shared';
+import { schemas, type Evidence, type ProfileEditBody, type SessionState, type SseEvent } from '@modulematch/shared';
 import { Hono, type Context } from 'hono';
 import { streamSSE } from 'hono/streaming';
 import { randomUUID } from 'node:crypto';
+import { draftWellbeing } from '../agents/escalation.ts';
+import { extract, mergeUpdates } from '../agents/extractor.ts';
 import { QUICK_PLAN } from '../agents/interviewer.ts';
-import { catalogue, clearExplanationCache, explanationFor, newSessionState, ranked, recommendationsResponse, saveProfile, setMode, timetableView, tracerSink } from '../agents/session.ts';
+import { answerModuleQuestion, moduleFacts } from '../agents/knowledge.ts';
+import { emitWords } from '../agents/llm.ts';
+import { catalogue, clearExplanationCache, explanationFor, moduleTitle, newSessionState, ranked, recommendationsResponse, saveProfile, setMode, timetableView, tracerSink } from '../agents/session.ts';
 import { confirmProfile, handleTurn, resumeInterview } from '../agents/supervisor.ts';
+import { rawModule } from '../db/catalogue.ts';
 import * as repo from '../db/repo.ts';
+import { WELLBEING_NOTICE } from '../guardrails/g4-wellbeing.ts';
+import { runInputGuardrails } from '../guardrails/pipeline.ts';
 import { matchSocieties, pathwayProgress } from '../engines/index.ts';
 import { createTracer } from '../trace/tracer.ts';
 import { body } from './validate.ts';
@@ -174,6 +181,66 @@ export const studentRoutes = new Hono()
     const pathway = catalogue.pathways().find((p) => p.id === c.req.param('pathwayId'));
     if (!pathway) return c.json({ error: 'pathway not found' }, 404);
     return c.json(pathwayProgress(session.profile, pathway, catalogue.modules(), session.shortlist, ranked(session)));
+  })
+  .post('/:id/modules/:moduleId/ask', body(schemas.AskModuleBody), (c) => {
+    // The module knowledge agent: answers from one module's record and public page, after the input guardrails.
+    const session = load(c);
+    if (session instanceof Response) return session;
+    const module = catalogue.modules().find((m) => m.id === c.req.param('moduleId'));
+    if (!module) return c.json({ error: 'module not found' }, 404);
+    const { question } = c.req.valid('json');
+    return streamSSE(c, async (stream) => {
+      const emit = (event: SseEvent) => stream.writeSSE({ event: event.type, data: JSON.stringify(event) });
+      const tracer = createTracer(session.id, tracerSink);
+      const guarded = await runInputGuardrails(question, { mode: session.mode, tracer });
+      for (const e of guarded.events) await emit({ type: 'guardrail', stage: e.stage, verdict: e.verdict, notice: e.notice });
+      const pending: Promise<void>[] = [];
+      const onToken = (text: string) => pending.push(emit({ type: 'token', text, agent: 'knowledge' }));
+      if (guarded.action === 'wellbeing') emitWords(WELLBEING_NOTICE, onToken);
+      else if (!guarded.text.trim()) emitWords('Ask me anything about this module: how it is assessed, what it covers, or what you need beforehand.', onToken);
+      else {
+        const facts = moduleFacts(module, rawModule(module.id), moduleTitle);
+        const rec = ranked(session).find((r) => r.moduleId === module.id);
+        await tracer.timed(
+          { actor: 'knowledge', kind: 'agent', input: `question about ${module.code}` },
+          () => answerModuleQuestion(guarded.text, facts, rec, onToken),
+          (a) => ({ output: `answered (${a.length} chars)`, verdict: null }),
+        );
+      }
+      await Promise.all(pending);
+      await emit({ type: 'done', messageId: randomUUID(), widget: null });
+    });
+  })
+  .post('/:id/cv', body(schemas.CvBody), async (c) => {
+    // CV or personal statement text: redacted (G2) and injection-scanned (G3) first, then mined for interests.
+    // The text itself is never stored; only evidence quotes of at most 200 characters, taken from the redacted text.
+    const session = load(c);
+    if (session instanceof Response) return session;
+    const tracer = createTracer(session.id, tracerSink);
+    const guarded = await runInputGuardrails(c.req.valid('json').text, { mode: session.mode, tracer });
+    const redacted = guarded.events.some((e) => e.verdict === 'redact');
+    if (guarded.action === 'wellbeing') {
+      // As in the chat: nothing is extracted or stored, and a support hand-off is offered with consent (spec 11).
+      const draft = draftWellbeing(session.profile);
+      repo.updateSession(session.id, { escalationDraft: draft });
+      tracer.record({ actor: 'supervisor', kind: 'escalation', input: 'WELLBEING', output: 'CV not processed, support offered', verdict: 'escalate' });
+      return c.json({ session: fresh(session.id), slots: [], redacted: true });
+    }
+    // A CV shows what the student has done, which is evidence of interests and goals, not of how they like to
+    // learn, so only interest and pathway updates are kept and stated preferences are never overwritten.
+    const updates = (
+      await tracer.timed(
+        { actor: 'extractor', kind: 'agent', input: `CV (${guarded.text.length} chars after redaction)` },
+        () => extract(guarded.text, ['interest', 'pathways'], catalogue.pathways().map((p) => p.id)),
+        (u) => ({ output: `${u.length} slot update(s)`, verdict: null }),
+      )
+    ).filter((u) => u.slot.startsWith('interest:') || u.slot === 'pathways' || u.slot === 'pathwaysSkipped');
+    const merged = mergeUpdates(session.profile, updates, { sessionId: session.id, turnId: randomUUID() });
+    repo.addEvidence(merged.evidence);
+    session.evidence.push(...merged.evidence);
+    session.profile = saveProfile(session, merged.profile);
+    clearExplanationCache();
+    return c.json({ session: fresh(session.id), slots: [...new Set(merged.evidence.map((e) => e.slot))], redacted });
   })
   .get('/:id/societies', (c) => {
     const session = load(c);
