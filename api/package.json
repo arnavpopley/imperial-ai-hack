@@ -1,0 +1,31 @@
+{
+  "name": "@modulematch/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --env-file-if-exists=../.env src/index.ts",
+    "start": "tsx --env-file-if-exists=../.env src/index.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "seed": "tsx --env-file-if-exists=../.env ../scripts/seed.ts",
+    "eval": "tsx --env-file-if-exists=../.env ../scripts/run-evals.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.8.0",
+    "@hono/node-server": "^2.1.8",
+    "@hono/zod-validator": "^0.9.1",
+    "@modulematch/shared": "*",
+    "better-sqlite3": "^13.2.0",
+    "drizzle-orm": "^0.45.4",
+    "hono": "^4.13.18",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/node": "^26.6.6",
+    "drizzle-kit": "^0.31.11",
+    "tsx": "^4.23.15",
+    "vitest": "^5.1.0"
+  }
+}
