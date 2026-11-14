@@ -160,7 +160,7 @@ No authentication this weekend. The staff console sits behind a role switch in t
     figma/                 # screenshots, Make prompts, file link
   packages/
     shared/                # types, zod schemas, taxonomy (owned by WS0)
-  api/
+  server/                  # named server/, not api/: Vercel treats a top-level api/ folder as functions
     src/
       engines/             # scoring, rules, timetable, insights, pathways (WS2)
       agents/              # supervisor, interviewer, extractor, matcher, timetabler, insights (WS3)
@@ -349,7 +349,7 @@ Database tables: `sessions`, `messages`, `profiles`, `evidence`, `modules`, `slo
 
 ## 8. Scoring engine
 
-Pure functions in `api/src/engines/scoring.ts`. No model calls. Same inputs always give the same outputs.
+Pure functions in `server/src/engines/scoring.ts`. No model calls. Same inputs always give the same outputs.
 
 ### 8.1 Interest alignment
 
@@ -757,12 +757,12 @@ WS0 is blocking and comes first. After it, the other workstreams run in parallel
 | WS | Owns | Delivers | Done when |
 |---|---|---|---|
 | WS0 Contracts | `packages/shared`, `data/taxonomy.json`, route stubs | Types, zod schemas, taxonomy, fixture responses for every route in section 13 | Web and API both compile against the shared package, and every route returns a fixture. |
-| WS1 Data | `data/`, `scripts/`, `api/src/db` | Schema, seed scripts, analysed modules, slots, cohort | `npm run seed` builds a database with all datasets in section 15. |
-| WS2 Engines | `api/src/engines`, `api/tests` | Sections 8 and 9 as pure functions | Unit tests pass, including the determinism test. |
-| WS3 Agents | `api/src/agents`, `api/src/guardrails`, `api/src/routes` | Supervisor, six agents, guardrail pipeline, SSE | A full student journey works through the API with real model calls. |
+| WS1 Data | `data/`, `scripts/`, `server/src/db` | Schema, seed scripts, analysed modules, slots, cohort | `npm run seed` builds a database with all datasets in section 15. |
+| WS2 Engines | `server/src/engines`, `server/tests` | Sections 8 and 9 as pure functions | Unit tests pass, including the determinism test. |
+| WS3 Agents | `server/src/agents`, `server/src/guardrails`, `server/src/routes` | Supervisor, six agents, guardrail pipeline, SSE | A full student journey works through the API with real model calls. |
 | WS4 Student UI | `web/src/student` | Screens 1 to 7 | The journey in section 18 runs in the browser. |
 | WS5 Staff UI | `web/src/staff` | Screens 8 to 11 | Insight decisions and escalation replies round-trip. |
-| WS6 Trace, evals, docs | `api/src/trace`, `scripts/run-evals.ts`, `docs/`, `README.md` | Trace page, evaluation harness, all documents in section 19 | `npm run eval` prints pass rates, and the docs are complete. |
+| WS6 Trace, evals, docs | `server/src/trace`, `scripts/run-evals.ts`, `docs/`, `README.md` | Trace page, evaluation harness, all documents in section 19 | `npm run eval` prints pass rates, and the docs are complete. |
 
 Brief for each coding agent: "Read MODULE_MATCHER_SPEC.md. You own workstream N and its directories. Code against the shared types. If a contract needs to change, update the spec and `packages/shared` first and say so."
 

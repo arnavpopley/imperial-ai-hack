@@ -16,7 +16,7 @@ import {
   ModulesFile,
   ProgrammeRulesFile,
   readDataset,
-} from '../api/src/db/datasets.ts';
+} from '../server/src/db/datasets.ts';
 import { wordCount } from './lib/analyst.ts';
 import { fraction, Rng } from './lib/prng.ts';
 

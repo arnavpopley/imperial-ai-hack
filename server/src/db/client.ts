@@ -1,4 +1,5 @@
 // Opens the SQLite database and creates the tables in schema.ts if they do not exist yet.
+import { existsSync, renameSync } from 'node:fs';
 import { isAbsolute, resolve } from 'node:path';
 import Database from 'better-sqlite3';
 import { type BetterSQLite3Database, drizzle } from 'drizzle-orm/better-sqlite3';
@@ -124,7 +125,22 @@ CREATE INDEX IF NOT EXISTS trace_events_session ON trace_events(session_id);
 `;
 
 /** Default database file, relative to the repository root (spec section 5). */
-const DEFAULT_DATABASE_PATH = 'api/modulematch.db';
+const DEFAULT_DATABASE_PATH = 'server/modulematch.db';
+
+/** Where the default database lived before the backend moved from api/ to server/. */
+const LEGACY_DATABASE_PATH = 'api/modulematch.db';
+
+/**
+ * Moves a database (with its WAL and shared-memory files) from `legacy` to `target`, once: only when the legacy
+ * file exists and the target does not. Keeps saved sessions after the api/ to server/ rename. Returns whether it moved.
+ */
+export function migrateLegacyDatabase(legacy: string, target: string): boolean {
+  if (!existsSync(legacy) || existsSync(target)) return false;
+  for (const suffix of ['', '-wal', '-shm']) {
+    if (existsSync(`${legacy}${suffix}`)) renameSync(`${legacy}${suffix}`, `${target}${suffix}`);
+  }
+  return true;
+}
 
 /** DATABASE_PATH if set, else the default; relative paths resolve against the repo root, not the cwd. */
 export function databasePath(): string {
@@ -146,6 +162,12 @@ let shared: Db | null = null;
 
 /** The process-wide database at databasePath(), opened on first use. */
 export function getDb(): Db {
-  shared ??= openDb(databasePath());
+  if (!shared) {
+    // Only the default location moves; an explicit DATABASE_PATH is always used as given.
+    if (process.env.DATABASE_PATH === undefined) {
+      migrateLegacyDatabase(resolve(REPO_ROOT, LEGACY_DATABASE_PATH), resolve(REPO_ROOT, DEFAULT_DATABASE_PATH));
+    }
+    shared = openDb(databasePath());
+  }
   return shared;
 }

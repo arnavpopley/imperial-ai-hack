@@ -1,6 +1,6 @@
 # Architecture
 
-Design rule: **numbers come from code, words come from models.** Scores, clashes, eligibility, pathway progress and counterfactuals are computed by deterministic TypeScript in `api/src/engines`. Agents decide what to ask, call the engines, and explain the results. Scores are therefore stable, testable and defensible.
+Design rule: **numbers come from code, words come from models.** Scores, clashes, eligibility, pathway progress and counterfactuals are computed by deterministic TypeScript in `server/src/engines`. Agents decide what to ask, call the engines, and explain the results. Scores are therefore stable, testable and defensible.
 
 Every agent also has an offline path: deterministic rules and templates that run when no `ANTHROPIC_API_KEY` is set (or `MODULEMATCH_OFFLINE=1`). The tests and the evaluation harness use it, and the demo cannot fail on network access.
 
@@ -46,7 +46,7 @@ stateDiagram-v2
   ESCALATED --> RECOMMEND: staff responds
 ```
 
-The mode machine lives in `api/src/agents/modes.ts`. A transition outside this diagram is refused and traced. The current mode is always shown in the UI as a chip.
+The mode machine lives in `server/src/agents/modes.ts`. A transition outside this diagram is refused and traced. The current mode is always shown in the UI as a chip.
 
 ## Agents
 

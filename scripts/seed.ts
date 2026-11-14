@@ -2,7 +2,7 @@
 // Every dataset, including the JSON-only ones the API reads at runtime, is validated with zod first.
 // Needs no API key.
 import { rmSync } from 'node:fs';
-import { databasePath, openDb } from '../api/src/db/client.ts';
+import { databasePath, openDb } from '../server/src/db/client.ts';
 import {
   CohortFile,
   DATASET_FILES,
@@ -13,8 +13,8 @@ import {
   readDataset,
   SlotsFile,
   SocietiesFile,
-} from '../api/src/db/datasets.ts';
-import { listCohort, listModules, listSlots, replaceCohort, replaceModules, replaceSlots } from '../api/src/db/repo.ts';
+} from '../server/src/db/datasets.ts';
+import { listCohort, listModules, listSlots, replaceCohort, replaceModules, replaceSlots } from '../server/src/db/repo.ts';
 
 function main(): void {
   const raw = readDataset(DATASET_FILES.rawModules, RawModulesFile);

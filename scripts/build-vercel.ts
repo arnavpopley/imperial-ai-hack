@@ -5,7 +5,7 @@ import { build } from 'esbuild';
 import { execSync } from 'node:child_process';
 import { cpSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { REPO_ROOT } from '../api/src/db/datasets.ts';
+import { REPO_ROOT } from '../server/src/db/datasets.ts';
 
 const OUTPUT = resolve(REPO_ROOT, '.vercel/output');
 const FUNC = resolve(OUTPUT, 'functions/api.func');
@@ -20,7 +20,7 @@ cpSync(resolve(REPO_ROOT, 'web/dist'), resolve(OUTPUT, 'static'), { recursive: t
 
 // 2. API function. better-sqlite3 is a native module, so it is shipped beside the bundle rather than inlined.
 await build({
-  entryPoints: [resolve(REPO_ROOT, 'api/src/vercel.ts')],
+  entryPoints: [resolve(REPO_ROOT, 'server/src/vercel.ts')],
   outfile: resolve(FUNC, 'index.mjs'),
   bundle: true,
   platform: 'node',

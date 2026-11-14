@@ -13,7 +13,7 @@ import {
   RawModulesFile,
   readDataset,
   SlotsFile,
-} from '../api/src/db/datasets.ts';
+} from '../server/src/db/datasets.ts';
 import { Rng } from './lib/prng.ts';
 import { clashProbability } from './lib/timetable.ts';
 

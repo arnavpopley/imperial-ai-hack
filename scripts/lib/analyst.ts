@@ -2,7 +2,7 @@
 // scripts/analyse-modules.ts and the data tests so both apply exactly the same rules.
 import { type ModuleDerived, SKILL_IDS, schemas as S, TOPIC_IDS } from '@modulematch/shared';
 import { z } from 'zod';
-import type { RawModule } from '../../api/src/db/datasets.ts';
+import type { RawModule } from '../../server/src/db/datasets.ts';
 
 /** A topic weight at or above this needs a verbatim quote from the description. */
 export const QUOTE_REQUIRED_WEIGHT = 0.5;
