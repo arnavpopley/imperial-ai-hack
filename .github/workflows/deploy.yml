@@ -1,0 +1,41 @@
+name: Deploy to Vercel
+# Every merge to main is built with scripts/build-vercel.ts (Build Output API) and deployed to production.
+# Needs the VERCEL_TOKEN secret and the VERCEL_ORG_ID and VERCEL_PROJECT_ID variables; it is skipped until they exist.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+concurrency:
+  group: vercel-production
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+    steps:
+      - name: Check deployment settings
+        id: settings
+        run: |
+          if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_ORG_ID" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
+            echo "Vercel token or project ids are not configured; skipping deployment."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.settings.outputs.ready == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.settings.outputs.ready == 'true'
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+        if: steps.settings.outputs.ready == 'true'
+      - run: npm run build:vercel
+        if: steps.settings.outputs.ready == 'true'
+      - name: Deploy prebuilt output
+        if: steps.settings.outputs.ready == 'true'
+        run: npx --yes vercel@latest deploy --prebuilt --prod --token "$VERCEL_TOKEN"
