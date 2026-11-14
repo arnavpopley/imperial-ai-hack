@@ -30,10 +30,13 @@ function matchReason(interests: TopicWeights, society: Society): string {
   return named.length > 0 ? `Shares your interests: ${named.join(' and ')}.` : 'No overlap with your stated interests yet.';
 }
 
-function wildcardReason(society: Society): string {
-  const [main] = heaviestTopics(society.topics);
-  return main === undefined
-    ? 'Something different from your top interests.'
+/** Says the wildcard is outside the top interests only when none of its topics are among them. */
+function wildcardReason(society: Society, topInterests: TopicWeights): string {
+  const topics = heaviestTopics(society.topics);
+  const [main] = topics;
+  if (main === undefined) return 'Something different from your top interests.';
+  return topics.some((topic) => Object.hasOwn(topInterests, topic))
+    ? `The most different option left: centred on ${topicLabel(main)}, though it shares some of your top interests.`
     : `Something different: centred on ${topicLabel(main)}, outside your top interests.`;
 }
 
@@ -70,6 +73,6 @@ export function matchSocieties(profile: StudentProfile, societies: readonly Soci
 
   return [
     ...scored.slice(0, TOP_SOCIETIES).map((entry) => toMatch(entry, false, matchReason(profile.interests, entry.society))),
-    ...(wildcard ? [toMatch(wildcard, true, wildcardReason(wildcard.society))] : []),
+    ...(wildcard ? [toMatch(wildcard, true, wildcardReason(wildcard.society, topInterests))] : []),
   ];
 }

@@ -51,6 +51,19 @@ describe('clashProbability', () => {
     expect(clashProbability(twoSessions, confirmedB)).toBeCloseTo(0.75);
   });
 
+  it('treats a sessionKey reused in another term as a separate session', () => {
+    const acrossTerms = [
+      makeSlot('a', 'mon', '09:00', '10:00', { probability: 0.5 }),
+      makeSlot('a', 'tue', '09:00', '10:00', { probability: 0.5 }),
+      makeSlot('a', 'mon', '09:00', '10:00', { probability: 0.5, term: 'spring' }),
+      makeSlot('a', 'tue', '09:00', '10:00', { probability: 0.5, term: 'spring' }),
+    ];
+    const bothTerms = [...confirmedB, makeSlot('b', 'mon', '09:00', '10:00', { term: 'spring' })];
+    // Two independent 50% clashes: 1 − 0.5 · 0.5 = 0.75, not 0.5 + 0.5.
+    expect(clashProbability(acrossTerms, bothTerms)).toBeCloseTo(0.75);
+    expect(clashPriorities([['a', 'b']], [...acrossTerms, ...bothTerms])[0]?.probability).toBeCloseTo(0.75);
+  });
+
   it('multiplies candidate probabilities on both sides', () => {
     const provisionalA = [
       makeSlot('a', 'mon', '09:00', '10:00', { probability: 0.5 }),
