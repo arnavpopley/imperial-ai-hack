@@ -66,7 +66,7 @@ export async function classifyIntent(text: string, mode: Mode, modules: Module[]
   // would only add latency.
   if (!isLive() || mode === 'INTERVIEW') return byRules;
   const result = await structured(LiveIntent, {
-    tier: 'fast',
+    tier: 'light',
     system: SYSTEM,
     messages: [{ role: 'user', content: `Current mode: ${mode}\n${asData('student', text)}` }],
     maxTokens: 200,
