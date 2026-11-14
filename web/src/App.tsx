@@ -19,7 +19,7 @@ type Role = 'student' | 'staff' | 'trace';
 const ROLES: readonly { role: Role; to: string; label: string; short: string; icon: IconName }[] = [
   { role: 'student', to: '/', label: 'Student', short: 'Student', icon: 'tutor' },
   { role: 'staff', to: '/staff', label: 'Staff', short: 'Staff', icon: 'user' },
-  { role: 'trace', to: '/trace', label: 'How it works', short: 'How it works', icon: 'sparkle' },
+  { role: 'trace', to: '/trace', label: 'How it works', short: 'Guide', icon: 'sparkle' },
 ];
 
 function roleFor(pathname: string): Role {
@@ -72,7 +72,7 @@ export function App() {
 function AppHeader({ role }: { role: Role }) {
   return (
     <header className="sticky top-0 z-(--z-header) border-b border-line/80 bg-surface/85 backdrop-blur-md supports-[backdrop-filter]:bg-surface/75">
-      <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-3 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-2 px-3 sm:gap-3 sm:px-6 lg:px-8">
         <Link to="/" className="flex shrink-0 items-center gap-2.5 rounded-lg" aria-label="ModuleMatch, home">
           <span
             aria-hidden="true"
@@ -93,7 +93,7 @@ function AppHeader({ role }: { role: Role }) {
                     to={r.to}
                     aria-current={active ? 'page' : undefined}
                     className={cx(
-                      'relative flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-medium whitespace-nowrap transition-colors sm:px-4',
+                      'relative flex h-9 items-center gap-1.5 rounded-full px-2.5 text-[13px] font-medium whitespace-nowrap transition-colors sm:px-4 sm:text-sm',
                       active ? 'text-on-brand' : 'text-muted hover:text-ink',
                     )}
                   >
@@ -107,7 +107,9 @@ function AppHeader({ role }: { role: Role }) {
                     )}
                     <span className="relative flex items-center gap-1.5">
                       <Icon name={r.icon} size={16} className="max-sm:hidden" />
-                      {r.short}
+                      {/* Phones get a shorter label so the header, with the theme button, fits a 320px screen. */}
+                      <span className="sm:hidden">{r.short}</span>
+                      <span className="max-sm:hidden">{r.label}</span>
                     </span>
                   </Link>
                 </li>
