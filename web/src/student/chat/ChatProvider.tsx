@@ -2,7 +2,7 @@
 // Applies each SSE event (spec 13) to the transcript and to the session state.
 import type { Evidence, Message, SendMessageBody, SseEvent, Verdict } from '@modulematch/shared';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { sendMessage } from '../../api.ts';
+import { api, sendMessage } from '../../api.ts';
 import type { GuardrailVariant } from '../../components/GuardrailNotice.tsx';
 import { errorMessage } from '../../components/StateViews.tsx';
 import { upsertEscalation } from '../hooks/useEscalationDraft.ts';
@@ -136,7 +136,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           case 'guardrail': {
             const { notice } = event;
             if (notice) {
-              const added = { variant: guardrailVariant(event.stage, event.verdict), message: notice, stage: event.stage };
+              const added = {
+                variant: guardrailVariant(event.stage, event.verdict),
+                message: notice,
+                stage: event.stage,
+              };
               patchReply((t) => ({ ...t, notices: [...t.notices, added] }));
             }
             break;
@@ -150,7 +154,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             if (event.draft) offerDraft(event.draft);
             if (escalation) {
               offerDraft(null);
-              update((s) => ({ ...s, escalationDraft: null, escalations: upsertEscalation(s.escalations, escalation) }));
+              update((s) => ({
+                ...s,
+                escalationDraft: null,
+                escalations: upsertEscalation(s.escalations, escalation),
+              }));
             }
             break;
           }
@@ -166,6 +174,14 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         // A stream that closes without `done` still ends the reply.
         patchReply((t) => (t.status === 'streaming' ? { ...t, status: 'done' } : t));
         requestsRef.current.delete(reply.id);
+        // The stream does not carry interview progress (steps asked, finished), so read it back for the
+        // timeline. A failed read keeps the last known progress; the next turn tries again.
+        api.getSession(sessionId).then(
+          (fresh) => {
+            if (!controller.signal.aborted) update((s) => ({ ...s, interview: fresh.interview }));
+          },
+          () => undefined,
+        );
       } catch (err) {
         if (!controller.signal.aborted) patchReply((t) => ({ ...t, status: 'error', error: errorMessage(err) }));
       } finally {
