@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..700&display=swap');
 @import 'tailwindcss';
 
 /*
@@ -36,6 +37,91 @@
   --color-mode-escalated: #c0392b;
 
   --radius-card: 0.875rem;
+
+  /* WS4 additions: secondary surfaces, emphasis lines, text on brand, status, module palette, motion. */
+  --color-surface-2: #f0f0ea;
+  --color-line-strong: #cbcbc1;
+  --color-on-brand: #ffffff;
+  --color-scrim: rgb(14 16 22 / 0.42);
+
+  /* One colour per module on the timetable grid and legend. */
+  --color-module-1: #3b4fd8;
+  --color-module-2: #0e8a7e;
+  --color-module-3: #c2571a;
+  --color-module-4: #8e44ad;
+  --color-module-5: #b8860b;
+  --color-module-6: #c0336f;
+  --color-module-7: #2f7fbf;
+  --color-module-8: #5b7a1f;
+
+  --shadow-soft: 0 1px 2px rgb(22 24 29 / 0.04), 0 4px 16px -4px rgb(22 24 29 / 0.08);
+  --shadow-lift: 0 2px 4px rgb(22 24 29 / 0.06), 0 18px 40px -12px rgb(22 24 29 / 0.22);
+
+  --ease-out-soft: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --animate-rise: rise 420ms var(--ease-out-soft) both;
+  --animate-fade: fade 240ms ease-out both;
+  --animate-slide-in: slide-in 320ms var(--ease-out-soft) both;
+  --animate-glow: glow 1600ms ease-out 1;
+  --animate-caret: caret 1s steps(2, start) infinite;
+  --animate-pulse-dot: pulse-dot 1.8s ease-in-out infinite;
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes slide-in {
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: none;
+    }
+  }
+  @keyframes glow {
+    from {
+      background-color: var(--color-brand-soft);
+    }
+    to {
+      background-color: transparent;
+    }
+  }
+  @keyframes caret {
+    to {
+      visibility: hidden;
+    }
+  }
+  @keyframes pulse-dot {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.35;
+    }
+  }
+}
+
+/* Diagonal hatch in the current text colour, used for clash overlap bands and n/a sub-scores. */
+@utility hatch {
+  background-image: repeating-linear-gradient(
+    135deg,
+    color-mix(in oklab, currentColor 28%, transparent) 0 5px,
+    transparent 5px 10px
+  );
 }
 
 @layer base {
@@ -54,6 +140,49 @@
       --color-line: #2b2f39;
       --color-brand: #7c8cff;
       --color-brand-soft: #232a52;
+      --color-surface-2: #22252e;
+      --color-line-strong: #3d4250;
+      --color-on-brand: #0c0f24;
+      --color-scrim: rgb(0 0 0 / 0.6);
+
+      --color-fit-high: #4cc38a;
+      --color-fit-mid: #e3b341;
+      --color-fit-low: #f0806f;
+      --color-clash-certain: #f2705f;
+      --color-clash-likely: #f5a04a;
+      --color-clash-possible: #e8cb4a;
+      --color-mode-onboard: #a1a7b4;
+      --color-mode-interview: #8b99ff;
+      --color-mode-recommend: #4cc38a;
+      --color-mode-explain: #b08cff;
+      --color-mode-plan: #4cc0dc;
+      --color-mode-escalated: #f2705f;
+
+      --color-module-1: #8b99ff;
+      --color-module-2: #3fcfbf;
+      --color-module-3: #f29a5c;
+      --color-module-4: #c58bf0;
+      --color-module-5: #e3b341;
+      --color-module-6: #f07fae;
+      --color-module-7: #6cb6f0;
+      --color-module-8: #a3c95a;
+
+      --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 16px -4px rgb(0 0 0 / 0.4);
+      --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.3), 0 18px 40px -12px rgb(0 0 0 / 0.6);
+    }
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 1ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 1ms !important;
+      scroll-behavior: auto !important;
     }
   }
 }
