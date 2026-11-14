@@ -101,6 +101,8 @@ flowchart LR
   GIN --> INT[Interviewer agent]
   GIN --> MAT[Matcher agent]
   GIN --> TT[Timetabler agent]
+  GIN --> CAT[Catalogue agent]
+  CAT --> ENG
   INT --> EXT[Profile Extractor]
   EXT --> PROF[(Profile and evidence)]
   MAT --> ENG[Scoring engine and rules validator]
@@ -499,7 +501,7 @@ Every agent has a narrow job, a fixed tool list, and structured output validated
 
 - **Job:** owns the mode, routes each student turn to one agent, and raises escalations.
 - **Implementation:** a deterministic state machine plus one intent classification call on `MODEL_FAST`.
-- **Intents:** `answer_interview`, `ask_why`, `what_if`, `edit_profile`, `shortlist_action`, `timetable_action`, `rule_exception_request`, `pathway_action`, `smalltalk`, `out_of_scope`, `wellbeing`.
+- **Intents:** `answer_interview`, `ask_why`, `what_if`, `edit_profile`, `shortlist_action`, `timetable_action`, `rule_exception_request`, `pathway_action`, `catalogue_question`, `smalltalk`, `out_of_scope`, `wellbeing`.
 - **Rule:** if intent confidence is below 0.6, ask one clarifying question instead of guessing.
 
 ### 10.2 Interviewer
@@ -594,6 +596,14 @@ For each explanation:
 - **Model:** `MODEL_SMART`, on demand and after cohort changes.
 - **Tools:** `cohort_stats(moduleId)`, `counterfactuals(moduleId)`, `clash_priorities()`.
 - **Rule:** every number in a card must come from a tool result, and every card waits for a staff decision.
+
+### 10.8 Catalogue
+
+- **Job:** answer questions across the whole catalogue ("which modules use Python?", "what is coursework-only in spring?", "compare CFD and Fluid Mechanics 3A"). Routed by the `catalogue_question` intent in RECOMMEND, EXPLAIN or PLAN.
+- **Model:** `MODEL_SMART` at low effort, in a tool loop capped at four tool rounds.
+- **Tools:** `search_modules({ query?, topics?, term?, type?, maxExamShare?, minExamShare?, eligibleOnly?, limit? })` (deterministic keyword and filter search returning compact rows with the student's fit and eligibility), `get_module(id)`, `compare_modules(ids)` (two or three).
+- **Rules:** plain text under 120 words that cites module codes; only modules from tool results (a reply naming an unknown code is replaced by the search results); ineligible modules are marked with the reason; G8 runs on the buffered reply. Every tool call is traced.
+- **Offline:** the `search_modules` results for filters read from the question, formatted as a short list.
 
 ---
 
