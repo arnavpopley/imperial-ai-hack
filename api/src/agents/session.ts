@@ -67,7 +67,17 @@ export function emptyProfile(body: CreateSessionBody, studentId: string): Studen
   };
 }
 
-export function newSessionState(body: CreateSessionBody): SessionState {
+/**
+ * When a student skips the completed-modules question, assume they passed the core modules of earlier years,
+ * which is what progression requires. They can correct it in "Your data".
+ */
+export function defaultCompleted(body: CreateSessionBody): string[] {
+  if (body.completedModuleIds.length > 0) return body.completedModuleIds;
+  return catalogue.modules().filter((m) => m.type === 'core' && m.level < body.yearOfStudy).map((m) => m.id);
+}
+
+export function newSessionState(input: CreateSessionBody): SessionState {
+  const body = { ...input, completedModuleIds: defaultCompleted(input) };
   const now = new Date().toISOString();
   const id = randomUUID();
   return {
@@ -102,8 +112,17 @@ export function saveProfile(session: SessionState, profile: StudentProfile): Stu
   return next;
 }
 
+/**
+ * The catalogue as the student sees it: completed modules are left out, and eligible modules are listed
+ * before ineligible ones, which stay visible with their reasons (spec 8.7). Order within each group is the
+ * engine's ranking.
+ */
 export function ranked(session: SessionState): Recommendation[] {
-  return rankModules(session.profile, catalogue.modules(), session.weights, rulesForProfile(session.profile));
+  const completed = new Set(session.profile.completedModuleIds);
+  const all = rankModules(session.profile, catalogue.modules(), session.weights, rulesForProfile(session.profile)).filter(
+    (r) => !completed.has(r.moduleId),
+  );
+  return [...all.filter((r) => r.eligible), ...all.filter((r) => !r.eligible)];
 }
 
 export function recommendationsResponse(session: SessionState): RecommendationsResponse {

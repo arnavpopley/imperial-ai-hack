@@ -11,12 +11,14 @@ export interface PlanStep {
   slots: string[];
   question: string;
   widget: Widget;
+  /** Asked even when its slots are already filled, because the answer adds something new (dislikes). */
+  always?: boolean;
 }
 
 /** Spec 10.2 quick-mode plan. Questions 4 and 6 also cover the applied and workload dimensions. */
 export const QUICK_PLAN: PlanStep[] = [
-  { id: 'love', slots: ['interest'], question: 'Which topics or lectures made you lose track of time?', widget: null },
-  { id: 'avoid', slots: ['interest'], question: 'And what would you avoid if you could?', widget: null },
+  { id: 'love', slots: ['interest'], question: 'Which topics or lectures made you lose track of time?', widget: null, always: true },
+  { id: 'avoid', slots: ['interest'], question: 'And what would you avoid if you could?', widget: null, always: true },
   { id: 'career', slots: ['pathways'], question: 'What would you like to be doing after you graduate? "Not sure yet" is a fine answer.', widget: null },
   {
     id: 'assessment',
@@ -87,7 +89,7 @@ export function nextQuestion(session: SessionState, askedStepIds: string[]): Nex
   if (interview.questionsAsked >= interview.budget) return null;
   const gaps = unfilledSlots(profile, evidence);
   const planned = QUICK_PLAN.find(
-    (step) => !askedStepIds.includes(step.id) && step.slots.some((slot) => !slotFilled(slot, gaps, evidence)),
+    (step) => !askedStepIds.includes(step.id) && (step.always || step.slots.some((slot) => !slotFilled(slot, gaps, evidence))),
   );
   if (planned) return { step: planned, targetSlots: planned.slots };
   const gap = gaps.find((slot) => !askedStepIds.includes(`follow:${slot}`));

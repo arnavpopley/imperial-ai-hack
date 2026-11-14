@@ -1,9 +1,10 @@
-// WS0 contract tests: fixtures match their schemas and every spec-13 route returns a valid fixture.
+// Contract tests: fixtures match their schemas, and every spec-13 route returns a schema-valid response.
 import { schemas } from '@modulematch/shared';
 import * as fx from '@modulematch/shared/fixtures';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import type { z } from 'zod';
 import { createApp } from '../src/app.ts';
+import { seedIfEmpty } from '../src/bootstrap.ts';
 
 const app = createApp();
 const S = schemas;
@@ -41,53 +42,75 @@ describe('fixture swaps', () => {
   });
 });
 
+// Every spec-13 route against the seeded in-memory database, validated with the shared schemas.
 describe('every route returns a valid response', () => {
-  const sid = fx.fixtureSession.id;
-  const routes: [string, RequestInit | undefined, z.ZodType][] = [
-    ['/api/sessions', json({ programme: 'MEng Mechanical Engineering', yearOfStudy: 3 }), S.SessionState],
-    [`/api/sessions/${sid}`, undefined, S.SessionState],
-    [`/api/sessions/${sid}/profile`, put({ breadthAppetite: 0.4 }), S.SessionState],
-    [`/api/sessions/${sid}/profile`, { method: 'DELETE' }, S.SessionState],
-    [`/api/sessions/${sid}/weights`, put({ interest: 1, goal: 0, style: 0, breadth: 0 }), S.RecommendationsResponse],
-    [`/api/sessions/${sid}/recommendations`, undefined, S.RecommendationsResponse],
-    [`/api/sessions/${sid}/modules/ME3-CFD/explanation`, undefined, S.ExplanationResponse],
-    [`/api/sessions/${sid}/shortlist`, json({ moduleId: 'ME3-CFD', action: 'add' }), S.SessionState],
-    [`/api/sessions/${sid}/timetable`, undefined, S.TimetableView],
-    [`/api/sessions/${sid}/escalations`, json({ type: 'RULE_EXCEPTION', summary: 'x' }), S.Escalation],
-    [`/api/sessions/${sid}/pathways/aerospace-motorsport/progress`, undefined, S.PathwayProgress],
-    [`/api/sessions/${sid}/societies`, undefined, S.SocietyMatch.array()],
-    ['/api/staff/modules', undefined, S.StaffModuleSummary.array()],
-    ['/api/staff/modules/ME3-ROB/insights', undefined, S.Insight.array()],
-    ['/api/staff/insights/ins-1/decision', json({ decision: 'accepted' }), S.Insight],
-    ['/api/staff/modules/ME3-CFD/derived', put({ topics: { 'fluid-mechanics': 1 } }), S.Module],
-    ['/api/staff/timetable/clash-priorities', undefined, S.ClashPriority.array()],
-    ['/api/staff/escalations', undefined, S.StaffEscalation.array()],
-    ['/api/staff/escalations/esc-1/respond', json({ response: 'Approved.' }), S.Escalation],
-    ['/api/modules', undefined, S.Module.array()],
-    ['/api/pathways', undefined, S.Pathway.array()],
-    ['/api/societies', undefined, S.Society.array()],
-    [`/api/trace/${sid}`, undefined, S.TraceEvent.array()],
-    ['/api/eval/latest', undefined, S.EvalRun],
-  ];
-  it.each(routes)('%s', async (path, init, schema) => {
+  let sid = '';
+  let escalationId = '';
+  const ids = { module: 'MECH60006', insightModule: 'MECH60009', pathway: 'aerospace-motorsport' };
+
+  beforeAll(async () => {
+    seedIfEmpty();
+    const res = await app.request('/api/sessions', json({ programme: 'MEng Mechanical Engineering', yearOfStudy: 3 }));
+    sid = S.SessionState.parse(await res.json()).id;
+  });
+
+  const check = async (path: string, init: RequestInit | undefined, schema: z.ZodType) => {
     const res = await app.request(path, init);
     expect(res.ok).toBe(true);
     const payload: unknown = await res.json();
     expect(() => schema.parse(payload)).not.toThrow();
+    return payload;
+  };
+
+  it('student routes', async () => {
+    const s = `/api/sessions/${sid}`;
+    await check(s, undefined, S.SessionState);
+    await check(`${s}/profile`, put({ breadthAppetite: 0.4 }), S.SessionState);
+    await check(`${s}/weights`, put({ interest: 1, goal: 0, style: 0, breadth: 0 }), S.RecommendationsResponse);
+    await check(`${s}/recommendations`, undefined, S.RecommendationsResponse);
+    await check(`${s}/modules/${ids.module}/explanation`, undefined, S.ExplanationResponse);
+    await check(`${s}/shortlist`, json({ moduleId: ids.module, action: 'add' }), S.SessionState);
+    await check(`${s}/timetable`, undefined, S.TimetableView);
+    const escalation = (await check(`${s}/escalations`, json({ type: 'RULE_EXCEPTION', summary: 'x' }), S.Escalation)) as { id: string };
+    escalationId = escalation.id;
+    await check(`${s}/pathways/${ids.pathway}/progress`, undefined, S.PathwayProgress);
+    await check(`${s}/societies`, undefined, S.SocietyMatch.array());
+    await check(`${s}/profile`, { method: 'DELETE' }, S.SessionState);
   });
 
-  it('rejects an invalid body with 400', async () => {
-    const res = await app.request(`/api/sessions/${sid}/shortlist`, json({ moduleId: 'x', action: 'steal' }));
-    expect(res.status).toBe(400);
+  it('staff routes', async () => {
+    await check('/api/staff/modules', undefined, S.StaffModuleSummary.array());
+    const insights = (await check(`/api/staff/modules/${ids.insightModule}/insights`, undefined, S.Insight.array())) as { id: string }[];
+    expect(insights.length).toBeGreaterThan(0);
+    await check(`/api/staff/insights/${insights[0]!.id}/decision`, json({ decision: 'accepted' }), S.Insight);
+    await check(`/api/staff/modules/${ids.module}/derived`, put({ topics: { 'fluid-mechanics': 1 } }), S.Module);
+    await check('/api/staff/timetable/clash-priorities', undefined, S.ClashPriority.array());
+    await check('/api/staff/escalations', undefined, S.StaffEscalation.array());
+    await check(`/api/staff/escalations/${escalationId}/respond`, json({ response: 'Approved.' }), S.Escalation);
+  });
+
+  it('shared routes', async () => {
+    await check('/api/modules', undefined, S.Module.array());
+    await check('/api/pathways', undefined, S.Pathway.array());
+    await check('/api/societies', undefined, S.Society.array());
+    await check(`/api/trace/${sid}`, undefined, S.TraceEvent.array());
+    await check('/api/eval/latest', undefined, S.EvalRun.nullable());
+  });
+
+  it('rejects an invalid body with 400 and an unknown session with 404', async () => {
+    expect((await app.request(`/api/sessions/${sid}/shortlist`, json({ moduleId: 'x', action: 'steal' }))).status).toBe(400);
+    expect((await app.request('/api/sessions/nope')).status).toBe(404);
   });
 
   it('streams valid SSE events from /messages', async () => {
-    const res = await app.request(`/api/sessions/${sid}/messages`, json({ content: 'hello' }));
-    const text = await res.text();
-    const events = text
+    const created = await app.request('/api/sessions', json({ programme: 'MEng Mechanical Engineering', yearOfStudy: 3 }));
+    const fresh = S.SessionState.parse(await created.json()).id;
+    const res = await app.request(`/api/sessions/${fresh}/messages`, json({ content: 'I love fluid mechanics and robotics.' }));
+    const events = (await res.text())
       .split('\n')
       .filter((l) => l.startsWith('data: '))
       .map((l) => S.SseEvent.parse(JSON.parse(l.slice(6))));
+    expect(events.map((e) => e.type)).toContain('profile_update');
     expect(events.at(-1)?.type).toBe('done');
   });
 });

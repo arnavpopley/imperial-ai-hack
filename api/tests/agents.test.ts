@@ -81,7 +81,8 @@ describe('interviewer', () => {
   it('skips plan steps whose slots are already filled', () => {
     const ev = (slot: string): Evidence => ({ id: slot, sessionId: 's', turnId: 't', slot, value: 0.5, quote: 'q', confidence: 1 });
     const filled = ['interest:fluid-mechanics', 'interest:control-robotics', 'interest:statistics-data', 'pathwaysSkipped'].map(ev);
-    expect(nextQuestion(session(filled, 2), ['love'])?.step.id).toBe('assessment');
+    expect(nextQuestion(session(filled, 2), ['love', 'avoid'])?.step.id).toBe('assessment');
+    expect(nextQuestion(session(filled, 1), ['love'])?.step.id).toBe('avoid');
   });
 
   it('finishes when the budget is spent', () => {

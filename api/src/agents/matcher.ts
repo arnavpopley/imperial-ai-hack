@@ -86,7 +86,7 @@ export function explainByRules(
   // Spec 8.7: compulsory modules with a low style fit get a preparation hint.
   if (module.type === 'core' && rec.sub.style < 0.6) watchOuts.push('This is a core module, so it is worth preparing for the parts above your comfort level early.');
 
-  const band = rec.fit >= 75 ? 'A strong fit' : rec.fit >= 55 ? 'A reasonable fit' : 'A weaker fit';
+  const band = rec.fit >= 70 ? 'A strong fit' : rec.fit >= 50 ? 'A good fit' : rec.fit >= 35 ? 'A partial fit' : 'A weak fit';
   const driver = overlaps[0] ? `mostly because of ${topicLabel(overlaps[0].topic).toLowerCase()}` : 'based on your learning preferences';
   return { moduleId: module.id, summary: `${band} at ${rec.fit}, ${driver}.`, because: because.slice(0, 4), watchOuts };
 }

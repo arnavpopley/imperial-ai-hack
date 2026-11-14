@@ -8,7 +8,7 @@ A personalised module catalogue for Imperial students, built for the Imperial AI
 ```sh
 npm install            # Node 22.12 or newer
 cp .env.example .env   # add ANTHROPIC_API_KEY
-npm run dev            # API on :8787, web on :5173 (also reachable on your LAN)
+npm run dev            # API on :8790, web on :5173 (also reachable on your LAN)
 ```
 
 | Script | What it does |
