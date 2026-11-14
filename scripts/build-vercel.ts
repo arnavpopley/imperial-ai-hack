@@ -14,7 +14,7 @@ const SQLITE = resolve(REPO_ROOT, 'node_modules/better-sqlite3');
 rmSync(OUTPUT, { recursive: true, force: true });
 mkdirSync(FUNC, { recursive: true });
 
-// 1. Web app. The demo flag shows a notice that this public instance is offline-only and resets.
+// 1. Web app. The demo flag shows a notice that this public instance uses synthetic students and resets.
 execSync('npm run build -w web', { cwd: REPO_ROOT, stdio: 'inherit', env: { ...process.env, VITE_DEMO_INSTANCE: '1' } });
 cpSync(resolve(REPO_ROOT, 'web/dist'), resolve(OUTPUT, 'static'), { recursive: true });
 
