@@ -28,7 +28,7 @@ export function ConfidenceBadge({ variant, className }: { variant: Confidence; c
   return (
     <span
       title={m.detail}
-      className={cx('inline-flex items-center gap-1.5 rounded-md px-1.5 py-0.5 text-[11px] font-semibold', m.className, className)}
+      className={cx('inline-flex items-center gap-1.5 rounded-md px-1.5 py-0.5 text-2xs font-semibold', m.className, className)}
     >
       <svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true" focusable="false">
         {[0, 1, 2].map((i) => (

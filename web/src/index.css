@@ -18,14 +18,14 @@
   --color-brand: #3b4fd8;
   --color-brand-soft: #e7eafc;
 
-  /* Fit and confidence */
-  --color-fit-high: #1f8a5b;
-  --color-fit-mid: #c48a12;
+  /* Fit and confidence. Light values clear 4.5:1 as text on surface and canvas (UI/UX Pro Max rule 1). */
+  --color-fit-high: #1a7f53;
+  --color-fit-mid: #956600;
   --color-fit-low: #b4483c;
 
   /* Clash markers (certain, likely, possible) */
   --color-clash-certain: #c0392b;
-  --color-clash-likely: #e07b1a;
+  --color-clash-likely: #ad5a10;
   --color-clash-possible: #d9b310;
 
   /* Mode chip colours */
@@ -40,6 +40,9 @@
   --radius-panel: 1.5rem;
 
   /* WS-shell: a roomier type scale (15px small text, 13px extra small) so screens read less condensed. */
+  /* 2xs is the floor for chips, badges and micro labels: nothing renders under 12px (UI/UX Pro Max rule 6). */
+  --text-2xs: 0.75rem;
+  --text-2xs--line-height: 1rem;
   --text-xs: 0.8125rem;
   --text-xs--line-height: 1.25rem;
   --text-sm: 0.9375rem;

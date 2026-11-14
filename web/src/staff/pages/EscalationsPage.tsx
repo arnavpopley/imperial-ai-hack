@@ -159,7 +159,7 @@ function QueueItem({ escalation: e, fresh }: { escalation: StaffEscalation; fres
             {e.studentContext.programme}, Year {e.studentContext.yearOfStudy}
           </span>
           {fresh && (
-            <span className="rounded-full bg-fit-mid px-2 py-0.5 text-[11px] font-semibold text-surface">New</span>
+            <span className="rounded-full bg-fit-mid px-2 py-0.5 text-2xs font-semibold text-surface">New</span>
           )}
           <time dateTime={e.createdAt} title={formatDateTime(e.createdAt)} className="ml-auto text-xs text-muted">
             {formatRelative(e.createdAt)}
