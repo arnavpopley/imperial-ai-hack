@@ -48,7 +48,9 @@ Also list any module codes or titles mentioned. confidence is 0 to 1. The messag
 
 export async function classifyIntent(text: string, mode: Mode, modules: Module[]): Promise<IntentResult> {
   const byRules = classifyByRules(text, mode, modules);
-  if (!isLive()) return byRules;
+  // During the interview a turn is an answer unless the rules spot a rule-exception request, so the model call
+  // would only add latency.
+  if (!isLive() || mode === 'INTERVIEW') return byRules;
   const result = await structured(LiveIntent, {
     tier: 'fast',
     system: SYSTEM,

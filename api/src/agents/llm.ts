@@ -27,13 +27,24 @@ function anthropic(): Anthropic {
 
 export type ChatMessage = Anthropic.Beta.BetaMessageParam;
 
+export type Effort = 'low' | 'medium' | 'high';
+
 interface CallOptions {
   tier: ModelTier;
   /** Stable instructions. Cached, so keep volatile content out of it. */
   system: string;
   messages: ChatMessage[];
+  /** Output cap for the fast tier. The smart tier thinks before answering, so it always gets SMART_MIN_TOKENS. */
   maxTokens?: number;
+  /** Smart tier only: low for chat replies (faster), medium for explanations. */
+  effort?: Effort;
 }
+
+/**
+ * Current smart models always think before answering, and thinking counts towards max_tokens. A small cap
+ * can be used up by thinking alone, which cuts the visible reply off, so smart calls never go below this.
+ */
+const SMART_MIN_TOKENS = 8000;
 
 /** Models that accept server-side refusal fallbacks routed by category (`fallbacks: 'default'`). */
 const FALLBACK_MODELS = new Set(['claude-sonnet-5-5', 'claude-opus-5-5', 'claude-opus-5', 'claude-fable-5-1']);
@@ -44,22 +55,34 @@ function baseParams(opts: CallOptions, defaultMaxTokens: number) {
   const fallback = FALLBACK_MODELS.has(model);
   return {
     model,
-    max_tokens: opts.maxTokens ?? defaultMaxTokens,
+    max_tokens: opts.tier === 'smart' ? Math.max(opts.maxTokens ?? 0, SMART_MIN_TOKENS) : (opts.maxTokens ?? defaultMaxTokens),
     system: [{ type: 'text' as const, text: opts.system, cache_control: { type: 'ephemeral' as const } }],
     messages: opts.messages,
     ...(fallback ? { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' as const } : {}),
   };
 }
 
-/** Medium effort on the smart tier for conversational latency; the fast tier keeps its default. */
-const effort = (tier: ModelTier) => (tier === 'smart' ? { effort: 'medium' as const } : {});
+/** Effort applies to the smart tier only (default medium); the fast tier does not accept it. */
+const effort = (opts: CallOptions) => (opts.tier === 'smart' ? { effort: opts.effort ?? ('medium' as const) } : {});
+
+/** A reply that stopped early (token cap or refusal) is incomplete, and callers fall back rather than show it. */
+export class IncompleteReplyError extends Error {
+  constructor(readonly stopReason: string | null) {
+    super(`model reply incomplete (${stopReason ?? 'no stop reason'})`);
+    this.name = 'IncompleteReplyError';
+  }
+}
 
 /** Streams plain text, calling onToken for each delta, and resolves with the full text. */
 export async function streamText(opts: CallOptions, onToken: (text: string) => void): Promise<string> {
-  const stream = anthropic().beta.messages.stream({ ...baseParams(opts, 1024), output_config: effort(opts.tier) });
+  const stream = anthropic().beta.messages.stream({ ...baseParams(opts, 1024), output_config: effort(opts) });
   stream.on('text', onToken);
   const message = await stream.finalMessage();
-  return message.content.flatMap((b) => (b.type === 'text' ? [b.text] : [])).join('');
+  const text = message.content.flatMap((b) => (b.type === 'text' ? [b.text] : [])).join('');
+  if (message.stop_reason === 'max_tokens' || message.stop_reason === 'refusal' || !text.trim()) {
+    throw new IncompleteReplyError(message.stop_reason);
+  }
+  return text;
 }
 
 /**
@@ -72,9 +95,9 @@ export async function structured<T extends z.ZodType>(
 ): Promise<z.infer<T> | null> {
   const response = await anthropic().beta.messages.parse({
     ...baseParams(opts, 2048),
-    output_config: { ...effort(opts.tier), format: betaZodOutputFormat(schema) },
+    output_config: { ...effort(opts), format: betaZodOutputFormat(schema) },
   });
-  if (response.stop_reason === 'refusal') return null;
+  if (response.stop_reason === 'refusal' || response.stop_reason === 'max_tokens') return null;
   return response.parsed_output;
 }
 
