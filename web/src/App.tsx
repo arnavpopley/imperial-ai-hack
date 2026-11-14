@@ -36,8 +36,7 @@ export function App() {
       </header>
       {DEMO_INSTANCE && (
         <p className="border-b border-line bg-brand-soft px-4 py-2 text-center text-xs text-ink">
-          Public demo: the agents run in offline mode, all students are synthetic, and data resets when the server
-          sleeps.
+          Public demo: all students are synthetic, and data resets when the server sleeps.
         </p>
       )}
       <main className="mx-auto max-w-7xl px-4 py-6">
