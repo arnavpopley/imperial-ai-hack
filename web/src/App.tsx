@@ -1,7 +1,10 @@
+import { lazy, Suspense } from 'react';
 import { Link, NavLink, Route, Routes, useMatch } from 'react-router';
-import { StaffApp } from './staff/StaffApp.tsx';
 import { StudentApp } from './student/StudentApp.tsx';
-import { TraceApp } from './trace/TraceApp.tsx';
+
+// The staff console and the trace page load on demand, so students only download the student app.
+const StaffApp = lazy(() => import('./staff/StaffApp.tsx').then((m) => ({ default: m.StaffApp })));
+const TraceApp = lazy(() => import('./trace/TraceApp.tsx').then((m) => ({ default: m.TraceApp })));
 
 const tab = ({ isActive }: { isActive: boolean }) =>
   `rounded-full px-3 py-1 text-sm font-medium ${isActive ? 'bg-brand text-white' : 'text-muted hover:text-ink'}`;
@@ -29,11 +32,13 @@ export function App() {
         </nav>
       </header>
       <main className="mx-auto max-w-7xl px-4 py-6">
-        <Routes>
-          <Route path="/*" element={<StudentApp />} />
-          <Route path="/staff/*" element={<StaffApp />} />
-          <Route path="/trace/*" element={<TraceApp />} />
-        </Routes>
+        <Suspense fallback={<p className="text-sm text-muted">Loading…</p>}>
+          <Routes>
+            <Route path="/*" element={<StudentApp />} />
+            <Route path="/staff/*" element={<StaffApp />} />
+            <Route path="/trace/*" element={<TraceApp />} />
+          </Routes>
+        </Suspense>
       </main>
     </div>
   );

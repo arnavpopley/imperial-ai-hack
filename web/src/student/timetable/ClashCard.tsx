@@ -63,7 +63,7 @@ export function ClashCard({ clash, swaps, titleFor, onSwap, onAsk }: ClashCardPr
       <p className="mt-0.5 text-[12px] text-muted">{overlapText(clash)}</p>
 
       {swaps.length > 0 ? (
-        <div className="mt-3 grid gap-2">
+        <div className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-2">
           <p className="text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">Suggested swaps</p>
           {swaps.map((swap) => {
             const from = titleFor(swap.replaceModuleId);

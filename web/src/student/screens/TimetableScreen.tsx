@@ -122,7 +122,7 @@ function TimetableBody({ view, onChanged, refreshing }: { view: TimetableView; o
         {refreshing && <p className="mt-2 text-[12px] text-muted">Updating…</p>}
       </section>
 
-      <div className="grid gap-4">
+      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4">
         <section aria-labelledby="clash-heading">
           <h2 id="clash-heading" className="mb-2 text-sm font-semibold">
             {view.clashes.length === 0 ? 'No clashes' : `${view.clashes.length} clash${view.clashes.length > 1 ? 'es' : ''} to resolve`}
@@ -133,7 +133,7 @@ function TimetableBody({ view, onChanged, refreshing }: { view: TimetableView; o
               Your shortlist fits together in every term.
             </p>
           ) : (
-            <ul className="grid gap-3">
+            <ul className="grid grid-cols-[minmax(0,1fr)] gap-3">
               {view.clashes.map((clash) => (
                 <ClashCard
                   key={`${clash.moduleA}-${clash.moduleB}-${clash.term}`}
@@ -157,7 +157,7 @@ function TimetableBody({ view, onChanged, refreshing }: { view: TimetableView; o
             </h2>
             <span className="text-[12px] text-muted tabular-nums">{ects} ECTS</span>
           </div>
-          <ul className="grid gap-1">
+          <ul className="grid grid-cols-[minmax(0,1fr)] gap-1">
             {session.shortlist.map((id) => (
               <li key={id} className="flex items-center gap-2.5 rounded-lg py-1 text-[13px]">
                 <span className={cx('size-2.5 shrink-0 rounded-full', colourFor(id).dot)} aria-hidden="true" />

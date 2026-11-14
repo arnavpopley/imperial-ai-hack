@@ -336,6 +336,12 @@ export const InterviewState = z.object({
   budget: z.number().int().min(0),
   finished: z.boolean(),
   confirmed: z.boolean(),
+  /** Interview plan steps already asked, so the Interviewer never repeats a question. */
+  askedSteps: z.array(z.string()).default([]),
+  /** Slots the last question targeted, which lets the extractor read short answers such as "yes". */
+  targetSlots: z.array(z.string()).default([]),
+  /** Times the student disputed the profile; two disputes offer a LOW_CONFIDENCE escalation (spec 11.1). */
+  disputes: z.number().int().min(0).default(0),
 });
 
 export const EscalationDraft = z.object({
@@ -438,6 +444,8 @@ export const ProfileEditBody = z.object({
     .optional(),
   /** Confirms the "Here is what I heard" card and leaves the interview. */
   confirm: z.boolean().optional(),
+  /** Returns to the interview for two more questions when confidence is low (spec 8.6 and 12). */
+  resumeInterview: z.boolean().optional(),
 });
 
 export const ShortlistBody = z.object({

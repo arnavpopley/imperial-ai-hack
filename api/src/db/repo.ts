@@ -16,7 +16,7 @@ import {
   type TraceEvent,
   schemas as S,
 } from '@modulematch/shared';
-import { and, asc, desc, eq } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 import { type Db, getDb } from './client.ts';
 import type { CohortStudent } from './datasets.ts';
@@ -210,8 +210,8 @@ export function saveProfile(sessionId: string, profile: StudentProfile, db: Db =
 }
 
 /**
- * Spec 20.3: the student deletes their profile and evidence. The profile is reset to an empty one that keeps
- * only the onboarding answers (programme, year, completed modules), so the session can still be resumed.
+ * Spec 20.3: the student deletes everything held about them: profile, evidence, chat, escalations, shortlist
+ * and trace. The profile is reset to an empty one that keeps only programme and year.
  */
 export function deleteProfileAndEvidence(sessionId: string, db: Db = getDb()): StudentProfile | null {
   const row = db.select().from(profiles).where(eq(profiles.sessionId, sessionId)).get();
@@ -221,7 +221,7 @@ export function deleteProfileAndEvidence(sessionId: string, db: Db = getDb()): S
     studentId: old.studentId,
     programme: old.programme,
     yearOfStudy: old.yearOfStudy,
-    completedModuleIds: old.completedModuleIds,
+    completedModuleIds: [],
     interests: {},
     pathways: [],
     pathwaysSkipped: false,
@@ -240,6 +240,10 @@ export function deleteProfileAndEvidence(sessionId: string, db: Db = getDb()): S
   };
   db.transaction((tx) => {
     tx.delete(evidence).where(eq(evidence.sessionId, sessionId)).run();
+    tx.delete(messages).where(eq(messages.sessionId, sessionId)).run();
+    tx.delete(escalations).where(eq(escalations.sessionId, sessionId)).run();
+    tx.delete(shortlistItems).where(eq(shortlistItems.sessionId, sessionId)).run();
+    tx.delete(traceEvents).where(eq(traceEvents.sessionId, sessionId)).run();
     tx.update(profiles).set({ data: blank }).where(eq(profiles.sessionId, sessionId)).run();
     tx.update(sessions).set({ updatedAt: blank.updatedAt }).where(eq(sessions.id, sessionId)).run();
   });
@@ -249,6 +253,12 @@ export function deleteProfileAndEvidence(sessionId: string, db: Db = getDb()): S
 export function addEvidence(items: Evidence[], db: Db = getDb()): void {
   const rows = items.map((e) => S.Evidence.parse(e));
   if (rows.length > 0) db.insert(evidence).values(rows).run();
+}
+
+/** Removes evidence for the given slots, used when the student clears an answer (spec 20.3). */
+export function deleteEvidenceForSlots(sessionId: string, slots: string[], db: Db = getDb()): void {
+  if (slots.length === 0) return;
+  db.delete(evidence).where(and(eq(evidence.sessionId, sessionId), inArray(evidence.slot, slots))).run();
 }
 
 export function listEvidence(sessionId: string, db: Db = getDb()): Evidence[] {
