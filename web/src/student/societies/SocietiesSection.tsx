@@ -12,6 +12,7 @@ import { useAsync } from '../hooks/useAsync.ts';
 import { useReadySession } from '../state/SessionProvider.tsx';
 import { BubbleCloud, type CloudItem } from './BubbleCloud.tsx';
 import { MAX_PER_RING } from './cloudLayout.ts';
+import { SocietyBanner } from './SocietyArt.tsx';
 
 const TOP_SOCIETIES = 5;
 
@@ -97,7 +98,7 @@ export function SocietiesSection() {
 function SocietyDetail({ id, society, match }: { id: string; society: Society | undefined; match: SocietyMatch | undefined }) {
   const reduce = useReducedMotion();
   return (
-    <div id={id} aria-live="polite" className="min-h-[11rem] rounded-2xl bg-surface-2 p-5">
+    <div id={id} aria-live="polite" className="min-h-[11rem] overflow-hidden rounded-2xl bg-surface-2 p-5">
       <AnimatePresence mode="wait" initial={false}>
         {society ? (
           <motion.div
@@ -107,6 +108,7 @@ function SocietyDetail({ id, society, match }: { id: string; society: Society | 
             exit={reduce ? { opacity: 0, transition: { duration: 0 } } : { opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
           >
+            <SocietyBanner society={society} className="-mx-5 -mt-5 mb-4 h-24 rounded-t-2xl" />
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 {match?.wildcard && (
@@ -146,39 +148,44 @@ function SocietyCard({ match, society, index }: { match: SocietyMatch; society: 
   return (
     <motion.li
       initial={reduce ? false : { opacity: 0, y: 12 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      // The stagger delay belongs to the entrance only, so hovering in and out responds at once.
+      whileInView={{ opacity: 1, y: 0, transition: { duration: 0.35, delay: index * 0.05 } }}
       viewport={{ once: true, amount: 0.3 }}
-      transition={{ duration: 0.35, delay: index * 0.05 }}
+      transition={{ duration: 0.2 }}
+      whileHover={reduce ? undefined : { y: -4 }}
       className={cx(
-        'flex flex-col gap-2 rounded-card border p-4',
+        'flex flex-col overflow-hidden rounded-card border transition-shadow hover:shadow-lift',
         match.wildcard ? 'border-dashed border-mode-explain/50 bg-mode-explain/6' : 'border-line bg-surface shadow-soft',
       )}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          {match.wildcard && (
-            <span className="mb-1 inline-flex items-center gap-1 text-[11px] font-semibold tracking-[0.08em] text-mode-explain uppercase">
-              <Icon name="sparkle" size={11} />
-              Wildcard
-            </span>
-          )}
-          <p className="font-semibold tracking-tight">{society?.name ?? match.societyId}</p>
+      <SocietyBanner society={society} className="h-28" />
+      <div className="flex flex-1 flex-col gap-2 p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            {match.wildcard && (
+              <span className="mb-1 inline-flex items-center gap-1 text-[11px] font-semibold tracking-[0.08em] text-mode-explain uppercase">
+                <Icon name="sparkle" size={11} />
+                Wildcard
+              </span>
+            )}
+            <p className="font-semibold tracking-tight">{society?.name ?? match.societyId}</p>
+          </div>
+          <FitScore value={match.fit} variant="compact" className="text-sm" />
         </div>
-        <FitScore value={match.fit} variant="compact" className="text-sm" />
+        <p className="text-[13px] leading-snug text-muted">{match.reason}</p>
+        {society && (
+          <a
+            href={society.sourceUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-auto inline-flex items-center gap-1.5 self-start rounded-full bg-brand-soft px-3 py-1.5 text-[12px] font-semibold text-brand transition-colors hover:bg-brand hover:text-on-brand"
+          >
+            Visit the society
+            <Icon name="external" size={12} />
+            <span className="sr-only">(opens in a new tab)</span>
+          </a>
+        )}
       </div>
-      <p className="text-[13px] leading-snug text-muted">{match.reason}</p>
-      {society && (
-        <a
-          href={society.sourceUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="mt-auto inline-flex items-center gap-1 text-[12px] font-medium text-brand underline-offset-2 hover:underline"
-        >
-          Union listing
-          <Icon name="external" size={12} />
-          <span className="sr-only">(opens in a new tab)</span>
-        </a>
-      )}
     </motion.li>
   );
 }
