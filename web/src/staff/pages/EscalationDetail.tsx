@@ -6,6 +6,7 @@ import { Link, useParams } from 'react-router';
 import { ESCALATION_TYPES, StatusBadge, TypeBadge } from '../components/EscalationBadges.tsx';
 import { Button, EmptyState } from '../components/ui.tsx';
 import { AlertIcon, ArrowLeftIcon, CheckIcon, HeartIcon, InboxIcon } from '../components/icons.tsx';
+import { Avatar } from '../../components/Avatar.tsx';
 import { focusRing, formatDateTime } from '../lib/format.ts';
 import { errorMessage } from '../lib/errors.ts';
 import { useStaffData } from '../StaffData.tsx';
@@ -46,22 +47,29 @@ function EscalationCase({ escalation: e }: { escalation: StaffEscalation }) {
   useEffect(() => markSeen(e.id), [markSeen, e.id]);
 
   return (
-    <article aria-labelledby={ids.title} className="grid gap-5 rounded-card border border-line bg-surface p-5">
-      <header className="grid gap-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <TypeBadge type={e.type} />
-          <StatusBadge status={e.status} />
-          <time dateTime={e.createdAt} className="ml-auto text-xs text-muted">
-            {formatDateTime(e.createdAt)}
-          </time>
+    <article
+      aria-labelledby={ids.title}
+      className="grid gap-7 rounded-panel bg-surface p-card shadow-soft ring-1 ring-line sm:p-card-lg"
+    >
+      <header className="flex flex-wrap items-start gap-4">
+        <Avatar seed={e.sessionId} size={64} />
+        <div className="grid min-w-0 flex-1 gap-2">
+          <h2 id={ids.title} className="text-2xl font-semibold tracking-tight">
+            {type.label} for the {type.queue}
+          </h2>
+          <p className="text-sm text-muted">
+            {e.studentContext.programme}, Year {e.studentContext.yearOfStudy} ·{' '}
+            <time dateTime={e.createdAt}>{formatDateTime(e.createdAt)}</time>
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <TypeBadge type={e.type} />
+            <StatusBadge status={e.status} />
+          </div>
         </div>
-        <h2 id={ids.title} className="text-lg font-semibold tracking-tight">
-          {type.label} for the {type.queue}
-        </h2>
       </header>
 
       {e.type === 'WELLBEING' && (
-        <p className="flex items-start gap-2 rounded-lg bg-mode-plan/10 p-3 text-sm">
+        <p className="flex items-start gap-3 rounded-2xl bg-mode-plan/10 p-4 text-sm leading-relaxed">
           <HeartIcon className="mt-0.5 text-mode-plan" />
           The student consented to this hand-off. The advisor has stopped advising and shown support contacts; please
           reply as a person, not as the advisor.
@@ -69,17 +77,20 @@ function EscalationCase({ escalation: e }: { escalation: StaffEscalation }) {
       )}
 
       <section aria-labelledby={ids.summary}>
-        <h3 id={ids.summary} className="text-xs font-medium text-muted">
-          Summary, drafted by the agent and approved by the student
+        <h3 id={ids.summary} className="text-xs font-semibold tracking-[0.08em] text-muted uppercase">
+          What the student is asking
         </h3>
-        <blockquote className="mt-1.5 border-l-2 border-brand pl-3 text-sm leading-relaxed">{e.summary}</blockquote>
+        <blockquote className="mt-3 rounded-2xl border-l-4 border-brand bg-brand-soft/50 px-5 py-4 text-base leading-relaxed">
+          {e.summary}
+        </blockquote>
+        <p className="mt-2 text-xs text-muted">Drafted by the AI, then read and approved by the student.</p>
       </section>
 
-      <section aria-labelledby={ids.context} className="rounded-lg bg-canvas p-4">
-        <h3 id={ids.context} className="text-xs font-medium text-muted">
+      <section aria-labelledby={ids.context} className="rounded-2xl bg-surface-2 p-5">
+        <h3 id={ids.context} className="text-xs font-semibold tracking-[0.08em] text-muted uppercase">
           Student context
         </h3>
-        <dl className="mt-2 grid gap-x-6 gap-y-3 text-sm sm:grid-cols-[auto_minmax(0,1fr)]">
+        <dl className="mt-3 grid gap-x-6 gap-y-3 text-sm sm:grid-cols-[auto_minmax(0,1fr)]">
           <dt className="text-muted">Programme</dt>
           <dd>{e.studentContext.programme}</dd>
           <dt className="text-muted">Year</dt>
@@ -91,7 +102,7 @@ function EscalationCase({ escalation: e }: { escalation: StaffEscalation }) {
             ) : (
               <ul className="flex flex-wrap gap-1.5">
                 {e.studentContext.shortlist.map((id) => (
-                  <li key={id} className="rounded-md border border-line bg-surface px-2 py-0.5">
+                  <li key={id} className="rounded-full border border-line bg-surface px-3 py-1">
                     {moduleTitle(id)}
                   </li>
                 ))}
@@ -102,7 +113,7 @@ function EscalationCase({ escalation: e }: { escalation: StaffEscalation }) {
       </section>
 
       {e.status === 'resolved' ? (
-        <section aria-labelledby={ids.reply} className="rounded-lg border border-fit-high/30 bg-fit-high/5 p-4">
+        <section aria-labelledby={ids.reply} className="rounded-2xl border border-fit-high/30 bg-fit-high/5 p-5">
           <h3 id={ids.reply} className="flex items-center gap-1.5 text-sm font-medium text-fit-high">
             <CheckIcon /> Resolved. The reply is in the student's session
           </h3>
@@ -139,7 +150,7 @@ function ReplyBox({ escalationId }: { escalationId: string }) {
 
   return (
     <form
-      className="grid gap-2"
+      className="grid gap-3"
       onSubmit={(ev) => {
         ev.preventDefault();
         if (trimmed) void submit();
@@ -154,9 +165,9 @@ function ReplyBox({ escalationId }: { escalationId: string }) {
         value={text}
         onChange={(ev) => setText(ev.target.value)}
         maxLength={MAX_REPLY}
-        rows={5}
+        rows={6}
         placeholder="For example: I have approved a prerequisite waiver. Please complete the bridging notes before week 3."
-        className={`w-full resize-y rounded-lg border border-line bg-canvas p-3 text-sm leading-relaxed placeholder:text-muted ${focusRing}`}
+        className={`w-full resize-y rounded-2xl border border-line bg-canvas p-4 text-sm leading-relaxed placeholder:text-muted ${focusRing}`}
       />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p id={hintId} className="text-xs text-muted">

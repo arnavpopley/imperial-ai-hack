@@ -1,11 +1,12 @@
 // One Insights-agent card (spec 9.3, 10.7): kind, headline, detail, cohort size and, for counterfactuals,
 // the average fit uplift. Staff accept, note or dismiss it; nothing changes until they do.
 import type { Insight, InsightDecision, InsightKind } from '@modulematch/shared';
-import { useId } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
+import { useId, useState } from 'react';
 import type { ComponentType, SVGProps } from 'react';
 import type { StaffDecision } from '../hooks/useInsights.ts';
 import { focusRing, plural } from '../lib/format.ts';
-import { CheckIcon, ClockAlertIcon, EyeIcon, NoteIcon, TrendUpIcon, UsersIcon, XIcon } from './icons.tsx';
+import { CheckIcon, ChevronDownIcon, ClockAlertIcon, EyeIcon, NoteIcon, TrendUpIcon, UsersIcon, XIcon } from './icons.tsx';
 
 type IconComponent = ComponentType<Omit<SVGProps<SVGSVGElement>, 'children'>>;
 
@@ -43,28 +44,54 @@ export function InsightCard({
   const kind = INSIGHT_KINDS[insight.kind];
   const state = DECISION_STATE[insight.decision];
   const headingId = useId();
+  const detailId = useId();
+  const [expanded, setExpanded] = useState(false);
   const uplift = insight.kind === 'COUNTERFACTUAL' ? insight.upliftPoints : null;
 
   return (
     <article
       aria-labelledby={headingId}
-      className={`flex flex-col gap-4 rounded-card border border-line bg-surface p-5 transition-opacity ${
+      className={`flex flex-col gap-5 rounded-panel bg-surface p-card shadow-soft ring-1 ring-line transition-opacity ${
         insight.decision === 'dismissed' ? 'opacity-60' : ''
       }`}
     >
       <div className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-4 gap-y-3 sm:grid-cols-[auto_minmax(0,1fr)_auto]">
-        <span className={`grid size-9 shrink-0 place-items-center rounded-lg ${kind.tint} ${kind.ink}`}>
-          <kind.Icon className="size-5" />
+        <span className={`grid size-12 shrink-0 place-items-center rounded-2xl ${kind.tint} ${kind.ink}`}>
+          <kind.Icon className="size-6" />
         </span>
         <div className="min-w-0">
-          <p className={`text-xs font-semibold tracking-wide uppercase ${kind.ink}`}>{kind.label}</p>
-          <h3 id={headingId} className="mt-1 font-medium text-pretty">
+          <p className={`text-xs font-semibold tracking-[0.08em] uppercase ${kind.ink}`}>{kind.label}</p>
+          <h3 id={headingId} className="mt-1 text-lg leading-snug font-semibold text-pretty">
             {insight.headline}
           </h3>
-          <p className="mt-1 text-sm text-muted text-pretty">{insight.detail}</p>
+          <button
+            type="button"
+            aria-expanded={expanded}
+            aria-controls={expanded ? detailId : undefined}
+            onClick={() => setExpanded((v) => !v)}
+            className={`mt-2 inline-flex items-center gap-1 rounded-lg text-sm font-medium text-brand hover:underline ${focusRing}`}
+          >
+            {expanded ? 'Hide details' : 'Details'}
+            <ChevronDownIcon className={`size-4 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+          </button>
+          <AnimatePresence initial={false}>
+            {expanded && (
+              <motion.p
+                id={detailId}
+                key="detail"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.25, ease: [0.2, 0.8, 0.2, 1] }}
+                className="overflow-hidden text-sm leading-relaxed text-muted text-pretty"
+              >
+                <span className="block pt-2">{insight.detail}</span>
+              </motion.p>
+            )}
+          </AnimatePresence>
         </div>
         {uplift !== null && (
-          <div className="col-start-2 justify-self-start rounded-lg bg-fit-high/10 px-3 py-2 text-center sm:col-start-3">
+          <div className="col-start-2 justify-self-start rounded-2xl bg-fit-high/10 px-4 py-3 text-center sm:col-start-3">
             <p className="text-2xl leading-none font-semibold tracking-tight text-fit-high tabular-nums">
               {uplift >= 0 ? '+' : ''}
               {uplift} fit
@@ -84,7 +111,7 @@ export function InsightCard({
             {saving ? 'Saving…' : state.label}
           </span>
         </div>
-        <div role="group" aria-label={`Decision on: ${insight.headline}`} className="flex gap-1.5">
+        <div role="group" aria-label={`Decision on: ${insight.headline}`} className="flex flex-wrap gap-2">
           {ACTIONS.map(({ decision, label, Icon, active }) => {
             const pressed = insight.decision === decision;
             return (
@@ -94,7 +121,7 @@ export function InsightCard({
                 aria-pressed={pressed}
                 disabled={saving}
                 onClick={() => onDecide(decision)}
-                className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-sm font-medium transition-colors disabled:cursor-wait ${
+                className={`inline-flex min-h-10 items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm font-medium transition-colors disabled:cursor-wait ${
                   pressed ? active : 'border-line text-ink hover:bg-canvas'
                 } ${focusRing}`}
               >

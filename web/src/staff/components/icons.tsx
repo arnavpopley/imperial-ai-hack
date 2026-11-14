@@ -147,3 +147,32 @@ export const SparkIcon = (p: IconProps) => (
     <path d="M10 2.5v4M10 13.5v4M2.5 10h4M13.5 10h4M5 5l2 2M13 13l2 2M15 5l-2 2M7 13l-2 2" />
   </Icon>
 );
+
+export const GridIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="3" y="3" width="5.5" height="5.5" rx="1.25" />
+    <rect x="11.5" y="3" width="5.5" height="5.5" rx="1.25" />
+    <rect x="3" y="11.5" width="5.5" height="5.5" rx="1.25" />
+    <rect x="11.5" y="11.5" width="5.5" height="5.5" rx="1.25" />
+  </Icon>
+);
+
+export const ChevronDownIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="m5.5 8 4.5 4.5L14.5 8" />
+  </Icon>
+);
+
+export const GaugeIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M3.5 14a6.5 6.5 0 1 1 13 0" />
+    <path d="m10 14 3-4.5" />
+  </Icon>
+);
+
+export const CalendarIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="3" y="4" width="14" height="13" rx="2" />
+    <path d="M13 2.5v3M7 2.5v3M3 8.5h14" />
+  </Icon>
+);

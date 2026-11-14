@@ -6,9 +6,10 @@ import { FitHistogram } from '../components/FitHistogram.tsx';
 import { InsightCard } from '../components/InsightCard.tsx';
 import { PrivacyHidden } from '../components/PrivacyNote.tsx';
 import { EmptyState, ErrorState, LoadingState, Panel, StatTile } from '../components/ui.tsx';
-import { SparkIcon } from '../components/icons.tsx';
+import { GaugeIcon, SparkIcon, TrendUpIcon, UsersIcon } from '../components/icons.tsx';
+import { CountUp } from '../../components/CountUp.tsx';
 import { useInsights } from '../hooks/useInsights.ts';
-import { CAPACITY_LABEL, capacityStatus, percent, plural } from '../lib/format.ts';
+import { CAPACITY_LABEL, capacityStatus, plural } from '../lib/format.ts';
 import { useModuleOutlet } from './ModulesPage.tsx';
 
 export function ModuleDashboard() {
@@ -24,22 +25,34 @@ export function ModuleDashboard() {
 
   const status = capacityStatus(summary.shortlisted, summary.capacity);
   return (
-    <div className="grid grid-cols-1 gap-5">
-      <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3 [&>:last-child]:col-span-2 sm:[&>:last-child]:col-span-1">
+    <div className="grid grid-cols-1 gap-8">
+      <dl className="grid gap-4 sm:grid-cols-3">
         <StatTile
           label="Shortlisted"
-          value={summary.shortlisted}
+          icon={<UsersIcon className="size-5" />}
+          tone="bg-brand-soft text-brand"
+          value={<CountUp value={summary.shortlisted} />}
           hint={summary.capacity === null ? 'No capacity limit' : `of ${summary.capacity} places`}
         />
-        <StatTile label="Average fit" value={Math.round(summary.averageFit)} hint="out of 100, across the cohort" />
+        <StatTile
+          label="Average fit"
+          icon={<TrendUpIcon className="size-5" />}
+          tone="bg-fit-high/10 text-fit-high"
+          value={<CountUp value={Math.round(summary.averageFit)} />}
+          hint="out of 100, across the cohort"
+        />
         <StatTile
           label="Capacity used"
-          value={summary.capacity === null ? '—' : percent(summary.shortlisted / summary.capacity)}
+          icon={<GaugeIcon className="size-5" />}
+          tone={status === 'over' ? 'bg-fit-low/10 text-fit-low' : status === 'near' ? 'bg-fit-mid/15 text-fit-mid' : 'bg-mode-plan/10 text-mode-plan'}
+          value={
+            summary.capacity === null ? '—' : <CountUp value={Math.round((summary.shortlisted / summary.capacity) * 100)} suffix="%" />
+          }
           hint={CAPACITY_LABEL[status]}
         />
       </dl>
 
-      <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
         <Panel title="Demand against capacity" description="Students who shortlisted this module.">
           <DemandGauge shortlisted={summary.shortlisted} capacity={summary.capacity} />
         </Panel>
@@ -74,7 +87,7 @@ function InsightsSection({ moduleId }: { moduleId: string }) {
       );
 
     return (
-      <div className="grid gap-3">
+      <div className="grid gap-4">
         {shown.map((insight) => (
           <InsightCard
             key={insight.id}
