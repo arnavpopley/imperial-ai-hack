@@ -5,11 +5,14 @@ import { api } from '../../api.ts';
 import { Icon } from '../../components/Icon.tsx';
 import { Button } from '../../components/Button.tsx';
 import { Skeleton } from '../../components/StateViews.tsx';
+import { ClaimCheck } from '../claimcheck/ClaimCheck.tsx';
 import { useAsync } from '../hooks/useAsync.ts';
+import { useReferenceData } from '../state/ReferenceDataProvider.tsx';
 
 export function AiSummaryCard({ moduleId }: { moduleId: string }) {
   const summary = useAsync(() => api.moduleSummary(moduleId), [moduleId]);
   const reduce = useReducedMotion();
+  const sourceUrl = useReferenceData().moduleById.get(moduleId)?.sourceUrl;
   // useAsync keeps the last value while a new module loads; never show another module's summary.
   const data = summary.data?.moduleId === moduleId ? summary.data : undefined;
 
@@ -55,6 +58,16 @@ export function AiSummaryCard({ moduleId }: { moduleId: string }) {
                   </motion.li>
                 ))}
               </ul>
+            )}
+            {sourceUrl && (
+              <ClaimCheck
+                className="mt-4"
+                label="Check this summary"
+                kind={data.source === 'model' ? 'summary' : 'summary-template'}
+                text={[data.summary, ...data.highlights].join('\n')}
+                sourceUrl={sourceUrl}
+                storageKey={`${moduleId}.summary`}
+              />
             )}
           </>
         ) : summary.error ? (
