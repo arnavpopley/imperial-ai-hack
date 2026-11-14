@@ -143,16 +143,22 @@ export function rankModules(
 /**
  * Spec 8.6: the fraction of required slots with at least one evidence item. The nine required slots
  * are: interests (at least MIN_INTEREST_TOPICS distinct topics), each of the six style dimensions,
- * breadth appetite, and a pathway choice or an explicit skip.
+ * breadth appetite, and a pathway choice or an explicit skip. The pathway slot counts only for a
+ * non-empty current choice backed by non-empty `pathways` evidence, or when the profile records a skip;
+ * an empty list or a `pathwaysSkipped: false` answer is not a choice.
  */
 export function completeness(profile: StudentProfile, evidence: readonly Evidence[]): number {
-  const slots = new Set(evidence.map((item) => item.slot).filter(isAllowedSlot));
+  const allowed = evidence.filter((item) => isAllowedSlot(item.slot));
+  const slots = new Set(allowed.map((item) => item.slot));
+  const pathwayChosen =
+    profile.pathways.length > 0 &&
+    allowed.some((item) => item.slot === 'pathways' && Array.isArray(item.value) && item.value.length > 0);
   const interestTopics = [...slots].filter((slot) => slot.startsWith(INTEREST_SLOT_PREFIX)).length;
   const required = [
     interestTopics >= MIN_INTEREST_TOPICS,
     ...STYLE_SLOTS.map((slot) => slots.has(`style.${slot}`)),
     slots.has('breadthAppetite'),
-    profile.pathwaysSkipped || slots.has('pathways') || slots.has('pathwaysSkipped'),
+    pathwayChosen || profile.pathwaysSkipped,
   ];
   return required.filter(Boolean).length / required.length;
 }

@@ -49,14 +49,19 @@ export function buildTimetable(shortlist: readonly string[], slots: readonly Slo
   });
 }
 
+/** A teaching session is one sessionKey within one term, so a key reused in another term is a separate session. */
+const sessionsOf = (slots: readonly Slot[]): Slot[][] => [
+  ...groupBy(slots, (slot) => JSON.stringify([slot.term, slot.sessionKey])).values(),
+];
+
 /**
  * Spec 9.2: the chance that at least one pair of teaching sessions overlaps. Each session's candidates
- * (grouped by sessionKey) carry probabilities π; per session pair P = Σ π_a π_b 1[overlap], and the
- * pairs combine as 1 − Π (1 − P), treating sessions as independent.
+ * (grouped by term and sessionKey) carry probabilities π; per session pair P = Σ π_a π_b 1[overlap],
+ * and the pairs combine as 1 − Π (1 − P), treating sessions as independent.
  */
 export function clashProbability(slotsI: readonly Slot[], slotsJ: readonly Slot[]): number {
-  const sessionsI = [...groupBy(slotsI, (slot) => slot.sessionKey).values()];
-  const sessionsJ = [...groupBy(slotsJ, (slot) => slot.sessionKey).values()];
+  const sessionsI = sessionsOf(slotsI);
+  const sessionsJ = sessionsOf(slotsJ);
   let noClash = 1;
   for (const x of sessionsI) {
     for (const y of sessionsJ) {

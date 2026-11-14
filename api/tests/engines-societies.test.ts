@@ -39,6 +39,15 @@ describe('matchSocieties', () => {
     expect(matches[5]?.reason).toContain('History and philosophy');
   });
 
+  it('does not call the wildcard outside the top interests when it shares one', () => {
+    const allOverlap = [...societies.slice(1, 6), society('motorsport', { 'fluid-mechanics': 0.2, 'finance-economics': 0.8 })];
+    const wildcard = matchSocieties(profile, allOverlap).find((m) => m.wildcard);
+    expect(wildcard?.societyId).toBe('motorsport');
+    expect(wildcard?.reason).toBe(
+      'The most different option left: centred on Finance and economics, though it shares some of your top interests.',
+    );
+  });
+
   it('omits the wildcard when there are five societies or fewer', () => {
     expect(matchSocieties(profile, societies.slice(0, 5)).some((m) => m.wildcard)).toBe(false);
   });

@@ -180,16 +180,16 @@ describe('rankModules (8.7)', () => {
 });
 
 describe('completeness (8.6)', () => {
-  const evidence = (slots: string[]): Evidence[] =>
-    slots.map((slot, i) => ({
-      id: `e${i}`,
-      sessionId: 's',
-      turnId: 't',
-      slot,
-      value: 0.5,
-      quote: 'quote',
-      confidence: 0.9,
-    }));
+  const item = (slot: string, value: Evidence['value'], i = 0): Evidence => ({
+    id: `e${i}`,
+    sessionId: 's',
+    turnId: 't',
+    slot,
+    value,
+    quote: 'quote',
+    confidence: 0.9,
+  });
+  const evidence = (slots: string[]): Evidence[] => slots.map((slot, i) => item(slot, 0.5, i));
   const styleSlots = [
     'style.examPreference',
     'style.groupPreference',
@@ -209,9 +209,24 @@ describe('completeness (8.6)', () => {
     const interests = ['interest:fluid-mechanics', 'interest:policy-ethics', 'interest:languages'];
     const filled = [...interests, ...styleSlots, 'breadthAppetite'];
     expect(completeness(makeProfile(), evidence(filled))).toBeCloseTo(8 / 9);
-    expect(completeness(makeProfile(), evidence([...filled, 'pathways']))).toBe(1);
-    expect(completeness(makeProfile(), evidence([...filled, 'pathwaysSkipped']))).toBe(1);
+    const chosen = makeProfile({ pathways: ['aerospace-motorsport'] });
+    expect(completeness(chosen, [...evidence(filled), item('pathways', ['aerospace-motorsport'])])).toBe(1);
     expect(completeness(makeProfile({ pathwaysSkipped: true }), evidence(filled))).toBe(1);
+  });
+
+  it('does not count an empty pathway list or a false skip as a pathway answer', () => {
+    const interests = ['interest:fluid-mechanics', 'interest:policy-ethics', 'interest:languages'];
+    const filled = evidence([...interests, ...styleSlots, 'breadthAppetite']);
+    expect(completeness(makeProfile(), [...filled, item('pathways', [])])).toBeCloseTo(8 / 9);
+    expect(completeness(makeProfile(), [...filled, item('pathwaysSkipped', false)])).toBeCloseTo(8 / 9);
+  });
+
+  it('needs evidence behind a current pathway choice', () => {
+    const interests = ['interest:fluid-mechanics', 'interest:policy-ethics', 'interest:languages'];
+    const filled = evidence([...interests, ...styleSlots, 'breadthAppetite']);
+    expect(completeness(makeProfile({ pathways: ['aerospace-motorsport'] }), filled)).toBeCloseTo(8 / 9);
+    // Evidence of an earlier choice the student has since cleared.
+    expect(completeness(makeProfile(), [...filled, item('pathways', ['aerospace-motorsport'])])).toBeCloseTo(8 / 9);
   });
 
   it('ignores slots outside the whitelist', () => {
