@@ -6,7 +6,7 @@
 // lazily loaded three.js canvas that animates the mouth while `speaking` is true), then point
 // `InterviewerRenderer` at it. Everything else (the stage, the name plate, the speaking state, where the
 // stage sits in the interview) stays as it is.
-import { motion } from 'motion/react';
+import { motion, useReducedMotion } from 'motion/react';
 import type { ComponentType } from 'react';
 import { cx } from '../../components/cx.ts';
 import { InterviewerAvatar } from './InterviewerAvatar.tsx';
@@ -38,6 +38,8 @@ interface InterviewerStageProps {
 
 export function InterviewerStage({ persona, speaking, layout, className }: InterviewerStageProps) {
   const hero = layout === 'hero';
+  // MotionConfig only stops transforms, so the opacity pulse is switched off here for reduced motion.
+  const pulse = speaking && !useReducedMotion();
   return (
     <div
       className={cx(
@@ -58,8 +60,8 @@ export function InterviewerStage({ persona, speaking, layout, className }: Inter
           'absolute -z-10 rounded-full bg-surface/60 blur-2xl',
           hero ? 'size-48' : 'left-4 size-24',
         )}
-        animate={speaking ? { scale: [1, 1.12, 1], opacity: [0.6, 1, 0.6] } : { scale: 1, opacity: 0.6 }}
-        transition={speaking ? { duration: 1.6, repeat: Infinity, ease: 'easeInOut' } : { duration: 0.4 }}
+        animate={pulse ? { scale: [1, 1.12, 1], opacity: [0.6, 1, 0.6] } : { scale: 1, opacity: speaking ? 0.9 : 0.6 }}
+        transition={pulse ? { duration: 1.6, repeat: Infinity, ease: 'easeInOut' } : { duration: 0.4 }}
       />
 
       <InterviewerRenderer persona={persona} speaking={speaking} size={hero ? 132 : 64} />
