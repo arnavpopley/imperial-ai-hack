@@ -4,7 +4,7 @@ import { fixtureModules } from '@modulematch/shared/fixtures';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../src/app.ts';
 import { seedIfEmpty } from '../src/bootstrap.ts';
-import { compareModules, filtersFromQuestion, getModule, searchModules, unknownCodes } from '../src/agents/catalogue.ts';
+import { acronymMentions, compareModules, filtersFromQuestion, getModule, searchModules, unknownCodes } from '../src/agents/catalogue.ts';
 import { classifyByRules } from '../src/agents/intent.ts';
 import { catalogue } from '../src/agents/session.ts';
 import * as repo from '../src/db/repo.ts';
@@ -97,6 +97,15 @@ describe('search_modules', () => {
     expect(filtersFromQuestion('Which modules are coursework-only in spring?')).toEqual({ term: 'spring', maxExamShare: 0 });
     expect(filtersFromQuestion("Anything on climate I'm eligible for?")).toEqual({ topics: ['sustainability-climate'], eligibleOnly: true });
     expect(filtersFromQuestion('Which modules use Python?')).toEqual({ query: 'python' });
+    // Filter phrases never leak into the keywords.
+    expect(filtersFromQuestion('Which modules are exam-free?')).toEqual({ maxExamShare: 0 });
+    expect(filtersFromQuestion('Any 100% coursework modules?')).toEqual({ maxExamShare: 0 });
+    expect(filtersFromQuestion('Which I-Explore modules are exam-only?')).toEqual({ type: 'i-explore', minExamShare: 1 });
+  });
+
+  it('resolves module acronyms such as CFD', () => {
+    expect(acronymMentions('Compare CFD and Fluid Mechanics 3A')).toEqual(['MECH70015']);
+    expect(getModule(session, 'CFD')).toMatchObject({ code: 'MECH70015' });
   });
 
   it('spots module codes that are not in the catalogue', () => {
@@ -155,5 +164,20 @@ describe('catalogue route', () => {
     const trace = repo.listTraceEvents(id);
     expect(trace.some((e) => e.actor === 'catalogue' && e.kind === 'tool' && e.input.startsWith('search_modules'))).toBe(true);
     expect(trace.some((e) => e.actor === 'catalogue' && e.kind === 'agent')).toBe(true);
+  });
+
+  it('compares modules named by acronym and title, giving the blocking rule', async () => {
+    const { id } = await newSession();
+    await app.request(`/api/sessions/${id}/profile`, put({ confirm: true }));
+    const stream = await (await app.request(`/api/sessions/${id}/messages`, json({ content: 'Compare CFD and Fluid Mechanics 3A' }))).text();
+    const reply = stream
+      .split('\n')
+      .filter((l) => l.startsWith('data: '))
+      .map((l) => schemas.SseEvent.parse(JSON.parse(l.slice(6))))
+      .flatMap((e) => (e.type === 'token' ? [e.text] : []))
+      .join('');
+    expect(reply).toContain('MECH70015');
+    expect(reply).toContain('MECH60006');
+    expect(reply).toMatch(/not open to you: \S+/);
   });
 });

@@ -221,8 +221,27 @@ export function resolveModule(ref: string): Module | undefined {
   return (
     modules.find((m) => m.id.toLowerCase() === r || m.code.toLowerCase() === r) ??
     modules.find((m) => m.title.toLowerCase() === r) ??
+    modules.find((m) => acronymMentions(ref.toUpperCase()).includes(m.id)) ??
     [...modules].sort((a, b) => b.title.length - a.title.length).find((m) => r.includes(m.title.toLowerCase()))
   );
+}
+
+const TITLE_STOPWORDS = new Set(['and', 'of', 'for', 'to', 'the', 'from', 'with', 'a', 'an', 'in', 'on']);
+/** "Computational Fluid Dynamics" -> "CFD": initials of the title's words, ignoring small words and part letters. */
+const acronym = (title: string) =>
+  title
+    .split(/[^A-Za-z]+/)
+    .filter((w) => w.length > 1 && !TITLE_STOPWORDS.has(w.toLowerCase()))
+    .map((w) => w[0]!.toUpperCase())
+    .join('');
+
+/** Modules the text names by a capitalised acronym of three or more letters ("CFD"), when only one module has it. */
+export function acronymMentions(text: string): string[] {
+  const tokens = new Set(text.match(/\b[A-Z]{3,6}\b/g) ?? []);
+  if (!tokens.size) return [];
+  const byAcronym = new Map<string, string[]>();
+  for (const m of catalogue.modules()) byAcronym.set(acronym(m.title), [...(byAcronym.get(acronym(m.title)) ?? []), m.id]);
+  return [...tokens].flatMap((t) => (byAcronym.get(t)?.length === 1 ? byAcronym.get(t)! : []));
 }
 
 /** What the engine says about this student and a module; completed modules are not scored. */
@@ -274,16 +293,22 @@ export function compareModules(session: SessionState, ids: string[], recs: Recom
 
 /** Reads the filters a question implies, for the offline path ("coursework-only in spring" -> term + maxExamShare). */
 export function filtersFromQuestion(question: string): SearchInput {
-  const q = question.toLowerCase();
-  const term = TermEnum.options.find((t) => new RegExp(`\\b${t}\\b`).test(q));
-  const type = /\bi-?explore\b/.test(q) ? 'i-explore' : /\belectives?\b/.test(q) ? 'elective' : /\bcore\b/.test(q) ? 'core' : undefined;
-  const maxExamShare = /\b(coursework[- ]only|no exams?|without (an? )?exams?|not examined|all coursework|100% coursework|exam[- ]free)\b/.test(q)
+  let q = question.toLowerCase();
+  /** Tests a filter phrase and removes it, so its words ("free" in "exam-free") never become search keywords. */
+  const take = (re: RegExp) => {
+    const hit = re.test(q);
+    if (hit) q = q.replace(new RegExp(re.source, 'g'), ' ');
+    return hit;
+  };
+  const maxExamShare = take(/\b(coursework[- ]only|no exams?|without (an? )?exams?|not examined|all coursework|100% coursework|exam[- ]free)\b/)
     ? 0
-    : /\b(mostly|mainly) coursework|\b(light|low) on exams?\b|\blittle exam/.test(q)
+    : take(/\b(mostly|mainly) coursework\b|\b(light|low) on exams?\b|\blittle exam\w*/)
       ? 0.3
       : undefined;
-  const minExamShare = /\b(exam[- ]only|all exams?|fully examined|100% exams?)\b/.test(q) ? 1 : /\b(mostly|mainly) exams?\b/.test(q) ? 0.7 : undefined;
-  const eligibleOnly = /\b(eligible|open to me|i can (take|do)|can i (take|do)|allowed)\b/.test(q) || undefined;
+  const minExamShare = take(/\b(exam[- ]only|all exams?|fully examined|100% exams?)\b/) ? 1 : take(/\b(mostly|mainly) exams?\b/) ? 0.7 : undefined;
+  const term = TermEnum.options.find((t) => take(new RegExp(`\\b${t}\\b`)));
+  const type = take(/\bi-?explore\b/) ? 'i-explore' : take(/\belectives?\b/) ? 'elective' : take(/\bcore\b/) ? 'core' : undefined;
+  const eligibleOnly = take(/\b(eligible|open to me|i can (take|do)|can i (take|do)|allowed)\b/) || undefined;
   const words = keywords(q);
   const topicWords = words.filter((w) => resolveTopics([w]).ids.length > 0 && (TOPIC_WORDS[w] || w.length >= 5));
   const topics = resolveTopics(topicWords).ids;
@@ -330,11 +355,13 @@ function formatCompare(result: ReturnType<typeof compareModules>): string | null
   if (!('modules' in result) || !result.modules) return null;
   const lines = result.modules.map((m) => {
     const s = m.student;
-    const fit = 'fit' in s ? `fit ${s.fit}${s.eligible ? '' : ', not open to you'}` : 'completed' in s ? 'already completed' : 'not in your catalogue';
+    const fit = 'fit' in s ? `fit ${s.fit}${s.eligible ? '' : `, not open to you: ${s.ineligibleReasons?.[0] ?? 'programme rules'}`}` : 'completed' in s ? 'already completed' : 'not in your catalogue';
     return `• ${m.code} ${m.title}: ${m.terms.join(' and ')}, ${m.ects} ECTS, ${m.examPercent}% exam, maths ${m.mathsIntensityPercent}%, coding ${m.codingIntensityPercent}%, mainly ${m.topTopics.slice(0, 2).join(' and ').toLowerCase()}; ${fit}.`;
   });
   return ['Side by side:', ...lines].join('\n');
 }
+
+const moduleCode = (id: string) => catalogue.modules().find((m) => m.id === id)?.code ?? id;
 
 const COMPARE_CUE = /\b(compare|comparison|versus|vs\.?|difference|differ)\b/i;
 
@@ -345,12 +372,21 @@ interface Outcome {
 }
 
 function answerOffline(question: string, moduleIds: string[], session: SessionState, tracer: Tracer, recs: Recommendation[]): Outcome {
-  if (COMPARE_CUE.test(question) && moduleIds.length >= 2) {
-    const ids = moduleIds.slice(0, 3);
-    const result = compareModules(session, ids, recs);
-    tracer.record({ actor: 'catalogue', kind: 'tool', input: `compare_modules(${ids.join(', ')})`, output: 'error' in result ? 'not found' : `${ids.length} modules`, verdict: null });
-    const text = formatCompare(result);
-    if (text) return { text, source: 'rules', toolCalls: 1 };
+  if (COMPARE_CUE.test(question)) {
+    const ids = [...new Set([...moduleIds, ...acronymMentions(question)])].slice(0, 3);
+    if (ids.length === 1) {
+      return {
+        text: `I found ${moduleCode(ids[0]!)} ${moduleTitle(ids[0]!)}, but I could not tell which other module you mean. Tell me its code or full title and I will compare them.`,
+        source: 'rules',
+        toolCalls: 0,
+      };
+    }
+    if (ids.length >= 2) {
+      const result = compareModules(session, ids, recs);
+      tracer.record({ actor: 'catalogue', kind: 'tool', input: `compare_modules(${ids.join(', ')})`, output: 'error' in result ? 'not found' : `${ids.length} modules`, verdict: null });
+      const text = formatCompare(result);
+      if (text) return { text, source: 'rules', toolCalls: 1 };
+    }
   }
   const input = filtersFromQuestion(question);
   const result = searchModules(session, input, recs);
@@ -443,14 +479,20 @@ function runTool(call: Anthropic.Beta.BetaToolUseBlock, session: SessionState, r
     return fail(`Unknown tool ${call.name}`);
   }
   tracer.record({ actor: 'catalogue', kind: 'tool', input: `${call.name}(${JSON.stringify(input)})`, output: summary, verdict: null });
-  return { content: asData(`tool:${call.name}`, JSON.stringify(result)) };
+  // A lookup of an unknown module is an error result, so it does not count as catalogue data for the answer.
+  const notFound = summary === 'not found';
+  return { content: asData(`tool:${call.name}`, JSON.stringify(result)), ...(notFound ? { is_error: true } : {}) };
 }
 
 async function answerLive(question: string, session: SessionState, tracer: Tracer, recs: Recommendation[]): Promise<Outcome> {
   const model = modelId('smart');
   const messages: Anthropic.Beta.BetaMessageParam[] = [{ role: 'user', content: asData('student-question', question) }];
   let toolCalls = 0;
-  for (let round = 0; ; round++) {
+  let toolRounds = 0;
+  let succeeded = 0;
+  let nudged = false;
+  // At most MAX_TOOL_ROUNDS tool rounds plus one reminder to use the tools, so the loop always ends.
+  for (;;) {
     const response = await anthropic().beta.messages.create({
       model,
       max_tokens: SMART_MAX_TOKENS,
@@ -467,13 +509,23 @@ async function answerLive(question: string, session: SessionState, tracer: Trace
     if (calls.length === 0) {
       const text = response.content.flatMap((b) => (b.type === 'text' ? [b.text] : [])).join('').trim();
       if (!text) throw new IncompleteReplyError(response.stop_reason);
-      return { text, source: 'model', toolCalls };
+      // An answer is only accepted once it rests on catalogue data from at least one successful tool call.
+      if (succeeded > 0) return { text, source: 'model', toolCalls };
+      if (nudged || toolRounds >= MAX_TOOL_ROUNDS) throw new Error('catalogue agent answered without a successful tool result');
+      nudged = true;
+      messages.push(
+        { role: 'assistant', content: response.content },
+        { role: 'user', content: 'Answer only from tool results. Call search_modules, get_module or compare_modules first.' },
+      );
+      continue;
     }
-    if (round >= MAX_TOOL_ROUNDS) throw new Error(`catalogue agent wanted more than ${MAX_TOOL_ROUNDS} tool rounds`);
+    if (toolRounds >= MAX_TOOL_ROUNDS) throw new Error(`catalogue agent wanted more than ${MAX_TOOL_ROUNDS} tool rounds`);
     messages.push({ role: 'assistant', content: response.content });
     const results = calls.map((call): Anthropic.Beta.BetaToolResultBlockParam => ({ type: 'tool_result', tool_use_id: call.id, ...runTool(call, session, recs, tracer) }));
     toolCalls += calls.length;
-    const last = round + 1 >= MAX_TOOL_ROUNDS;
+    toolRounds += 1;
+    succeeded += results.filter((r) => !r.is_error).length;
+    const last = toolRounds >= MAX_TOOL_ROUNDS;
     messages.push({ role: 'user', content: last ? [...results, { type: 'text', text: 'That was the last tool round. Answer now from the results above.' }] : results });
   }
 }
