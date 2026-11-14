@@ -1,0 +1,215 @@
+{
+  "_note": "Sample of real clubs and societies from the public Imperial College Union A to Z listing (imperialcollegeunion.org), fetched on 2026-11-14. Descriptions are short summaries in our own words of each society's public page; topic tags are our own judgement (a society with no matching taxonomy topic has none, so it can only appear as a wildcard). Not an official or complete list.",
+  "societies": [
+    {
+      "id": "soc-racing",
+      "name": "Racing (Imperial Racing Green)",
+      "description": "Student team that designs and builds cars for the Shell Eco-Marathon energy-efficiency competition and Formula Student.",
+      "topics": { "design-manufacturing": 0.9, "thermodynamics-energy": 0.5, "electronics-embedded": 0.5, "sustainability-climate": 0.4 },
+      "sourceUrl": "https://www.imperialcollegeunion.org/activities/a-to-z/racing"
+    },
+    {
+      "id": "soc-robotics",
+      "name": "Robotics",
+      "description": "Imperial's robotics and making society, with its own lab of 3D printers, a laser cutter and soldering stations for members' prototypes and builds.",
+      "topics": { "control-robotics": 0.9, "electronics-embedded": 0.7, "design-manufacturing": 0.6, "programming-software": 0.5 },
+      "sourceUrl": "https://www.imperialcollegeunion.org/activities/a-to-z/robotics"
+    },
+    {
+      "id": "soc-space",
+      "name": "Space Society",
+      "description": "Runs space engineering projects such as CubeSats, rocket engines and rocketry competitions, and teaches beginners from scratch.",
+      "topics": { "design-manufacturing": 0.7, "thermodynamics-energy": 0.5, "electronics-embedded": 0.5, "fluid-mechanics": 0.4 },
+      "sourceUrl": "https://www.imperialcollegeunion.org/activities/a-to-z/space-society"
+    },
+    {
+      "id": "soc-auv",
+      "name": "Autonomous Underwater Vehicle (AUV)",
+      "description": "Team that designs, builds and tests autonomous underwater robots, combining mechanical design, electronics, embedded software and control.",
+      "topics": { "control-robotics": 0.9, "electronics-embedded": 0.7, "design-manufacturing": 0.6, "programming-software": 0.5, "experimental-lab": 0.4 },
+      "sourceUrl": "https://www.imperialcollegeunion.org/activities/a-to-z/autonomous-underwater-vehicle-auv"
+    },
+    {
+      "id": "soc-aeronautics",
+      "name": "Aeronautics (AeroSoc)",
+      "description": "Community for aeronautics students and other aerospace enthusiasts, running talks, trips and social events.",
+      "topics": { "fluid-mechanics": 0.7, "design-manufacturing": 0.4, "thermodynamics-energy": 0.3 },
+      "sourceUrl": "https://www.imperialcollegeunion.org/activities/a-to-z/aeronautics"
+    },
+    {
+      "id": "soc-mechanical-engineering",
+      "name": "Mechanical Engineering (MechSoc)",
+      "description": "The department society every Mechanical Engineering student belongs to, running socials and professional talks with engineering, finance and consulting partners.",
+      "topics": { "design-manufacturing": 0.4, "management-leadership": 0.3, "communication-writing": 0.2 },
+      "sourceUrl": "https://www.imperialcollegeunion.org/activities/a-to-z/mechanical-engineering"
+    },
+    {
+      "id": "soc-docsoc",
+      "name": "DoCSoc",
+      "description": "One of Imperial's largest societies, for anyone into computing and technology, with tech talks from industry and plenty of socials.",
+      "topics": { "programming-software": 0.9, "machine-learning-ai": 0.5, "statistics-data": 0.3 },
+      "sourceUrl": "https://www.imperialcollegeunion.org/activities/a-to-z/docsoc"
+    },
+    {
+      "id": "soc-protosoc",
+      "name": "Prototyping and Hacking Society (ProtoSoc)",
+      "description": "Home for makers and builders who prototype and hack on everyday or global problems, run hackspace workshops and lead a RoboCup team.",
+      "topics": { "design-manufacturing": 0.8, "electronics-embedded": 0.6, "entrepreneurship-innovation": 0.5, "programming-software": 0.5, "creative-arts-design": 0.3 },
+      "sourceUrl": "https://www.imperialcollegeunion.org/activities/a-to-z/prototyping-and-hacking-society"
+    },
+    {
+      "id": "soc-medtech",
+      "name": "MedTech",
+      "description": "Collaborative platform for medical technology innovation open to medical and non-medical students, with speaker and workshop series.",
+      "topics": { "biomedical-engineering": 0.9, "entrepreneurship-innovation": 0.5, "design-manufacturing": 0.3 },
+      "sourceUrl": "https://www.imperialcollegeunion.org/activities/a-to-z/medtech"
+    },
+    {
+      "id": "soc-prosthetics",
+      "name": "Prosthetics",
+      "description": "Project teams building a bionic arm, an exoskeleton, prosthetic knee and ankle designs and an affordable prosthesis adapter, with CAD, electronics and 3D-printing workshops.",
+      "topics": { "biomedical-engineering": 0.9, "design-manufacturing": 0.8, "control-robotics": 0.5, "electronics-embedded": 0.4, "global-development": 0.3 },
+      "sourceUrl": "https://www.imperialcollegeunion.org/activities/a-to-z/prosthetics"
+    },
+    {
+      "id": "soc-entrepreneurs",
+      "name": "Entrepreneurs",
+      "description": "Imperial's society for founders and would-be founders, offering networks, mentoring and opportunities to turn ideas into companies.",
+      "topics": { "entrepreneurship-innovation": 0.95, "management-leadership": 0.5, "finance-economics": 0.4 },
+      "sourceUrl": "https://www.imperialcollegeunion.org/activities/a-to-z/entrepreneurs"
+    },
+    {
+      "id": "soc-consultancy",
+      "name": "Consultancy",
+      "description": "The student society for anyone curious about consulting or planning a consultancy career.",
+      "topics": { "management-leadership": 0.8, "finance-economics": 0.5, "communication-writing": 0.5 },
+      "sourceUrl": "https://www.imperialcollegeunion.org/activities/a-to-z/consultancy"
+    },
+    {
+      "id": "soc-finance",
+      "name": "Finance",
+      "description": "A large careers-focused society for students aiming at jobs in finance.",
+      "topics": { "finance-economics": 0.95, "statistics-data": 0.3, "management-leadership": 0.3 },
+      "sourceUrl": "https://www.imperialcollegeunion.org/activities/a-to-z/finance"
+    },
+    {
+      "id": "soc-algotrading",
+      "name": "Algorithmic Trading (AlgoSoc)",
+      "description": "Teaches members about trading and financial markets, from the basics to quantitative and algorithmic trading.",
+      "topics": { "finance-economics": 0.8, "programming-software": 0.6, "statistics-data": 0.6, "mathematics-modelling": 0.5 },
+      "sourceUrl": "https://www.imperialcollegeunion.org/activities/a-to-z/algorithmic-trading"
+    },
+    {
+      "id": "soc-vcpe",
+      "name": "Venture Capital & Private Equity",
+      "description": "Lectures, workshops, career panels and networking about venture capital and private equity investing.",
+      "topics": { "finance-economics": 0.8, "entrepreneurship-innovation": 0.6, "management-leadership": 0.3 },
+      "sourceUrl": "https://www.imperialcollegeunion.org/activities/a-to-z/venture-capital-private-equity"
+    },
+    {
+      "id": "soc-energy",
+      "name": "Energy",
+      "description": "Open to anyone interested in the energy sector, helping members build the insight, skills and network for energy careers.",
+      "topics": { "thermodynamics-energy": 0.8, "sustainability-climate": 0.7, "nuclear-energy": 0.3, "policy-ethics": 0.3 },
+      "sourceUrl": "https://www.imperialcollegeunion.org/activities/a-to-z/energy"
+    },
+    {
+      "id": "soc-ewb",
+      "name": "Engineers Without Borders UK",
+      "description": "Part of a global movement that wants engineering practised for people and planet rather than mainly for profit.",
+      "topics": { "global-development": 0.9, "sustainability-climate": 0.8, "policy-ethics": 0.5, "design-manufacturing": 0.3 },
+      "sourceUrl": "https://www.imperialcollegeunion.org/activities/a-to-z/engineers-without-borders-uk"
+    },
+    {
+      "id": "soc-climate-entrepreneurs",
+      "name": "Climate Entrepreneurs",
+      "description": "Helps entrepreneurial students build ventures that tackle climate change and related UN Sustainable Development Goals.",
+      "topics": { "entrepreneurship-innovation": 0.85, "sustainability-climate": 0.85, "finance-economics": 0.3 },
+      "sourceUrl": "https://www.imperialcollegeunion.org/activities/a-to-z/climate-entrepreneurs"
+    },
+    {
+      "id": "soc-mathematics",
+      "name": "Mathematics (MathSoc)",
+      "description": "Imperial's main maths society, open to all STEM students, mixing talks and learning with socials.",
+      "topics": { "mathematics-modelling": 0.95, "statistics-data": 0.3 },
+      "sourceUrl": "https://www.imperialcollegeunion.org/activities/a-to-z/mathematics"
+    },
+    {
+      "id": "soc-physics",
+      "name": "Physics (PhySoc)",
+      "description": "Free talks, conferences, careers events, competitions and socials for anyone who studies or enjoys physics.",
+      "topics": { "mathematics-modelling": 0.6, "nuclear-energy": 0.3, "experimental-lab": 0.3 },
+      "sourceUrl": "https://www.imperialcollegeunion.org/activities/a-to-z/physics"
+    },
+    {
+      "id": "soc-debating",
+      "name": "Debating",
+      "description": "Free weekly debating sessions for everyone, from experienced debaters to people new to public speaking.",
+      "topics": { "communication-writing": 0.9, "policy-ethics": 0.5, "history-philosophy": 0.3 },
+      "sourceUrl": "https://www.imperialcollegeunion.org/activities/a-to-z/debating"
+    },
+    {
+      "id": "soc-photosoc",
+      "name": "PhotoSoc",
+      "description": "Guidance and facilities for students who want to grow as photographers and meet others who share the hobby.",
+      "topics": { "creative-arts-design": 0.9 },
+      "sourceUrl": "https://www.imperialcollegeunion.org/activities/a-to-z/photosoc"
+    },
+    {
+      "id": "soc-art-club",
+      "name": "Art Club",
+      "description": "Arts-and-crafts and life-drawing workshops, an art studio, socials and an annual exhibition.",
+      "topics": { "creative-arts-design": 0.95 },
+      "sourceUrl": "https://www.imperialcollegeunion.org/activities/a-to-z/art-club"
+    },
+    {
+      "id": "soc-big-band",
+      "name": "Big Band",
+      "description": "Jazz big band of scientists, engineers and medics that plays across the London and UK university scene.",
+      "topics": { "creative-arts-design": 0.8 },
+      "sourceUrl": "https://www.imperialcollegeunion.org/activities/a-to-z/big-band"
+    },
+    {
+      "id": "soc-philosophy",
+      "name": "Philosophy",
+      "description": "Weekly discussions on any philosophical question, from the nature of reality to the ethics of artificial intelligence.",
+      "topics": { "history-philosophy": 0.95, "policy-ethics": 0.4, "machine-learning-ai": 0.2 },
+      "sourceUrl": "https://www.imperialcollegeunion.org/activities/a-to-z/philosophy"
+    },
+    {
+      "id": "soc-japan",
+      "name": "Japan",
+      "description": "Free Japanese lessons at every level plus film nights, socials and other events through the year.",
+      "topics": { "languages": 0.9, "creative-arts-design": 0.2 },
+      "sourceUrl": "https://www.imperialcollegeunion.org/activities/a-to-z/japan"
+    },
+    {
+      "id": "soc-french",
+      "name": "French",
+      "description": "Society for francophone and francophile students that promotes French culture through events.",
+      "topics": { "languages": 0.9, "history-philosophy": 0.2 },
+      "sourceUrl": "https://www.imperialcollegeunion.org/activities/a-to-z/french"
+    },
+    {
+      "id": "soc-fellwanderers",
+      "name": "Fellwanderers (Imperial Hiking Society)",
+      "description": "Imperial's hiking society, with weekly trips that range from countryside walks to mountain tours.",
+      "topics": {},
+      "sourceUrl": "https://www.imperialcollegeunion.org/activities/a-to-z/fellwanderers-imperial-hiking-society"
+    },
+    {
+      "id": "soc-gliding",
+      "name": "Gliding",
+      "description": "Low-cost flying training in gliders for every level of experience, from first flights to aerobatics.",
+      "topics": { "fluid-mechanics": 0.4, "experimental-lab": 0.2 },
+      "sourceUrl": "https://www.imperialcollegeunion.org/activities/a-to-z/gliding"
+    },
+    {
+      "id": "soc-global-brigades",
+      "name": "Global Brigades",
+      "description": "Student-led health and development movement that works with partner communities on sustainable health, economic and education projects.",
+      "topics": { "global-development": 0.95, "biomedical-engineering": 0.3, "sustainability-climate": 0.3 },
+      "sourceUrl": "https://www.imperialcollegeunion.org/activities/a-to-z/global-brigades"
+    }
+  ]
+}
