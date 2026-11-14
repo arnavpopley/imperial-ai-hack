@@ -1,8 +1,8 @@
 // One conversation per session, shared by the interview screen and the "Ask the advisor" drawer.
 // Applies each SSE event (spec 13) to the transcript and to the session state.
-import type { Evidence, Message, SendMessageBody, SseEvent, Verdict } from '@modulematch/shared';
+import type { CvResponse, Evidence, Message, SendMessageBody, SseEvent, Verdict } from '@modulematch/shared';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { sendMessage } from '../../api.ts';
+import { api, sendMessage } from '../../api.ts';
 import type { GuardrailVariant } from '../../components/GuardrailNotice.tsx';
 import { errorMessage } from '../../components/StateViews.tsx';
 import { upsertEscalation } from '../hooks/useEscalationDraft.ts';
@@ -37,6 +37,12 @@ interface ChatContextValue {
   /** Set once the stream reports that ranked recommendations are ready. */
   recommendationsReady: boolean;
   send: (content: string, structured?: Structured) => Promise<void>;
+  /**
+   * Import a pasted CV (POST /cv). It shares the send lock, because the chat and the CV route both save the
+   * whole profile and the later write would erase the other's changes. Rejects with BUSY_MESSAGE while a
+   * reply or another import is in flight.
+   */
+  importCv: (text: string) => Promise<CvResponse>;
   /** Resend the request behind a failed reply, identified by the reply's id. */
   retry: (replyId: string) => void;
 }
@@ -71,6 +77,8 @@ function turn(role: ChatTurn['role'], content: string, extra: Partial<ChatTurn> 
 
 const STAFF_AGENT = 'staff';
 
+export const BUSY_MESSAGE = 'Wait for the current reply to finish, then try again.';
+
 const fromMessage = (m: Message): ChatTurn => ({ ...turn(m.role, m.content), id: m.id, agent: m.agent });
 
 interface SentRequest {
@@ -82,7 +90,7 @@ interface SentRequest {
 
 /** Render with `key={session.id}` so a new session starts a fresh transcript. */
 export function ChatProvider({ children }: { children: ReactNode }) {
-  const { session, update, offerDraft, invalidateRecs } = useReadySession();
+  const { session, update, replace, offerDraft, invalidateRecs } = useReadySession();
   const sessionId = session.id;
   const [turns, setTurns] = useState<ChatTurn[]>(() => session.messages.map(fromMessage));
   const [sending, setSending] = useState(false);
@@ -93,6 +101,24 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const requestsRef = useRef(new Map<string, SentRequest>());
 
   useEffect(() => () => abortRef.current?.abort(), []);
+
+  /**
+   * The stream does not carry interview progress (steps asked, finished), so read it back for the timeline
+   * while the send lock is still held. A response older than the session on screen (for example after the
+   * student confirmed their profile) is ignored. A failed read keeps the last known progress.
+   */
+  const refreshProgress = useCallback(
+    async (signal: AbortSignal) => {
+      try {
+        const fresh = await api.getSession(sessionId);
+        if (signal.aborted) return;
+        update((s) => (fresh.updatedAt >= s.updatedAt ? { ...s, interview: fresh.interview } : s));
+      } catch {
+        // Transient: the next reply reads progress again.
+      }
+    },
+    [sessionId, update],
+  );
 
   // Staff replies also arrive as assistant messages (agent "staff") through the session poll.
   // The transcript is otherwise local, so append only those, once each.
@@ -136,7 +162,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           case 'guardrail': {
             const { notice } = event;
             if (notice) {
-              const added = { variant: guardrailVariant(event.stage, event.verdict), message: notice, stage: event.stage };
+              const added = {
+                variant: guardrailVariant(event.stage, event.verdict),
+                message: notice,
+                stage: event.stage,
+              };
               patchReply((t) => ({ ...t, notices: [...t.notices, added] }));
             }
             break;
@@ -150,7 +180,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             if (event.draft) offerDraft(event.draft);
             if (escalation) {
               offerDraft(null);
-              update((s) => ({ ...s, escalationDraft: null, escalations: upsertEscalation(s.escalations, escalation) }));
+              update((s) => ({
+                ...s,
+                escalationDraft: null,
+                escalations: upsertEscalation(s.escalations, escalation),
+              }));
             }
             break;
           }
@@ -166,6 +200,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         // A stream that closes without `done` still ends the reply.
         patchReply((t) => (t.status === 'streaming' ? { ...t, status: 'done' } : t));
         requestsRef.current.delete(reply.id);
+        await refreshProgress(controller.signal);
       } catch (err) {
         if (!controller.signal.aborted) patchReply((t) => ({ ...t, status: 'error', error: errorMessage(err) }));
       } finally {
@@ -173,7 +208,28 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         setSending(false);
       }
     },
-    [sessionId, update, offerDraft, invalidateRecs],
+    [sessionId, update, offerDraft, invalidateRecs, refreshProgress],
+  );
+
+  const importCv = useCallback(
+    async (text: string): Promise<CvResponse> => {
+      if (abortRef.current) throw new Error(BUSY_MESSAGE);
+      const controller = new AbortController();
+      abortRef.current = controller;
+      setSending(true);
+      try {
+        const response = await api.submitCv(sessionId, text);
+        if (!controller.signal.aborted) {
+          replace(response.session);
+          invalidateRecs();
+        }
+        return response;
+      } finally {
+        abortRef.current = null;
+        setSending(false);
+      }
+    },
+    [sessionId, replace, invalidateRecs],
   );
 
   const retry = useCallback(
@@ -188,8 +244,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ turns, sending, widget, recommendationsReady, send, retry }),
-    [turns, sending, widget, recommendationsReady, send, retry],
+    () => ({ turns, sending, widget, recommendationsReady, send, importCv, retry }),
+    [turns, sending, widget, recommendationsReady, send, importCv, retry],
   );
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
 }
