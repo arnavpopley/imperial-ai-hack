@@ -1,7 +1,7 @@
 // Contract tests: fixtures match their schemas, and every spec-13 route returns a schema-valid response.
 import { schemas } from '@modulematch/shared';
 import * as fx from '@modulematch/shared/fixtures';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 import type { z } from 'zod';
 import { createApp } from '../src/app.ts';
 import { seedIfEmpty } from '../src/bootstrap.ts';
@@ -170,5 +170,34 @@ describe('every route returns a valid response', () => {
       .map((l) => S.SseEvent.parse(JSON.parse(l.slice(6))));
     expect(events.map((e) => e.type)).toContain('profile_update');
     expect(events.at(-1)?.type).toBe('done');
+  });
+});
+
+describe('module resources', () => {
+  it('serves staff-provided resources from data/module-resources.json on every module', async () => {
+    const { mkdtempSync, cpSync, writeFileSync, readdirSync } = await import('node:fs');
+    const { join, resolve } = await import('node:path');
+    const { tmpdir } = await import('node:os');
+    const { DATA_DIR } = await import('../src/db/datasets.ts');
+    // A copy of data/ with one resource added, so the real file is never touched.
+    const dir = mkdtempSync(join(tmpdir(), 'mm-data-'));
+    for (const f of readdirSync(DATA_DIR)) cpSync(resolve(DATA_DIR, f), resolve(dir, f));
+    writeFileSync(
+      resolve(dir, 'module-resources.json'),
+      JSON.stringify({ _note: 'test', resources: { MECH60006: [{ label: '2025 exam', url: 'https://example.org/2025.pdf', kind: 'past-paper' }] } }),
+    );
+    process.env.MODULEMATCH_DATA_DIR = dir;
+    vi.resetModules();
+    try {
+      // A fresh module graph opens a fresh in-memory database, so seed it from the copied data/.
+      (await import('../src/bootstrap.ts')).seedIfEmpty();
+      const { catalogue } = await import('../src/agents/session.ts');
+      const module = catalogue.modules().find((m) => m.id === 'MECH60006');
+      expect(module?.resources).toEqual([{ label: '2025 exam', url: 'https://example.org/2025.pdf', kind: 'past-paper' }]);
+      expect(catalogue.modules().find((m) => m.id === 'MECH60007')?.resources).toEqual([]);
+    } finally {
+      delete process.env.MODULEMATCH_DATA_DIR;
+      vi.resetModules();
+    }
   });
 });
