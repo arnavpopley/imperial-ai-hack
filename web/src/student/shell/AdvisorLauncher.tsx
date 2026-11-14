@@ -83,24 +83,24 @@ export function AdvisorLauncher({ state, onOpen, onClose, showBubble }: AdvisorL
                 whileHover={{ scale: 1.06 }}
                 whileTap={{ scale: 0.94 }}
                 transition={{ type: 'spring', stiffness: 380, damping: 26 }}
-                className="group relative grid size-16 place-items-center rounded-full bg-gradient-to-br from-brand to-mode-explain text-on-brand shadow-lift"
+                className="relative flex h-16 items-center gap-3 rounded-full bg-gradient-to-br from-brand to-mode-explain pr-4 pl-4 text-on-brand shadow-lift sm:h-[4.5rem] sm:pr-7 sm:pl-5"
               >
                 {/* A gentle idle pulse; the reduced-motion rule in index.css stops it after one beat. */}
                 <span aria-hidden="true" className="absolute inset-0 animate-halo rounded-full bg-brand" />
-                <Icon name="chat" size={26} className="relative" />
-                <Icon name="sparkle" size={14} className="absolute top-3.5 right-3.5" />
+                <span aria-hidden="true" className="relative grid size-10 place-items-center rounded-full bg-on-brand/15">
+                  <Icon name="chat" size={22} />
+                  <Icon name="sparkle" size={12} className="absolute top-1 right-1" />
+                </span>
+                {/* Always labelled on wider screens so the advisor is obvious; just the icon on phones. */}
+                <span aria-hidden="true" className="relative text-base font-semibold whitespace-nowrap max-sm:hidden">
+                  Ask the advisor
+                </span>
                 {unread && (
                   <span
                     aria-hidden="true"
                     className="absolute top-0.5 right-0.5 size-4 rounded-full bg-fit-low ring-[3px] ring-canvas"
                   />
                 )}
-                <span
-                  aria-hidden="true"
-                  className="pointer-events-none absolute right-full mr-3 hidden rounded-full bg-ink px-3 py-1.5 text-xs font-medium whitespace-nowrap text-canvas opacity-0 shadow-soft transition-opacity group-hover:opacity-100 sm:block"
-                >
-                  Ask the advisor
-                </span>
               </motion.button>
             )}
           </AnimatePresence>
@@ -123,7 +123,7 @@ export function AdvisorLauncher({ state, onOpen, onClose, showBubble }: AdvisorL
         className={cx(
           'm-0 overflow-visible bg-transparent p-0 text-ink backdrop:bg-scrim sm:backdrop:bg-transparent',
           'fixed inset-0 h-dvh max-h-none w-full max-w-none',
-          'sm:inset-auto sm:right-6 sm:bottom-6 sm:h-[min(42rem,calc(100dvh-3rem))] sm:w-[26rem]',
+          'sm:inset-auto sm:right-6 sm:bottom-6 sm:h-[min(52rem,calc(100dvh-3rem))] sm:w-[min(34rem,calc(100vw-3rem))]',
         )}
       >
         <AnimatePresence onExitComplete={finishClose}>
