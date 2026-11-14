@@ -58,15 +58,18 @@ export function CatalogueProvider({ children }: { children: ReactNode }) {
   const recs = useAsync(() => api.recommendations(sessionId), [sessionId, recsVersion, session.profile.updatedAt]);
   const [weights, setWeights] = useState<Weights>(session.weights);
   const [saveState, setSaveState] = useState<SaveState>('idle');
+  /** Counts local slider edits, so a server refresh that started before an edit never overwrites it. */
+  const editSeq = useRef(0);
 
   // A chat what-if changes the weights on the server and bumps recsVersion; adopt the server's weights then,
   // so the sliders and the client-side re-rank match what the advisor just said.
   useEffect(() => {
     if (recsVersion === 0) return;
     let live = true;
+    const startedAt = editSeq.current;
     api.recommendations(sessionId).then(
       (response) => {
-        if (live) setWeights(response.weights);
+        if (live && editSeq.current === startedAt) setWeights(response.weights);
       },
       () => {},
     );
@@ -95,6 +98,7 @@ export function CatalogueProvider({ children }: { children: ReactNode }) {
   const setWeight = useCallback(
     (key: WeightKey, value: number) => {
       const next = { ...weights, [key]: value };
+      editSeq.current += 1;
       setWeights(next);
       save(next);
     },
@@ -102,6 +106,7 @@ export function CatalogueProvider({ children }: { children: ReactNode }) {
   );
 
   const resetWeights = useCallback(() => {
+    editSeq.current += 1;
     setWeights(DEFAULT_WEIGHTS);
     save(DEFAULT_WEIGHTS);
   }, [save]);
