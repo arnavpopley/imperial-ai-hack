@@ -19,7 +19,8 @@
     "eval": "npm run eval -w server",
     "build:vercel": "tsx scripts/build-vercel.ts",
     "deploy:vercel": "npm run build:vercel && npx vercel@latest deploy --prebuilt --prod",
-    "eval:live": "npm run eval:live -w server"
+    "eval:live": "npm run eval:live -w server",
+    "e2e": "node scripts/e2e/demo-journey.mjs"
   },
   "devDependencies": {
     "concurrently": "^10.0.7",
