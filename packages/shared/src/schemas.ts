@@ -108,7 +108,10 @@ export const ModuleDerived = z.object({
   derivedRationale: z.string(),
 });
 
-/** A link for a module: past papers, reading lists, recordings. Provided by staff, not derived. */
+/**
+ * A link for a module: past papers, reading lists, recordings. Provided by staff in data/module-resources.json,
+ * keyed by module id, and merged into every module the API serves. It is not stored in SQLite or derived.
+ */
 export const ModuleResource = z.object({
   label: z.string().min(1),
   url: z.string().url(),
