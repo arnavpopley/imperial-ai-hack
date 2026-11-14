@@ -21,17 +21,17 @@ export function Panel({
   return (
     <section
       aria-labelledby={title ? headingId : undefined}
-      className={`rounded-card border border-line bg-surface p-5 ${className}`}
+      className={`rounded-panel bg-surface p-card shadow-soft ring-1 ring-line sm:p-card-lg ${className}`}
     >
       {(title || actions) && (
-        <header className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             {title && (
-              <h2 id={headingId} className="text-sm font-semibold tracking-tight">
+              <h2 id={headingId} className="text-lg font-semibold tracking-tight">
                 {title}
               </h2>
             )}
-            {description && <p className="mt-0.5 text-sm text-muted">{description}</p>}
+            {description && <p className="mt-1 text-sm text-muted">{description}</p>}
           </div>
           {actions}
         </header>
@@ -58,7 +58,7 @@ export function Button({
   return (
     <button
       type={type}
-      className={`inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors disabled:cursor-not-allowed ${variants[variant]} ${focusRing} ${className}`}
+      className={`inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed ${variants[variant]} ${focusRing} ${className}`}
       {...props}
     />
   );
@@ -91,22 +91,57 @@ export function ErrorState({ title, error, onRetry }: { title: string; error: Er
   );
 }
 
-export function EmptyState({ icon, title, children }: { icon?: ReactNode; title: string; children?: ReactNode }) {
+export function EmptyState({
+  icon,
+  title,
+  image,
+  children,
+}: {
+  icon?: ReactNode;
+  title: string;
+  /** Optional illustrative photo from /images, shown above the title. */
+  image?: string;
+  children?: ReactNode;
+}) {
   return (
-    <div className="flex flex-col items-center gap-2 rounded-card border border-dashed border-line px-6 py-10 text-center">
-      {icon && <span className="text-muted">{icon}</span>}
-      <p className="text-sm font-medium">{title}</p>
+    <div className="flex flex-col items-center gap-3 rounded-panel border border-dashed border-line-strong px-6 py-12 text-center">
+      {image && (
+        <img src={image} alt="" className="mb-2 aspect-[16/9] w-full max-w-sm rounded-2xl object-cover shadow-soft" />
+      )}
+      {icon && !image && <span className="text-muted">{icon}</span>}
+      <p className="text-base font-semibold">{title}</p>
       {children && <div className="max-w-sm text-sm text-muted">{children}</div>}
     </div>
   );
 }
 
-export function StatTile({ label, value, hint }: { label: string; value: ReactNode; hint?: ReactNode }) {
+export function StatTile({
+  label,
+  value,
+  hint,
+  icon,
+  tone = 'bg-brand-soft text-brand',
+}: {
+  label: string;
+  value: ReactNode;
+  hint?: ReactNode;
+  /** A small icon in a tinted square beside the label. */
+  icon?: ReactNode;
+  /** Tailwind classes for the icon square. */
+  tone?: string;
+}) {
   return (
-    <div className="rounded-card border border-line bg-surface px-4 py-3">
-      <dt className="text-xs font-medium text-muted">{label}</dt>
-      <dd className="mt-1 text-2xl font-semibold tracking-tight tabular-nums">{value}</dd>
-      {hint && <dd className="mt-0.5 text-xs text-muted">{hint}</dd>}
+    <div className="flex items-start gap-4 rounded-panel bg-surface p-card shadow-soft ring-1 ring-line">
+      {icon && (
+        <span aria-hidden="true" className={`grid size-11 shrink-0 place-items-center rounded-2xl ${tone}`}>
+          {icon}
+        </span>
+      )}
+      <div className="min-w-0">
+        <dt className="text-sm font-medium text-muted">{label}</dt>
+        <dd className="mt-1 text-3xl font-semibold tracking-tight tabular-nums">{value}</dd>
+        {hint && <dd className="mt-1 text-xs text-muted">{hint}</dd>}
+      </div>
     </div>
   );
 }
@@ -127,12 +162,12 @@ export function Segmented<T extends string>({
 }) {
   return (
     <fieldset className="min-w-0">
-      <legend className="mb-1.5 text-xs font-medium text-muted">{legend}</legend>
-      <div className="flex flex-wrap gap-1">
+      <legend className="mb-2 text-xs font-semibold tracking-[0.08em] text-muted uppercase">{legend}</legend>
+      <div className="flex flex-wrap gap-2">
         {options.map((o) => (
           <label
             key={o.value}
-            className="cursor-pointer rounded-full border border-line px-2.5 py-1 text-xs font-medium text-muted transition-colors hover:text-ink has-checked:border-brand has-checked:bg-brand-soft has-checked:text-ink has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-brand"
+            className="cursor-pointer rounded-full border border-line px-3.5 py-1.5 text-sm font-medium text-muted transition-colors hover:text-ink has-checked:border-brand has-checked:bg-brand-soft has-checked:text-ink has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-brand"
           >
             <input
               type="radio"

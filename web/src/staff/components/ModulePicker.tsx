@@ -38,23 +38,23 @@ export function ModulePicker({ modules }: { modules: StaffModuleSummary[] }) {
   }, [modules, query, sort]);
 
   return (
-    <nav aria-label="Modules" className="flex min-h-0 flex-col rounded-card border border-line bg-surface">
-      <div className="grid gap-2 border-b border-line p-3">
+    <nav aria-label="Modules" className="flex min-h-0 flex-col overflow-hidden rounded-panel bg-surface shadow-soft ring-1 ring-line">
+      <div className="grid gap-3 border-b border-line p-4">
         <label htmlFor={searchId} className="sr-only">
           Search modules
         </label>
         <div className="relative">
-          <SearchIcon className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted" />
+          <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted" />
           <input
             id={searchId}
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by title or code"
-            className={`w-full rounded-lg border border-line bg-canvas py-1.5 pr-2 pl-8 text-sm placeholder:text-muted ${focusRing}`}
+            className={`w-full rounded-xl border border-line bg-canvas py-2.5 pr-3 pl-9 text-sm placeholder:text-muted ${focusRing}`}
           />
         </div>
-        <div className="flex items-center gap-2 text-xs">
+        <div className="flex items-center gap-2 text-sm">
           <label htmlFor={sortId} className="text-muted">
             Sort by
           </label>
@@ -62,7 +62,7 @@ export function ModulePicker({ modules }: { modules: StaffModuleSummary[] }) {
             id={sortId}
             value={sort}
             onChange={(e) => isSortKey(e.target.value) && setSort(e.target.value)}
-            className={`min-w-0 flex-1 rounded-md border border-line bg-surface px-1.5 py-1 text-xs ${focusRing}`}
+            className={`min-w-0 flex-1 rounded-lg border border-line bg-surface px-2 py-1.5 text-sm ${focusRing}`}
           >
             {Object.entries(SORTS).map(([key, s]) => (
               <option key={key} value={key}>
@@ -78,14 +78,14 @@ export function ModulePicker({ modules }: { modules: StaffModuleSummary[] }) {
       {visible.length === 0 ? (
         <p className="p-4 text-sm text-muted">No modules match “{query}”.</p>
       ) : (
-        <ul className="max-h-72 overflow-y-auto p-1.5 lg:max-h-[calc(100dvh-16rem)]">
+        <ul className="grid max-h-80 gap-1 overflow-x-hidden overflow-y-auto overscroll-contain p-2 lg:max-h-[calc(100dvh-14rem)]">
           {visible.map((m) => (
             <li key={m.moduleId}>
               <NavLink
                 to={`/staff/modules/${encodeURIComponent(m.moduleId)}`}
                 className={({ isActive }) =>
-                  `grid gap-1.5 rounded-lg px-2.5 py-2 transition-colors ${
-                    isActive ? 'bg-brand-soft' : 'hover:bg-canvas'
+                  `grid min-w-0 gap-2 rounded-2xl px-3.5 py-3 transition-colors ${
+                    isActive ? 'bg-brand-soft ring-1 ring-brand/30' : 'hover:bg-canvas'
                   } ${focusRing}`
                 }
               >
@@ -103,13 +103,17 @@ function ModuleFigures({ module: m }: { module: StaffModuleSummary }) {
   const status = capacityStatus(m.shortlisted, m.capacity);
   return (
     <>
-      <span className="flex items-baseline justify-between gap-2">
-        <span className="min-w-0 truncate text-sm font-medium">{m.title}</span>
-        <span aria-hidden="true" className="shrink-0 text-sm font-semibold tabular-nums" title="Average fit">
+      <span className="flex items-start justify-between gap-3">
+        <span className="min-w-0 text-sm leading-snug font-medium break-words text-pretty">{m.title}</span>
+        <span
+          aria-hidden="true"
+          className="grid h-7 min-w-9 shrink-0 place-items-center rounded-full bg-surface px-2 text-sm font-semibold tabular-nums ring-1 ring-line"
+          title="Average fit"
+        >
           {Math.round(m.averageFit)}
         </span>
       </span>
-      <span className="flex items-baseline justify-between gap-2 text-xs text-muted">
+      <span className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 text-xs text-muted">
         <span className="font-mono">{m.code}</span>
         <span className="tabular-nums">
           {m.shortlisted}
@@ -128,8 +132,8 @@ function ModuleFigures({ module: m }: { module: StaffModuleSummary }) {
 function HiddenFigures({ module: m }: { module: StaffModuleSummary }) {
   return (
     <>
-      <span className="min-w-0 truncate text-sm font-medium">{m.title}</span>
-      <span className="flex items-baseline justify-between gap-2 text-xs text-muted">
+      <span className="min-w-0 text-sm leading-snug font-medium break-words text-pretty">{m.title}</span>
+      <span className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 text-xs text-muted">
         <span className="font-mono">{m.code}</span>
         <span className="inline-flex items-center gap-1">
           <ShieldIcon className="size-3.5" />

@@ -6,6 +6,7 @@ import { ESCALATION_TYPES, StatusBadge, TypeBadge } from '../components/Escalati
 import { EmptyState, ErrorState, LoadingState, Segmented } from '../components/ui.tsx';
 import { InboxIcon } from '../components/icons.tsx';
 import { ESCALATION_POLL_MS } from '../hooks/useEscalationQueue.ts';
+import { Avatar } from '../../components/Avatar.tsx';
 import { focusRing, formatClock, formatDateTime, formatRelative, plural } from '../lib/format.ts';
 import { useStaffData } from '../StaffData.tsx';
 
@@ -56,12 +57,12 @@ export function EscalationsPage() {
   }, [items, statusTest]);
 
   return (
-    <div className="grid grid-cols-1 gap-5">
-      <header className="flex flex-wrap items-end justify-between gap-3">
+    <div className="grid grid-cols-1 gap-8">
+      <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Escalations</h1>
-          <p className="mt-1 max-w-2xl text-sm text-muted">
-            Cases the agents will not decide alone. Your reply goes straight back into the student's session.
+          <h2 className="text-3xl font-semibold tracking-tight">Escalations</h2>
+          <p className="mt-2 max-w-2xl text-base text-muted">
+            Questions the AI will not decide alone. Your reply goes straight back into the student's chat.
           </p>
         </div>
         <LiveIndicator />
@@ -77,9 +78,9 @@ export function EscalationsPage() {
       )}
 
       {items !== null && (
-        <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,24rem)_minmax(0,1fr)]">
-          <section aria-label="Queue" className={`grid gap-4 ${escalationId ? 'hidden lg:grid' : ''}`}>
-            <div className="grid gap-3 rounded-card border border-line bg-surface p-4">
+        <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]">
+          <section aria-label="Queue" className={`grid min-w-0 gap-5 ${escalationId ? 'hidden lg:grid' : ''}`}>
+            <div className="grid gap-5 rounded-panel bg-surface p-card shadow-soft ring-1 ring-line">
               <Segmented
                 legend="Queue"
                 name="queue-filter"
@@ -102,7 +103,7 @@ export function EscalationsPage() {
                   : 'Try another filter.'}
               </EmptyState>
             ) : (
-              <ul className="grid gap-2" aria-label={`${plural(visible.length, 'escalation')}`}>
+              <ul className="grid gap-3" aria-label={`${plural(visible.length, 'escalation')}`}>
                 {visible.map((e) => (
                   <li key={e.id}>
                     <QueueItem escalation={e} fresh={queue.freshIds.has(e.id)} />
@@ -111,7 +112,7 @@ export function EscalationsPage() {
               </ul>
             )}
           </section>
-          <div className="min-w-0 lg:sticky lg:top-20">
+          <div className="min-w-0 lg:sticky lg:top-24 lg:max-h-[calc(100dvh-7rem)] lg:overflow-y-auto lg:overscroll-contain lg:rounded-panel">
             <Outlet />
           </div>
         </div>
@@ -146,24 +147,29 @@ function QueueItem({ escalation: e, fresh }: { escalation: StaffEscalation; fres
     <NavLink
       to={`/staff/escalations/${encodeURIComponent(e.id)}`}
       className={({ isActive }) =>
-        `grid gap-2 rounded-card border p-3.5 transition-colors ${
-          isActive ? 'border-brand bg-brand-soft/60' : 'border-line bg-surface hover:border-muted/50'
+        `grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-3 rounded-panel p-5 shadow-soft ring-1 transition-[box-shadow,background-color] hover:shadow-lift ${
+          isActive ? 'bg-brand-soft/70 ring-brand/40' : 'bg-surface ring-line'
         } ${focusRing}`
       }
     >
-      <span className="flex flex-wrap items-center gap-1.5">
-        <TypeBadge type={e.type} />
-        <StatusBadge status={e.status} />
-        {fresh && (
-          <span className="rounded-full bg-fit-mid px-1.5 py-0.5 text-[11px] font-semibold text-surface">New</span>
-        )}
-        <time dateTime={e.createdAt} title={formatDateTime(e.createdAt)} className="ml-auto text-xs text-muted">
-          {formatRelative(e.createdAt)}
-        </time>
-      </span>
-      <span className="line-clamp-2 text-sm">{e.summary}</span>
-      <span className="text-xs text-muted">
-        {e.studentContext.programme}, Year {e.studentContext.yearOfStudy}
+      <Avatar seed={e.sessionId} size={48} />
+      <span className="grid min-w-0 gap-2">
+        <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span className="text-sm font-semibold">
+            {e.studentContext.programme}, Year {e.studentContext.yearOfStudy}
+          </span>
+          {fresh && (
+            <span className="rounded-full bg-fit-mid px-2 py-0.5 text-[11px] font-semibold text-surface">New</span>
+          )}
+          <time dateTime={e.createdAt} title={formatDateTime(e.createdAt)} className="ml-auto text-xs text-muted">
+            {formatRelative(e.createdAt)}
+          </time>
+        </span>
+        <span className="line-clamp-2 text-sm leading-relaxed text-muted">{e.summary}</span>
+        <span className="flex flex-wrap items-center gap-2">
+          <TypeBadge type={e.type} />
+          <StatusBadge status={e.status} />
+        </span>
       </span>
     </NavLink>
   );
@@ -172,8 +178,8 @@ function QueueItem({ escalation: e, fresh }: { escalation: StaffEscalation; fres
 export function EscalationPlaceholder() {
   return (
     <div className="hidden lg:block">
-      <EmptyState icon={<InboxIcon className="size-6" />} title="Select an escalation">
-        Its summary, the student's context and a reply box open here.
+      <EmptyState image="/images/tutor-teamwork.jpg" title="Pick a question from the queue">
+        You will see what the student asked, their context, and a box to reply.
       </EmptyState>
     </div>
   );

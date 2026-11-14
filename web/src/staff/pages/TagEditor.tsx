@@ -103,7 +103,7 @@ function TagEditorForm({ module }: { module: Module }) {
   const reviewFlags = countReviewFlags(saved.derivedRationale);
 
   return (
-    <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_22rem]">
+    <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_22rem]">
       <form
         className="grid grid-cols-1 gap-5"
         onSubmit={(e) => {
@@ -167,7 +167,7 @@ function TagEditorForm({ module }: { module: Module }) {
           <DiffSummary diff={diff} labelFor={labelFor} />
         </Panel>
 
-        <div className="sticky bottom-3 z-10 flex flex-wrap items-center justify-between gap-3 rounded-card border border-line bg-surface/95 px-4 py-3 shadow-sm backdrop-blur">
+        <div className="sticky bottom-3 z-(--z-sticky) flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-surface/95 px-5 py-4 shadow-lift backdrop-blur">
           <p className="text-sm" aria-live="polite">
             {save.status === 'saved' ? (
               <span className="inline-flex items-center gap-1.5 text-fit-high">
@@ -201,7 +201,7 @@ function TagEditorForm({ module }: { module: Module }) {
         </div>
       </form>
 
-      <aside className="grid gap-5 xl:sticky xl:top-20" aria-label="Analyst rationale and source">
+      <aside className="grid gap-5 xl:sticky xl:top-24 xl:max-h-[calc(100dvh-7rem)] xl:overflow-y-auto" aria-label="Analyst rationale and source">
         <Panel
           title="Analyst rationale"
           actions={<DerivedByBadge derivedBy={saved.derivedBy} />}

@@ -35,8 +35,8 @@ export function ModulesPage() {
     );
 
   return (
-    <div className="grid items-start gap-6 lg:grid-cols-[18rem_minmax(0,1fr)]">
-      <div className="lg:sticky lg:top-20">
+    <div className="grid items-start gap-8 lg:grid-cols-[20rem_minmax(0,1fr)]">
+      <div className="min-w-0 lg:sticky lg:top-24">
         <ModulePicker modules={state.data} />
       </div>
       <div className="min-w-0">
@@ -60,7 +60,7 @@ const typeLabel: Record<StaffModuleSummary['type'], string> = {
 };
 
 const tab = ({ isActive }: { isActive: boolean }) =>
-  `-mb-px border-b-2 px-1 pb-2 text-sm font-medium transition-colors ${
+  `-mb-px border-b-2 px-1 pb-3 text-sm font-medium transition-colors ${
     isActive ? 'border-brand text-ink' : 'border-transparent text-muted hover:text-ink'
   } ${focusRing}`;
 
@@ -78,17 +78,17 @@ export function ModuleLayout() {
 
   const base = `/staff/modules/${encodeURIComponent(summary.moduleId)}`;
   return (
-    <div className="grid grid-cols-1 gap-5">
+    <div className="grid grid-cols-1 gap-8">
       <header className="grid gap-3">
-        <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
+        <div className="flex flex-wrap items-center gap-2 text-sm text-muted">
           <span className="font-mono">{summary.code}</span>
           <span aria-hidden="true">·</span>
           <span>{typeLabel[summary.type]}</span>
           <span aria-hidden="true">·</span>
           <span>Synthetic cohort of {plural(summary.cohortSize, 'student')}</span>
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-balance">{summary.title}</h1>
-        <nav aria-label={`${summary.title} views`} className="flex gap-5 border-b border-line">
+        <h2 className="text-3xl font-semibold tracking-tight text-balance">{summary.title}</h2>
+        <nav aria-label={`${summary.title} views`} className="mt-2 flex gap-6 border-b border-line">
           <NavLink to={base} end className={tab}>
             Dashboard
           </NavLink>

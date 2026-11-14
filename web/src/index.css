@@ -36,7 +36,31 @@
   --color-mode-plan: #0e7490;
   --color-mode-escalated: #c0392b;
 
-  --radius-card: 0.875rem;
+  --radius-card: 1rem;
+  --radius-panel: 1.5rem;
+
+  /* WS-shell: a roomier type scale (15px small text, 13px extra small) so screens read less condensed. */
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.25rem;
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.5rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.65rem;
+
+  /* Generous spacing for cards and page sections (use as p-card, gap-section, and so on). */
+  --spacing-card: 1.5rem;
+  --spacing-card-lg: 2rem;
+  --spacing-section: 3rem;
+  --spacing-header: 4rem;
+
+  /*
+   * Stacking order, low to high: sticky page bits (10), in-page popovers and menus (20 to 30), the app
+   * header (40) and the advisor launcher (45). Use as z-(--z-header). Modal dialogs sit in the top layer.
+   */
+  --z-sticky: 10;
+  --z-popover: 30;
+  --z-header: 40;
+  --z-launcher: 45;
 
   /* WS4 additions: secondary surfaces, emphasis lines, text on brand, status, module palette, motion. */
   --color-surface-2: #f0f0ea;
@@ -64,6 +88,7 @@
   --animate-glow: glow 1600ms ease-out 1;
   --animate-caret: caret 1s steps(2, start) infinite;
   --animate-pulse-dot: pulse-dot 1.8s ease-in-out infinite;
+  --animate-halo: halo 2.8s ease-out infinite;
 
   @keyframes rise {
     from {
@@ -104,6 +129,17 @@
       visibility: hidden;
     }
   }
+  @keyframes halo {
+    0% {
+      transform: scale(1);
+      opacity: 0.45;
+    }
+    70%,
+    100% {
+      transform: scale(1.55);
+      opacity: 0;
+    }
+  }
   @keyframes pulse-dot {
     0%,
     100% {
@@ -130,6 +166,14 @@
   }
   body {
     @apply bg-canvas text-ink font-sans antialiased;
+    font-size: var(--text-base);
+    line-height: var(--text-base--line-height);
+    text-rendering: optimizeLegibility;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
   }
   @media (prefers-color-scheme: dark) {
     :root {

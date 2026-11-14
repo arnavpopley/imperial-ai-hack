@@ -1,8 +1,14 @@
-// Trace and evaluation page (spec 14, screen 12): a per-session timeline of modes, agents, tools and guardrail
-// verdicts, plus the latest evaluation pass rates.
+// "How it works" (spec 14, screen 12): a plain-English explainer, an animated flowchart of the agent process,
+// the latest evaluation pass rates, and a live per-session trace of every decision and safety check.
 import type { EvalRun, TraceEvent, TraceKind, Verdict } from '@modulematch/shared';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { motion } from 'motion/react';
+import { useCallback, useEffect, useId, useMemo, useState, type ReactNode } from 'react';
 import { api } from '../api.ts';
+import { CountUp } from '../components/CountUp.tsx';
+import { cx } from '../components/cx.ts';
+import { Icon, type IconName } from '../components/Icon.tsx';
+import { AgentFlowchart } from './AgentFlowchart.tsx';
+import { nodesInTrace } from './flow.ts';
 
 const SESSION_KEY = 'modulematch.sessionId';
 
@@ -14,111 +20,66 @@ function storedSessionId(): string {
   }
 }
 
-const KIND_LABEL: Record<TraceKind, string> = {
-  mode: 'Mode',
-  agent: 'Agent',
-  tool: 'Tool',
-  guardrail: 'Guardrail',
-  escalation: 'Escalation',
+const KIND_META: Record<TraceKind, { label: string; icon: IconName; dot: string }> = {
+  mode: { label: 'Mode change', icon: 'swap', dot: 'bg-mode-plan text-on-brand' },
+  agent: { label: 'Agent step', icon: 'sparkle', dot: 'bg-brand text-on-brand' },
+  tool: { label: 'Engine call', icon: 'sliders', dot: 'bg-mode-explain text-on-brand' },
+  guardrail: { label: 'Safety check', icon: 'shield', dot: 'bg-fit-mid text-on-brand' },
+  escalation: { label: 'Handed to staff', icon: 'lifebuoy', dot: 'bg-mode-escalated text-on-brand' },
 };
 
-const VERDICT_STYLE: Record<Verdict, string> = {
-  pass: 'bg-fit-high/15 text-fit-high',
-  redact: 'bg-fit-mid/15 text-fit-mid',
-  block: 'bg-fit-low/15 text-fit-low',
-  escalate: 'bg-mode-escalated/15 text-mode-escalated',
+const VERDICT_META: Record<Verdict, { label: string; className: string }> = {
+  pass: { label: 'Passed', className: 'bg-fit-high/15 text-fit-high' },
+  redact: { label: 'Redacted', className: 'bg-fit-mid/15 text-fit-mid' },
+  block: { label: 'Blocked', className: 'bg-fit-low/15 text-fit-low' },
+  escalate: { label: 'Escalated', className: 'bg-mode-escalated/15 text-mode-escalated' },
 };
 
-const KIND_DOT: Record<TraceKind, string> = {
-  mode: 'bg-mode-plan',
-  agent: 'bg-brand',
-  tool: 'bg-mode-explain',
-  guardrail: 'bg-fit-mid',
-  escalation: 'bg-mode-escalated',
+/** What each evaluation measures, in plain words. Unknown names fall back to the raw name. */
+const EVAL_COPY: Record<string, { title: string; question: string; icon: IconName }> = {
+  'Ranking quality': {
+    title: 'Good matches',
+    question: 'For test students with known tastes, do the right modules reach their top five?',
+    icon: 'grid',
+  },
+  Extraction: {
+    title: 'Listening',
+    question: 'Does the AI pick up what a student said, and store it in the right place?',
+    icon: 'chat',
+  },
+  Guardrails: {
+    title: 'Safety checks',
+    question: 'Are off-topic, injected, sensitive and distressed messages all caught?',
+    icon: 'shield',
+  },
+  Determinism: {
+    title: 'Same answer every time',
+    question: 'Does the same profile always produce exactly the same scores?',
+    icon: 'reset',
+  },
+  'Privacy threshold': {
+    title: 'Privacy',
+    question: 'Are staff insights hidden when fewer than five students are behind them?',
+    icon: 'lock',
+  },
 };
 
-function EvalPanel() {
-  const [run, setRun] = useState<EvalRun | null | undefined>(undefined);
-  const [error, setError] = useState(false);
-  useEffect(() => {
-    api.latestEval().then(setRun, () => setError(true));
-  }, []);
-
-  if (error) return <p className="text-sm text-fit-low">Could not load the evaluation run.</p>;
-  if (run === undefined) return <p className="text-sm text-muted">Loading evaluation…</p>;
-  if (run === null) return <p className="text-sm text-muted">No evaluation run yet. Run <code className="font-mono">npm run eval</code>.</p>;
-
-  return (
-    <div className="grid gap-3">
-      <p className="text-xs text-muted">Run {new Date(run.at).toLocaleString()} · offline, deterministic</p>
-      <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        {run.results.map((r) => {
-          const rate = r.total ? r.passed / r.total : 0;
-          const ok = rate >= r.target;
-          return (
-            <li key={r.name} className="rounded-card border border-line bg-surface p-4">
-              <p className="text-sm font-medium">{r.name}</p>
-              <p className={`mt-1 text-3xl font-semibold tabular-nums ${ok ? 'text-fit-high' : 'text-fit-low'}`}>{Math.round(rate * 100)}%</p>
-              <p className="text-xs text-muted">
-                {r.passed}/{r.total} · target {Math.round(r.target * 100)}%
-              </p>
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-line" role="img" aria-label={`${Math.round(rate * 100)} percent passed`}>
-                <div className={`h-full ${ok ? 'bg-fit-high' : 'bg-fit-low'}`} style={{ width: `${rate * 100}%` }} />
-              </div>
-              {r.details.some((d) => !d.pass) && (
-                <details className="mt-2 text-xs">
-                  <summary className="cursor-pointer text-muted">{r.details.filter((d) => !d.pass).length} failing</summary>
-                  <ul className="mt-1 grid gap-1">
-                    {r.details
-                      .filter((d) => !d.pass)
-                      .map((d) => (
-                        <li key={d.case}>
-                          <span className="font-medium">{d.case}</span>
-                          {d.note ? <span className="text-muted">: {d.note}</span> : null}
-                        </li>
-                      ))}
-                  </ul>
-                </details>
-              )}
-            </li>
-          );
-        })}
-      </ul>
-    </div>
-  );
-}
-
-function Timeline({ events }: { events: TraceEvent[] }) {
-  return (
-    <ol className="relative grid gap-2 border-l border-line pl-5">
-      {events.map((e) => (
-        <li key={e.id} className="relative rounded-card border border-line bg-surface p-3">
-          <span className={`absolute -left-[1.6rem] top-4 size-2.5 rounded-full ring-4 ring-canvas ${KIND_DOT[e.kind]}`} aria-hidden />
-          <div className="flex flex-wrap items-center gap-2 text-sm">
-            <span className="font-medium">{e.actor}</span>
-            <span className="rounded-full bg-brand-soft px-2 py-0.5 text-xs text-brand">{KIND_LABEL[e.kind]}</span>
-            {e.verdict && <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${VERDICT_STYLE[e.verdict]}`}>{e.verdict}</span>}
-            <span className="ml-auto font-mono text-xs text-muted">
-              {new Date(e.at).toLocaleTimeString()} · {e.latencyMs} ms
-            </span>
-          </div>
-          <p className="mt-1 text-sm text-muted">
-            <span className="text-ink">{e.input}</span> → {e.output}
-          </p>
-        </li>
-      ))}
-    </ol>
-  );
-}
+const rise = {
+  initial: { opacity: 0, y: 14 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.45, ease: [0.2, 0.8, 0.2, 1] },
+} as const;
 
 export function TraceApp() {
   const [sessionId, setSessionId] = useState(storedSessionId);
   const [events, setEvents] = useState<TraceEvent[]>([]);
   const [state, setState] = useState<'idle' | 'loading' | 'error'>('idle');
-  const [filter, setFilter] = useState<TraceKind | 'all'>('all');
 
   const load = useCallback(async (id: string) => {
-    if (!id) return;
+    if (!id) {
+      setEvents([]);
+      return;
+    }
     setState('loading');
     try {
       setEvents(await api.trace(id));
@@ -135,63 +96,354 @@ export function TraceApp() {
     return () => clearInterval(timer);
   }, [load, sessionId]);
 
-  // Newest first, so the latest verdicts are at the top during a live demo.
-  const shown = useMemo(() => (filter === 'all' ? events : events.filter((e) => e.kind === filter)).toReversed(), [events, filter]);
-  const verdicts = useMemo(
-    () => events.filter((e) => e.kind === 'guardrail').reduce<Record<string, number>>((acc, e) => ({ ...acc, [e.verdict ?? 'none']: (acc[e.verdict ?? 'none'] ?? 0) + 1 }), {}),
-    [events],
-  );
+  const seen = useMemo(() => nodesInTrace(events), [events]);
 
   return (
-    <div className="grid gap-8">
-      <section aria-labelledby="eval-heading" className="grid gap-3">
-        <h1 id="eval-heading" className="text-xl font-semibold tracking-tight">
-          Evaluation
-        </h1>
+    <div className="grid gap-section">
+      <Intro />
+
+      <section aria-labelledby="flow-heading" className="grid gap-6">
+        <SectionHeading id="flow-heading" eyebrow="The process" title="What happens to one message">
+          Every message takes this path. Hover or tap a step to see what it does.
+          {seen.size > 0 && ' Green dots mark the steps your session has used.'}
+        </SectionHeading>
+        <AgentFlowchart seen={seen} />
+      </section>
+
+      <section aria-labelledby="eval-heading" className="grid gap-6">
+        <SectionHeading id="eval-heading" eyebrow="Evaluation" title="How we test it">
+          A fixed set of test cases runs offline on every build. Each number is the share that passed; the target is
+          the bar it has to clear.
+        </SectionHeading>
         <EvalPanel />
       </section>
 
-      <section aria-labelledby="trace-heading" className="grid gap-3">
-        <div className="flex flex-wrap items-end gap-3">
-          <h2 id="trace-heading" className="text-xl font-semibold tracking-tight">
-            Session trace
-          </h2>
-          <label className="ml-auto flex min-w-0 flex-1 items-center gap-2 text-sm sm:max-w-md">
-            <span className="shrink-0 text-muted">Session</span>
-            <input
-              className="min-w-0 flex-1 rounded-lg border border-line bg-surface px-3 py-1.5 font-mono text-xs focus:outline-2 focus:outline-brand"
-              value={sessionId}
-              onChange={(e) => setSessionId(e.target.value.trim())}
-              placeholder="Session id"
-            />
-          </label>
-        </div>
-        <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by kind">
-          {(['all', 'mode', 'agent', 'tool', 'guardrail', 'escalation'] as const).map((k) => (
-            <button
-              key={k}
-              type="button"
-              aria-pressed={filter === k}
-              onClick={() => setFilter(k)}
-              className={`rounded-full px-3 py-1 text-sm ${filter === k ? 'bg-brand text-white' : 'border border-line bg-surface text-muted hover:text-ink'}`}
-            >
-              {k === 'all' ? 'All' : KIND_LABEL[k]}
-            </button>
-          ))}
-          <span className="ml-auto self-center text-xs text-muted">
-            {events.length} events · guardrails: {Object.entries(verdicts).map(([v, n]) => `${n} ${v}`).join(', ') || 'none yet'}
-          </span>
-        </div>
-        {!sessionId ? (
-          <p className="text-sm text-muted">Start a session on the Student tab, or paste a session id.</p>
-        ) : state === 'error' ? (
-          <p className="text-sm text-fit-low">Could not load the trace for this session.</p>
-        ) : shown.length === 0 ? (
-          <p className="text-sm text-muted">{state === 'loading' ? 'Loading…' : 'No events yet.'}</p>
-        ) : (
-          <Timeline events={shown} />
-        )}
+      <section aria-labelledby="trace-heading" className="grid gap-6">
+        <SectionHeading id="trace-heading" eyebrow="Live trace" title="Every decision for one session">
+          A running log of what the AI did for a student, newest first, including each safety check and its verdict.
+        </SectionHeading>
+        <TracePanel sessionId={sessionId} onSessionId={setSessionId} events={events} state={state} />
       </section>
+    </div>
+  );
+}
+
+function Intro() {
+  return (
+    <motion.header {...rise} className="overflow-hidden rounded-panel bg-surface shadow-soft ring-1 ring-line">
+      <div className="grid md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+        <div className="grid content-center gap-4 p-card-lg sm:p-10">
+          <p className="text-xs font-semibold tracking-[0.12em] text-brand uppercase">How it works</p>
+          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">A team of small AI helpers, checked at every step</h1>
+          <p className="max-w-xl text-base text-muted text-pretty">
+            Numbers come from code; words come from the AI. This page shows the process, how we test it, and a live
+            record of what it did for a session.
+          </p>
+        </div>
+        <img
+          src="/images/hero-students-steps.jpg"
+          alt="Students talking on the steps outside a university building"
+          className="h-56 w-full object-cover md:h-full"
+        />
+      </div>
+      <ul className="grid gap-px border-t border-line bg-line sm:grid-cols-3">
+        <Explainer icon="sparkle" title="The agents">
+          Each agent has one job: interview, extract, explain or plan. A Supervisor picks which one replies.
+        </Explainer>
+        <Explainer icon="clock" title="A trace">
+          A live log of every decision the AI made for a session, including each safety check and its verdict.
+        </Explainer>
+        <Explainer icon="check" title="The evaluation">
+          Fixed test cases that measure match quality, listening, safety, consistency and privacy.
+        </Explainer>
+      </ul>
+    </motion.header>
+  );
+}
+
+function Explainer({ icon, title, children }: { icon: IconName; title: string; children: ReactNode }) {
+  return (
+    <li className="flex items-start gap-4 bg-surface p-card">
+      <span aria-hidden="true" className="grid size-11 shrink-0 place-items-center rounded-2xl bg-brand-soft text-brand">
+        <Icon name={icon} size={20} />
+      </span>
+      <div>
+        <h2 className="font-semibold">{title}</h2>
+        <p className="mt-1 text-sm text-muted">{children}</p>
+      </div>
+    </li>
+  );
+}
+
+function SectionHeading({ id, eyebrow, title, children }: { id: string; eyebrow: string; title: string; children: ReactNode }) {
+  return (
+    <div className="grid gap-1.5">
+      <p className="text-xs font-semibold tracking-[0.12em] text-brand uppercase">{eyebrow}</p>
+      <h2 id={id} className="text-2xl font-semibold tracking-tight sm:text-3xl">
+        {title}
+      </h2>
+      <p className="max-w-2xl text-sm text-muted">{children}</p>
+    </div>
+  );
+}
+
+function EvalPanel() {
+  const [run, setRun] = useState<EvalRun | null | undefined>(undefined);
+  const [error, setError] = useState(false);
+  useEffect(() => {
+    api.latestEval().then(setRun, () => setError(true));
+  }, []);
+
+  if (error) return <p className="text-sm text-fit-low">Could not load the evaluation run.</p>;
+  if (run === undefined) return <p className="text-sm text-muted">Loading evaluation…</p>;
+  if (run === null)
+    return (
+      <p className="text-sm text-muted">
+        No evaluation run yet. Run <code className="font-mono">npm run eval</code>.
+      </p>
+    );
+
+  return (
+    <div className="grid gap-4">
+      <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {run.results.map((r, i) => (
+          <EvalCard key={r.name} result={r} index={i} />
+        ))}
+      </ul>
+      <p className="text-xs text-muted">
+        Last run {new Date(run.at).toLocaleString()}. Offline and deterministic, so it gives the same result every time.
+      </p>
+    </div>
+  );
+}
+
+function EvalCard({ result: r, index }: { result: EvalRun['results'][number]; index: number }) {
+  const rate = r.total ? r.passed / r.total : 0;
+  const pct = Math.round(rate * 100);
+  const ok = rate >= r.target;
+  const copy = EVAL_COPY[r.name] ?? { title: r.name, question: '', icon: 'check' as const };
+  const failing = r.details.filter((d) => !d.pass);
+  const headingId = useId();
+  return (
+    <motion.li
+      {...rise}
+      transition={{ ...rise.transition, delay: index * 0.06 }}
+      aria-labelledby={headingId}
+      className="flex flex-col gap-4 rounded-panel bg-surface p-card shadow-soft ring-1 ring-line"
+    >
+      <div className="flex items-center gap-3">
+        <span aria-hidden="true" className="grid size-11 place-items-center rounded-2xl bg-brand-soft text-brand">
+          <Icon name={copy.icon} size={20} />
+        </span>
+        <div className="min-w-0">
+          <h3 id={headingId} className="font-semibold">
+            {copy.title}
+          </h3>
+          <p className="text-xs text-muted">{r.name}</p>
+        </div>
+      </div>
+      {copy.question && <p className="text-sm text-muted">{copy.question}</p>}
+      <div className="mt-auto grid gap-2">
+        <p className="flex items-baseline justify-between gap-3">
+          <span className={cx('text-4xl font-semibold tracking-tight', ok ? 'text-fit-high' : 'text-fit-low')}>
+            <CountUp value={pct} suffix="%" />
+          </span>
+          <span className={cx('rounded-full px-2.5 py-1 text-xs font-semibold', ok ? 'bg-fit-high/15 text-fit-high' : 'bg-fit-low/15 text-fit-low')}>
+            {ok ? 'Meets target' : 'Below target'}
+          </span>
+        </p>
+        <div
+          className="relative h-2.5 rounded-full bg-surface-2"
+          role="img"
+          aria-label={`${pct} percent passed, target ${Math.round(r.target * 100)} percent`}
+        >
+          <motion.div
+            className={cx('h-full rounded-full', ok ? 'bg-fit-high' : 'bg-fit-low')}
+            initial={{ width: 0 }}
+            animate={{ width: `${pct}%` }}
+            transition={{ duration: 0.9, ease: [0.2, 0.8, 0.2, 1] }}
+          />
+          <span
+            aria-hidden="true"
+            className="absolute -top-1 h-4.5 w-0.5 rounded-full bg-ink/60"
+            style={{ left: `calc(${r.target * 100}% - 1px)` }}
+          />
+        </div>
+        <p className="text-xs text-muted">
+          {r.passed} of {r.total} cases passed · target {Math.round(r.target * 100)}%
+        </p>
+      </div>
+      {failing.length > 0 && (
+        <details className="text-sm">
+          <summary className="cursor-pointer text-muted">{failing.length} failing cases</summary>
+          <ul className="mt-2 grid gap-1.5">
+            {failing.map((d) => (
+              <li key={d.case}>
+                <span className="font-medium">{d.case}</span>
+                {d.note ? <span className="text-muted">: {d.note}</span> : null}
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+    </motion.li>
+  );
+}
+
+const FILTERS = ['all', 'guardrail', 'agent', 'tool', 'mode', 'escalation'] as const;
+type Filter = (typeof FILTERS)[number];
+
+function TracePanel({
+  sessionId,
+  onSessionId,
+  events,
+  state,
+}: {
+  sessionId: string;
+  onSessionId: (id: string) => void;
+  events: TraceEvent[];
+  state: 'idle' | 'loading' | 'error';
+}) {
+  const [filter, setFilter] = useState<Filter>('all');
+  const inputId = useId();
+  const mine = storedSessionId();
+
+  // Newest first, so the latest verdicts are at the top during a live demo.
+  const shown = useMemo(
+    () => (filter === 'all' ? events : events.filter((e) => e.kind === filter)).toReversed(),
+    [events, filter],
+  );
+  const verdicts = useMemo(() => {
+    const counts: Partial<Record<Verdict, number>> = {};
+    for (const e of events) if (e.kind === 'guardrail' && e.verdict) counts[e.verdict] = (counts[e.verdict] ?? 0) + 1;
+    return counts;
+  }, [events]);
+
+  return (
+    <div className="grid gap-5 rounded-panel bg-surface p-card shadow-soft ring-1 ring-line sm:p-card-lg">
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="grid min-w-0 flex-1 gap-1.5">
+          <label htmlFor={inputId} className="text-sm font-medium">
+            Session
+          </label>
+          <input
+            id={inputId}
+            className="min-w-0 rounded-xl border border-line bg-canvas px-4 py-2.5 font-mono text-sm"
+            value={sessionId}
+            onChange={(e) => onSessionId(e.target.value.trim())}
+            placeholder="Paste a session id"
+          />
+        </div>
+        {mine && mine !== sessionId && (
+          <button
+            type="button"
+            onClick={() => onSessionId(mine)}
+            className="h-11 rounded-xl border border-line px-4 text-sm font-medium hover:bg-surface-2"
+          >
+            Use my session
+          </button>
+        )}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Show only">
+        {FILTERS.map((k) => (
+          <button
+            key={k}
+            type="button"
+            aria-pressed={filter === k}
+            onClick={() => setFilter(k)}
+            className={cx(
+              'h-9 rounded-full px-4 text-sm font-medium transition-colors',
+              filter === k ? 'bg-brand text-on-brand' : 'bg-surface-2 text-muted hover:text-ink',
+            )}
+          >
+            {k === 'all' ? 'Everything' : KIND_META[k].label}
+          </button>
+        ))}
+      </div>
+
+      {events.length > 0 && (
+        <ul className="flex flex-wrap gap-2 text-sm" aria-label="Summary">
+          <li className="rounded-full bg-surface-2 px-3.5 py-1.5">
+            <span className="font-semibold tabular-nums">{events.length}</span> events
+          </li>
+          {(Object.keys(VERDICT_META) as Verdict[]).map((v) =>
+            verdicts[v] ? (
+              <li key={v} className={cx('rounded-full px-3.5 py-1.5', VERDICT_META[v].className)}>
+                <span className="font-semibold tabular-nums">{verdicts[v]}</span> safety checks {VERDICT_META[v].label.toLowerCase()}
+              </li>
+            ) : null,
+          )}
+        </ul>
+      )}
+
+      {!sessionId ? (
+        <p className="rounded-2xl bg-surface-2 p-5 text-sm text-muted">
+          Start a session on the Student tab and it appears here, or paste a session id.
+        </p>
+      ) : state === 'error' ? (
+        <p className="text-sm text-fit-low">Could not load the trace for this session.</p>
+      ) : shown.length === 0 ? (
+        <p className="rounded-2xl bg-surface-2 p-5 text-sm text-muted">{state === 'loading' ? 'Loading…' : 'No events yet.'}</p>
+      ) : (
+        <Timeline events={shown} />
+      )}
+    </div>
+  );
+}
+
+const PAGE = 20;
+
+function Timeline({ events }: { events: TraceEvent[] }) {
+  const [limit, setLimit] = useState(PAGE);
+  const shown = events.slice(0, limit);
+  return (
+    <div className="grid gap-4">
+    <ol className="relative grid gap-3 before:absolute before:top-2 before:bottom-2 before:left-[1.125rem] before:w-px before:bg-line">
+      {shown.map((e) => {
+        const kind = KIND_META[e.kind];
+        return (
+          <motion.li
+            key={e.id}
+            layout="position"
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="relative grid grid-cols-[auto_minmax(0,1fr)] gap-4"
+          >
+            <span aria-hidden="true" className={cx('relative grid size-9 place-items-center rounded-full ring-4 ring-surface', kind.dot)}>
+              <Icon name={kind.icon} size={16} />
+            </span>
+            <div className="min-w-0 rounded-2xl bg-surface-2 px-4 py-3">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <span className="font-semibold capitalize">{e.actor}</span>
+                <span className="text-xs text-muted">{kind.label}</span>
+                {e.verdict && (
+                  <span className={cx('rounded-full px-2.5 py-0.5 text-xs font-semibold', VERDICT_META[e.verdict].className)}>
+                    {VERDICT_META[e.verdict].label}
+                  </span>
+                )}
+                <span className="ml-auto font-mono text-xs text-muted">
+                  {new Date(e.at).toLocaleTimeString()} · {e.latencyMs} ms
+                </span>
+              </div>
+              <p className="mt-1.5 text-sm leading-relaxed break-words text-muted">
+                <span className="text-ink">{e.input}</span> <span aria-hidden="true">→</span>
+                <span className="sr-only">, result:</span> {e.output}
+              </p>
+            </div>
+          </motion.li>
+        );
+      })}
+    </ol>
+      {events.length > limit && (
+        <button
+          type="button"
+          onClick={() => setLimit((n) => n + PAGE)}
+          className="justify-self-center rounded-full bg-surface-2 px-5 py-2 text-sm font-medium hover:text-brand"
+        >
+          Show {Math.min(PAGE, events.length - limit)} older events ({events.length - limit} hidden)
+        </button>
+      )}
     </div>
   );
 }
