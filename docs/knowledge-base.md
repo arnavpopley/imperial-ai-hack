@@ -94,7 +94,7 @@ These gaps are in the sources, and the agents decline rather than guess:
    - Give each field the URL it came from.
    - Never store email addresses or testimonials.
    - Update `_note` and `_assumptions` if a source changes.
-4. If a description changed materially, re-run the Module Analyst for the changed modules only, with Sonnet (`MODEL_SMART=claude-sonnet-5-5 npx tsx scripts/analyse-modules.ts`, which reads `.env`). The next run also picks up any new published assessment and learning outcomes.
+4. If a description changed materially, re-run the Module Analyst with Sonnet: `MODEL_SMART=claude-sonnet-5-5 npx tsx scripts/analyse-modules.ts` (it reads `.env`). The script has no module filter: it calls the model for all 60 modules and rewrites the whole of `data/modules.json`. Review the diff and keep only the changed modules' entries if unrelated tags shift. The run also picks up any new published assessment and learning outcomes.
 5. Run these checks:
    - `npm test`. `server/tests/knowledge-details.test.ts` checks that every fact has a public Imperial URL, that leads are names only, that weightings sum to 100%, and the offline answers and declines.
    - `npm run eval`.

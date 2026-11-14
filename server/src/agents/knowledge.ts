@@ -3,7 +3,7 @@
 // computes or changes a score; fit numbers come from the scoring engine and are passed in as data.
 import { taxonomy, type Module, type ModuleSummary, type Recommendation } from '@modulematch/shared';
 import { z } from 'zod';
-import type { PublishedFact, RawModule } from '../db/datasets.ts';
+import type { RawModule } from '../db/datasets.ts';
 import { stripInjection } from '../guardrails/g3-injection.ts';
 import { filterClaims } from '../guardrails/g8-claims.ts';
 import { sentences } from '../guardrails/types.ts';
@@ -13,33 +13,35 @@ const topicLabel = (id: string) => taxonomy.topics[id as keyof typeof taxonomy.t
 const pct = (x: number) => `${Math.round(x * 100)}%`;
 /** Page text is untrusted: G3 strips injected instructions before any of it reaches a model or a student. */
 const clean = (text: string) => stripInjection(text).text;
-const cleanFact = (f: PublishedFact) => ({ ...(f.label ? { label: f.label } : {}), text: clean(f.text), sourceUrl: f.sourceUrl });
+/** Runs G3 over every string in a published field (names, authors, notes...), leaving the source URLs as they are. */
+function cleanAll<T>(value: T): T {
+  if (typeof value === 'string') return clean(value) as T;
+  if (Array.isArray(value)) return value.map(cleanAll) as T;
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, k === 'sourceUrl' ? v : cleanAll(v)])) as T;
+  }
+  return value;
+}
 /** Reading-list entries passed to the model; the total is passed too, so it never claims the list is complete. */
 const READING_LIST_CAP = 15;
 
 /**
- * The published details beyond the description (docs/knowledge-base.md), as the agents see them. A field is null when
- * the public page does not publish it, so the model can say so instead of guessing.
+ * The published details beyond the description (docs/knowledge-base.md), as the agents see them, with every string
+ * scanned by G3. A field is null when the public page does not publish it, so the model can say so instead of guessing.
  */
 function publishedDetails(raw: RawModule | undefined) {
   const reading = raw?.readingList;
   const assessment = raw?.assessmentDetails;
-  return {
-    syllabus: raw?.syllabus ? { items: raw.syllabus.items.map(clean), sourceUrl: raw.syllabus.sourceUrl } : null,
-    teaching: raw?.teaching ? { paragraphs: raw.teaching.paragraphs.map(clean), sourceUrl: raw.teaching.sourceUrl } : null,
-    hours: raw?.hours ? { ...raw.hours, statements: raw.hours.statements.map(clean) } : null,
-    readingList: reading
-      ? {
-          items: reading.items.slice(0, READING_LIST_CAP).map((i) => ({ ...i, title: clean(i.title) })),
-          totalItems: reading.items.length,
-          sourceUrl: reading.sourceUrl,
-        }
-      : null,
+  return cleanAll({
+    syllabus: raw?.syllabus ?? null,
+    teaching: raw?.teaching ?? null,
+    hours: raw?.hours ?? null,
+    readingList: reading ? { items: reading.items.slice(0, READING_LIST_CAP), totalItems: reading.items.length, sourceUrl: reading.sourceUrl } : null,
     moduleLeads: raw?.moduleLeads ?? null,
-    requirements: raw?.requirements?.map(cleanFact) ?? [],
-    assessmentDetails: assessment ? { ...assessment, notes: assessment.notes?.map(cleanFact) ?? [] } : null,
-    programmeNotes: raw?.programmeNotes?.map(cleanFact) ?? [],
-  };
+    requirements: raw?.requirements ?? [],
+    assessmentDetails: assessment ? { ...assessment, notes: assessment.notes ?? [] } : null,
+    programmeNotes: raw?.programmeNotes ?? [],
+  });
 }
 
 /** Everything the agent may say about a module, as one data object. Module text is scanned by G3 first. */
@@ -56,7 +58,7 @@ export function moduleFacts(module: Module, raw: RawModule | undefined, titleOf:
     // The public pages are the source; the derived record only lags them until the Module Analyst next runs.
     learningOutcomes: (module.learningOutcomes.length ? module.learningOutcomes : (raw?.learningOutcomes ?? [])).map(clean),
     // Weightings as the page prints them ("80%"), so the model never quotes a raw fraction such as 1 or 0.8.
-    publishedAssessment: (raw?.assessment ?? []).map((a) => ({ ...a, weighting: `${Number((a.weighting * 100).toFixed(2))}%`, description: clean(a.description) })),
+    publishedAssessment: cleanAll((raw?.assessment ?? []).map((a) => ({ ...a, weighting: `${Number((a.weighting * 100).toFixed(2))}%` }))),
     ...publishedDetails(raw),
     prerequisites: module.prerequisites.map((id) => `${id} ${titleOf(id)}`),
     topics: Object.entries(module.topics)
@@ -146,7 +148,7 @@ const QUESTION_RULES: [RegExp, (f: Facts) => RuleAnswer][] = [
     /\b(hours?|contact time|time commitment|independent study|self[- ]study|private study|how much time)\b/i,
     (f) =>
       f.hours
-        ? `The public page says: ${f.hours.statements.slice(0, 2).join(' ')}`
+        ? `The public page says: ${f.hours.statements.join(' ')}`
         : { decline: `The public page for ${f.code} does not state contact or study hours. The full page is at ${f.sourceUrl}.` },
   ],
   [
@@ -162,13 +164,7 @@ const QUESTION_RULES: [RegExp, (f: Facts) => RuleAnswer][] = [
     /\b(taught|teaching( methods?)?|delivered|format|lectures|tutorials|labs?)\b/i,
     (f) => (f.teaching ? `On teaching, the public page says: ${sentences(f.teaching.paragraphs.join(' ')).slice(0, 2).join('').trim()}` : { decline: `The public page for ${f.code} does not describe how it is taught.` }),
   ],
-  [
-    /\b(assess\w*|exam\w*|coursework|graded|marked|weighting)\b/i,
-    (f) =>
-      f.publishedAssessment.length
-        ? `It is assessed by ${f.publishedAssessment.map((a) => `${a.description} (${a.weighting}, ${a.type})`).join(', ')}.${f.assessmentDetails?.passMark ? ` The published pass mark is ${f.assessmentDetails.passMark}.` : ''}`
-        : `The public page does not list the assessment. From the module record, about ${pct(f.demandProfile.examShare)} of it is exam-based.`,
-  ],
+  // Deadlines come before the broader assessment rule, so "When is the exam?" leads with the date or its decline.
   [
     /\b(deadlines?|due|exam (date|week)|when is the exam)\b/i,
     (f) => {
@@ -177,6 +173,13 @@ const QUESTION_RULES: [RegExp, (f: Facts) => RuleAnswer][] = [
         ? `The public page says: ${dated.slice(0, 3).join(' ')}`
         : { decline: `The public page for ${f.code} does not publish assessment deadlines or exam dates. The full page is at ${f.sourceUrl}.` };
     },
+  ],
+  [
+    /\b(assess\w*|exam\w*|coursework|graded|marked|weighting)\b/i,
+    (f) =>
+      f.publishedAssessment.length
+        ? `It is assessed by ${f.publishedAssessment.map((a) => `${a.description} (${a.weighting}, ${a.type})`).join(', ')}.${f.assessmentDetails?.passMark ? ` The published pass mark is ${f.assessmentDetails.passMark}.` : ''}`
+        : `The public page does not list the assessment. From the module record, about ${pct(f.demandProfile.examShare)} of it is exam-based.`,
   ],
   [
     /\b(prereq\w*|beforehand|need to know|background|requires?|required)\b/i,
@@ -199,14 +202,17 @@ const QUESTION_RULES: [RegExp, (f: Facts) => RuleAnswer][] = [
   [/\b(workload|hard|difficult|maths|coding|programming)\b/i, (f) => `From the module record: maths intensity ${pct(f.demandProfile.mathsIntensity)}, coding ${pct(f.demandProfile.codingIntensity)}, workload ${pct(f.demandProfile.workload)}.`],
 ];
 
-/** Offline answer: the rules that match the question, a plain decline when the page does not publish it, or a pointer. */
+/**
+ * Offline answer: the first two matching rules in priority order (specific questions before broad keywords), with a
+ * plain decline wherever the page does not publish the answer, or a pointer to the page when no rule matches.
+ */
 export function answerByRules(question: string, facts: Facts): string {
-  const answers = QUESTION_RULES.filter(([re]) => re.test(question)).map(([, answer]) => answer(facts));
-  const published = answers.filter((a): a is string => typeof a === 'string');
-  const declines = answers.flatMap((a) => (typeof a === 'string' ? [] : [a.decline]));
-  if (published.length) return `${[...published, ...declines].slice(0, 2).join(' ')} Source: the public module page.`;
-  if (declines.length) return declines.slice(0, 2).join(' ');
-  return `I can only answer from ${facts.code}'s public description and record, and they do not cover that. The full page is at ${facts.sourceUrl}.`;
+  const answers = QUESTION_RULES.filter(([re]) => re.test(question))
+    .slice(0, 2)
+    .map(([, answer]) => answer(facts));
+  if (!answers.length) return `I can only answer from ${facts.code}'s public description and record, and they do not cover that. The full page is at ${facts.sourceUrl}.`;
+  const text = answers.map((a) => (typeof a === 'string' ? a : a.decline)).join(' ');
+  return answers.some((a) => typeof a === 'string') ? `${text} Source: the public module page.` : text;
 }
 
 const ASK_SYSTEM = `You answer a student's questions about one university module, using only the module record and public page
