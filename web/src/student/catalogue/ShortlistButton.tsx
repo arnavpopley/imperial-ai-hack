@@ -25,17 +25,23 @@ interface ShortlistButtonProps {
  */
 export function ShortlistButton({ title, shortlisted, pending, onToggle, size = 'md', className }: ShortlistButtonProps) {
   const { reduce, transition } = useMotionTokens();
-  // Count the moments the module joins the shortlist while this button is on screen, so a module that was
-  // already shortlisted when the page loaded is not celebrated.
-  const [wasShortlisted, setWasShortlisted] = useState(shortlisted);
-  const [celebrations, setCelebrations] = useState(0);
-  if (wasShortlisted !== shortlisted) {
-    setWasShortlisted(shortlisted);
-    if (shortlisted) setCelebrations((n) => n + 1);
+  // Celebrate only a new addition made while this button is on screen: not a module that was already
+  // shortlisted when the page loaded, and not the check coming back after a removal that failed.
+  const [previous, setPrevious] = useState({ shortlisted, pending });
+  const [celebration, setCelebration] = useState(0);
+  const [celebrating, setCelebrating] = useState(false);
+  if (previous.shortlisted !== shortlisted || previous.pending !== pending) {
+    setPrevious({ shortlisted, pending });
+    if (shortlisted && !previous.shortlisted) {
+      setCelebration((n) => n + 1);
+      setCelebrating(true);
+    } else if (pending && !previous.pending) {
+      setCelebrating(false);
+    }
   }
 
   const iconKey = pending ? 'pending' : shortlisted ? 'on' : 'off';
-  const landing = iconKey === 'on' && celebrations > 0;
+  const landing = iconKey === 'on' && celebrating;
   const swap = reduce
     ? { initial: false as const, animate: { opacity: 1 }, exit: { opacity: 0, transition: { duration: 0 } } }
     : {
@@ -65,7 +71,7 @@ export function ShortlistButton({ title, shortlisted, pending, onToggle, size = 
     >
       <span className="relative grid size-[18px] place-items-center" aria-hidden="true">
         {/* Secondary action: the burst follows the check, behind it, and never takes pointer events. */}
-        {landing && !reduce && <Burst key={celebrations} />}
+        {landing && !reduce && <Burst key={celebration} />}
         <AnimatePresence mode="popLayout" initial={false}>
           <motion.span
             key={iconKey}
