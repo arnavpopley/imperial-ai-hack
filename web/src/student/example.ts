@@ -2,7 +2,7 @@
 // The details mirror synthetic-robotics-automation-01 in data/cohort.json: invented, not a real student.
 
 export const EXAMPLE_STUDENT = {
-  name: 'Sam',
+  name: 'Rosa',
   summary: 'Year 3 MEng Mechanical Engineering. Loves robotics and control, wants a hands-on lab project.',
   tags: ['Robotics', 'Control systems', 'Lab work'],
   programme: 'MEng Mechanical Engineering',
