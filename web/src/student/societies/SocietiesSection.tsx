@@ -148,9 +148,10 @@ function SocietyCard({ match, society, index }: { match: SocietyMatch; society: 
   return (
     <motion.li
       initial={reduce ? false : { opacity: 0, y: 12 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      // The stagger delay belongs to the entrance only, so hovering in and out responds at once.
+      whileInView={{ opacity: 1, y: 0, transition: { duration: 0.35, delay: index * 0.05 } }}
       viewport={{ once: true, amount: 0.3 }}
-      transition={{ duration: 0.35, delay: index * 0.05 }}
+      transition={{ duration: 0.2 }}
       whileHover={reduce ? undefined : { y: -4 }}
       className={cx(
         'flex flex-col overflow-hidden rounded-card border transition-shadow hover:shadow-lift',
