@@ -60,8 +60,16 @@ export const DATASET_FILES = {
   cohort: 'cohort.json',
 } as const;
 
+/**
+ * Path to a file in data/. A bundled deployment (scripts/build-vercel.ts) ships its own copy of data/ and
+ * points MODULEMATCH_DATA_DIR at it; read lazily so the entry point can set it first.
+ */
+export function dataPath(file: string): string {
+  return resolve(process.env.MODULEMATCH_DATA_DIR ?? DATA_DIR, file);
+}
+
 /** Read a file from data/ and validate it, throwing a zod error that names the failing path. */
 export function readDataset<T extends z.ZodType>(file: string, schema: T): z.infer<T> {
-  const json: unknown = JSON.parse(readFileSync(resolve(DATA_DIR, file), 'utf8'));
+  const json: unknown = JSON.parse(readFileSync(dataPath(file), 'utf8'));
   return schema.parse(json);
 }

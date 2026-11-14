@@ -2,6 +2,9 @@
 // in eval_runs for the evaluation page. Run with `npm run eval`.
 import { DEFAULT_WEIGHTS, type EvalResult, type EvalRun, type StudentProfile } from '@modulematch/shared';
 import { randomUUID } from 'node:crypto';
+import { writeFileSync } from 'node:fs';
+import { EVAL_SNAPSHOT_FILE } from '../api/src/bootstrap.ts';
+import { dataPath } from '../api/src/db/datasets.ts';
 import { extractByCues, mergeUpdates } from '../api/src/agents/extractor.ts';
 import { classifyByRules } from '../api/src/agents/intent.ts';
 import { emptyProfile } from '../api/src/agents/session.ts';
@@ -142,6 +145,8 @@ const run: EvalRun = {
   results: [rankingQuality(), extraction(), await guardrails(), determinism(), privacy()],
 };
 repo.saveEvalRun(run);
+// Also kept as a file, so a freshly seeded database (such as a serverless deployment) shows these results.
+writeFileSync(dataPath(EVAL_SNAPSHOT_FILE), `${JSON.stringify(run, null, 2)}\n`);
 
 for (const r of run.results) {
   const rate = r.total ? r.passed / r.total : 0;

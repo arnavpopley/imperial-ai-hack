@@ -6,6 +6,9 @@ import { StudentApp } from './student/StudentApp.tsx';
 const StaffApp = lazy(() => import('./staff/StaffApp.tsx').then((m) => ({ default: m.StaffApp })));
 const TraceApp = lazy(() => import('./trace/TraceApp.tsx').then((m) => ({ default: m.TraceApp })));
 
+/** Set by scripts/build-vercel.ts for the public deployment, whose data is not persistent. */
+const DEMO_INSTANCE = import.meta.env.VITE_DEMO_INSTANCE === '1';
+
 const tab = ({ isActive }: { isActive: boolean }) =>
   `rounded-full px-3 py-1 text-sm font-medium ${isActive ? 'bg-brand text-white' : 'text-muted hover:text-ink'}`;
 
@@ -31,6 +34,11 @@ export function App() {
           </NavLink>
         </nav>
       </header>
+      {DEMO_INSTANCE && (
+        <p className="border-b border-line bg-brand-soft px-4 py-2 text-center text-xs text-ink">
+          Public demo: all students are synthetic, and data resets when the server sleeps.
+        </p>
+      )}
       <main className="mx-auto max-w-7xl px-4 py-6">
         <Suspense fallback={<p className="text-sm text-muted">Loading…</p>}>
           <Routes>
