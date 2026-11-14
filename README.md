@@ -56,7 +56,7 @@ Open http://localhost:5173. The database seeds itself from `data/` on first star
 | `npm run build` | Builds the web app |
 | `npm run deploy:vercel` | Builds the Vercel bundle and deploys it to production (needs `vercel login`) |
 
-**Public demo.** https://modulematch.vercel.app runs the same app on Vercel. `npm run deploy:vercel` rebuilds and redeploys it: `scripts/build-vercel.ts` writes a Build Output API bundle, with the web app as static files and the API as one Node function. The function keeps SQLite in its instance's `/tmp`, seeded from `data/` on each cold start, so sessions last only while the instance is warm. The live demo for judging runs locally. To use live models there, add `ANTHROPIC_API_KEY` in the Vercel project settings and redeploy.
+**Public demo.** https://modulematch.vercel.app runs the same app on Vercel. Every push to `main` deploys it through Vercel's GitHub integration (`vercel.json` runs `npm run build:vercel`), and `npm run deploy:vercel` deploys from your machine: `scripts/build-vercel.ts` writes a Build Output API bundle, with the web app as static files and the API as one Node function. The function keeps SQLite in its instance's `/tmp`, seeded from `data/` on each cold start, so sessions last only while the instance is warm. The live demo for judging runs locally. To use live models there, add `ANTHROPIC_API_KEY` in the Vercel project settings and redeploy.
 
 **Offline mode.** Without `ANTHROPIC_API_KEY`, or with `MODULEMATCH_OFFLINE=1`, every agent uses its deterministic path: keyword extraction, templated questions and explanations, and pattern-only guardrails. The full journey works this way, and the tests and evaluations always run like this.
 
