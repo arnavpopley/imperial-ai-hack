@@ -13,7 +13,9 @@ function ChangeRow({ change, label }: { change: Change; label: string }) {
   if (change.before === null)
     return (
       <li className="flex items-baseline gap-2">
-        <span aria-hidden="true" className="w-3 font-mono text-fit-high">+</span>
+        <span aria-hidden="true" className="w-3 font-mono text-fit-high">
+          +
+        </span>
         <span className="min-w-0 flex-1">
           <span className="sr-only">Added </span>
           {label}
@@ -24,7 +26,9 @@ function ChangeRow({ change, label }: { change: Change; label: string }) {
   if (change.after === null)
     return (
       <li className="flex items-baseline gap-2 text-muted">
-        <span aria-hidden="true" className="w-3 font-mono text-fit-low">−</span>
+        <span aria-hidden="true" className="w-3 font-mono text-fit-low">
+          −
+        </span>
         <span className="min-w-0 flex-1 line-through">
           <span className="sr-only">Removed </span>
           {label}
@@ -34,7 +38,9 @@ function ChangeRow({ change, label }: { change: Change; label: string }) {
     );
   return (
     <li className="flex items-baseline gap-2">
-      <span aria-hidden="true" className="w-3 font-mono text-brand">~</span>
+      <span aria-hidden="true" className="w-3 font-mono text-brand">
+        ~
+      </span>
       <span className="min-w-0 flex-1">{label}</span>
       <span className="tabular-nums">
         <span className="text-muted">{weight(change.before)}</span>
@@ -46,7 +52,13 @@ function ChangeRow({ change, label }: { change: Change; label: string }) {
   );
 }
 
-export function DiffSummary({ diff, labelFor }: { diff: DraftDiff; labelFor: (field: keyof DraftDiff, key: string) => string }) {
+export function DiffSummary({
+  diff,
+  labelFor,
+}: {
+  diff: DraftDiff;
+  labelFor: (field: keyof DraftDiff, key: string) => string;
+}) {
   const groups = GROUPS.filter((g) => diff[g.field].length > 0);
   if (groups.length === 0) return <p className="text-sm text-muted">No changes yet. Move a slider to start.</p>;
   return (

@@ -5,7 +5,10 @@ import { CheckIcon, CompassIcon, GavelIcon, HeartIcon, MessageIcon } from './ico
 
 type IconComponent = ComponentType<Omit<SVGProps<SVGSVGElement>, 'children'>>;
 
-export const ESCALATION_TYPES: Record<EscalationType, { label: string; queue: string; Icon: IconComponent; tone: string }> = {
+export const ESCALATION_TYPES: Record<
+  EscalationType,
+  { label: string; queue: string; Icon: IconComponent; tone: string }
+> = {
   RULE_EXCEPTION: { label: 'Rule exception', queue: 'Senior Tutor', Icon: GavelIcon, tone: 'bg-brand-soft text-brand' },
   LOW_CONFIDENCE: {
     label: 'Low confidence',
@@ -20,7 +23,9 @@ export const ESCALATION_TYPES: Record<EscalationType, { label: string; queue: st
 export function TypeBadge({ type }: { type: EscalationType }) {
   const t = ESCALATION_TYPES[type];
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap ${t.tone}`}>
+    <span
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap ${t.tone}`}
+    >
       <t.Icon className="size-3.5" />
       {t.queue}
       <span className="sr-only">, {t.label}</span>

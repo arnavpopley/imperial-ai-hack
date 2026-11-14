@@ -13,8 +13,16 @@ import { useModuleOutlet } from './ModulesPage.tsx';
 
 export function ModuleDashboard() {
   const { summary, cohortVisible } = useModuleOutlet();
-  const status = capacityStatus(summary.shortlisted, summary.capacity);
 
+  // Every figure here is drawn from the cohort, so a cohort under MIN_COHORT shows none of them.
+  if (!cohortVisible)
+    return (
+      <Panel title="Module overview">
+        <PrivacyHidden />
+      </Panel>
+    );
+
+  const status = capacityStatus(summary.shortlisted, summary.capacity);
   return (
     <div className="grid grid-cols-1 gap-5">
       <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3 [&>:last-child]:col-span-2 sm:[&>:last-child]:col-span-1">
@@ -23,11 +31,7 @@ export function ModuleDashboard() {
           value={summary.shortlisted}
           hint={summary.capacity === null ? 'No capacity limit' : `of ${summary.capacity} places`}
         />
-        <StatTile
-          label="Average fit"
-          value={cohortVisible ? Math.round(summary.averageFit) : '—'}
-          hint={cohortVisible ? 'out of 100, across the cohort' : `Hidden: cohort under ${MIN_COHORT}`}
-        />
+        <StatTile label="Average fit" value={Math.round(summary.averageFit)} hint="out of 100, across the cohort" />
         <StatTile
           label="Capacity used"
           value={summary.capacity === null ? '—' : percent(summary.shortlisted / summary.capacity)}
@@ -40,21 +44,11 @@ export function ModuleDashboard() {
           <DemandGauge shortlisted={summary.shortlisted} capacity={summary.capacity} />
         </Panel>
         <Panel title="Fit distribution" description="How well the module fits each student in the cohort.">
-          {cohortVisible ? (
-            <FitHistogram buckets={summary.fitHistogram} averageFit={summary.averageFit} />
-          ) : (
-            <PrivacyHidden />
-          )}
+          <FitHistogram buckets={summary.fitHistogram} averageFit={summary.averageFit} />
         </Panel>
       </div>
 
-      {cohortVisible ? (
-        <InsightsSection key={summary.moduleId} moduleId={summary.moduleId} />
-      ) : (
-        <Panel title="Insights">
-          <PrivacyHidden />
-        </Panel>
-      )}
+      <InsightsSection key={summary.moduleId} moduleId={summary.moduleId} />
     </div>
   );
 }

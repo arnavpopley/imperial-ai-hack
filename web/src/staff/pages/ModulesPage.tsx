@@ -1,5 +1,4 @@
 // Screen 8 shell: module picker beside the selected module's dashboard or tag editor.
-import { MIN_COHORT } from '@modulematch/shared';
 import type { StaffModuleSummary } from '@modulematch/shared';
 import { Navigate, NavLink, Outlet, useOutletContext, useParams } from 'react-router';
 import { api } from '../../api.ts';
@@ -8,6 +7,7 @@ import { EmptyState, ErrorState, LoadingState } from '../components/ui.tsx';
 import { InboxIcon } from '../components/icons.tsx';
 import { useResource } from '../hooks/useResource.ts';
 import { focusRing, plural } from '../lib/format.ts';
+import { byCohortFigure, isCohortVisible } from '../lib/privacy.ts';
 
 interface ModulesOutlet {
   summaries: StaffModuleSummary[];
@@ -49,7 +49,7 @@ export function ModulesPage() {
 /** `/staff` lands on the highest-fit module so the dashboard is never blank. */
 export function FirstModuleRedirect() {
   const { summaries } = useOutletContext<ModulesOutlet>();
-  const first = [...summaries].sort((a, b) => b.averageFit - a.averageFit)[0];
+  const first = [...summaries].sort(byCohortFigure((m) => m.averageFit))[0];
   return first ? <Navigate to={`/staff/modules/${encodeURIComponent(first.moduleId)}`} replace /> : null;
 }
 
@@ -97,7 +97,7 @@ export function ModuleLayout() {
           </NavLink>
         </nav>
       </header>
-      <Outlet context={{ summary, cohortVisible: summary.cohortSize >= MIN_COHORT } satisfies ModuleOutlet} />
+      <Outlet context={{ summary, cohortVisible: isCohortVisible(summary) } satisfies ModuleOutlet} />
     </div>
   );
 }

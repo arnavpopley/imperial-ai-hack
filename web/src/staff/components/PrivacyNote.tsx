@@ -17,8 +17,8 @@ export function PrivacyNote() {
       <ShieldIcon className="mt-px size-4 text-fit-high" />
       <span>
         <span className="font-medium text-ink">Aggregate only.</span> Module views show cohort totals, never a single
-        student, and any figure drawn from fewer than {MIN_COHORT} students is hidden. Escalations are the exception:
-        a student chose to send them, with a summary they approved.
+        student, and any figure drawn from fewer than {MIN_COHORT} students is hidden. Escalations are the exception: a
+        student chose to send them, with a summary they approved.
       </span>
     </p>
   );

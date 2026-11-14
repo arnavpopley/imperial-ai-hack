@@ -1,10 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toError } from '../lib/errors.ts';
 
-export type ResourceState<T> =
-  | { status: 'loading' }
-  | { status: 'error'; error: Error }
-  | { status: 'ready'; data: T };
+export type ResourceState<T> = { status: 'loading' } | { status: 'error'; error: Error } | { status: 'ready'; data: T };
 
 interface Resource<T> {
   state: ResourceState<T>;

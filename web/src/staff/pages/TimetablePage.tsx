@@ -61,20 +61,32 @@ function ClashPriorities({ rows }: { rows: ClashPriority[] }) {
         )}
       </dl>
 
-      <Panel
-        title="Clash priority"
-        description="Priority = students who shortlisted both modules × clash probability."
-      >
-        <div role="region" aria-label="Clash priority table" tabIndex={0} className={`-mx-5 overflow-x-auto ${focusRing}`}>
+      <Panel title="Clash priority" description="Priority = students who shortlisted both modules × clash probability.">
+        <div
+          role="region"
+          aria-label="Clash priority table"
+          tabIndex={0}
+          className={`-mx-5 overflow-x-auto ${focusRing}`}
+        >
           <table className="w-full min-w-[40rem] text-left text-sm">
             <caption className="sr-only">Clashing module pairs, highest priority first</caption>
             <thead className="text-xs text-muted">
               <tr className="border-b border-line">
-                <th scope="col" className="w-10 py-2 pl-5 font-medium">#</th>
-                <th scope="col" className="py-2 font-medium">Module pair</th>
-                <th scope="col" className="py-2 text-right font-medium">Students</th>
-                <th scope="col" className="py-2 pl-4 font-medium">Clash probability</th>
-                <th scope="col" className="w-48 py-2 pr-5 font-medium">Priority</th>
+                <th scope="col" className="w-10 py-2 pl-5 font-medium">
+                  #
+                </th>
+                <th scope="col" className="py-2 font-medium">
+                  Module pair
+                </th>
+                <th scope="col" className="py-2 text-right font-medium">
+                  Students
+                </th>
+                <th scope="col" className="py-2 pl-4 font-medium">
+                  Clash probability
+                </th>
+                <th scope="col" className="w-48 py-2 pr-5 font-medium">
+                  Priority
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -113,8 +125,8 @@ function ClashPriorities({ rows }: { rows: ClashPriority[] }) {
         </div>
       </Panel>
       <p className="text-xs text-muted">
-        Certain when every candidate slot overlaps (P = 1), likely from P = 0.3, possible below that. Synthetic cohort and
-        slots.
+        Certain when every candidate slot overlaps (P = 1), likely from P = 0.3, possible below that. Synthetic cohort
+        and slots.
       </p>
     </>
   );

@@ -77,9 +77,12 @@ function TagEditorForm({ module }: { module: Module }) {
     return DEMAND_FIELDS.find((d) => d.key === key)?.label ?? key;
   };
 
+  const saving = save.status === 'saving';
+
+  // The editing fieldset is disabled while saving, so no edit can land between the request and its response.
   const edit = (next: Partial<DerivedDraft>) => {
     setDraft((d) => ({ ...d, ...next }));
-    if (save.status !== 'saving') setSave({ status: 'idle' });
+    setSave({ status: 'idle' });
   };
   const editWeights = (field: WeightField) => (value: Record<string, number>) => edit({ [field]: value });
 
@@ -108,53 +111,53 @@ function TagEditorForm({ module }: { module: Module }) {
           void submit();
         }}
       >
-        <Panel
-          title="Topics"
-          description="What the module covers. Only taxonomy topics can be added."
-        >
-          <WeightMapEditor
-            value={draft.topics}
-            original={baseline.topics}
-            options={TOPIC_OPTIONS}
-            labelFor={topicLabel}
-            noun="topic"
-            onChange={editWeights('topics')}
-          />
-        </Panel>
-        <Panel title="Skills" description="Skills the module builds, which feed pathway progress.">
-          <WeightMapEditor
-            value={draft.skills}
-            original={baseline.skills}
-            options={SKILL_OPTIONS}
-            labelFor={skillLabel}
-            noun="skill"
-            onChange={editWeights('skills')}
-          />
-        </Panel>
-        <Panel title="Pathway relevance" description="How directly the module serves each career pathway.">
-          <WeightMapEditor
-            value={draft.pathwayRelevance}
-            original={baseline.pathwayRelevance}
-            options={pathwayOptions}
-            labelFor={pathwayLabel}
-            noun="pathway"
-            onChange={editWeights('pathwayRelevance')}
-          />
-        </Panel>
-        <Panel title="Demand profile" description="Assessment and intensity, used for learning-style fit.">
-          <div className="grid gap-3">
-            {DEMAND_FIELDS.map((f) => (
-              <WeightSlider
-                key={f.key}
-                label={f.label}
-                hint={f.hint}
-                value={draft.demand[f.key]}
-                original={baseline.demand[f.key]}
-                onChange={(v) => edit({ demand: { ...draft.demand, [f.key]: v } })}
-              />
-            ))}
-          </div>
-        </Panel>
+        <fieldset disabled={saving} className="grid min-w-0 grid-cols-1 gap-5 transition-opacity disabled:opacity-60">
+          <legend className="sr-only">Derived fields</legend>
+          <Panel title="Topics" description="What the module covers. Only taxonomy topics can be added.">
+            <WeightMapEditor
+              value={draft.topics}
+              original={baseline.topics}
+              options={TOPIC_OPTIONS}
+              labelFor={topicLabel}
+              noun="topic"
+              onChange={editWeights('topics')}
+            />
+          </Panel>
+          <Panel title="Skills" description="Skills the module builds, which feed pathway progress.">
+            <WeightMapEditor
+              value={draft.skills}
+              original={baseline.skills}
+              options={SKILL_OPTIONS}
+              labelFor={skillLabel}
+              noun="skill"
+              onChange={editWeights('skills')}
+            />
+          </Panel>
+          <Panel title="Pathway relevance" description="How directly the module serves each career pathway.">
+            <WeightMapEditor
+              value={draft.pathwayRelevance}
+              original={baseline.pathwayRelevance}
+              options={pathwayOptions}
+              labelFor={pathwayLabel}
+              noun="pathway"
+              onChange={editWeights('pathwayRelevance')}
+            />
+          </Panel>
+          <Panel title="Demand profile" description="Assessment and intensity, used for learning-style fit.">
+            <div className="grid gap-3">
+              {DEMAND_FIELDS.map((f) => (
+                <WeightSlider
+                  key={f.key}
+                  label={f.label}
+                  hint={f.hint}
+                  value={draft.demand[f.key]}
+                  original={baseline.demand[f.key]}
+                  onChange={(v) => edit({ demand: { ...draft.demand, [f.key]: v } })}
+                />
+              ))}
+            </div>
+          </Panel>
+        </fieldset>
 
         <Panel
           title="Review changes"
@@ -175,13 +178,15 @@ function TagEditorForm({ module }: { module: Module }) {
                 <AlertIcon /> Could not save: {save.message}
               </span>
             ) : (
-              <span className="text-muted">{changes === 0 ? 'No unsaved changes' : `${plural(changes, 'unsaved change')}`}</span>
+              <span className="text-muted">
+                {changes === 0 ? 'No unsaved changes' : `${plural(changes, 'unsaved change')}`}
+              </span>
             )}
           </p>
           <div className="flex gap-2">
             <Button
               variant="ghost"
-              disabled={changes === 0 || save.status === 'saving'}
+              disabled={changes === 0 || saving}
               onClick={() => {
                 setDraft(baseline);
                 setSave({ status: 'idle' });
@@ -189,8 +194,8 @@ function TagEditorForm({ module }: { module: Module }) {
             >
               Discard
             </Button>
-            <Button type="submit" variant="primary" disabled={changes === 0 || save.status === 'saving'}>
-              {save.status === 'saving' ? 'Saving…' : `Save ${changes > 0 ? plural(changes, 'change') : 'changes'}`}
+            <Button type="submit" variant="primary" disabled={changes === 0 || saving}>
+              {saving ? 'Saving…' : `Save ${changes > 0 ? plural(changes, 'change') : 'changes'}`}
             </Button>
           </div>
         </div>

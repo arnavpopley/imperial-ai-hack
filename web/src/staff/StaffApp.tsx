@@ -32,7 +32,9 @@ export function StaffApp() {
           </Route>
           <Route
             path="*"
-            element={<EmptyState title="Page not found">That staff page does not exist. Use the tabs above.</EmptyState>}
+            element={
+              <EmptyState title="Page not found">That staff page does not exist. Use the tabs above.</EmptyState>
+            }
           />
         </Routes>
       </div>

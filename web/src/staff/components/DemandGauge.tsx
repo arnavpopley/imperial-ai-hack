@@ -56,7 +56,10 @@ export function DemandGauge({ shortlisted, capacity }: { shortlisted: number; ca
           style={{ width: percent(fill) }}
         />
         {capacityAt !== null && (
-          <div className="absolute -top-1 -bottom-1 w-0.5 rounded-full bg-ink" style={{ left: `calc(${percent(capacityAt)} - 1px)` }} />
+          <div
+            className="absolute -top-1 -bottom-1 w-0.5 rounded-full bg-ink"
+            style={{ left: `calc(${percent(capacityAt)} - 1px)` }}
+          />
         )}
       </div>
       <p className="mt-2 text-xs text-muted">

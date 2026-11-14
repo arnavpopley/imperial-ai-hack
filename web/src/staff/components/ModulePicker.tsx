@@ -1,18 +1,17 @@
 // Searchable, sortable module list for the module-lead dashboard.
+import { MIN_COHORT } from '@modulematch/shared';
 import type { StaffModuleSummary } from '@modulematch/shared';
 import { useId, useMemo, useState } from 'react';
 import { NavLink } from 'react-router';
 import { capacityStatus, focusRing } from '../lib/format.ts';
+import { byCohortFigure, isCohortVisible } from '../lib/privacy.ts';
 import { DemandMiniBar } from './DemandGauge.tsx';
-import { SearchIcon } from './icons.tsx';
+import { SearchIcon, ShieldIcon } from './icons.tsx';
 
 const SORTS = {
-  fit: { label: 'Average fit', compare: (a, b) => b.averageFit - a.averageFit },
-  shortlisted: { label: 'Shortlisted', compare: (a, b) => b.shortlisted - a.shortlisted },
-  pressure: {
-    label: 'Demand against capacity',
-    compare: (a, b) => load(b) - load(a),
-  },
+  fit: { label: 'Average fit', compare: byCohortFigure((m) => m.averageFit) },
+  shortlisted: { label: 'Shortlisted', compare: byCohortFigure((m) => m.shortlisted) },
+  pressure: { label: 'Demand against capacity', compare: byCohortFigure(load) },
   code: { label: 'Module code', compare: (a, b) => a.code.localeCompare(b.code) },
 } satisfies Record<string, { label: string; compare: (a: StaffModuleSummary, b: StaffModuleSummary) => number }>;
 
@@ -80,41 +79,63 @@ export function ModulePicker({ modules }: { modules: StaffModuleSummary[] }) {
         <p className="p-4 text-sm text-muted">No modules match “{query}”.</p>
       ) : (
         <ul className="max-h-72 overflow-y-auto p-1.5 lg:max-h-[calc(100dvh-16rem)]">
-          {visible.map((m) => {
-            const status = capacityStatus(m.shortlisted, m.capacity);
-            return (
-              <li key={m.moduleId}>
-                <NavLink
-                  to={`/staff/modules/${encodeURIComponent(m.moduleId)}`}
-                  className={({ isActive }) =>
-                    `grid gap-1.5 rounded-lg px-2.5 py-2 transition-colors ${
-                      isActive ? 'bg-brand-soft' : 'hover:bg-canvas'
-                    } ${focusRing}`
-                  }
-                >
-                  <span className="flex items-baseline justify-between gap-2">
-                    <span className="min-w-0 truncate text-sm font-medium">{m.title}</span>
-                    <span aria-hidden="true" className="shrink-0 text-sm font-semibold tabular-nums" title="Average fit">
-                      {Math.round(m.averageFit)}
-                    </span>
-                  </span>
-                  <span className="flex items-baseline justify-between gap-2 text-xs text-muted">
-                    <span className="font-mono">{m.code}</span>
-                    <span className="tabular-nums">
-                      {m.shortlisted}
-                      {m.capacity !== null && ` / ${m.capacity}`} shortlisted
-                      {status === 'over' && <span className="ml-1 font-medium text-fit-low">over</span>}
-                      {status === 'near' && <span className="ml-1 font-medium text-fit-mid">near cap</span>}
-                    </span>
-                  </span>
-                  <DemandMiniBar shortlisted={m.shortlisted} capacity={m.capacity} />
-                  <span className="sr-only">Average fit {Math.round(m.averageFit)}</span>
-                </NavLink>
-              </li>
-            );
-          })}
+          {visible.map((m) => (
+            <li key={m.moduleId}>
+              <NavLink
+                to={`/staff/modules/${encodeURIComponent(m.moduleId)}`}
+                className={({ isActive }) =>
+                  `grid gap-1.5 rounded-lg px-2.5 py-2 transition-colors ${
+                    isActive ? 'bg-brand-soft' : 'hover:bg-canvas'
+                  } ${focusRing}`
+                }
+              >
+                {isCohortVisible(m) ? <ModuleFigures module={m} /> : <HiddenFigures module={m} />}
+              </NavLink>
+            </li>
+          ))}
         </ul>
       )}
     </nav>
+  );
+}
+
+function ModuleFigures({ module: m }: { module: StaffModuleSummary }) {
+  const status = capacityStatus(m.shortlisted, m.capacity);
+  return (
+    <>
+      <span className="flex items-baseline justify-between gap-2">
+        <span className="min-w-0 truncate text-sm font-medium">{m.title}</span>
+        <span aria-hidden="true" className="shrink-0 text-sm font-semibold tabular-nums" title="Average fit">
+          {Math.round(m.averageFit)}
+        </span>
+      </span>
+      <span className="flex items-baseline justify-between gap-2 text-xs text-muted">
+        <span className="font-mono">{m.code}</span>
+        <span className="tabular-nums">
+          {m.shortlisted}
+          {m.capacity !== null && ` / ${m.capacity}`} shortlisted
+          {status === 'over' && <span className="ml-1 font-medium text-fit-low">over</span>}
+          {status === 'near' && <span className="ml-1 font-medium text-fit-mid">near cap</span>}
+        </span>
+      </span>
+      <DemandMiniBar shortlisted={m.shortlisted} capacity={m.capacity} />
+      <span className="sr-only">Average fit {Math.round(m.averageFit)}</span>
+    </>
+  );
+}
+
+/** A cohort under MIN_COHORT: the row names the module and withholds every figure. */
+function HiddenFigures({ module: m }: { module: StaffModuleSummary }) {
+  return (
+    <>
+      <span className="min-w-0 truncate text-sm font-medium">{m.title}</span>
+      <span className="flex items-baseline justify-between gap-2 text-xs text-muted">
+        <span className="font-mono">{m.code}</span>
+        <span className="inline-flex items-center gap-1">
+          <ShieldIcon className="size-3.5" />
+          Cohort under {MIN_COHORT}: hidden
+        </span>
+      </span>
+    </>
   );
 }

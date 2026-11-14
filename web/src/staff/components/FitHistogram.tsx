@@ -22,7 +22,10 @@ export function FitHistogram({ buckets, averageFit }: { buckets: readonly number
     <figure>
       <div className="mt-6 flex gap-2">
         {/* y axis */}
-        <div aria-hidden="true" className="flex h-44 flex-col justify-between text-right text-[11px] text-muted tabular-nums">
+        <div
+          aria-hidden="true"
+          className="flex h-44 flex-col justify-between text-right text-[11px] text-muted tabular-nums"
+        >
           {ticks.map((t) => (
             <span key={t} className="leading-none">
               {t}
@@ -48,7 +51,8 @@ export function FitHistogram({ buckets, averageFit }: { buckets: readonly number
                     aria-hidden="true"
                     className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 hidden -translate-x-1/2 whitespace-nowrap rounded-md border border-line bg-surface px-2 py-1 text-xs shadow-sm group-hover:block"
                   >
-                    <span className="font-medium tabular-nums">{n}</span> <span className="text-muted">at fit {bucketLabel(i)}</span>
+                    <span className="font-medium tabular-nums">{n}</span>{' '}
+                    <span className="text-muted">at fit {bucketLabel(i)}</span>
                   </div>
                 </div>
               ))}
@@ -71,23 +75,27 @@ export function FitHistogram({ buckets, averageFit }: { buckets: readonly number
           </div>
         </div>
       </div>
-      <figcaption className="mt-3 text-xs text-muted">
-        Students per fit band (0–100). {summary}
-      </figcaption>
+      <figcaption className="mt-3 text-xs text-muted">Students per fit band (0–100). {summary}</figcaption>
       <details className="mt-2 text-xs">
         <summary className="cursor-pointer text-muted hover:text-ink">Show as table</summary>
         <table className="mt-2 w-full max-w-xs text-left tabular-nums">
           <caption className="sr-only">Students per fit band</caption>
           <thead className="text-muted">
             <tr>
-              <th scope="col" className="py-1 font-medium">Fit band</th>
-              <th scope="col" className="py-1 text-right font-medium">Students</th>
+              <th scope="col" className="py-1 font-medium">
+                Fit band
+              </th>
+              <th scope="col" className="py-1 text-right font-medium">
+                Students
+              </th>
             </tr>
           </thead>
           <tbody>
             {buckets.map((n, i) => (
               <tr key={i} className="border-t border-line">
-                <th scope="row" className="py-1 font-normal">{bucketLabel(i)}</th>
+                <th scope="row" className="py-1 font-normal">
+                  {bucketLabel(i)}
+                </th>
                 <td className="py-1 text-right">{n}</td>
               </tr>
             ))}

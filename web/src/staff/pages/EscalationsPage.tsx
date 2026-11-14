@@ -97,7 +97,9 @@ export function EscalationsPage() {
             </div>
             {visible.length === 0 ? (
               <EmptyState icon={<InboxIcon className="size-6" />} title="Nothing in this view">
-                {items.length === 0 ? 'No escalations yet. New ones appear here within 5 seconds.' : 'Try another filter.'}
+                {items.length === 0
+                  ? 'No escalations yet. New ones appear here within 5 seconds.'
+                  : 'Try another filter.'}
               </EmptyState>
             ) : (
               <ul className="grid gap-2" aria-label={`${plural(visible.length, 'escalation')}`}>

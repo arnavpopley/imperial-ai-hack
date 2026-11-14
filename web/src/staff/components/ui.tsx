@@ -77,7 +77,10 @@ export function LoadingState({ label, rows = 3 }: { label: string; rows?: number
 
 export function ErrorState({ title, error, onRetry }: { title: string; error: Error; onRetry?: () => void }) {
   return (
-    <div role="alert" className="flex flex-wrap items-start gap-3 rounded-card border border-fit-low/30 bg-fit-low/5 p-4">
+    <div
+      role="alert"
+      className="flex flex-wrap items-start gap-3 rounded-card border border-fit-low/30 bg-fit-low/5 p-4"
+    >
       <AlertIcon className="mt-0.5 size-5 text-fit-low" />
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium">{title}</p>
