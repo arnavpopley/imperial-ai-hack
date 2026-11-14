@@ -15,6 +15,13 @@ import type {
   Module,
   ModuleSummary,
   CvResponse,
+  ExamFeedbackForm,
+  ExamFormDraftBody,
+  ExamFormSaveBody,
+  PerformanceView,
+  ResultsUploadResponse,
+  StudentResults,
+  TailoredFeedback,
   Pathway,
   PathwayProgress,
   ProfileEditBody,
@@ -64,6 +71,16 @@ export const api = {
   pathwayProgress: (id: string, pathwayId: string) =>
     call<PathwayProgress>(`${s(id)}/pathways/${encodeURIComponent(pathwayId)}/progress`),
   societyMatches: (id: string) => call<SocietyMatch[]>(`${s(id)}/societies`),
+  /** Upload a transcript or mark sheet (PDF, image or pasted text). Consent is required with every upload. */
+  uploadResults: (id: string, body: z.input<typeof schemas.ResultsUploadBody>) =>
+    call<ResultsUploadResponse>(`${s(id)}/results`, { body }),
+  results: (id: string) => call<StudentResults>(`${s(id)}/results`),
+  /** Withdraw consent and delete every stored mark. */
+  deleteResults: (id: string) => call<StudentResults>(`${s(id)}/results`, { method: 'DELETE' }),
+  /** Topic strengths from the student's own marks, and informational nudges on modules (never a score change). */
+  performance: (id: string) => call<PerformanceView>(`${s(id)}/performance`),
+  /** Tailored feedback for each exam that has a published examiner form and the student's question marks. */
+  examFeedback: (id: string) => call<TailoredFeedback[]>(`${s(id)}/exam-feedback`),
   /** Pasted CV or personal statement: redacted on the server, then mined for interests and skills. */
   submitCv: (id: string, text: string) => call<CvResponse>(`${s(id)}/cv`, { body: { text } }),
   /** Thumbs up or down on one AI answer. Free text is redacted on the server before it is stored. */
@@ -77,6 +94,15 @@ export const api = {
     editDerived: (moduleId: string, body: DerivedEditBody) =>
       call<Module>(`/staff/modules/${encodeURIComponent(moduleId)}/derived`, { method: 'PUT', body }),
     clashPriorities: () => call<ClashPriority[]>('/staff/timetable/clash-priorities'),
+    /** The examiner's feedback form for a module's exam, or null when none exists yet. */
+    examForm: (moduleId: string) => call<ExamFeedbackForm | null>(`/staff/modules/${encodeURIComponent(moduleId)}/exam-form`),
+    saveExamForm: (moduleId: string, body: ExamFormSaveBody) =>
+      call<ExamFeedbackForm>(`/staff/modules/${encodeURIComponent(moduleId)}/exam-form`, { method: 'PUT', body }),
+    /** AI drafts a form from the examiner's marking notes; it stays a draft until an examiner publishes it. */
+    draftExamForm: (moduleId: string, body: ExamFormDraftBody) =>
+      call<ExamFeedbackForm>(`/staff/modules/${encodeURIComponent(moduleId)}/exam-form/draft`, { body }),
+    publishExamForm: (moduleId: string) =>
+      call<ExamFeedbackForm>(`/staff/modules/${encodeURIComponent(moduleId)}/exam-form/publish`, { body: {} }),
     escalations: () => call<StaffEscalation[]>('/staff/escalations'),
     respond: (escalationId: string, body: RespondInput) =>
       call<Escalation>(`/staff/escalations/${encodeURIComponent(escalationId)}/respond`, { body }),

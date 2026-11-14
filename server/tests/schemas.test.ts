@@ -54,3 +54,36 @@ describe('fixture recommendations', () => {
     for (const r of fixtureRecommendations.recommendations) expect(r.fit).toBe(combineFit(r.sub, DEFAULT_WEIGHTS));
   });
 });
+
+describe('results and exam feedback contracts', () => {
+  const result = (mark: number, maxMarks: number) =>
+    schemas.ModuleResult.safeParse({
+      moduleId: 'MECH50010',
+      code: 'MECH50010',
+      title: null,
+      mark: 62,
+      questionMarks: [{ questionId: 'Q1', mark, maxMarks }],
+      matched: true,
+      source: 'pasted-text',
+    }).success;
+
+  it('rejects a question mark above its maximum', () => {
+    expect(result(14, 20)).toBe(true);
+    expect(result(25, 20)).toBe(false);
+  });
+
+  it('rejects exam forms with duplicate question ids', () => {
+    const question = (id: string) => ({ id, label: id, maxMarks: 20, topics: ['fluid-mechanics'], whatGoodAnswersDid: '', commonMistakes: [], revisionPointers: [] });
+    const form = (ids: string[]) =>
+      schemas.ExamFormSaveBody.safeParse({ examLabel: '2026 exam', questions: ids.map(question), generalComments: '' }).success;
+    expect(form(['Q1', 'Q2'])).toBe(true);
+    expect(form(['Q1', 'Q1'])).toBe(false);
+  });
+
+  it('rejects empty or non-base64 uploads', () => {
+    const upload = (base64: string) => schemas.ResultsUploadBody.safeParse({ consent: true, file: { mediaType: 'application/pdf', base64 } }).success;
+    expect(upload('JVBERi0xLjQK')).toBe(true);
+    expect(upload('')).toBe(false);
+    expect(upload('not base64!')).toBe(false);
+  });
+});
