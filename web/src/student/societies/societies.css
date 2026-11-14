@@ -1,0 +1,37 @@
+/* The society bubble cloud: two rings that revolve slowly in opposite directions while each bubble
+   counter-rotates to stay upright. Hovering or focusing the cloud pauses it; reduced motion keeps it still. */
+@keyframes society-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.society-ring {
+  animation: society-orbit var(--orbit-duration, 90s) linear infinite;
+}
+
+.society-ring .society-upright {
+  animation: society-orbit var(--orbit-duration, 90s) linear infinite reverse;
+}
+
+.society-ring[data-direction='reverse'] {
+  animation-direction: reverse;
+}
+
+.society-ring[data-direction='reverse'] .society-upright {
+  animation-direction: normal;
+}
+
+.society-cloud:hover .society-ring,
+.society-cloud:hover .society-upright,
+.society-cloud:focus-within .society-ring,
+.society-cloud:focus-within .society-upright {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .society-ring,
+  .society-ring .society-upright {
+    animation: none;
+  }
+}
