@@ -38,14 +38,21 @@ if (!rules || modules.length === 0) throw new Error('Run `npm run seed` first: n
 const pathwayIds = loadPathways().map((p) => p.id);
 const baseProfile = (): StudentProfile => emptyProfile({ programme, yearOfStudy: 3, completedModuleIds: [], interviewDepth: 'quick' }, 'eval');
 
-// ---------- ranking quality: three expected modules in the top five ----------
+// ---------- ranking quality: three expected modules in the top five optional modules ----------
+
+const coreIds = new Set(modules.filter((m) => m.type === 'core').map((m) => m.id));
 
 function rankingQuality(): EvalResult {
   const details = PERSONAS.map((persona) => {
     const profile = { ...baseProfile(), ...persona.profile, style: { ...baseProfile().style, ...persona.profile.style } };
-    const top5 = rankModules(profile, modules, DEFAULT_WEIGHTS, rules!).filter((r) => r.eligible).slice(0, 5).map((r) => r.moduleId);
+    // Core modules are compulsory, not choices, so the top five is taken over the optional modules the student
+    // can actually pick (eligible electives and I-Explore).
+    const top5 = rankModules(profile, modules, DEFAULT_WEIGHTS, rules!)
+      .filter((r) => r.eligible && !coreIds.has(r.moduleId))
+      .slice(0, 5)
+      .map((r) => r.moduleId);
     const hits = persona.expected.filter((id) => top5.includes(id));
-    return { case: persona.name, pass: hits.length === persona.expected.length, note: `${hits.length}/3 in top five: ${top5.join(', ')}` };
+    return { case: persona.name, pass: hits.length === persona.expected.length, note: `${hits.length}/3 in top five optional modules: ${top5.join(', ')}` };
   });
   return result('Ranking quality', 0.8, details);
 }

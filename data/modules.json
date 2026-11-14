@@ -26,35 +26,36 @@
       "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH40002&year=26_27",
       "prerequisites": [],
       "capacity": null,
+      "resources": [],
       "topics": {
         "fluid-mechanics": 0.95,
-        "mathematics-modelling": 0.5,
-        "thermodynamics-energy": 0.1
+        "mathematics-modelling": 0.4,
+        "thermodynamics-energy": 0.15
       },
       "skills": {
-        "quantitative-analysis": 0.6,
+        "quantitative-analysis": 0.7,
         "modelling-simulation": 0.3
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.6,
-        "energy-transition": 0.4,
-        "robotics-automation": 0.1,
-        "biomedical-devices": 0.2,
-        "software-data": 0.1,
-        "consulting": 0.05,
-        "startup-founder": 0.05,
+        "aerospace-motorsport": 0.8,
+        "energy-transition": 0.68,
+        "robotics-automation": 0.2,
+        "biomedical-devices": 0.32,
+        "software-data": 0.08,
+        "consulting": 0.17,
+        "startup-founder": 0.17,
         "research-academia": 0.5
       },
       "demand": {
         "examShare": 1,
-        "groupShare": 0.05,
-        "applied": 0.4,
-        "mathsIntensity": 0.7,
-        "codingIntensity": 0.05,
-        "workload": 0.5
+        "groupShare": 0,
+        "applied": 0.3,
+        "mathsIntensity": 0.6,
+        "codingIntensity": 0.01,
+        "workload": 0.4
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Year 1 foundation in fluid statics, control-volume dynamics and internal flows, assessed by a single exam. Evidence: fluid-mechanics 0.95 \"elementary fluid mechanics\"; mathematics-modelling 0.50 \"the mathematical description of fluids\"."
+      "derivedRationale": "Introduces the fundamentals of fluid mechanics: the mathematical description of fluids, fluid statics, and fluid dynamics using control volume analysis. It finishes with applications to internal flows, including velocity profiles and an introduction to turbulence. Published assessment: 1.5 Hour exam (100%, examination). Evidence: fluid-mechanics 0.95 \"establish a strong foundation and understanding of elementary fluid mechanics\"."
     },
     {
       "id": "MECH40003",
@@ -78,34 +79,39 @@
       "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH40003&year=26_27",
       "prerequisites": [],
       "capacity": null,
+      "resources": [],
       "topics": {
         "thermodynamics-energy": 0.95,
-        "mathematics-modelling": 0.4,
-        "sustainability-climate": 0.2
+        "mathematics-modelling": 0.3,
+        "sustainability-climate": 0.15,
+        "solid-mechanics-materials": 0.1,
+        "finance-economics": 0.08
       },
       "skills": {
-        "quantitative-analysis": 0.6
+        "quantitative-analysis": 0.8,
+        "modelling-simulation": 0.22,
+        "design-cad": 0.1
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.4,
-        "energy-transition": 0.6,
-        "robotics-automation": 0.05,
-        "biomedical-devices": 0.1,
+        "aerospace-motorsport": 0.6,
+        "energy-transition": 0.85,
+        "robotics-automation": 0.2,
+        "biomedical-devices": 0.17,
         "software-data": 0.05,
-        "consulting": 0.05,
-        "startup-founder": 0.05,
+        "consulting": 0.22,
+        "startup-founder": 0.15,
         "research-academia": 0.4
       },
       "demand": {
         "examShare": 1,
-        "groupShare": 0.05,
-        "applied": 0.4,
-        "mathsIntensity": 0.6,
-        "codingIntensity": 0,
-        "workload": 0.5
+        "groupShare": 0,
+        "applied": 0.33,
+        "mathsIntensity": 0.5,
+        "codingIntensity": 0.02,
+        "workload": 0.4
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Year 1 introduction to the laws of thermodynamics applied to simple engineering problems, assessed by a single exam. Evidence: thermodynamics-energy 0.95 \"the fundamental laws of thermodynamics\"."
+      "derivedRationale": "An introductory core module on the fundamental laws of thermodynamics, covering properties of steam and ideal substances and applying the laws to systems and control volumes. It builds analytical problem-solving skills and links thermodynamics to energy resources, materials, economics and the environment. Published assessment: 1.5 Hour exam (100%, examination). Evidence: thermodynamics-energy 0.95 \"fundamental laws of thermodynamics\"."
     },
     {
       "id": "MECH40004",
@@ -131,37 +137,38 @@
       "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH40004&year=26_27",
       "prerequisites": [],
       "capacity": null,
+      "resources": [],
       "topics": {
-        "electronics-embedded": 0.85,
+        "electronics-embedded": 0.77,
         "control-robotics": 0.5,
-        "mathematics-modelling": 0.35,
-        "design-manufacturing": 0.3
+        "mathematics-modelling": 0.53,
+        "design-manufacturing": 0.2
       },
       "skills": {
-        "quantitative-analysis": 0.5,
-        "design-cad": 0.2,
-        "experimental-skills": 0.2
+        "quantitative-analysis": 0.6,
+        "modelling-simulation": 0.5,
+        "design-cad": 0.27
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.2,
-        "energy-transition": 0.2,
-        "robotics-automation": 0.6,
-        "biomedical-devices": 0.3,
-        "software-data": 0.3,
-        "consulting": 0.05,
-        "startup-founder": 0.2,
+        "aerospace-motorsport": 0.4,
+        "energy-transition": 0.33,
+        "robotics-automation": 0.83,
+        "biomedical-devices": 0.43,
+        "software-data": 0.13,
+        "consulting": 0.1,
+        "startup-founder": 0.3,
         "research-academia": 0.3
       },
       "demand": {
         "examShare": 1,
-        "groupShare": 0.05,
-        "applied": 0.5,
-        "mathsIntensity": 0.5,
-        "codingIntensity": 0.1,
-        "workload": 0.5
+        "groupShare": 0,
+        "applied": 0.32,
+        "mathsIntensity": 0.53,
+        "codingIntensity": 0.05,
+        "workload": 0.3
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Year 1 mechatronics: electrical networks, logic and sensors modelled like mechanical systems, assessed by a single exam. Evidence: electronics-embedded 0.85 \"electrical systems to be modelled in a manner compatible with mechanical systems\"; control-robotics 0.50 \"simple electromechanical systems\"."
+      "derivedRationale": "Introduces mechatronics as a systems approach, modelling electrical networks, impedances, logic gates, sensors and actuators in ways compatible with mechanical systems. Students learn circuit analysis with Kirchhoff's laws under d.c. and a.c. excitation, Thévenin equivalents, and basic analogue and digital circuit representation. Published assessment: 1.5 Hour exam (100%, examination). Evidence: electronics-embedded 0.77 \"design, and select components for simple electromechanical systems\"; control-robotics 0.50 \"introduce Mechatronics as a fundamental concept for modelling and designing machine systems\"; mathematics-modelling 0.53 \"develop mastery of modelling concepts which have direct equivalents in mechanical systems theory\"."
     },
     {
       "id": "MECH40005",
@@ -185,34 +192,37 @@
       "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH40005&year=26_27",
       "prerequisites": [],
       "capacity": null,
+      "resources": [],
       "topics": {
         "solid-mechanics-materials": 0.95,
-        "mathematics-modelling": 0.45
+        "mathematics-modelling": 0.47,
+        "design-manufacturing": 0.17
       },
       "skills": {
-        "quantitative-analysis": 0.6,
-        "modelling-simulation": 0.2
+        "quantitative-analysis": 0.8,
+        "modelling-simulation": 0.3,
+        "design-cad": 0.07
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.5,
-        "energy-transition": 0.2,
-        "robotics-automation": 0.2,
-        "biomedical-devices": 0.4,
+        "aerospace-motorsport": 0.8,
+        "energy-transition": 0.5,
+        "robotics-automation": 0.45,
+        "biomedical-devices": 0.5,
         "software-data": 0.05,
-        "consulting": 0.05,
-        "startup-founder": 0.05,
-        "research-academia": 0.4
+        "consulting": 0.2,
+        "startup-founder": 0.22,
+        "research-academia": 0.42
       },
       "demand": {
         "examShare": 1,
-        "groupShare": 0.05,
-        "applied": 0.5,
-        "mathsIntensity": 0.6,
-        "codingIntensity": 0,
-        "workload": 0.5
+        "groupShare": 0,
+        "applied": 0.35,
+        "mathsIntensity": 0.65,
+        "codingIntensity": 0.02,
+        "workload": 0.4
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Year 1 stress analysis of frames, pressure vessels and beams from first principles, assessed by a single exam. Evidence: solid-mechanics-materials 0.95 \"the basic concepts and methods of stress analysis\"."
+      "derivedRationale": "Introduces the fundamentals of stress analysis: stress, strain, Hooke's Law and elasticity (Young's modulus, Poisson's ratio). These are applied to problems such as plane frames, pressure vessels and beams. Published assessment: 1.5 Hour exam (100%, examination). Evidence: solid-mechanics-materials 0.95 \"This module introduces the basic concepts and methods of stress analysis.\"."
     },
     {
       "id": "MECH40006",
@@ -240,36 +250,39 @@
       "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH40006&year=26_27",
       "prerequisites": [],
       "capacity": null,
+      "resources": [],
       "topics": {
-        "solid-mechanics-materials": 0.9,
-        "experimental-lab": 0.5,
-        "design-manufacturing": 0.4,
+        "solid-mechanics-materials": 0.95,
+        "design-manufacturing": 0.3,
+        "experimental-lab": 0.2,
         "sustainability-climate": 0.1
       },
       "skills": {
-        "experimental-skills": 0.4,
-        "quantitative-analysis": 0.4
+        "quantitative-analysis": 0.3,
+        "experimental-skills": 0.28,
+        "design-cad": 0.2,
+        "research": 0.1
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.4,
-        "energy-transition": 0.3,
-        "robotics-automation": 0.1,
-        "biomedical-devices": 0.5,
-        "software-data": 0,
-        "consulting": 0.05,
-        "startup-founder": 0.1,
-        "research-academia": 0.4
+        "aerospace-motorsport": 0.72,
+        "energy-transition": 0.5,
+        "robotics-automation": 0.37,
+        "biomedical-devices": 0.55,
+        "software-data": 0.05,
+        "consulting": 0.12,
+        "startup-founder": 0.25,
+        "research-academia": 0.42
       },
       "demand": {
         "examShare": 1,
-        "groupShare": 0.1,
-        "applied": 0.5,
-        "mathsIntensity": 0.4,
+        "groupShare": 0,
+        "applied": 0.33,
+        "mathsIntensity": 0.25,
         "codingIntensity": 0,
-        "workload": 0.5
+        "workload": 0.3
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Year 1 materials: structure, properties and selection of metals, ceramics, polymers and composites, assessed by a single exam. Evidence: solid-mechanics-materials 0.90 \"the important mechanical properties that mechanical engineers require knowledge of\"; experimental-lab 0.50 \"Practice in testing of materials is included.\"."
+      "derivedRationale": "Introduces the mechanical properties of engineering materials and how to select materials, including Ashby maps. It links atomic bonding, crystal structure, alloying and strengthening to the behaviour of metals, ceramics, polymers and composites, with some materials testing practice and sustainability issues. Published assessment: 1.5 Hour exam (100%, examination). Evidence: solid-mechanics-materials 0.95 \"Topics include tensile and fracture properties, material selection, atomic bonding, crystal structure and strengthening.\"."
     },
     {
       "id": "MECH40008",
@@ -298,35 +311,39 @@
       "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH40008&year=26_27",
       "prerequisites": [],
       "capacity": null,
+      "resources": [],
       "topics": {
-        "mathematics-modelling": 0.95,
-        "programming-software": 0.55,
-        "computational-simulation": 0.3
+        "mathematics-modelling": 0.9,
+        "programming-software": 0.35,
+        "computational-simulation": 0.23,
+        "statistics-data": 0.05
       },
       "skills": {
-        "quantitative-analysis": 0.8,
-        "coding": 0.6
+        "quantitative-analysis": 0.92,
+        "coding": 0.4,
+        "modelling-simulation": 0.35,
+        "research": 0.07
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.4,
-        "energy-transition": 0.3,
-        "robotics-automation": 0.4,
-        "biomedical-devices": 0.2,
-        "software-data": 0.6,
-        "consulting": 0.2,
-        "startup-founder": 0.1,
-        "research-academia": 0.6
+        "aerospace-motorsport": 0.57,
+        "energy-transition": 0.52,
+        "robotics-automation": 0.57,
+        "biomedical-devices": 0.42,
+        "software-data": 0.47,
+        "consulting": 0.4,
+        "startup-founder": 0.22,
+        "research-academia": 0.65
       },
       "demand": {
         "examShare": 0.8,
         "groupShare": 0,
-        "applied": 0.3,
+        "applied": 0.22,
         "mathsIntensity": 0.95,
-        "codingIntensity": 0.6,
-        "workload": 0.8
+        "codingIntensity": 0.35,
+        "workload": 0.7
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Year 1 engineering mathematics with Python programming, 15 ECTS, assessed 80% by exam and 20% by programming coursework. Evidence: mathematics-modelling 0.95 \"key mathematical and computational skills\"; programming-software 0.55 \"Practical implementation through programming\"."
+      "derivedRationale": "Core first-year maths module covering vector algebra, real and complex analysis, series, matrix algebra, multivariable functions, second-order ODEs and vector calculus. Python programming is used to implement numerical methods for problems from these topics. Published assessment: 3 Hour exam (80%, examination), Programming coursework (formative) (4%, coursework), Programming coursework (summative) (16%, coursework). Evidence: mathematics-modelling 0.90 \"vector algebra, real analysis, limits, curve sketching, series, applications of integration, complex analysis\"."
     },
     {
       "id": "MECH50001",
@@ -351,35 +368,39 @@
       "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH50001&year=26_27",
       "prerequisites": [],
       "capacity": null,
+      "resources": [],
       "topics": {
-        "thermodynamics-energy": 0.85,
-        "mathematics-modelling": 0.4,
-        "fluid-mechanics": 0.3
+        "thermodynamics-energy": 0.93,
+        "fluid-mechanics": 0.4,
+        "mathematics-modelling": 0.43,
+        "design-manufacturing": 0.22
       },
       "skills": {
-        "quantitative-analysis": 0.6,
-        "modelling-simulation": 0.3
+        "quantitative-analysis": 0.8,
+        "modelling-simulation": 0.35,
+        "research": 0.2,
+        "design-cad": 0.12
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.5,
-        "energy-transition": 0.7,
-        "robotics-automation": 0.1,
-        "biomedical-devices": 0.2,
+        "aerospace-motorsport": 0.63,
+        "energy-transition": 0.82,
+        "robotics-automation": 0.22,
+        "biomedical-devices": 0.27,
         "software-data": 0.05,
-        "consulting": 0.05,
-        "startup-founder": 0.05,
-        "research-academia": 0.4
+        "consulting": 0.18,
+        "startup-founder": 0.17,
+        "research-academia": 0.43
       },
       "demand": {
         "examShare": 1,
-        "groupShare": 0.05,
-        "applied": 0.5,
+        "groupShare": 0,
+        "applied": 0.38,
         "mathsIntensity": 0.6,
-        "codingIntensity": 0,
-        "workload": 0.45
+        "codingIntensity": 0.05,
+        "workload": 0.42
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "REVIEW: description is 39 words (under 60), so staff should check these tags. Year 2 conduction, convection, radiation and heat exchangers through design-like problems, assessed by a single exam. Evidence: thermodynamics-energy 0.85 \"the physics of heat transfer\"."
+      "derivedRationale": "REVIEW: description is 39 words (under 60), so staff should check these tags. Introduces the physics of heat transfer and how to quantify it: steady and transient conduction, convection, radiation and heat exchangers. Students solve small design-style problems and use dimensionless groups, supported by independent study of a standard textbook. Published assessment: 1.5 Hour exam (100%, examination). Evidence: thermodynamics-energy 0.93 \"To develop an understanding of the physics of heat transfer and to quantify them.\"."
     },
     {
       "id": "MECH50002",
@@ -408,35 +429,37 @@
         "MECH40005"
       ],
       "capacity": null,
+      "resources": [],
       "topics": {
         "solid-mechanics-materials": 0.95,
-        "mathematics-modelling": 0.45,
-        "design-manufacturing": 0.35
+        "mathematics-modelling": 0.4,
+        "design-manufacturing": 0.25
       },
       "skills": {
-        "quantitative-analysis": 0.65,
-        "design-cad": 0.2
+        "quantitative-analysis": 0.85,
+        "modelling-simulation": 0.3,
+        "design-cad": 0.25
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.5,
-        "energy-transition": 0.2,
-        "robotics-automation": 0.2,
-        "biomedical-devices": 0.5,
-        "software-data": 0,
-        "consulting": 0.05,
-        "startup-founder": 0.05,
-        "research-academia": 0.4
+        "aerospace-motorsport": 0.85,
+        "energy-transition": 0.52,
+        "robotics-automation": 0.45,
+        "biomedical-devices": 0.52,
+        "software-data": 0.05,
+        "consulting": 0.18,
+        "startup-founder": 0.25,
+        "research-academia": 0.45
       },
       "demand": {
         "examShare": 1,
-        "groupShare": 0.05,
-        "applied": 0.55,
-        "mathsIntensity": 0.65,
-        "codingIntensity": 0,
-        "workload": 0.5
+        "groupShare": 0,
+        "applied": 0.43,
+        "mathsIntensity": 0.7,
+        "codingIntensity": 0.02,
+        "workload": 0.47
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Year 2 stress analysis in two and three dimensions, failure criteria and buckling, assessed by a single exam. Evidence: solid-mechanics-materials 0.95 \"as the basis for advanced stress analysis\"."
+      "derivedRationale": "Extends linear elasticity to two and three dimensions for advanced stress analysis. It covers complex stress and strain, Mohr's circle, failure criteria, beam shear stresses, thick-walled cylinders, plastic failure and Euler buckling of struts, so students can design or assess simple load-bearing components. Published assessment: 1.5 Hour exam (100%, examination). Evidence: solid-mechanics-materials 0.95 \"extending the concepts of linear elasticity to two and three dimensions, as the basis for advanced stress analysis\"."
     },
     {
       "id": "MECH50003",
@@ -465,36 +488,39 @@
         "MECH40008"
       ],
       "capacity": null,
+      "resources": [],
       "topics": {
-        "mathematics-modelling": 0.85,
-        "computational-simulation": 0.65,
-        "programming-software": 0.55
+        "mathematics-modelling": 0.9,
+        "computational-simulation": 0.63,
+        "programming-software": 0.55,
+        "statistics-data": 0.15
       },
       "skills": {
-        "quantitative-analysis": 0.8,
-        "coding": 0.6,
-        "modelling-simulation": 0.6
+        "quantitative-analysis": 0.85,
+        "coding": 0.65,
+        "modelling-simulation": 0.77,
+        "research": 0.13
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.6,
-        "energy-transition": 0.4,
-        "robotics-automation": 0.4,
-        "biomedical-devices": 0.2,
-        "software-data": 0.6,
-        "consulting": 0.1,
-        "startup-founder": 0.05,
-        "research-academia": 0.7
+        "aerospace-motorsport": 0.65,
+        "energy-transition": 0.55,
+        "robotics-automation": 0.52,
+        "biomedical-devices": 0.38,
+        "software-data": 0.52,
+        "consulting": 0.35,
+        "startup-founder": 0.22,
+        "research-academia": 0.73
       },
       "demand": {
         "examShare": 0.64,
         "groupShare": 0,
-        "applied": 0.3,
-        "mathsIntensity": 0.95,
-        "codingIntensity": 0.65,
-        "workload": 0.75
+        "applied": 0.45,
+        "mathsIntensity": 0.9,
+        "codingIntensity": 0.6,
+        "workload": 0.63
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Year 2 PDEs and numerical methods implemented in Python, 10 ECTS, assessed 64% by exam and 36% by computing tests. Evidence: mathematics-modelling 0.85 \"the analytical solution of partial differential equations\"; computational-simulation 0.65 \"discrete methods for the solution of PDEs\"; programming-software 0.55 \"practical implementation through programming is studied\"."
+      "derivedRationale": "Core second-year mathematics and computing module covering analytical solution of PDEs by separation of variables, interpolation, numerical differentiation and integration, finite difference and finite volume methods, iterative linear solvers, and Fourier transforms. All techniques are implemented in Python to support later mechanical engineering modules. Published assessment: 2 Hour exam (64%, examination), Computing quizzes (18%, coursework), Computing Final test (18%, coursework). Evidence: mathematics-modelling 0.90 \"analytical solution of partial differential equations\"; computational-simulation 0.63 \"discrete methods for the solution of PDEs (finite difference, finite volume)\"; programming-software 0.55 \"practical implementation through programming is studied\"."
     },
     {
       "id": "MECH50004",
@@ -521,35 +547,37 @@
         "MECH40004"
       ],
       "capacity": null,
+      "resources": [],
       "topics": {
-        "electronics-embedded": 0.85,
-        "control-robotics": 0.6,
-        "mathematics-modelling": 0.35
+        "electronics-embedded": 0.63,
+        "control-robotics": 0.5,
+        "mathematics-modelling": 0.32
       },
       "skills": {
-        "quantitative-analysis": 0.5,
-        "experimental-skills": 0.3
+        "quantitative-analysis": 0.6,
+        "modelling-simulation": 0.32,
+        "design-cad": 0.2
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.3,
-        "energy-transition": 0.2,
-        "robotics-automation": 0.7,
-        "biomedical-devices": 0.4,
-        "software-data": 0.3,
-        "consulting": 0,
-        "startup-founder": 0.2,
-        "research-academia": 0.3
+        "aerospace-motorsport": 0.5,
+        "energy-transition": 0.35,
+        "robotics-automation": 0.9,
+        "biomedical-devices": 0.5,
+        "software-data": 0.15,
+        "consulting": 0.1,
+        "startup-founder": 0.32,
+        "research-academia": 0.35
       },
       "demand": {
         "examShare": 1,
-        "groupShare": 0.05,
-        "applied": 0.55,
+        "groupShare": 0,
+        "applied": 0.37,
         "mathsIntensity": 0.6,
-        "codingIntensity": 0.1,
-        "workload": 0.5
+        "codingIntensity": 0.05,
+        "workload": 0.4
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "REVIEW: description is 35 words (under 60), so staff should check these tags. Year 2 circuits with active components and an introduction to control theory, assessed by a single exam. Evidence: electronics-embedded 0.85 \"advanced electronics components\"; control-robotics 0.60 \"the fundamentals of Control Theory\"."
+      "derivedRationale": "REVIEW: description is 35 words (under 60), so staff should check these tags. Builds on first-year mechatronics to cover analysis and design of analogue circuits, including transistors, op-amps, filters and ADC/DAC converters. It also introduces control theory, using Laplace-domain analysis of dynamic systems and PID closed-loop control. Published assessment: 1.5 Hour exam (100%, examination). Evidence: electronics-embedded 0.63 \"develop real-life circuits with advanced electronics components\"; control-robotics 0.50 \"fundamentals of Control Theory\"."
     },
     {
       "id": "MECH50005",
@@ -577,34 +605,39 @@
         "MECH40006"
       ],
       "capacity": null,
+      "resources": [],
       "topics": {
         "solid-mechanics-materials": 0.95,
-        "design-manufacturing": 0.4
+        "design-manufacturing": 0.3,
+        "mathematics-modelling": 0.2,
+        "experimental-lab": 0.11
       },
       "skills": {
-        "quantitative-analysis": 0.5,
-        "research": 0.1
+        "quantitative-analysis": 0.6,
+        "design-cad": 0.25,
+        "research": 0.17,
+        "modelling-simulation": 0.12
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.5,
-        "energy-transition": 0.3,
-        "robotics-automation": 0.1,
-        "biomedical-devices": 0.6,
-        "software-data": 0,
-        "consulting": 0.05,
-        "startup-founder": 0.05,
-        "research-academia": 0.4
+        "aerospace-motorsport": 0.83,
+        "energy-transition": 0.57,
+        "robotics-automation": 0.35,
+        "biomedical-devices": 0.5,
+        "software-data": 0.05,
+        "consulting": 0.17,
+        "startup-founder": 0.22,
+        "research-academia": 0.45
       },
       "demand": {
         "examShare": 1,
-        "groupShare": 0.05,
-        "applied": 0.55,
-        "mathsIntensity": 0.5,
-        "codingIntensity": 0,
-        "workload": 0.5
+        "groupShare": 0,
+        "applied": 0.38,
+        "mathsIntensity": 0.45,
+        "codingIntensity": 0.01,
+        "workload": 0.38
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Year 2 materials failure (yielding, fracture, fatigue, creep) and designing against it, assessed by a single exam. Evidence: solid-mechanics-materials 0.95 \"various common failure modes\"."
+      "derivedRationale": "Core mechanical engineering module on materials failure: dislocations, strengthening of alloys and corrosion, then prediction of yielding, fracture, fatigue and creep under multiaxial loading. It teaches students to identify failure mechanisms in practice and design against them. Published assessment: 1.5 Hour exam (100%, examination). Evidence: solid-mechanics-materials 0.95 \"predict component failures under multiaxial loading conditions due to yielding, fracture, fatigue and creep mechanisms\"."
     },
     {
       "id": "MECH50006",
@@ -630,35 +663,40 @@
         "MECH40003"
       ],
       "capacity": null,
+      "resources": [],
       "topics": {
         "thermodynamics-energy": 0.95,
-        "design-manufacturing": 0.3,
-        "sustainability-climate": 0.2
+        "mathematics-modelling": 0.27,
+        "design-manufacturing": 0.28,
+        "sustainability-climate": 0.15,
+        "fluid-mechanics": 0.2
       },
       "skills": {
-        "quantitative-analysis": 0.6,
+        "quantitative-analysis": 0.8,
+        "modelling-simulation": 0.3,
+        "design-cad": 0.2,
         "commercial-awareness": 0.1
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.6,
-        "energy-transition": 0.8,
-        "robotics-automation": 0.05,
-        "biomedical-devices": 0.05,
-        "software-data": 0,
-        "consulting": 0.1,
-        "startup-founder": 0.05,
-        "research-academia": 0.4
+        "aerospace-motorsport": 0.67,
+        "energy-transition": 0.87,
+        "robotics-automation": 0.12,
+        "biomedical-devices": 0.08,
+        "software-data": 0.05,
+        "consulting": 0.27,
+        "startup-founder": 0.17,
+        "research-academia": 0.38
       },
       "demand": {
         "examShare": 1,
-        "groupShare": 0.05,
-        "applied": 0.6,
-        "mathsIntensity": 0.55,
-        "codingIntensity": 0,
-        "workload": 0.5
+        "groupShare": 0,
+        "applied": 0.4,
+        "mathsIntensity": 0.6,
+        "codingIntensity": 0.05,
+        "workload": 0.4
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "REVIEW: description is 52 words (under 60), so staff should check these tags. Year 2 applied thermodynamics of turbines, boilers, engines and refrigeration plant, assessed by a single exam. Evidence: thermodynamics-energy 0.95 \"energy conversion and use\"."
+      "derivedRationale": "REVIEW: description is 52 words (under 60), so staff should check these tags. Applies thermodynamic principles to energy conversion plant, including gas and steam turbines, boilers, heat exchangers, reciprocating engines, refrigeration and air-conditioning. Students analyse plant performance and consider constraints from materials, economics and the environment. Published assessment: 1.5 Hour exam (100%, examination). Evidence: thermodynamics-energy 0.95 \"energy conversion and use\"."
     },
     {
       "id": "MECH50008",
@@ -684,35 +722,37 @@
       "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH50008&year=26_27",
       "prerequisites": [],
       "capacity": null,
+      "resources": [],
       "topics": {
-        "mathematics-modelling": 0.6,
-        "solid-mechanics-materials": 0.5,
-        "control-robotics": 0.3
+        "mathematics-modelling": 0.7,
+        "solid-mechanics-materials": 0.53,
+        "control-robotics": 0.2,
+        "computational-simulation": 0.07
       },
       "skills": {
-        "quantitative-analysis": 0.65,
-        "modelling-simulation": 0.4
+        "quantitative-analysis": 0.83,
+        "modelling-simulation": 0.57
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.6,
-        "energy-transition": 0.2,
-        "robotics-automation": 0.5,
-        "biomedical-devices": 0.2,
-        "software-data": 0.05,
-        "consulting": 0,
-        "startup-founder": 0.05,
-        "research-academia": 0.4
+        "aerospace-motorsport": 0.85,
+        "energy-transition": 0.4,
+        "robotics-automation": 0.65,
+        "biomedical-devices": 0.3,
+        "software-data": 0.1,
+        "consulting": 0.2,
+        "startup-founder": 0.2,
+        "research-academia": 0.5
       },
       "demand": {
         "examShare": 1,
-        "groupShare": 0.05,
-        "applied": 0.45,
-        "mathsIntensity": 0.7,
-        "codingIntensity": 0,
-        "workload": 0.5
+        "groupShare": 0,
+        "applied": 0.33,
+        "mathsIntensity": 0.78,
+        "codingIntensity": 0.05,
+        "workload": 0.45
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Year 2 vibrations of one- and multi-degree-of-freedom systems and rigid-body dynamics, assessed by a single exam. Evidence: mathematics-modelling 0.60 \"an introduction to multi-degree-of-freedom systems\"; solid-mechanics-materials 0.50 \"a source of system failure\"."
+      "derivedRationale": "Core mechanical engineering module on vibrations and rigid-body dynamics. It covers free and forced vibration of single- and two-degree-of-freedom systems, plus energy, momentum, impact and simple gyroscopic motion. Published assessment: 1.5 Hour exam (100%, examination). Evidence: mathematics-modelling 0.70 \"free vibration of single-degree-of-freedom undamped and damped systems\"; solid-mechanics-materials 0.53 \"general plane motion\"."
     },
     {
       "id": "MECH50010",
@@ -744,35 +784,38 @@
         "MECH40002"
       ],
       "capacity": null,
+      "resources": [],
       "topics": {
         "fluid-mechanics": 0.95,
-        "mathematics-modelling": 0.6,
-        "thermodynamics-energy": 0.2
+        "mathematics-modelling": 0.53,
+        "thermodynamics-energy": 0.27,
+        "computational-simulation": 0.08
       },
       "skills": {
-        "quantitative-analysis": 0.7,
-        "modelling-simulation": 0.3
+        "quantitative-analysis": 0.83,
+        "modelling-simulation": 0.4,
+        "research": 0.1
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.85,
-        "energy-transition": 0.4,
-        "robotics-automation": 0.05,
-        "biomedical-devices": 0.1,
-        "software-data": 0.05,
-        "consulting": 0,
-        "startup-founder": 0.05,
-        "research-academia": 0.55
+        "aerospace-motorsport": 0.9,
+        "energy-transition": 0.62,
+        "robotics-automation": 0.17,
+        "biomedical-devices": 0.25,
+        "software-data": 0.1,
+        "consulting": 0.18,
+        "startup-founder": 0.15,
+        "research-academia": 0.58
       },
       "demand": {
         "examShare": 1,
-        "groupShare": 0.05,
-        "applied": 0.4,
-        "mathsIntensity": 0.8,
-        "codingIntensity": 0,
-        "workload": 0.55
+        "groupShare": 0,
+        "applied": 0.3,
+        "mathsIntensity": 0.82,
+        "codingIntensity": 0.05,
+        "workload": 0.48
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Year 2 viscous, boundary-layer, turbulent and compressible flows from the Navier-Stokes equations, assessed by a single exam. Evidence: fluid-mechanics 0.95 \"engineering fluid mechanics\"; mathematics-modelling 0.60 \"the differential form of the governing equations (Navier-Stokes)\"."
+      "derivedRationale": "Core second-year fluid mechanics covering dimensional analysis, the Navier-Stokes equations and their exact and approximate solutions, boundary layers, turbulent pipe and channel flow with RANS, and one-dimensional compressible flow through nozzles. It also covers lift and drag and model-to-prototype similarity. Published assessment: 1.5 Hour exam (100%, examination). Evidence: fluid-mechanics 0.95 \"the differential form of the governing equations (Navier-Stokes)\"; mathematics-modelling 0.53 \"dimensional analysis\"."
     },
     {
       "id": "MECH60003",
@@ -799,39 +842,43 @@
       "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH60003&year=26_27",
       "prerequisites": [],
       "capacity": null,
+      "resources": [],
       "topics": {
         "design-manufacturing": 0.9,
-        "management-leadership": 0.55,
-        "experimental-lab": 0.4,
-        "communication-writing": 0.3
+        "management-leadership": 0.5,
+        "experimental-lab": 0.28,
+        "solid-mechanics-materials": 0.18,
+        "communication-writing": 0.18
       },
       "skills": {
-        "teamwork": 0.95,
+        "design-cad": 0.88,
+        "teamwork": 0.9,
         "project-management": 0.85,
-        "design-cad": 0.8,
-        "experimental-skills": 0.5,
-        "communication": 0.5
+        "experimental-skills": 0.43,
+        "communication": 0.5,
+        "quantitative-analysis": 0.3,
+        "commercial-awareness": 0.27
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.7,
-        "energy-transition": 0.4,
-        "robotics-automation": 0.6,
-        "biomedical-devices": 0.6,
+        "aerospace-motorsport": 0.73,
+        "energy-transition": 0.5,
+        "robotics-automation": 0.72,
+        "biomedical-devices": 0.58,
         "software-data": 0.1,
-        "consulting": 0.5,
-        "startup-founder": 0.6,
-        "research-academia": 0.2
+        "consulting": 0.38,
+        "startup-founder": 0.62,
+        "research-academia": 0.18
       },
       "demand": {
-        "examShare": 0,
-        "groupShare": 0.95,
+        "examShare": 0.03,
+        "groupShare": 0.7,
         "applied": 0.95,
-        "mathsIntensity": 0.3,
-        "codingIntensity": 0.2,
-        "workload": 0.9
+        "mathsIntensity": 0.25,
+        "codingIntensity": 0.05,
+        "workload": 0.85
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Year 3 core group project to design, make and test a machine to a budget and timetable, 20 ECTS, assessed entirely on the project. Evidence: design-manufacturing 0.90 \"engineering science, design, manufacturing and management modules\"; management-leadership 0.55 \"a realistic engineering project environment, with rigorous time and budget constraints\"."
+      "derivedRationale": "A core team project in which students design, manufacture and test a machine system under realistic time and budget constraints, integrating earlier engineering science, design, manufacturing and management learning. It includes quality, budget, health and safety and test planning, plus workshops on teamworking and assessment-centre skills. Evidence: design-manufacturing 0.90 \"engineering science, design, manufacturing and management modules\"; management-leadership 0.50 \"team-working and organisational skills\"."
     },
     {
       "id": "MECH60015",
@@ -861,40 +908,42 @@
       "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH60015&year=26_27",
       "prerequisites": [],
       "capacity": null,
+      "resources": [],
       "topics": {
         "management-leadership": 0.55,
         "finance-economics": 0.5,
-        "law-ip": 0.5,
-        "policy-ethics": 0.5,
+        "policy-ethics": 0.55,
         "communication-writing": 0.5,
+        "law-ip": 0.28,
         "sustainability-climate": 0.3
       },
       "skills": {
-        "research": 0.7,
-        "communication": 0.6,
-        "commercial-awareness": 0.6,
-        "project-management": 0.5
+        "research": 0.77,
+        "communication": 0.67,
+        "commercial-awareness": 0.67,
+        "project-management": 0.57,
+        "quantitative-analysis": 0.18
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.1,
-        "energy-transition": 0.2,
-        "robotics-automation": 0.1,
-        "biomedical-devices": 0.15,
-        "software-data": 0.1,
-        "consulting": 0.6,
-        "startup-founder": 0.5,
-        "research-academia": 0.5
+        "aerospace-motorsport": 0.22,
+        "energy-transition": 0.28,
+        "robotics-automation": 0.22,
+        "biomedical-devices": 0.23,
+        "software-data": 0.17,
+        "consulting": 0.58,
+        "startup-founder": 0.53,
+        "research-academia": 0.43
       },
       "demand": {
         "examShare": 0.5,
-        "groupShare": 0.05,
-        "applied": 0.5,
-        "mathsIntensity": 0.15,
-        "codingIntensity": 0,
-        "workload": 0.6
+        "groupShare": 0,
+        "applied": 0.3,
+        "mathsIntensity": 0.12,
+        "codingIntensity": 0.01,
+        "workload": 0.38
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Year 3 core: engineering in a commercial environment plus a literature research project, 10 ECTS, assessed half by exam and half by the research report. Evidence: management-leadership 0.55 \"project management\"; finance-economics 0.50 \"engineering finance\"; law-ip 0.50 \"professional responsibillity and intellectual property\"; policy-ethics 0.50 \"ethics; sustainability; security\"; communication-writing 0.50 \"a systematic method for citing them\"."
+      "derivedRationale": "Introduces the non-engineering side of professional practice: engineering finance, project management, ethics, sustainability, security, professional responsibility and intellectual property. Students also write an individual literature review on a mechanical engineering topic, building skills in source evaluation, synthesis and citation. Published assessment: 3 Hour exam (50%, examination), Literature Research Project (50%, coursework). Evidence: management-leadership 0.55 \"project management\"; finance-economics 0.50 \"engineering finance\"; policy-ethics 0.55 \"ethics\"; communication-writing 0.50 \"a systematic method for citing them\"."
     },
     {
       "id": "MECH60001",
@@ -927,40 +976,42 @@
         "MECH50003"
       ],
       "capacity": 120,
+      "resources": [],
       "topics": {
+        "mathematics-modelling": 0.68,
         "solid-mechanics-materials": 0.6,
-        "mathematics-modelling": 0.55,
-        "control-robotics": 0.5,
-        "experimental-lab": 0.5,
-        "computational-simulation": 0.35,
-        "design-manufacturing": 0.35
+        "computational-simulation": 0.32,
+        "experimental-lab": 0.3,
+        "control-robotics": 0.2,
+        "statistics-data": 0.05
       },
       "skills": {
-        "quantitative-analysis": 0.7,
-        "modelling-simulation": 0.55,
-        "experimental-skills": 0.5,
-        "coding": 0.3
+        "quantitative-analysis": 0.8,
+        "modelling-simulation": 0.7,
+        "coding": 0.3,
+        "experimental-skills": 0.3,
+        "design-cad": 0.18
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.8,
-        "energy-transition": 0.4,
-        "robotics-automation": 0.6,
-        "biomedical-devices": 0.3,
-        "software-data": 0.2,
-        "consulting": 0.05,
-        "startup-founder": 0.1,
-        "research-academia": 0.5
+        "aerospace-motorsport": 0.85,
+        "energy-transition": 0.5,
+        "robotics-automation": 0.53,
+        "biomedical-devices": 0.2,
+        "software-data": 0.1,
+        "consulting": 0.17,
+        "startup-founder": 0.17,
+        "research-academia": 0.47
       },
       "demand": {
         "examShare": 0.8,
-        "groupShare": 0.05,
-        "applied": 0.65,
-        "mathsIntensity": 0.75,
-        "codingIntensity": 0.35,
-        "workload": 0.6
+        "groupShare": 0,
+        "applied": 0.43,
+        "mathsIntensity": 0.8,
+        "codingIntensity": 0.3,
+        "workload": 0.5
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Machine vibration, rotor dynamics and vibration-driven fatigue with measurements compared against MATLAB models, assessed 80% by exam and 20% by a MATLAB exercise. Evidence: solid-mechanics-materials 0.60 \"the link between vibration and fatigue failure\"; mathematics-modelling 0.55 \"the vibration of continuous systems\"; control-robotics 0.50 \"signal processing and control analysis\"; experimental-lab 0.50 \"practical vibration measurements\"."
+      "derivedRationale": "Covers vibration of lumped and continuous mechanical systems, rotor dynamics and critical speeds, and how vibration drives high-cycle fatigue failure. Students also use Fourier-based signal analysis and MATLAB to compare practical vibration measurements with idealised models and to estimate fatigue life. Published assessment: 3 Hour exam (80%, examination), MATLAB exercise (20%, coursework). Evidence: mathematics-modelling 0.68 \"the dynamic response of a machine must be controlled\"; solid-mechanics-materials 0.60 \"the assessment of the fatigue life of structures subject to vibration and static loading\"."
     },
     {
       "id": "MECH60002",
@@ -988,35 +1039,40 @@
         "MECH50005"
       ],
       "capacity": 120,
+      "resources": [],
       "topics": {
         "solid-mechanics-materials": 0.95,
-        "design-manufacturing": 0.4,
-        "mathematics-modelling": 0.35
+        "mathematics-modelling": 0.35,
+        "design-manufacturing": 0.3,
+        "experimental-lab": 0.15
       },
       "skills": {
-        "quantitative-analysis": 0.6,
-        "research": 0.3
+        "quantitative-analysis": 0.7,
+        "modelling-simulation": 0.3,
+        "research": 0.2,
+        "experimental-skills": 0.05,
+        "design-cad": 0.1
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.7,
-        "energy-transition": 0.4,
-        "robotics-automation": 0.05,
-        "biomedical-devices": 0.6,
-        "software-data": 0,
-        "consulting": 0.05,
-        "startup-founder": 0.05,
-        "research-academia": 0.6
+        "aerospace-motorsport": 0.82,
+        "energy-transition": 0.45,
+        "robotics-automation": 0.17,
+        "biomedical-devices": 0.3,
+        "software-data": 0.04,
+        "consulting": 0.13,
+        "startup-founder": 0.1,
+        "research-academia": 0.5
       },
       "demand": {
         "examShare": 1,
         "groupShare": 0,
-        "applied": 0.55,
+        "applied": 0.43,
         "mathsIntensity": 0.6,
-        "codingIntensity": 0,
-        "workload": 0.55
+        "codingIntensity": 0.04,
+        "workload": 0.4
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Design and analysis of cracked structures with linear elastic fracture mechanics, assessed by a single three-hour exam. Evidence: solid-mechanics-materials 0.95 \"structures which contain cracks or defects/flaws\"."
+      "derivedRationale": "Covers the design and analysis of structures containing cracks or flaws, using linear elastic fracture mechanics to find critical crack sizes, residual strength and service life under static, fatigue and impact loading. It also covers crack-tip failure micro-mechanisms in metals, ceramics, polymers and composites, and how fracture toughness is measured. Published assessment: 3 Hour exam (100%, examination). Evidence: solid-mechanics-materials 0.95 \"Fracture mechanics concerns the design and analysis of structures which contain cracks or defects/flaws.\"."
     },
     {
       "id": "MECH60004",
@@ -1040,37 +1096,41 @@
       "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH60004&year=26_27",
       "prerequisites": [],
       "capacity": 100,
+      "resources": [],
       "topics": {
         "nuclear-energy": 0.95,
-        "policy-ethics": 0.5,
         "thermodynamics-energy": 0.45,
-        "sustainability-climate": 0.3
+        "policy-ethics": 0.23,
+        "mathematics-modelling": 0.2,
+        "sustainability-climate": 0.18,
+        "fluid-mechanics": 0.05
       },
       "skills": {
-        "quantitative-analysis": 0.45,
-        "commercial-awareness": 0.3,
-        "research": 0.3
+        "quantitative-analysis": 0.5,
+        "research": 0.2,
+        "commercial-awareness": 0.2,
+        "modelling-simulation": 0.17
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0,
-        "energy-transition": 0.9,
-        "robotics-automation": 0,
-        "biomedical-devices": 0.1,
-        "software-data": 0,
-        "consulting": 0.3,
-        "startup-founder": 0.1,
-        "research-academia": 0.5
+        "aerospace-motorsport": 0.08,
+        "energy-transition": 0.87,
+        "robotics-automation": 0.04,
+        "biomedical-devices": 0.04,
+        "software-data": 0.04,
+        "consulting": 0.28,
+        "startup-founder": 0.12,
+        "research-academia": 0.43
       },
       "demand": {
         "examShare": 1,
         "groupShare": 0,
-        "applied": 0.4,
-        "mathsIntensity": 0.5,
-        "codingIntensity": 0,
-        "workload": 0.45
+        "applied": 0.27,
+        "mathsIntensity": 0.45,
+        "codingIntensity": 0.05,
+        "workload": 0.35
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "REVIEW: description is 31 words (under 60), so staff should check these tags. Introduction to the engineering, safety and socio-economic context of nuclear power, assessed by a single exam. Evidence: nuclear-energy 0.95 \"prospects for nuclear energy\"; policy-ethics 0.50 \"socio-economic context\"."
+      "derivedRationale": "REVIEW: description is 31 words (under 60), so staff should check these tags. An introductory module on nuclear energy covering its engineering, safety, socio-economic context, history and prospects. It teaches the physical basis of nuclear power generation and basic reactor physics and thermal hydraulic calculations, preparing students for more advanced nuclear modules. Published assessment: 3 Hour exam (100%, examination). Evidence: nuclear-energy 0.95 \"basic introduction to the engineering, safety, socio-economic context and prospects for nuclear energy\"."
     },
     {
       "id": "MECH60006",
@@ -1100,36 +1160,38 @@
         "MECH50010"
       ],
       "capacity": 150,
+      "resources": [],
       "topics": {
-        "fluid-mechanics": 1,
-        "mathematics-modelling": 0.7,
-        "thermodynamics-energy": 0.25
+        "fluid-mechanics": 0.95,
+        "mathematics-modelling": 0.6,
+        "thermodynamics-energy": 0.3,
+        "computational-simulation": 0.1
       },
       "skills": {
-        "quantitative-analysis": 0.85,
+        "quantitative-analysis": 0.8,
         "modelling-simulation": 0.4,
-        "research": 0.3
+        "research": 0.2
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.95,
-        "energy-transition": 0.4,
-        "robotics-automation": 0.05,
-        "biomedical-devices": 0.1,
-        "software-data": 0.05,
-        "consulting": 0,
-        "startup-founder": 0,
-        "research-academia": 0.75
+        "aerospace-motorsport": 0.9,
+        "energy-transition": 0.5,
+        "robotics-automation": 0.1,
+        "biomedical-devices": 0.18,
+        "software-data": 0.1,
+        "consulting": 0.15,
+        "startup-founder": 0.1,
+        "research-academia": 0.7
       },
       "demand": {
         "examShare": 1,
         "groupShare": 0,
-        "applied": 0.3,
+        "applied": 0.13,
         "mathsIntensity": 0.9,
-        "codingIntensity": 0,
-        "workload": 0.65
+        "codingIntensity": 0.05,
+        "workload": 0.5
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "REVIEW: description is 44 words (under 60), so staff should check these tags. Advanced, theory-heavy fluid mechanics from subsonic to supersonic flow, turbulence and shocks, assessed by a single three-hour exam. Evidence: fluid-mechanics 1.00 \"An advanced fluid mechanics module\"; mathematics-modelling 0.70 \"derivation of conservation equations for incompressible and compressible flows\"."
+      "derivedRationale": "REVIEW: description is 44 words (under 60), so staff should check these tags. An advanced, fundamental fluid mechanics module covering subsonic, transonic and supersonic flows. It derives the conservation equations for incompressible and compressible flow, simplifies them to find solutions, and covers turbulence, energy and work, and normal and oblique shocks. Published assessment: 3 Hour exam (100%, examination). Evidence: fluid-mechanics 0.95 \"An advanced fluid mechanics module, general and fundamental in nature and spanning subsonic, transonic and supersonic flows\"; mathematics-modelling 0.60 \"derivation of conservation equations for incompressible and compressible flows\"."
     },
     {
       "id": "MECH60007",
@@ -1156,38 +1218,39 @@
         "MECH50002"
       ],
       "capacity": 90,
+      "resources": [],
       "topics": {
         "computational-simulation": 0.9,
-        "solid-mechanics-materials": 0.7,
-        "mathematics-modelling": 0.4,
-        "programming-software": 0.2
+        "solid-mechanics-materials": 0.63,
+        "mathematics-modelling": 0.5,
+        "design-manufacturing": 0.2
       },
       "skills": {
         "modelling-simulation": 0.9,
-        "quantitative-analysis": 0.5,
-        "design-cad": 0.4,
-        "teamwork": 0.2
+        "quantitative-analysis": 0.6,
+        "design-cad": 0.37,
+        "communication": 0.2
       },
       "pathwayRelevance": {
         "aerospace-motorsport": 0.8,
-        "energy-transition": 0.3,
-        "robotics-automation": 0.3,
-        "biomedical-devices": 0.7,
-        "software-data": 0.3,
-        "consulting": 0.05,
-        "startup-founder": 0.1,
-        "research-academia": 0.5
+        "energy-transition": 0.47,
+        "robotics-automation": 0.38,
+        "biomedical-devices": 0.55,
+        "software-data": 0.12,
+        "consulting": 0.17,
+        "startup-founder": 0.18,
+        "research-academia": 0.47
       },
       "demand": {
         "examShare": 0.8,
-        "groupShare": 0.2,
-        "applied": 0.85,
-        "mathsIntensity": 0.5,
-        "codingIntensity": 0.3,
-        "workload": 0.45
+        "groupShare": 0,
+        "applied": 0.6,
+        "mathsIntensity": 0.63,
+        "codingIntensity": 0.2,
+        "workload": 0.4
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Finite element theory plus hands-on analysis in an industry-standard package, assessed 80% by exam and 20% by lab task reports done in small groups. Evidence: computational-simulation 0.90 \"use Finite Element programs in a practical way\"; solid-mechanics-materials 0.70 \"problems in linear elastic stress analysis\"."
+      "derivedRationale": "Teaches the theory of the finite element method and how commercial FE programs work internally, then gives hands-on practice with an industry-standard FE package. Focuses on linear elastic stress analysis of 2D, 3D and axisymmetric structures, including element choice, meshing, boundary conditions and interpreting results. Published assessment: 2 Hour exam (80%, examination), 4 small task reports (20%, coursework). Evidence: computational-simulation 0.90 \"use Finite Element programs in a practical way to solve problems in linear elastic stress analysis\"; solid-mechanics-materials 0.63 \"linear elastic stress analysis\"; mathematics-modelling 0.50 \"Theoretical study of the Finite Element method\"."
     },
     {
       "id": "MECH60009",
@@ -1213,37 +1276,42 @@
         "MECH40008"
       ],
       "capacity": 48,
+      "resources": [],
       "topics": {
-        "electronics-embedded": 0.9,
-        "programming-software": 0.85,
-        "control-robotics": 0.5,
-        "design-manufacturing": 0.3
+        "programming-software": 0.83,
+        "electronics-embedded": 0.83,
+        "control-robotics": 0.45,
+        "design-manufacturing": 0.3,
+        "experimental-lab": 0.25
       },
       "skills": {
-        "coding": 0.95,
-        "experimental-skills": 0.6,
-        "design-cad": 0.3
+        "coding": 0.87,
+        "design-cad": 0.37,
+        "experimental-skills": 0.42,
+        "project-management": 0.3,
+        "modelling-simulation": 0.13,
+        "communication": 0.05
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.3,
-        "energy-transition": 0.1,
+        "aerospace-motorsport": 0.38,
+        "energy-transition": 0.23,
         "robotics-automation": 0.9,
-        "biomedical-devices": 0.5,
-        "software-data": 0.6,
-        "consulting": 0,
-        "startup-founder": 0.5,
-        "research-academia": 0.3
+        "biomedical-devices": 0.52,
+        "software-data": 0.47,
+        "consulting": 0.08,
+        "startup-founder": 0.53,
+        "research-academia": 0.27
       },
       "demand": {
         "examShare": 0,
-        "groupShare": 0.2,
-        "applied": 0.95,
-        "mathsIntensity": 0.3,
-        "codingIntensity": 0.9,
-        "workload": 0.75
+        "groupShare": 0.17,
+        "applied": 0.9,
+        "mathsIntensity": 0.2,
+        "codingIntensity": 0.88,
+        "workload": 0.5
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Hands-on C programming of microcontrollers to build working mechatronic systems in weekly three-hour labs, assessed entirely by project and lab work. Evidence: electronics-embedded 0.90 \"controlled by a microcontroller programmed in C\"; programming-software 0.85 \"the C programming language\"; control-robotics 0.50 \"build mechatronic systems containing typical sensors and actuators\"."
+      "derivedRationale": "Introduces C programming to students who already know MATLAB, focusing on programming microcontrollers. Students build mechatronic systems with typical sensors and actuators, drawing on basic mechatronics knowledge from year 2. Published assessment: Project (80%, coursework), Labs (20%, practical). Evidence: programming-software 0.83 \"introduce students who are proficient in MATLAB programming to the C programming language\"; electronics-embedded 0.83 \"controlled by a microcontroller programmed in C\"."
     },
     {
       "id": "MECH60011",
@@ -1269,34 +1337,38 @@
         "MECH50006"
       ],
       "capacity": 150,
+      "resources": [],
       "topics": {
         "thermodynamics-energy": 0.95,
-        "mathematics-modelling": 0.5
+        "mathematics-modelling": 0.45,
+        "fluid-mechanics": 0.2,
+        "solid-mechanics-materials": 0.1
       },
       "skills": {
         "quantitative-analysis": 0.8,
-        "research": 0.35
+        "modelling-simulation": 0.3,
+        "research": 0.3
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.5,
-        "energy-transition": 0.75,
-        "robotics-automation": 0,
-        "biomedical-devices": 0.1,
-        "software-data": 0,
-        "consulting": 0,
-        "startup-founder": 0,
-        "research-academia": 0.75
+        "aerospace-motorsport": 0.48,
+        "energy-transition": 0.72,
+        "robotics-automation": 0.1,
+        "biomedical-devices": 0.15,
+        "software-data": 0.05,
+        "consulting": 0.17,
+        "startup-founder": 0.1,
+        "research-academia": 0.67
       },
       "demand": {
         "examShare": 0.95,
         "groupShare": 0,
-        "applied": 0.2,
-        "mathsIntensity": 0.85,
-        "codingIntensity": 0,
-        "workload": 0.6
+        "applied": 0.12,
+        "mathsIntensity": 0.78,
+        "codingIntensity": 0.04,
+        "workload": 0.43
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "REVIEW: description is 49 words (under 60), so staff should check these tags. Equilibrium thermodynamics and kinetic theory of gases, a theory-heavy module assessed 95% by exam. Evidence: thermodynamics-energy 0.95 \"the fundamentals of equilibrium thermodynamics\"; mathematics-modelling 0.50 \"introduce students to the kinetic theory\"."
+      "derivedRationale": "REVIEW: description is 49 words (under 60), so staff should check these tags. An advanced thermodynamics module continuing from earlier years. It covers equilibrium thermodynamics (non-ideal behaviour, phase change, electro-chemistry, radiation, critical phenomena) and then kinetic theory, showing how pressure, temperature and transport properties arise from molecular motion. Published assessment: 3 Hour exam (95%, examination), Quiz (5%, coursework). Evidence: thermodynamics-energy 0.95 \"fundamentals of equilibrium thermodynamics\"."
     },
     {
       "id": "MECH60013",
@@ -1320,36 +1392,39 @@
       "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH60013&year=26_27",
       "prerequisites": [],
       "capacity": 80,
+      "resources": [],
       "topics": {
         "solid-mechanics-materials": 0.9,
-        "design-manufacturing": 0.65,
-        "sustainability-climate": 0.15
+        "design-manufacturing": 0.53,
+        "mathematics-modelling": 0.27,
+        "sustainability-climate": 0.12
       },
       "skills": {
-        "quantitative-analysis": 0.4,
-        "design-cad": 0.4,
-        "research": 0.2
+        "quantitative-analysis": 0.38,
+        "modelling-simulation": 0.2,
+        "design-cad": 0.28,
+        "research": 0.18
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.4,
-        "energy-transition": 0.2,
-        "robotics-automation": 0.1,
-        "biomedical-devices": 0.75,
-        "software-data": 0,
-        "consulting": 0.05,
-        "startup-founder": 0.3,
-        "research-academia": 0.4
+        "aerospace-motorsport": 0.42,
+        "energy-transition": 0.28,
+        "robotics-automation": 0.2,
+        "biomedical-devices": 0.57,
+        "software-data": 0.03,
+        "consulting": 0.11,
+        "startup-founder": 0.28,
+        "research-academia": 0.35
       },
       "demand": {
         "examShare": 1,
         "groupShare": 0,
-        "applied": 0.6,
-        "mathsIntensity": 0.4,
+        "applied": 0.4,
+        "mathsIntensity": 0.33,
         "codingIntensity": 0,
-        "workload": 0.45
+        "workload": 0.38
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Structure, processing, viscoelasticity and failure of engineering polymers for material selection, assessed by a single exam. Evidence: solid-mechanics-materials 0.90 \"failure modes of the principal classes of polymers\"; design-manufacturing 0.65 \"available processing technologies\"."
+      "derivedRationale": "Covers how the structure of polymers determines their mechanical properties, processing routes and failure modes, and how to use this for material selection. It includes polymer processing technologies and viscoelastic behaviour modelled with simple spring-dashpot models. Published assessment: 3 Hour exam (100%, examination). Evidence: solid-mechanics-materials 0.90 \"mechanical properties, processing characteristics and failure modes of the principal classes of polymers\"; design-manufacturing 0.53 \"familiarity with available processing technologies, and how they influence the design and properties of plastic components\"."
     },
     {
       "id": "MECH60014",
@@ -1376,35 +1451,38 @@
         "MECH50002"
       ],
       "capacity": 120,
+      "resources": [],
       "topics": {
         "solid-mechanics-materials": 0.95,
-        "mathematics-modelling": 0.6,
-        "design-manufacturing": 0.2
+        "mathematics-modelling": 0.45,
+        "thermodynamics-energy": 0.15,
+        "design-manufacturing": 0.15
       },
       "skills": {
-        "quantitative-analysis": 0.8,
-        "modelling-simulation": 0.3
+        "quantitative-analysis": 0.85,
+        "modelling-simulation": 0.35,
+        "research": 0.07
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.7,
-        "energy-transition": 0.4,
-        "robotics-automation": 0.05,
-        "biomedical-devices": 0.4,
-        "software-data": 0,
-        "consulting": 0,
-        "startup-founder": 0,
-        "research-academia": 0.6
+        "aerospace-motorsport": 0.77,
+        "energy-transition": 0.48,
+        "robotics-automation": 0.27,
+        "biomedical-devices": 0.35,
+        "software-data": 0.05,
+        "consulting": 0.15,
+        "startup-founder": 0.13,
+        "research-academia": 0.43
       },
       "demand": {
         "examShare": 1,
         "groupShare": 0,
-        "applied": 0.5,
-        "mathsIntensity": 0.8,
-        "codingIntensity": 0,
-        "workload": 0.6
+        "applied": 0.42,
+        "mathsIntensity": 0.77,
+        "codingIntensity": 0.05,
+        "workload": 0.5
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Advanced stress analysis of cylinders, plates and shells with thermal, plastic and energy methods, assessed by a single exam. Evidence: solid-mechanics-materials 0.95 \"thermal stresses, plastic deformation and residual stresses\"; mathematics-modelling 0.60 \"a new technique of analysis using energy methods\"."
+      "derivedRationale": "Advanced stress analysis building on earlier solid mechanics: axisymmetric elastic problems (cylinders, plates, thin shells), thermal stresses, plastic deformation and residual stresses. It also introduces energy methods for statically indeterminate structures and curved beam deflections. Published assessment: 3 Hour exam (100%, examination). Evidence: solid-mechanics-materials 0.95 \"The course aims to reinforce the student's knowledge of stress analysis\"."
     },
     {
       "id": "MECH60016",
@@ -1431,35 +1509,38 @@
         "MECH50003"
       ],
       "capacity": 90,
+      "resources": [],
       "topics": {
-        "mathematics-modelling": 1,
-        "computational-simulation": 0.2
+        "mathematics-modelling": 0.96,
+        "control-robotics": 0.17,
+        "solid-mechanics-materials": 0.1,
+        "computational-simulation": 0.1
       },
       "skills": {
-        "quantitative-analysis": 0.95,
+        "quantitative-analysis": 0.93,
         "modelling-simulation": 0.5,
-        "research": 0.4
+        "research": 0.23
       },
       "pathwayRelevance": {
         "aerospace-motorsport": 0.4,
-        "energy-transition": 0.2,
-        "robotics-automation": 0.4,
-        "biomedical-devices": 0.1,
-        "software-data": 0.4,
-        "consulting": 0.1,
-        "startup-founder": 0,
-        "research-academia": 0.9
+        "energy-transition": 0.25,
+        "robotics-automation": 0.42,
+        "biomedical-devices": 0.2,
+        "software-data": 0.2,
+        "consulting": 0.23,
+        "startup-founder": 0.08,
+        "research-academia": 0.75
       },
       "demand": {
         "examShare": 1,
         "groupShare": 0,
-        "applied": 0.1,
-        "mathsIntensity": 1,
-        "codingIntensity": 0,
-        "workload": 0.6
+        "applied": 0.17,
+        "mathsIntensity": 0.95,
+        "codingIntensity": 0.05,
+        "workload": 0.5
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Non-linear systems, phase planes, Fourier methods and chaos, the most mathematical option, assessed by a single exam. Evidence: mathematics-modelling 1.00 \"characterise and model the qualitative behaviour of a non-linear systems\"."
+      "derivedRationale": "An advanced mathematics elective on non-linear systems: phase-plane analysis of coupled differential equations, travelling waves in PDEs, Fourier transforms and generalized functions for signal energy and power, and chaos via one-dimensional maps and period-doubling. Examples are drawn from mechanical engineering, such as the pendulum and harmonic oscillator. Published assessment: 3 Hour exam (100%, examination). Evidence: mathematics-modelling 0.96 \"characterise and model the qualitative behaviour of a non-linear systems\"."
     },
     {
       "id": "MECH60017",
@@ -1482,38 +1563,41 @@
       "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH60017&year=26_27",
       "prerequisites": [],
       "capacity": 120,
+      "resources": [],
       "topics": {
-        "statistics-data": 0.9,
-        "mathematics-modelling": 0.4,
-        "programming-software": 0.4,
-        "machine-learning-ai": 0.2
+        "statistics-data": 0.94,
+        "mathematics-modelling": 0.48,
+        "programming-software": 0.28,
+        "machine-learning-ai": 0.14,
+        "communication-writing": 0.14
       },
       "skills": {
-        "quantitative-analysis": 0.85,
-        "coding": 0.5,
-        "research": 0.5,
-        "communication": 0.3
+        "quantitative-analysis": 0.95,
+        "coding": 0.43,
+        "modelling-simulation": 0.45,
+        "communication": 0.22,
+        "research": 0.22
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.3,
+        "aerospace-motorsport": 0.4,
         "energy-transition": 0.4,
         "robotics-automation": 0.4,
-        "biomedical-devices": 0.5,
-        "software-data": 0.85,
-        "consulting": 0.6,
-        "startup-founder": 0.3,
-        "research-academia": 0.75
+        "biomedical-devices": 0.42,
+        "software-data": 0.77,
+        "consulting": 0.63,
+        "startup-founder": 0.28,
+        "research-academia": 0.65
       },
       "demand": {
         "examShare": 0.9,
         "groupShare": 0,
-        "applied": 0.65,
-        "mathsIntensity": 0.6,
-        "codingIntensity": 0.45,
-        "workload": 0.35
+        "applied": 0.42,
+        "mathsIntensity": 0.77,
+        "codingIntensity": 0.4,
+        "workload": 0.45
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "REVIEW: description is 28 words (under 60), so staff should check these tags. Applied statistics, reliability and predictive modelling with R or Python, assessed 90% by exam and 10% by an applied report; the learning outcomes mention R or Python but the description does not, so programming stays below 0.5. Evidence: statistics-data 0.90 \"statistical methods and procedures\"."
+      "derivedRationale": "REVIEW: description is 28 words (under 60), so staff should check these tags. An applied statistics module covering probability models, parameter estimation and fit testing, reliability theory for devices and networks, and predictive modelling with regression and time series. Students use R or Python for data processing, visualisation, simulation and analysis, and report results professionally. Published assessment: 3 Hour exam (90%, examination), Report on applied statistics problem (10%, coursework). Evidence: statistics-data 0.94 \"statistical methods and procedures\"."
     },
     {
       "id": "MECH60018",
@@ -1539,37 +1623,39 @@
         "MECH50004"
       ],
       "capacity": 150,
+      "resources": [],
       "topics": {
-        "control-robotics": 0.85,
-        "electronics-embedded": 0.75,
-        "mathematics-modelling": 0.45,
-        "design-manufacturing": 0.2
+        "control-robotics": 0.72,
+        "electronics-embedded": 0.6,
+        "mathematics-modelling": 0.42,
+        "design-manufacturing": 0.23
       },
       "skills": {
-        "quantitative-analysis": 0.6,
-        "modelling-simulation": 0.5,
-        "design-cad": 0.3
+        "quantitative-analysis": 0.63,
+        "modelling-simulation": 0.53,
+        "design-cad": 0.32,
+        "experimental-skills": 0.07
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.4,
-        "energy-transition": 0.2,
-        "robotics-automation": 0.9,
-        "biomedical-devices": 0.4,
-        "software-data": 0.3,
-        "consulting": 0,
-        "startup-founder": 0.3,
+        "aerospace-motorsport": 0.52,
+        "energy-transition": 0.3,
+        "robotics-automation": 0.93,
+        "biomedical-devices": 0.45,
+        "software-data": 0.15,
+        "consulting": 0.1,
+        "startup-founder": 0.32,
         "research-academia": 0.4
       },
       "demand": {
         "examShare": 0.7,
         "groupShare": 0,
-        "applied": 0.6,
-        "mathsIntensity": 0.65,
-        "codingIntensity": 0.2,
-        "workload": 0.55
+        "applied": 0.43,
+        "mathsIntensity": 0.72,
+        "codingIntensity": 0.17,
+        "workload": 0.4
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Control theory in the first term and advanced electronics in the second, towards designing a full mechatronic system, assessed 70% by exam and 30% by quizzes. Evidence: control-robotics 0.85 \"further concepts of Control Theory\"; electronics-embedded 0.75 \"advanced electronic components are introduced\"."
+      "derivedRationale": "Continues the Mechatronics sequence with advanced control theory (Laplace and frequency-domain analysis and design) in the first term. The second term covers advanced electronic components, signal-processing and power-amplifier circuits, and actuation systems, working towards designing a full mechatronic system. Published assessment: 3 Hour exam (70%, examination), Quizzes (30%, coursework). Evidence: control-robotics 0.72 \"further concepts of Control Theory\"; electronics-embedded 0.60 \"advanced electronic components are introduced\"."
     },
     {
       "id": "MECH60019",
@@ -1597,36 +1683,39 @@
       "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH60019&year=26_27",
       "prerequisites": [],
       "capacity": 80,
+      "resources": [],
       "topics": {
-        "solid-mechanics-materials": 0.6,
-        "design-manufacturing": 0.6,
-        "fluid-mechanics": 0.5
+        "solid-mechanics-materials": 0.57,
+        "fluid-mechanics": 0.55,
+        "design-manufacturing": 0.4,
+        "mathematics-modelling": 0.3
       },
       "skills": {
-        "quantitative-analysis": 0.55,
-        "design-cad": 0.3,
-        "research": 0.3
+        "quantitative-analysis": 0.6,
+        "modelling-simulation": 0.28,
+        "design-cad": 0.2,
+        "research": 0.2
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.75,
-        "energy-transition": 0.5,
-        "robotics-automation": 0.2,
-        "biomedical-devices": 0.3,
-        "software-data": 0,
-        "consulting": 0.05,
-        "startup-founder": 0.1,
-        "research-academia": 0.5
+        "aerospace-motorsport": 0.62,
+        "energy-transition": 0.38,
+        "robotics-automation": 0.32,
+        "biomedical-devices": 0.18,
+        "software-data": 0.04,
+        "consulting": 0.1,
+        "startup-founder": 0.12,
+        "research-academia": 0.37
       },
       "demand": {
         "examShare": 0.6,
         "groupShare": 0,
-        "applied": 0.75,
-        "mathsIntensity": 0.5,
-        "codingIntensity": 0,
-        "workload": 0.45
+        "applied": 0.43,
+        "mathsIntensity": 0.57,
+        "codingIntensity": 0.05,
+        "workload": 0.4
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Friction, lubrication and wear in bearings, gears and other machine components, assessed 60% by exam and 40% by worked tutorial sheets. Evidence: solid-mechanics-materials 0.60 \"friction, lubrication and wear\"; design-manufacturing 0.60 \"the design and performance of lubricated machine components\"; fluid-mechanics 0.50 \"with particular emphasis on lubricated systems\"."
+      "derivedRationale": "Introduces the principles of tribology (friction, lubrication and wear), focusing on lubricated machine components such as plain and rolling element bearings and gears. Covers lubrication regimes, the Reynolds equation, film thickness and friction calculations, materials and lubricants, and surface damage and life prediction. Published assessment: 2 Hour exam (60%, examination), Worked solution of six of the tutorial sheets (40%, coursework). Evidence: solid-mechanics-materials 0.57 \"friction, lubrication and wear\"; fluid-mechanics 0.55 \"particularly relevant to the design and performance of lubricated machine components\"."
     },
     {
       "id": "MECH60021",
@@ -1650,38 +1739,40 @@
       "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH60021&year=26_27",
       "prerequisites": [],
       "capacity": 90,
+      "resources": [],
       "topics": {
-        "mathematics-modelling": 0.8,
-        "computational-simulation": 0.8,
-        "solid-mechanics-materials": 0.5,
-        "fluid-mechanics": 0.4,
-        "programming-software": 0.2
+        "mathematics-modelling": 0.6,
+        "computational-simulation": 0.73,
+        "solid-mechanics-materials": 0.57,
+        "fluid-mechanics": 0.32,
+        "programming-software": 0.07
       },
       "skills": {
-        "quantitative-analysis": 0.85,
-        "modelling-simulation": 0.8,
-        "research": 0.4
+        "quantitative-analysis": 0.8,
+        "modelling-simulation": 0.75,
+        "research": 0.25,
+        "coding": 0.12
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.7,
-        "energy-transition": 0.3,
-        "robotics-automation": 0.3,
-        "biomedical-devices": 0.4,
-        "software-data": 0.4,
-        "consulting": 0,
-        "startup-founder": 0,
-        "research-academia": 0.85
+        "aerospace-motorsport": 0.65,
+        "energy-transition": 0.4,
+        "robotics-automation": 0.27,
+        "biomedical-devices": 0.47,
+        "software-data": 0.15,
+        "consulting": 0.15,
+        "startup-founder": 0.1,
+        "research-academia": 0.77
       },
       "demand": {
         "examShare": 1,
         "groupShare": 0,
-        "applied": 0.2,
-        "mathsIntensity": 0.9,
-        "codingIntensity": 0.15,
-        "workload": 0.65
+        "applied": 0.27,
+        "mathsIntensity": 0.95,
+        "codingIntensity": 0.18,
+        "workload": 0.53
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Tensor-based continuum mechanics and the theory of the finite element method, assessed by a single three-hour exam. Evidence: mathematics-modelling 0.80 \"the fundamentals of continuum mechanics\"; computational-simulation 0.80 \"can be solved using numerical techniques\"; solid-mechanics-materials 0.50 \"companion module to level 6 Fluid Mechanics and Stress Analysis\"."
+      "derivedRationale": "Introduces the fundamentals of continuum mechanics (tensor algebra, kinematics, kinetics, conservation and constitutive laws for solids and fluids) and how they are solved numerically. It focuses on the theory and implementation of the finite element method, formulated from the principle of virtual work for linear elastic solids. Published assessment: 3 Hour exam (100%, examination). Evidence: mathematics-modelling 0.60 \"fundamentals of continuum mechanics that underpin the theoretical understanding of many engineering disciplines\"; computational-simulation 0.73 \"Particular attention is paid to the theory and implementation of the finite element method\"; solid-mechanics-materials 0.57 \"continuum mechanics\"."
     },
     {
       "id": "MECH60024",
@@ -1705,41 +1796,44 @@
       "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH60024&year=26_27",
       "prerequisites": [],
       "capacity": 60,
+      "resources": [],
       "topics": {
-        "design-manufacturing": 0.9,
-        "experimental-lab": 0.5,
-        "thermodynamics-energy": 0.4,
-        "fluid-mechanics": 0.35,
+        "design-manufacturing": 0.83,
+        "thermodynamics-energy": 0.38,
         "control-robotics": 0.3,
-        "electronics-embedded": 0.2
+        "experimental-lab": 0.3,
+        "solid-mechanics-materials": 0.37,
+        "fluid-mechanics": 0.25
       },
       "skills": {
-        "design-cad": 0.85,
-        "teamwork": 0.7,
-        "experimental-skills": 0.5,
-        "project-management": 0.4,
-        "quantitative-analysis": 0.4
+        "design-cad": 0.83,
+        "teamwork": 0.6,
+        "quantitative-analysis": 0.53,
+        "experimental-skills": 0.4,
+        "project-management": 0.33,
+        "modelling-simulation": 0.3,
+        "communication": 0.3
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 1,
-        "energy-transition": 0.3,
-        "robotics-automation": 0.3,
-        "biomedical-devices": 0.2,
+        "aerospace-motorsport": 0.95,
+        "energy-transition": 0.38,
+        "robotics-automation": 0.35,
+        "biomedical-devices": 0.1,
         "software-data": 0.05,
-        "consulting": 0.1,
-        "startup-founder": 0.4,
-        "research-academia": 0.2
+        "consulting": 0.12,
+        "startup-founder": 0.23,
+        "research-academia": 0.18
       },
       "demand": {
         "examShare": 0.4,
         "groupShare": 0.5,
-        "applied": 0.95,
+        "applied": 0.83,
         "mathsIntensity": 0.45,
         "codingIntensity": 0.1,
-        "workload": 0.75
+        "workload": 0.5
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Applied automotive and race-car design with hands-on labs, assessed 40% by exam, 50% by a group design task and 10% by a lab report. Evidence: design-manufacturing 0.90 \"machine element design, manufacturing/testing\"; experimental-lab 0.50 \"a series of hands-on laboratory activities\"."
+      "derivedRationale": "An applied design module in which students use engineering science to design and analyse automotive and motorsport systems, including powertrains, machine elements, manufacturing documentation, electronic control and race-vehicle suspension set-up. Hands-on laboratory activities put the content in practical context. Published assessment: 2.0 Hour exam (40%, examination), Group design task (50%, coursework), Individual laboratory report (10%, coursework). Evidence: design-manufacturing 0.83 \"machine element design, manufacturing/testing\"."
     },
     {
       "id": "MECH70007",
@@ -1764,39 +1858,46 @@
       "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH70007&year=26_27",
       "prerequisites": [],
       "capacity": null,
+      "resources": [],
       "topics": {
         "experimental-lab": 0.5,
         "computational-simulation": 0.4,
+        "mathematics-modelling": 0.35,
         "design-manufacturing": 0.3,
-        "communication-writing": 0.3
+        "communication-writing": 0.3,
+        "sustainability-climate": 0.15
       },
       "skills": {
-        "research": 0.95,
-        "project-management": 0.7,
-        "communication": 0.6,
-        "quantitative-analysis": 0.5,
-        "experimental-skills": 0.4
+        "research": 0.9,
+        "project-management": 0.8,
+        "communication": 0.7,
+        "quantitative-analysis": 0.58,
+        "experimental-skills": 0.5,
+        "modelling-simulation": 0.5,
+        "design-cad": 0.3,
+        "coding": 0.28,
+        "commercial-awareness": 0.1
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.5,
-        "energy-transition": 0.5,
-        "robotics-automation": 0.5,
-        "biomedical-devices": 0.5,
-        "software-data": 0.4,
-        "consulting": 0.3,
-        "startup-founder": 0.3,
-        "research-academia": 0.95
+        "aerospace-motorsport": 0.6,
+        "energy-transition": 0.6,
+        "robotics-automation": 0.6,
+        "biomedical-devices": 0.58,
+        "software-data": 0.38,
+        "consulting": 0.43,
+        "startup-founder": 0.5,
+        "research-academia": 0.88
       },
       "demand": {
         "examShare": 0,
         "groupShare": 0,
-        "applied": 0.7,
+        "applied": 0.87,
         "mathsIntensity": 0.5,
-        "codingIntensity": 0.4,
+        "codingIntensity": 0.33,
         "workload": 0.9
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Year 4 core individual research project in a staff research group, 25 ECTS, assessed by reports, a seminar, a poster and conduct. Evidence: experimental-lab 0.50 \"Projects can be experimental, computer-based or analytical\"."
+      "derivedRationale": "A year-long individual project, supervised by an academic and usually within their research group. Students tackle an open engineering problem using experimental, computational or analytical methods, and may also consider economic, safety and ecological aspects. Published assessment: Project Plan Report (5%, coursework), Project Progress Report (5%, coursework), Project Final Report (55%, coursework), Project Seminar (10%, practical), Project Poster (5%, practical), Project Logbook (10%, coursework), Project Conduct of Task (10%, practical). Evidence: experimental-lab 0.50 \"Projects can be experimental, computer-based or analytical, or any combination of these.\"."
     },
     {
       "id": "MECH70002",
@@ -1821,35 +1922,39 @@
         "MECH60004"
       ],
       "capacity": 60,
+      "resources": [],
       "topics": {
-        "nuclear-energy": 1,
+        "nuclear-energy": 0.95,
         "mathematics-modelling": 0.6,
-        "computational-simulation": 0.3
+        "computational-simulation": 0.2,
+        "thermodynamics-energy": 0.23
       },
       "skills": {
-        "quantitative-analysis": 0.85,
-        "modelling-simulation": 0.5
+        "quantitative-analysis": 0.8,
+        "modelling-simulation": 0.5,
+        "research": 0.2,
+        "coding": 0.15
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0,
-        "energy-transition": 0.85,
-        "robotics-automation": 0,
-        "biomedical-devices": 0.05,
-        "software-data": 0.1,
-        "consulting": 0,
-        "startup-founder": 0,
-        "research-academia": 0.7
+        "aerospace-motorsport": 0.05,
+        "energy-transition": 0.83,
+        "robotics-automation": 0.05,
+        "biomedical-devices": 0.08,
+        "software-data": 0.05,
+        "consulting": 0.15,
+        "startup-founder": 0.09,
+        "research-academia": 0.5
       },
       "demand": {
         "examShare": 1,
         "groupShare": 0,
-        "applied": 0.3,
-        "mathsIntensity": 0.9,
-        "codingIntensity": 0.2,
-        "workload": 0.6
+        "applied": 0.22,
+        "mathsIntensity": 0.8,
+        "codingIntensity": 0.17,
+        "workload": 0.4
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "REVIEW: description is 38 words (under 60), so staff should check these tags. Year 4 reactor physics: neutron diffusion, criticality and reactor kinetics, assessed by a single exam. Evidence: nuclear-energy 1.00 \"the reactor physics of nuclear reactors\"; mathematics-modelling 0.60 \"neutron conservation, neutron diffusion\"."
+      "derivedRationale": "REVIEW: description is 38 words (under 60), so staff should check these tags. An introduction to nuclear reactor physics covering neutron conservation and diffusion, criticality in simple geometries including reflected spheres, point kinetics with delayed neutrons, and xenon poisoning and other reactivity feedback. It is analytical and calculation-based. Published assessment: 3 Hour exam (100%, examination). Evidence: nuclear-energy 0.95 \"basic introduction to the reactor physics of nuclear reactors\"; mathematics-modelling 0.60 \"neutron diffusion, criticality for spheres cylinders and cuboids\"."
     },
     {
       "id": "MECH70003",
@@ -1873,39 +1978,46 @@
       "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH70003&year=26_27",
       "prerequisites": [],
       "capacity": 80,
+      "resources": [],
       "topics": {
-        "thermodynamics-energy": 0.85,
-        "sustainability-climate": 0.6,
-        "design-manufacturing": 0.4,
-        "electronics-embedded": 0.35,
-        "control-robotics": 0.3
+        "thermodynamics-energy": 0.7,
+        "sustainability-climate": 0.55,
+        "control-robotics": 0.35,
+        "electronics-embedded": 0.3,
+        "computational-simulation": 0.32,
+        "design-manufacturing": 0.2,
+        "fluid-mechanics": 0.1
       },
       "skills": {
-        "modelling-simulation": 0.6,
-        "teamwork": 0.6,
-        "quantitative-analysis": 0.6,
-        "coding": 0.3
+        "modelling-simulation": 0.63,
+        "quantitative-analysis": 0.62,
+        "teamwork": 0.5,
+        "design-cad": 0.1,
+        "research": 0.32,
+        "coding": 0.28,
+        "commercial-awareness": 0.07,
+        "communication": 0.1
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.85,
-        "energy-transition": 0.85,
-        "robotics-automation": 0.2,
-        "biomedical-devices": 0,
+        "aerospace-motorsport": 0.73,
+        "energy-transition": 0.82,
+        "robotics-automation": 0.3,
+        "biomedical-devices": 0.05,
         "software-data": 0.1,
-        "consulting": 0.2,
-        "startup-founder": 0.3,
-        "research-academia": 0.4
+        "consulting": 0.25,
+        "startup-founder": 0.27,
+        "research-academia": 0.42
       },
       "demand": {
         "examShare": 0.5,
         "groupShare": 0.5,
-        "applied": 0.7,
-        "mathsIntensity": 0.6,
-        "codingIntensity": 0.35,
-        "workload": 0.75
+        "applied": 0.57,
+        "mathsIntensity": 0.58,
+        "codingIntensity": 0.3,
+        "workload": 0.6
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Year 4 IC-engine and hybrid-electric propulsion for land transport, 10 ECTS, assessed half by exam and half by three group projects. Evidence: thermodynamics-energy 0.85 \"thermofluid and combustion processes in IC engines\"; sustainability-climate 0.60 \"the need for reduced CO2 and pollutant emissions\"."
+      "derivedRationale": "Covers the design and thermofluid and combustion science of internal combustion engines, and the design and control of hybrid and electric vehicle powertrains. It looks at emissions drivers and the future of competing land-transport propulsion technologies, using simple physical and computational models. Published assessment: 3 Hour exam (50%, examination), Project 1 (group project on gas cycle analysis) (16.7%, coursework), Project 2 (group project on turbocharger matching (16.7%, coursework), Project 3 (group project on hybrid-electric propulsion systems) (16.7%, coursework). Evidence: thermodynamics-energy 0.70 \"underlying thermofluid and combustion processes in IC engines\"; sustainability-climate 0.55 \"the need for reduced CO2 and pollutant emissions\"."
     },
     {
       "id": "MECH70014",
@@ -1929,37 +2041,40 @@
       "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH70014&year=26_27",
       "prerequisites": [],
       "capacity": 30,
+      "resources": [],
       "topics": {
-        "creative-arts-design": 0.95,
-        "communication-writing": 0.6,
-        "design-manufacturing": 0.5,
+        "creative-arts-design": 0.9,
+        "design-manufacturing": 0.45,
+        "communication-writing": 0.4,
+        "entrepreneurship-innovation": 0.2,
         "psychology-behaviour": 0.1
       },
       "skills": {
+        "design-cad": 0.63,
         "communication": 0.8,
-        "design-cad": 0.7,
-        "project-management": 0.3
+        "research": 0.23,
+        "project-management": 0.2
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.2,
+        "aerospace-motorsport": 0.17,
         "energy-transition": 0.05,
-        "robotics-automation": 0.1,
-        "biomedical-devices": 0.3,
-        "software-data": 0,
-        "consulting": 0.3,
-        "startup-founder": 0.6,
+        "robotics-automation": 0.15,
+        "biomedical-devices": 0.27,
+        "software-data": 0.1,
+        "consulting": 0.18,
+        "startup-founder": 0.53,
         "research-academia": 0.1
       },
       "demand": {
         "examShare": 0,
-        "groupShare": 0.1,
-        "applied": 0.8,
-        "mathsIntensity": 0,
+        "groupShare": 0.03,
+        "applied": 0.85,
+        "mathsIntensity": 0.01,
         "codingIntensity": 0,
-        "workload": 0.6
+        "workload": 0.4
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Year 4 studio module on creativity, art and design with a sketchbook, infographic, essay and design project, assessed entirely by coursework. Evidence: creative-arts-design 0.95 \"Extrospective exploration of art and design\"; communication-writing 0.60 \"Communication in various forms\"; design-manufacturing 0.50 \"You will be expected to make and create!\"."
+      "derivedRationale": "An elective on creative thinking, art and design that encourages open-ended brainstorming, sketching and making. Students explore and critique existing designs, develop concepts for a project, and practise verbal and visual communication. Published assessment: Infographic: progress and delivery (15%, coursework), Project: progress, delivery, presentation (50%, coursework), Essay (15%, coursework), Daily drawing sketchbook (20%, coursework). Evidence: creative-arts-design 0.90 \"Extrospective exploration of art and design and introspective responses and expression.\"."
     },
     {
       "id": "MECH70015",
@@ -1985,40 +2100,43 @@
       "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH70015&year=26_27",
       "prerequisites": [],
       "capacity": 100,
+      "resources": [],
       "topics": {
-        "computational-simulation": 0.95,
-        "fluid-mechanics": 0.85,
-        "mathematics-modelling": 0.5,
-        "programming-software": 0.45,
-        "thermodynamics-energy": 0.3
+        "computational-simulation": 0.9,
+        "fluid-mechanics": 0.75,
+        "mathematics-modelling": 0.6,
+        "thermodynamics-energy": 0.35,
+        "programming-software": 0.3,
+        "communication-writing": 0.13
       },
       "skills": {
         "modelling-simulation": 0.95,
-        "quantitative-analysis": 0.6,
-        "coding": 0.55,
+        "quantitative-analysis": 0.7,
+        "coding": 0.45,
         "communication": 0.4,
-        "teamwork": 0.3
+        "teamwork": 0.32,
+        "research": 0.22
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.95,
-        "energy-transition": 0.6,
-        "robotics-automation": 0.1,
-        "biomedical-devices": 0.3,
-        "software-data": 0.4,
-        "consulting": 0,
-        "startup-founder": 0.05,
+        "aerospace-motorsport": 0.9,
+        "energy-transition": 0.75,
+        "robotics-automation": 0.2,
+        "biomedical-devices": 0.37,
+        "software-data": 0.25,
+        "consulting": 0.18,
+        "startup-founder": 0.2,
         "research-academia": 0.7
       },
       "demand": {
         "examShare": 0.375,
         "groupShare": 0.35,
-        "applied": 0.7,
-        "mathsIntensity": 0.75,
-        "codingIntensity": 0.6,
-        "workload": 0.7
+        "applied": 0.68,
+        "mathsIntensity": 0.77,
+        "codingIntensity": 0.5,
+        "workload": 0.6
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Year 4 finite-volume CFD with an individual MATLAB code and a group Star-CCM+ project, assessed 37.5% by exam and 62.5% by projects and a presentation. Evidence: computational-simulation 0.95 \"the numerical methods that cover domain and equation discretisation\"; fluid-mechanics 0.85 \"heat and fluid flow problems\"; mathematics-modelling 0.50 \"the governing equations\"."
+      "derivedRationale": "Covers the governing equations of heat and fluid flow and the finite volume method for discretising and solving diffusion and convection problems, including pressure correction, convergence and accuracy. Students write a simple MATLAB solver and apply an industry-standard CFD package (STAR-CCM+) to practical problems. Published assessment: 1.5 Hour exam (37.5%, examination), Individual MATLAB Project report (27.5%, coursework), Group STAR-CCM+ Project (27.5%, coursework), Group presentation (7.5%, practical). Evidence: computational-simulation 0.90 \"numerical methods that cover domain and equation discretisation\"; fluid-mechanics 0.75 \"governing equations for heat and fluid flow problems\"; mathematics-modelling 0.60 \"numerical schemes for steady and unsteady diffusion and convection problems\"."
     },
     {
       "id": "MECH70021",
@@ -2042,39 +2160,43 @@
       "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH70021&year=26_27",
       "prerequisites": [],
       "capacity": 60,
+      "resources": [],
       "topics": {
-        "thermodynamics-energy": 0.75,
-        "fluid-mechanics": 0.7,
+        "thermodynamics-energy": 0.8,
+        "fluid-mechanics": 0.73,
         "design-manufacturing": 0.6,
-        "solid-mechanics-materials": 0.3
+        "solid-mechanics-materials": 0.25,
+        "mathematics-modelling": 0.13,
+        "communication-writing": 0.05
       },
       "skills": {
-        "teamwork": 0.75,
         "design-cad": 0.6,
         "quantitative-analysis": 0.6,
-        "modelling-simulation": 0.5,
-        "communication": 0.4
+        "teamwork": 0.6,
+        "communication": 0.4,
+        "modelling-simulation": 0.3,
+        "project-management": 0.3
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 1,
+        "aerospace-motorsport": 0.95,
         "energy-transition": 0.4,
-        "robotics-automation": 0,
-        "biomedical-devices": 0,
+        "robotics-automation": 0.1,
+        "biomedical-devices": 0.04,
         "software-data": 0.05,
-        "consulting": 0.1,
+        "consulting": 0.15,
         "startup-founder": 0.1,
-        "research-academia": 0.4
+        "research-academia": 0.3
       },
       "demand": {
         "examShare": 0.5,
-        "groupShare": 0.6,
-        "applied": 0.8,
+        "groupShare": 0.5,
+        "applied": 0.68,
         "mathsIntensity": 0.6,
-        "codingIntensity": 0.2,
-        "workload": 0.8
+        "codingIntensity": 0.17,
+        "workload": 0.68
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "REVIEW: description is 47 words (under 60), so staff should check these tags. Year 4 outline design of a civil jet engine in small groups, 10 ECTS, assessed half by exam and half by three design reports. Evidence: thermodynamics-energy 0.75 \"focus on the thermodynamics and aerodynamics\"; fluid-mechanics 0.70 \"the aerodynamic design choices\"; design-manufacturing 0.60 \"designing, in outline, a jet engine for a civil airliner\"."
+      "derivedRationale": "REVIEW: description is 47 words (under 60), so staff should check these tags. Small groups carry out an outline design of a civil airliner jet engine, turning an aircraft mission into engine specification, sizing and blade design. The focus is on thermodynamics and aerodynamics, with some stress and vibration analysis supporting the design choices. Published assessment: 3 Hour exam (50%, examination), Task 1: Specification of engine pressure ratios and temperature. Report 15 pages (15%, coursework), Task 2: Engine sizing, key dimensions, number of compressor and turbine stages, sketch of engine. Report 10 pages (10%, coursework), Task 3:Final report, with blade designs and some stress calulations for discs. Report: 35 pages + 10 pages of appendices. (25%, coursework). Evidence: thermodynamics-energy 0.80 \"The design will focus on the thermodynamics and aerodynamics\"; fluid-mechanics 0.73 \"thermodynamics and aerodynamics\"; design-manufacturing 0.60 \"get small groups designing, in outline, a jet engine for a civil airliner\"."
     },
     {
       "id": "MECH70022",
@@ -2100,36 +2222,39 @@
       "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH70022&year=26_27",
       "prerequisites": [],
       "capacity": 80,
+      "resources": [],
       "topics": {
-        "control-robotics": 0.95,
-        "mathematics-modelling": 0.7,
-        "computational-simulation": 0.4
+        "control-robotics": 0.92,
+        "mathematics-modelling": 0.6,
+        "computational-simulation": 0.27,
+        "electronics-embedded": 0.07
       },
       "skills": {
-        "quantitative-analysis": 0.8,
-        "modelling-simulation": 0.7,
-        "coding": 0.3
+        "quantitative-analysis": 0.77,
+        "modelling-simulation": 0.72,
+        "design-cad": 0.22,
+        "coding": 0.25
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.5,
-        "energy-transition": 0.3,
-        "robotics-automation": 0.9,
-        "biomedical-devices": 0.2,
-        "software-data": 0.3,
-        "consulting": 0,
-        "startup-founder": 0.1,
+        "aerospace-motorsport": 0.72,
+        "energy-transition": 0.42,
+        "robotics-automation": 0.95,
+        "biomedical-devices": 0.37,
+        "software-data": 0.18,
+        "consulting": 0.13,
+        "startup-founder": 0.23,
         "research-academia": 0.6
       },
       "demand": {
         "examShare": 1,
         "groupShare": 0,
-        "applied": 0.45,
+        "applied": 0.35,
         "mathsIntensity": 0.85,
         "codingIntensity": 0.3,
-        "workload": 0.6
+        "workload": 0.5
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Year 4 continuous, discrete and state-space control design, assessed by a single exam. Evidence: control-robotics 0.95 \"continuous and discrete control systems\"; mathematics-modelling 0.70 \"Introduction to state variable analysis\"."
+      "derivedRationale": "An elective on modelling, analysis and design of continuous and discrete-time control systems. It covers state variable methods, Bode and root locus techniques, and z-transform based design for sampled-data systems. Published assessment: 3 Hour exam (100%, examination). Evidence: control-robotics 0.92 \"modelling, analysis and design methods in relation to continuous and discrete control systems\"; mathematics-modelling 0.60 \"Introduction to state variable analysis is also provided\"."
     },
     {
       "id": "MECH70025",
@@ -2152,37 +2277,41 @@
       "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH70025&year=26_27",
       "prerequisites": [],
       "capacity": 120,
+      "resources": [],
       "topics": {
-        "machine-learning-ai": 0.95,
-        "programming-software": 0.5,
-        "statistics-data": 0.45
+        "machine-learning-ai": 0.93,
+        "programming-software": 0.38,
+        "statistics-data": 0.42,
+        "mathematics-modelling": 0.3,
+        "computational-simulation": 0.05
       },
       "skills": {
-        "coding": 0.75,
-        "quantitative-analysis": 0.7,
-        "modelling-simulation": 0.5,
-        "research": 0.4
+        "coding": 0.53,
+        "quantitative-analysis": 0.6,
+        "modelling-simulation": 0.4,
+        "research": 0.3,
+        "communication": 0.13
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.3,
-        "energy-transition": 0.3,
-        "robotics-automation": 0.6,
-        "biomedical-devices": 0.3,
-        "software-data": 0.95,
-        "consulting": 0.4,
-        "startup-founder": 0.5,
-        "research-academia": 0.7
+        "aerospace-motorsport": 0.4,
+        "energy-transition": 0.4,
+        "robotics-automation": 0.7,
+        "biomedical-devices": 0.4,
+        "software-data": 0.88,
+        "consulting": 0.42,
+        "startup-founder": 0.48,
+        "research-academia": 0.62
       },
       "demand": {
         "examShare": 0.6,
-        "groupShare": 0.1,
-        "applied": 0.65,
+        "groupShare": 0,
+        "applied": 0.5,
         "mathsIntensity": 0.6,
-        "codingIntensity": 0.75,
-        "workload": 0.55
+        "codingIntensity": 0.57,
+        "workload": 0.42
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Year 4 machine learning for engineers, including when ML is the wrong tool, assessed 60% by exam and 40% by a Python project. Evidence: machine-learning-ai 0.95 \"introduce engineering students to Machine Learning\"; programming-software 0.50 \"what may be required to implement it\"."
+      "derivedRationale": "An introduction to machine learning for engineers, covering the main techniques and how to judge whether ML suits a problem. It also covers which algorithm fits best and what is needed to implement it, including basic Python implementation. Published assessment: Project (40%, coursework), Exam (60%, examination). Evidence: machine-learning-ai 0.93 \"introduce engineering students to Machine Learning (ML)\"."
     },
     {
       "id": "MECH70026",
@@ -2205,37 +2334,40 @@
       "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH70026&year=26_27",
       "prerequisites": [],
       "capacity": 100,
+      "resources": [],
       "topics": {
-        "sustainability-climate": 0.9,
-        "thermodynamics-energy": 0.75,
-        "policy-ethics": 0.2
+        "sustainability-climate": 0.8,
+        "thermodynamics-energy": 0.7,
+        "mathematics-modelling": 0.22,
+        "policy-ethics": 0.2,
+        "finance-economics": 0.07
       },
       "skills": {
         "quantitative-analysis": 0.6,
-        "modelling-simulation": 0.4,
-        "commercial-awareness": 0.3,
-        "research": 0.3
+        "research": 0.3,
+        "modelling-simulation": 0.28,
+        "commercial-awareness": 0.2
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.1,
-        "energy-transition": 1,
-        "robotics-automation": 0,
-        "biomedical-devices": 0,
-        "software-data": 0.1,
-        "consulting": 0.4,
-        "startup-founder": 0.2,
-        "research-academia": 0.5
+        "aerospace-motorsport": 0.12,
+        "energy-transition": 0.95,
+        "robotics-automation": 0.05,
+        "biomedical-devices": 0.04,
+        "software-data": 0.08,
+        "consulting": 0.42,
+        "startup-founder": 0.28,
+        "research-academia": 0.37
       },
       "demand": {
         "examShare": 1,
         "groupShare": 0,
-        "applied": 0.5,
-        "mathsIntensity": 0.5,
-        "codingIntensity": 0,
-        "workload": 0.45
+        "applied": 0.4,
+        "mathsIntensity": 0.4,
+        "codingIntensity": 0.05,
+        "workload": 0.4
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Year 4 power and renewable energy systems with life cycle analysis for decarbonisation, assessed by a single exam. Evidence: sustainability-climate 0.90 \"reduction of carbon dioxide emissions\"; thermodynamics-energy 0.75 \"the most common power and renewable energy systems\"."
+      "derivedRationale": "Introduces major power and renewable energy systems, their environmental impact, and strategies for cutting carbon dioxide emissions. Students learn to apply life cycle analysis to evaluate the material, energy and environmental costs of energy systems. Published assessment: 3 Hour exam (100%, examination). Evidence: sustainability-climate 0.80 \"their environmental impact and possible strategies to reduce it\"; thermodynamics-energy 0.70 \"the most common power and renewable energy systems\"."
     },
     {
       "id": "MECH70055",
@@ -2258,38 +2390,41 @@
       "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH70055&year=26_27",
       "prerequisites": [],
       "capacity": 60,
+      "resources": [],
       "topics": {
-        "sustainability-climate": 0.95,
+        "sustainability-climate": 0.9,
         "design-manufacturing": 0.6,
-        "policy-ethics": 0.5,
-        "global-development": 0.35
+        "policy-ethics": 0.4,
+        "solid-mechanics-materials": 0.15,
+        "global-development": 0.23
       },
       "skills": {
-        "communication": 0.6,
-        "design-cad": 0.4,
-        "research": 0.4,
-        "commercial-awareness": 0.3
+        "research": 0.43,
+        "design-cad": 0.38,
+        "quantitative-analysis": 0.35,
+        "communication": 0.4,
+        "commercial-awareness": 0.25
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.2,
-        "energy-transition": 0.85,
-        "robotics-automation": 0.1,
-        "biomedical-devices": 0.3,
-        "software-data": 0,
-        "consulting": 0.5,
-        "startup-founder": 0.4,
-        "research-academia": 0.3
+        "aerospace-motorsport": 0.22,
+        "energy-transition": 0.77,
+        "robotics-automation": 0.12,
+        "biomedical-devices": 0.15,
+        "software-data": 0.05,
+        "consulting": 0.42,
+        "startup-founder": 0.33,
+        "research-academia": 0.23
       },
       "demand": {
         "examShare": 0,
-        "groupShare": 0.15,
-        "applied": 0.7,
+        "groupShare": 0.1,
+        "applied": 0.57,
         "mathsIntensity": 0.2,
-        "codingIntensity": 0,
-        "workload": 0.5
+        "codingIntensity": 0.05,
+        "workload": 0.4
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "REVIEW: description is 57 words (under 60), so staff should check these tags. Year 4 sustainability assessment and life cycle analysis of products against the UN goals, assessed entirely by coursework. Evidence: sustainability-climate 0.95 \"frameworks for sustainability assessment\"; design-manufacturing 0.60 \"designing and manufacturing products, processes and systems\"; policy-ethics 0.50 \"in an ethical and environmentally friendly manner\"."
+      "derivedRationale": "REVIEW: description is 57 words (under 60), so staff should check these tags. Introduces sustainability concepts and assessment frameworks grounded in the UN Sustainable Development Goals, applied to the design and manufacture of products and processes. Students evaluate design, manufacturing methods and materials and carry out a life cycle assessment. Published assessment: Design optimisation (10%, coursework), Life cycle assessment exercise (30%, coursework), Sustainable design assessment part I (20%, coursework), Sustainable design assessment part II (40%, coursework). Evidence: sustainability-climate 0.90 \"the module introduces concepts and frameworks for sustainability assessment\"; design-manufacturing 0.60 \"Sustainability is essential when designing and manufacturing products, processes and systems.\"."
     },
     {
       "id": "MECH70057",
@@ -2313,37 +2448,40 @@
       "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH70057&year=26_27",
       "prerequisites": [],
       "capacity": 60,
+      "resources": [],
       "topics": {
-        "control-robotics": 1,
-        "mathematics-modelling": 0.65,
+        "control-robotics": 0.95,
+        "mathematics-modelling": 0.6,
         "computational-simulation": 0.35,
-        "programming-software": 0.3
+        "solid-mechanics-materials": 0.2,
+        "programming-software": 0.18
       },
       "skills": {
         "quantitative-analysis": 0.8,
-        "modelling-simulation": 0.75,
-        "coding": 0.5
+        "modelling-simulation": 0.8,
+        "coding": 0.4,
+        "research": 0.23
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.3,
-        "energy-transition": 0.05,
-        "robotics-automation": 1,
-        "biomedical-devices": 0.4,
-        "software-data": 0.4,
-        "consulting": 0,
-        "startup-founder": 0.2,
-        "research-academia": 0.6
+        "aerospace-motorsport": 0.5,
+        "energy-transition": 0.15,
+        "robotics-automation": 0.95,
+        "biomedical-devices": 0.3,
+        "software-data": 0.2,
+        "consulting": 0.1,
+        "startup-founder": 0.25,
+        "research-academia": 0.7
       },
       "demand": {
         "examShare": 0.6,
         "groupShare": 0,
-        "applied": 0.55,
+        "applied": 0.45,
         "mathsIntensity": 0.9,
-        "codingIntensity": 0.5,
-        "workload": 0.6
+        "codingIntensity": 0.4,
+        "workload": 0.57
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "REVIEW: description is 42 words (under 60), so staff should check these tags. Year 4 robot dynamics and non-linear control, assessed 60% by exam and 40% by MATLAB simulation submissions. Evidence: control-robotics 1.00 \"robot dynamics and control\"; mathematics-modelling 0.65 \"rigid multibody systems and flexible structures\"."
+      "derivedRationale": "REVIEW: description is 42 words (under 60), so staff should check these tags. Introduces the theory of robot dynamics (Lagrangian and Hamiltonian) and nonlinear control, including stability, position control of serial robots, and methods such as inverse dynamics, sliding-mode, passivity-based and adaptive control. Also covers active vibration control of flexible structures, with applied problems in MATLAB. Published assessment: 2 Hour exam (60%, examination), 4 submissions (simulations and symbolic computing in MATLAB) (40%, coursework). Evidence: control-robotics 0.95 \"fundamental theoretical concepts of robot dynamics and control\"; mathematics-modelling 0.60 \"control of rigid multibody systems and flexible structures\"."
     },
     {
       "id": "MECH70058",
@@ -2367,40 +2505,45 @@
       "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=MECH70058&year=26_27",
       "prerequisites": [],
       "capacity": 60,
+      "resources": [],
       "topics": {
         "thermodynamics-energy": 0.6,
-        "experimental-lab": 0.55,
-        "computational-simulation": 0.5,
-        "electronics-embedded": 0.5,
-        "statistics-data": 0.5,
-        "sustainability-climate": 0.3
+        "computational-simulation": 0.58,
+        "experimental-lab": 0.45,
+        "statistics-data": 0.4,
+        "solid-mechanics-materials": 0.28,
+        "mathematics-modelling": 0.47,
+        "sustainability-climate": 0.2
       },
       "skills": {
-        "modelling-simulation": 0.75,
-        "experimental-skills": 0.6,
-        "quantitative-analysis": 0.6,
-        "coding": 0.45
+        "modelling-simulation": 0.88,
+        "quantitative-analysis": 0.75,
+        "experimental-skills": 0.5,
+        "research": 0.38,
+        "design-cad": 0.3,
+        "coding": 0.4,
+        "communication": 0.28
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.6,
+        "aerospace-motorsport": 0.52,
         "energy-transition": 0.95,
-        "robotics-automation": 0.3,
-        "biomedical-devices": 0.1,
-        "software-data": 0.4,
-        "consulting": 0.1,
-        "startup-founder": 0.3,
-        "research-academia": 0.6
+        "robotics-automation": 0.27,
+        "biomedical-devices": 0.15,
+        "software-data": 0.27,
+        "consulting": 0.22,
+        "startup-founder": 0.43,
+        "research-academia": 0.67
       },
       "demand": {
         "examShare": 0.5,
-        "groupShare": 0,
-        "applied": 0.75,
-        "mathsIntensity": 0.55,
+        "groupShare": 0.03,
+        "applied": 0.6,
+        "mathsIntensity": 0.63,
         "codingIntensity": 0.45,
-        "workload": 0.65
+        "workload": 0.5
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Year 4 battery cells to packs: modelling, experiments and degradation data analysis, assessed half by exam and half by coursework. Evidence: thermodynamics-energy 0.60 \"pack design considerations, including thermal performance\"; experimental-lab 0.55 \"real battery cell experiments\"; computational-simulation 0.50 \"battery modelling and experimentation\"; electronics-embedded 0.50 \"equivalent circuit models and physics-based models\"; statistics-data 0.50 \"data analysis tools\"."
+      "derivedRationale": "Introduces battery modelling and experimentation from materials through cells to modules and packs, including pack thermal design. Students build equivalent circuit and physics-based models and use data analysis on real cell experiments to parametrise and validate them, including degradation. Published assessment: 1.5 Hour exam (50%, examination), Coursework reports (39%, coursework), Tutorial sheets in-person (11%, coursework). Evidence: thermodynamics-energy 0.60 \"pack design considerations, including thermal performance\"; computational-simulation 0.58 \"equivalent circuit models and physics-based models\"."
     },
     {
       "id": "BIOE96071",
@@ -2426,36 +2569,39 @@
       "sourceUrl": "https://www.imperial.ac.uk/mechanical-engineering/study/undergraduate/detailed-module-information/?module=BIOE96071&year=26_27",
       "prerequisites": [],
       "capacity": 40,
+      "resources": [],
       "topics": {
-        "biomedical-engineering": 0.95,
+        "biomedical-engineering": 0.9,
         "solid-mechanics-materials": 0.6,
-        "design-manufacturing": 0.2
+        "experimental-lab": 0.1,
+        "communication-writing": 0.17,
+        "policy-ethics": 0.05
       },
       "skills": {
-        "research": 0.6,
-        "communication": 0.5,
-        "experimental-skills": 0.3
+        "research": 0.5,
+        "communication": 0.43,
+        "quantitative-analysis": 0.13
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0,
-        "energy-transition": 0,
-        "robotics-automation": 0,
-        "biomedical-devices": 1,
-        "software-data": 0,
+        "aerospace-motorsport": 0.05,
+        "energy-transition": 0.03,
+        "robotics-automation": 0.06,
+        "biomedical-devices": 0.95,
+        "software-data": 0.03,
         "consulting": 0.1,
-        "startup-founder": 0.3,
-        "research-academia": 0.6
+        "startup-founder": 0.28,
+        "research-academia": 0.53
       },
       "demand": {
         "examShare": 0.6,
-        "groupShare": 0.1,
-        "applied": 0.5,
-        "mathsIntensity": 0.2,
+        "groupShare": 0.03,
+        "applied": 0.28,
+        "mathsIntensity": 0.13,
         "codingIntensity": 0,
-        "workload": 0.5
+        "workload": 0.38
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Year 4 biomaterials for implants and tissue engineering; assessment is not published, so the exam share is an estimate. Evidence: biomedical-engineering 0.95 \"biomedical implant materials\"; solid-mechanics-materials 0.60 \"metals, ceramics and polymers\"."
+      "derivedRationale": "Introduces the main classes of biomedical implant materials (metals, ceramics, polymers), how they are used clinically to replace body tissues, and why implants fail. Also covers tissue engineering constructs for regenerating diseased tissue and restoring organ function. Evidence: biomedical-engineering 0.90 \"major classes of biomedical implant materials including metals, ceramics and polymers\"; solid-mechanics-materials 0.60 \"metals, ceramics and polymers\"."
     },
     {
       "id": "BUSI60038",
@@ -2473,37 +2619,39 @@
       "sourceUrl": "https://www.imperial.ac.uk/business-school/undergraduate/bpes/",
       "prerequisites": [],
       "capacity": 100,
+      "resources": [],
       "topics": {
-        "finance-economics": 0.9,
-        "management-leadership": 0.4,
-        "mathematics-modelling": 0.3,
-        "psychology-behaviour": 0.2
+        "finance-economics": 0.91,
+        "mathematics-modelling": 0.32,
+        "management-leadership": 0.3,
+        "policy-ethics": 0.15
       },
       "skills": {
-        "commercial-awareness": 0.9,
-        "quantitative-analysis": 0.5,
-        "communication": 0.3
+        "commercial-awareness": 0.82,
+        "quantitative-analysis": 0.4,
+        "research": 0.18,
+        "communication": 0.2
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0,
-        "energy-transition": 0.2,
-        "robotics-automation": 0,
-        "biomedical-devices": 0,
+        "aerospace-motorsport": 0.09,
+        "energy-transition": 0.25,
+        "robotics-automation": 0.09,
+        "biomedical-devices": 0.14,
         "software-data": 0.2,
         "consulting": 0.85,
         "startup-founder": 0.6,
-        "research-academia": 0.1
+        "research-academia": 0.17
       },
       "demand": {
-        "examShare": 0.6,
-        "groupShare": 0.2,
-        "applied": 0.5,
-        "mathsIntensity": 0.4,
+        "examShare": 0.57,
+        "groupShare": 0.12,
+        "applied": 0.4,
+        "mathsIntensity": 0.3,
         "codingIntensity": 0,
-        "workload": 0.45
+        "workload": 0.3
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Business School economics toolkit for firms, markets and game-theoretic strategy; it has a final exam, and the 60% exam share is an estimate. Evidence: finance-economics 0.90 \"Economics provides a useful set of tools\"."
+      "derivedRationale": "An introduction to economic tools for business decision-making, focusing on the behaviour of firms and individuals in markets and on strategic (game theoretic) interactions. It is aimed at the economic insights most relevant to businesses. Evidence: finance-economics 0.91 \"Economics provides a useful set of tools for analysing the world and aiding decision-making by businesses and governments.\"."
     },
     {
       "id": "BUSI60041",
@@ -2521,38 +2669,40 @@
       "sourceUrl": "https://www.imperial.ac.uk/business-school/undergraduate/bpes/",
       "prerequisites": [],
       "capacity": 100,
+      "resources": [],
       "topics": {
-        "entrepreneurship-innovation": 0.95,
-        "management-leadership": 0.55,
-        "finance-economics": 0.5,
-        "communication-writing": 0.3
+        "entrepreneurship-innovation": 0.92,
+        "finance-economics": 0.4,
+        "management-leadership": 0.35,
+        "communication-writing": 0.07
       },
       "skills": {
-        "commercial-awareness": 0.95,
-        "teamwork": 0.6,
-        "communication": 0.6,
-        "project-management": 0.5
+        "commercial-awareness": 0.85,
+        "project-management": 0.35,
+        "teamwork": 0.32,
+        "communication": 0.38,
+        "quantitative-analysis": 0.2
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.05,
-        "energy-transition": 0.1,
-        "robotics-automation": 0.1,
-        "biomedical-devices": 0.1,
-        "software-data": 0.1,
-        "consulting": 0.5,
-        "startup-founder": 1,
-        "research-academia": 0
+        "aerospace-motorsport": 0.08,
+        "energy-transition": 0.22,
+        "robotics-automation": 0.18,
+        "biomedical-devices": 0.22,
+        "software-data": 0.28,
+        "consulting": 0.57,
+        "startup-founder": 0.95,
+        "research-academia": 0.08
       },
       "demand": {
-        "examShare": 0,
-        "groupShare": 0.6,
-        "applied": 0.85,
-        "mathsIntensity": 0.1,
+        "examShare": 0.37,
+        "groupShare": 0.4,
+        "applied": 0.53,
+        "mathsIntensity": 0.12,
         "codingIntensity": 0,
-        "workload": 0.5
+        "workload": 0.3
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Business School module on spotting, funding and building a new venture; the BPES timetable lists no exam, so it is treated as coursework only. Evidence: entrepreneurship-innovation 0.95 \"identifying and exploiting a new business opportunity\"; management-leadership 0.55 \"compile a team, and generate a vision\"; finance-economics 0.50 \"assess risks and returns\"."
+      "derivedRationale": "Introduces how entrepreneurs identify and exploit new business opportunities. It covers the competitive landscape, demand estimation, risk and return, raising funding, building a team and setting a vision for a new venture. Evidence: entrepreneurship-innovation 0.92 \"Entrepreneurship is the process of identifying and exploiting a new business opportunity.\"."
     },
     {
       "id": "BUSI60043",
@@ -2570,35 +2720,39 @@
       "sourceUrl": "https://www.imperial.ac.uk/business-school/undergraduate/bpes/",
       "prerequisites": [],
       "capacity": 100,
+      "resources": [],
       "topics": {
-        "finance-economics": 1,
-        "mathematics-modelling": 0.4,
-        "statistics-data": 0.3
+        "finance-economics": 0.94,
+        "statistics-data": 0.28,
+        "mathematics-modelling": 0.3,
+        "management-leadership": 0.1
       },
       "skills": {
-        "commercial-awareness": 0.8,
-        "quantitative-analysis": 0.75
+        "quantitative-analysis": 0.67,
+        "commercial-awareness": 0.82,
+        "modelling-simulation": 0.2,
+        "research": 0.08
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0,
-        "energy-transition": 0.1,
-        "robotics-automation": 0,
-        "biomedical-devices": 0,
-        "software-data": 0.3,
-        "consulting": 0.9,
-        "startup-founder": 0.5,
-        "research-academia": 0.1
+        "aerospace-motorsport": 0.05,
+        "energy-transition": 0.23,
+        "robotics-automation": 0.05,
+        "biomedical-devices": 0.06,
+        "software-data": 0.2,
+        "consulting": 0.92,
+        "startup-founder": 0.48,
+        "research-academia": 0.15
       },
       "demand": {
-        "examShare": 0.7,
-        "groupShare": 0,
-        "applied": 0.4,
-        "mathsIntensity": 0.6,
-        "codingIntensity": 0,
-        "workload": 0.5
+        "examShare": 0.6,
+        "groupShare": 0.12,
+        "applied": 0.37,
+        "mathsIntensity": 0.48,
+        "codingIntensity": 0.07,
+        "workload": 0.38
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "REVIEW: description is 57 words (under 60), so staff should check these tags. Business School finance: risk, diversification and bond, stock and derivative valuation; it has a final exam, and the 70% exam share is an estimate. Evidence: finance-economics 1.00 \"the setting of prices in a market\"."
+      "derivedRationale": "REVIEW: description is 57 words (under 60), so staff should check these tags. Introduces the core purpose of finance, how prices are set in markets. The first half covers market-level risk management and diversification, and the second half covers valuation of bonds, stocks and derivatives. Evidence: finance-economics 0.94 \"the setting of prices in a market\"."
     },
     {
       "id": "IEX-CLIMATE",
@@ -2622,38 +2776,43 @@
       "sourceUrl": "https://www.imperial.ac.uk/centre-for-languages-culture-and-communication/i-explore/stemm-modules/technologies-to-combat-climate-change/",
       "prerequisites": [],
       "capacity": 60,
+      "resources": [],
       "topics": {
-        "sustainability-climate": 0.95,
-        "policy-ethics": 0.55,
+        "sustainability-climate": 0.9,
+        "thermodynamics-energy": 0.55,
         "finance-economics": 0.5,
-        "thermodynamics-energy": 0.5
+        "policy-ethics": 0.4,
+        "communication-writing": 0.2,
+        "mathematics-modelling": 0.15
       },
       "skills": {
+        "quantitative-analysis": 0.45,
         "communication": 0.7,
-        "teamwork": 0.7,
+        "teamwork": 0.65,
         "commercial-awareness": 0.5,
-        "quantitative-analysis": 0.4
+        "research": 0.38,
+        "project-management": 0.2
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.05,
-        "energy-transition": 0.95,
-        "robotics-automation": 0,
-        "biomedical-devices": 0,
-        "software-data": 0.05,
-        "consulting": 0.6,
-        "startup-founder": 0.4,
+        "aerospace-motorsport": 0.1,
+        "energy-transition": 0.9,
+        "robotics-automation": 0.05,
+        "biomedical-devices": 0.04,
+        "software-data": 0.09,
+        "consulting": 0.52,
+        "startup-founder": 0.33,
         "research-academia": 0.3
       },
       "demand": {
         "examShare": 0,
         "groupShare": 0.9,
-        "applied": 0.6,
-        "mathsIntensity": 0.25,
-        "codingIntensity": 0,
-        "workload": 0.4
+        "applied": 0.48,
+        "mathsIntensity": 0.23,
+        "codingIntensity": 0.05,
+        "workload": 0.32
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "I-Explore module on climate mitigation technologies, techno-economics and policy, assessed 90% by a group debate and presentation. Evidence: sustainability-climate 0.95 \"the challenge posed by climate change\"; policy-ethics 0.55 \"the policy background on climate change\"; finance-economics 0.50 \"basic economic analysis of the options\"; thermodynamics-energy 0.50 \"how energy systems are interconnected\"."
+      "derivedRationale": "An introductory module on climate change and the key mitigation technologies and energy systems. It covers basic techno-economic assessment, emissions estimation, systems thinking and the policy background, and it ends with a group plan for tackling climate change. Published assessment: Online Quiz - individual assessment (10%, coursework), Debate/Presentation - group assessment (90%, practical). Evidence: sustainability-climate 0.90 \"the technologies and systems that will be required to mitigate it\"; thermodynamics-energy 0.55 \"how energy systems are interconnected\"; finance-economics 0.50 \"basic economic analysis of the options\"."
     },
     {
       "id": "IEX-CROWDS",
@@ -2679,38 +2838,44 @@
       "sourceUrl": "https://www.imperial.ac.uk/centre-for-languages-culture-and-communication/i-explore/stemm-modules/the-science-of-crowds-movement-behaviour-and-design/",
       "prerequisites": [],
       "capacity": 40,
+      "resources": [],
       "topics": {
-        "psychology-behaviour": 0.75,
-        "computational-simulation": 0.5,
-        "design-manufacturing": 0.3,
-        "experimental-lab": 0.3
+        "psychology-behaviour": 0.62,
+        "computational-simulation": 0.57,
+        "mathematics-modelling": 0.43,
+        "design-manufacturing": 0.37,
+        "experimental-lab": 0.28,
+        "communication-writing": 0.15
       },
       "skills": {
-        "teamwork": 0.75,
-        "communication": 0.6,
-        "modelling-simulation": 0.5,
-        "design-cad": 0.3
+        "teamwork": 0.67,
+        "modelling-simulation": 0.53,
+        "communication": 0.58,
+        "research": 0.38,
+        "design-cad": 0.3,
+        "quantitative-analysis": 0.3,
+        "project-management": 0.1
       },
       "pathwayRelevance": {
         "aerospace-motorsport": 0.1,
         "energy-transition": 0.1,
-        "robotics-automation": 0.2,
-        "biomedical-devices": 0.2,
-        "software-data": 0.4,
-        "consulting": 0.4,
-        "startup-founder": 0.3,
+        "robotics-automation": 0.22,
+        "biomedical-devices": 0.1,
+        "software-data": 0.3,
+        "consulting": 0.38,
+        "startup-founder": 0.23,
         "research-academia": 0.4
       },
       "demand": {
         "examShare": 0,
-        "groupShare": 0.65,
-        "applied": 0.7,
-        "mathsIntensity": 0.35,
-        "codingIntensity": 0.2,
-        "workload": 0.4
+        "groupShare": 0.55,
+        "applied": 0.62,
+        "mathsIntensity": 0.28,
+        "codingIntensity": 0.17,
+        "workload": 0.33
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "I-Explore module on pedestrian dynamics and evacuation design with a group design project, assessed by quizzes, a VR test and group work. Evidence: psychology-behaviour 0.75 \"crowd movement theory, computer modelling, human behaviour\"; computational-simulation 0.50 \"computer modelling\"."
+      "derivedRationale": "An interdisciplinary introduction to pedestrian dynamics: how crowds move and behave, including in emergencies, drawing on maths, physics, computing, psychology and design. Students learn about simulation algorithms and experimental design, then apply them in a group project solving a real-world design problem. Published assessment: Quizzes based on lecture material (20%, coursework), Group project (20%, coursework), Reflective account (5%, coursework), Test after VR session (10%, coursework), Attendance and contribution (10%, practical), Presentation of Group project (35%, practical). Evidence: psychology-behaviour 0.62 \"human behaviour\"; computational-simulation 0.57 \"computer modelling\"."
     },
     {
       "id": "IEX-INNOVATE",
@@ -2730,38 +2895,43 @@
       "sourceUrl": "https://www.imperial.ac.uk/centre-for-languages-culture-and-communication/i-explore/stemm-modules/innovation-communication-teamwork/",
       "prerequisites": [],
       "capacity": 60,
+      "resources": [],
       "topics": {
-        "communication-writing": 0.85,
-        "entrepreneurship-innovation": 0.8,
-        "creative-arts-design": 0.4,
-        "management-leadership": 0.3
+        "entrepreneurship-innovation": 0.63,
+        "communication-writing": 0.65,
+        "creative-arts-design": 0.37,
+        "psychology-behaviour": 0.27,
+        "management-leadership": 0.2,
+        "sustainability-climate": 0.12
       },
       "skills": {
-        "communication": 0.95,
-        "teamwork": 0.95,
-        "project-management": 0.5,
-        "commercial-awareness": 0.5
+        "communication": 0.92,
+        "teamwork": 0.87,
+        "project-management": 0.33,
+        "commercial-awareness": 0.35,
+        "research": 0.22,
+        "design-cad": 0.2
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.05,
-        "energy-transition": 0.1,
+        "aerospace-motorsport": 0.1,
+        "energy-transition": 0.2,
         "robotics-automation": 0.1,
-        "biomedical-devices": 0.2,
-        "software-data": 0.1,
-        "consulting": 0.75,
-        "startup-founder": 0.9,
-        "research-academia": 0.1
+        "biomedical-devices": 0.23,
+        "software-data": 0.17,
+        "consulting": 0.52,
+        "startup-founder": 0.75,
+        "research-academia": 0.15
       },
       "demand": {
         "examShare": 0,
-        "groupShare": 1,
-        "applied": 0.8,
-        "mathsIntensity": 0,
-        "codingIntensity": 0,
-        "workload": 0.45
+        "groupShare": 0.6,
+        "applied": 0.7,
+        "mathsIntensity": 0.01,
+        "codingIntensity": 0.01,
+        "workload": 0.3
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "I-Explore module where multidisciplinary teams frame a real-world challenge and pitch it, assessed entirely on a pitch deck, a video and participation. Evidence: communication-writing 0.85 \"communicating their work through two key outputs\"; entrepreneurship-innovation 0.80 \"framing innovation, working across disciplinary boundaries\"."
+      "derivedRationale": "Multidisciplinary teams across Imperial tackle open-ended real-world challenges, taking them through problem definition, user and system understanding, and solution refinement using design thinking and behavioural methods. Students build presentation and storytelling skills through a live pitch deck and a 1-minute video. Published assessment: Pitch deck presentation (30%, coursework), 1-minute video (30%, coursework), Peer Assessment of other groups’ project videos (20%, coursework), Tutor reports of student participation and engagement (20%, coursework). Evidence: entrepreneurship-innovation 0.63 \"core stages of concept development\"; communication-writing 0.65 \"communicating their work through two key outputs\"."
     },
     {
       "id": "IEX-QUANTUM",
@@ -2786,37 +2956,42 @@
       "sourceUrl": "https://www.imperial.ac.uk/centre-for-languages-culture-and-communication/i-explore/stemm-modules/quantum-technologies/",
       "prerequisites": [],
       "capacity": 40,
+      "resources": [],
       "topics": {
-        "entrepreneurship-innovation": 0.5,
         "policy-ethics": 0.5,
-        "electronics-embedded": 0.35,
-        "programming-software": 0.2
+        "entrepreneurship-innovation": 0.45,
+        "mathematics-modelling": 0.25,
+        "communication-writing": 0.32,
+        "electronics-embedded": 0.23,
+        "finance-economics": 0.13
       },
       "skills": {
         "communication": 0.8,
-        "teamwork": 0.7,
-        "research": 0.6
+        "teamwork": 0.6,
+        "research": 0.5,
+        "commercial-awareness": 0.5,
+        "quantitative-analysis": 0.13
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.1,
+        "aerospace-motorsport": 0.12,
         "energy-transition": 0.1,
-        "robotics-automation": 0.1,
-        "biomedical-devices": 0.1,
-        "software-data": 0.3,
-        "consulting": 0.4,
+        "robotics-automation": 0.17,
+        "biomedical-devices": 0.15,
+        "software-data": 0.35,
+        "consulting": 0.43,
         "startup-founder": 0.5,
-        "research-academia": 0.6
+        "research-academia": 0.38
       },
       "demand": {
         "examShare": 0,
-        "groupShare": 0.65,
-        "applied": 0.4,
-        "mathsIntensity": 0.3,
-        "codingIntensity": 0,
-        "workload": 0.4
+        "groupShare": 0.25,
+        "applied": 0.3,
+        "mathsIntensity": 0.1,
+        "codingIntensity": 0.01,
+        "workload": 0.3
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "I-Explore introduction to quantum computing, sensing and imaging and the policy and commercial questions around them; the taxonomy has no quantum-physics topic, so the technical core is under-tagged. Assessed by a group presentation, a debate and a reflective journal. Evidence: entrepreneurship-innovation 0.50 \"the challenges associated with commercialising deep technologies\"; policy-ethics 0.50 \"ethical and regulatory considerations\"."
+      "derivedRationale": "An accessible, interdisciplinary introduction to the phenomena behind quantum computing, imaging and sensing, and how they differ from classical physics. It also looks at national quantum strategies, ethics and regulation, and the challenges of commercialising deep technologies, and asks whether quantum claims are hype or reality. Published assessment: Group presentation (25%, coursework), Debate (40%, coursework), Reflective journal (35%, coursework). Evidence: policy-ethics 0.50 \"discuss ethical and regulatory considerations\"."
     },
     {
       "id": "IEX-ML",
@@ -2840,38 +3015,43 @@
       "sourceUrl": "https://www.imperial.ac.uk/centre-for-languages-culture-and-communication/i-explore/stemm-modules/demystifying-machine-learning-theory-and-applications/",
       "prerequisites": [],
       "capacity": 60,
+      "resources": [],
       "topics": {
         "machine-learning-ai": 0.9,
-        "communication-writing": 0.5,
-        "programming-software": 0.3,
-        "statistics-data": 0.3
+        "communication-writing": 0.33,
+        "entrepreneurship-innovation": 0.2,
+        "programming-software": 0.25,
+        "statistics-data": 0.2
       },
       "skills": {
-        "communication": 0.75,
-        "teamwork": 0.7,
-        "coding": 0.4,
-        "research": 0.4
+        "coding": 0.33,
+        "communication": 0.6,
+        "teamwork": 0.45,
+        "research": 0.43,
+        "quantitative-analysis": 0.3,
+        "project-management": 0.18,
+        "modelling-simulation": 0.08
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.1,
-        "energy-transition": 0.1,
-        "robotics-automation": 0.4,
-        "biomedical-devices": 0.3,
-        "software-data": 0.7,
-        "consulting": 0.5,
-        "startup-founder": 0.6,
-        "research-academia": 0.4
+        "aerospace-motorsport": 0.12,
+        "energy-transition": 0.15,
+        "robotics-automation": 0.35,
+        "biomedical-devices": 0.25,
+        "software-data": 0.68,
+        "consulting": 0.35,
+        "startup-founder": 0.43,
+        "research-academia": 0.33
       },
       "demand": {
         "examShare": 0,
-        "groupShare": 0.9,
-        "applied": 0.7,
+        "groupShare": 0.47,
+        "applied": 0.65,
         "mathsIntensity": 0.3,
         "codingIntensity": 0.35,
-        "workload": 0.45
+        "workload": 0.4
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "I-Explore introduction to machine learning with a group proof-of-concept project, assessed by a pitch, promotional material, the proof of concept and a reflection. Evidence: machine-learning-ai 0.90 \"the foundations of Machine Learning\"; communication-writing 0.50 \"explain to others what Machine Learning really is all about\"."
+      "derivedRationale": "An introductory, non-specialist module on the foundations of machine learning, covering core concepts, models and learning systems. Students identify a real user problem and build a proof-of-concept ML solution, while practising explaining ML to different audiences. Published assessment: Self-reflection document (10%, coursework), Project Milestone 1: Pitch (15%, practical), Project Milestone 2: Promotional material (25%, practical), Project Milestone 3: Proof of concept (50%, practical). Evidence: machine-learning-ai 0.90 \"intuitive understanding of the foundations of Machine Learning\"."
     },
     {
       "id": "IEX-SPACE",
@@ -2894,39 +3074,43 @@
       "sourceUrl": "https://www.imperial.ac.uk/centre-for-languages-culture-and-communication/i-explore/stemm-modules/space-mining/",
       "prerequisites": [],
       "capacity": 40,
+      "resources": [],
       "topics": {
-        "law-ip": 0.6,
-        "finance-economics": 0.5,
-        "entrepreneurship-innovation": 0.5,
-        "design-manufacturing": 0.3,
-        "sustainability-climate": 0.2
+        "law-ip": 0.55,
+        "finance-economics": 0.55,
+        "entrepreneurship-innovation": 0.4,
+        "design-manufacturing": 0.35,
+        "sustainability-climate": 0.18,
+        "policy-ethics": 0.3
       },
       "skills": {
-        "teamwork": 0.85,
-        "communication": 0.7,
-        "commercial-awareness": 0.6,
-        "research": 0.5
+        "communication": 0.72,
+        "teamwork": 0.77,
+        "commercial-awareness": 0.65,
+        "research": 0.52,
+        "project-management": 0.32,
+        "quantitative-analysis": 0.2
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0.5,
-        "energy-transition": 0.2,
-        "robotics-automation": 0.1,
-        "biomedical-devices": 0,
-        "software-data": 0,
-        "consulting": 0.6,
-        "startup-founder": 0.7,
-        "research-academia": 0.3
+        "aerospace-motorsport": 0.6,
+        "energy-transition": 0.27,
+        "robotics-automation": 0.15,
+        "biomedical-devices": 0.02,
+        "software-data": 0.05,
+        "consulting": 0.45,
+        "startup-founder": 0.53,
+        "research-academia": 0.28
       },
       "demand": {
         "examShare": 0,
         "groupShare": 1,
-        "applied": 0.5,
-        "mathsIntensity": 0.1,
-        "codingIntensity": 0,
-        "workload": 0.4
+        "applied": 0.55,
+        "mathsIntensity": 0.15,
+        "codingIntensity": 0.02,
+        "workload": 0.32
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "I-Explore module on the law, technology and economics of mining space resources, assessed entirely by group work: a legal framework and a company poster. Evidence: law-ip 0.60 \"consider the legal aspects of using space resources\"; finance-economics 0.50 \"The economic case for your proposed operation\"; entrepreneurship-innovation 0.50 \"create a new economy\"."
+      "derivedRationale": "An interdisciplinary introduction to the legal, technical and economic basis for using resources in space, such as oxygen. Student groups propose a space resource extraction operation, make its economic case, and consider crossover to terrestrial resource use. Published assessment: Legal Framework document - short written document submitted as a group (30%, coursework), nteractive Poster Presentation submitted as a group (70%, practical). Evidence: law-ip 0.55 \"consider the legal aspects of using space resources\"; finance-economics 0.55 \"The economic case for your proposed operation will be determined\"."
     },
     {
       "id": "IEX-VR",
@@ -2950,37 +3134,42 @@
       "sourceUrl": "https://www.imperial.ac.uk/centre-for-languages-culture-and-communication/i-explore/stemm-modules/virtual-reality/",
       "prerequisites": [],
       "capacity": 40,
+      "resources": [],
       "topics": {
         "creative-arts-design": 0.6,
-        "programming-software": 0.5,
-        "management-leadership": 0.3
+        "programming-software": 0.45,
+        "design-manufacturing": 0.15,
+        "management-leadership": 0.27,
+        "psychology-behaviour": 0.15,
+        "communication-writing": 0.07
       },
       "skills": {
         "teamwork": 0.8,
         "project-management": 0.7,
-        "coding": 0.5,
-        "design-cad": 0.5
+        "design-cad": 0.5,
+        "coding": 0.4,
+        "communication": 0.43
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0,
-        "energy-transition": 0,
-        "robotics-automation": 0.3,
-        "biomedical-devices": 0.1,
-        "software-data": 0.6,
-        "consulting": 0.1,
-        "startup-founder": 0.5,
-        "research-academia": 0.1
+        "aerospace-motorsport": 0.1,
+        "energy-transition": 0.05,
+        "robotics-automation": 0.22,
+        "biomedical-devices": 0.17,
+        "software-data": 0.52,
+        "consulting": 0.13,
+        "startup-founder": 0.43,
+        "research-academia": 0.15
       },
       "demand": {
         "examShare": 0,
         "groupShare": 0.5,
-        "applied": 0.85,
+        "applied": 0.8,
         "mathsIntensity": 0.1,
-        "codingIntensity": 0.5,
-        "workload": 0.5
+        "codingIntensity": 0.35,
+        "workload": 0.3
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "I-Explore project module building a Virtual Reality experience in a multidisciplinary team, assessed half by a group presentation and half by an individual journal. Evidence: creative-arts-design 0.60 \"creating your own simple Virtual Reality experience\"; programming-software 0.50 \"user experience/interaction design, graphics, or coding\"."
+      "derivedRationale": "Students explore Virtual Reality applications, then work in multidisciplinary groups to design and build a simple VR experience about the Imperial student experience. Each student specialises in an area such as user experience design, graphics or coding while practising project management and teamwork. Published assessment: Group presentation (50%, coursework), Individual journal (50%, coursework). Evidence: creative-arts-design 0.60 \"user experience/interaction design, graphics, or coding\"."
     },
     {
       "id": "IEX-DECISIONS",
@@ -3005,38 +3194,41 @@
       "sourceUrl": "https://www.imperial.ac.uk/horizons/module-options/years-3--4-undergraduates/management-and-decision-making/",
       "prerequisites": [],
       "capacity": 50,
+      "resources": [],
       "topics": {
-        "management-leadership": 0.8,
+        "management-leadership": 0.85,
         "psychology-behaviour": 0.5,
-        "finance-economics": 0.3,
-        "policy-ethics": 0.3
+        "mathematics-modelling": 0.27,
+        "policy-ethics": 0.18,
+        "communication-writing": 0.18
       },
       "skills": {
-        "commercial-awareness": 0.7,
-        "project-management": 0.6,
-        "communication": 0.5,
-        "quantitative-analysis": 0.4
+        "quantitative-analysis": 0.32,
+        "research": 0.5,
+        "communication": 0.45,
+        "project-management": 0.37,
+        "commercial-awareness": 0.43
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0,
-        "energy-transition": 0.1,
-        "robotics-automation": 0,
-        "biomedical-devices": 0,
-        "software-data": 0.2,
-        "consulting": 0.85,
-        "startup-founder": 0.5,
-        "research-academia": 0.1
+        "aerospace-motorsport": 0.1,
+        "energy-transition": 0.18,
+        "robotics-automation": 0.1,
+        "biomedical-devices": 0.1,
+        "software-data": 0.17,
+        "consulting": 0.65,
+        "startup-founder": 0.43,
+        "research-academia": 0.17
       },
       "demand": {
         "examShare": 0,
-        "groupShare": 0.1,
-        "applied": 0.6,
-        "mathsIntensity": 0.25,
+        "groupShare": 0,
+        "applied": 0.48,
+        "mathsIntensity": 0.15,
         "codingIntensity": 0,
-        "workload": 0.35
+        "workload": 0.3
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Imperial Horizons module on systems thinking, decision-analysis tools and biases, assessed entirely by individual written coursework. Evidence: management-leadership 0.80 \"equip you to make effective decisions\"; psychology-behaviour 0.50 \"common psychological biases in decision making\"."
+      "derivedRationale": "An introduction to making effective decisions in workplace and personal contexts. It covers broad approaches such as Systems Thinking, the PROACT method and psychological biases, plus key decision-support tools. Published assessment: Individual written assignment (500 words) (20%, coursework), Individual written assignment (500 words) (20%, coursework), Individual coursework project (2,500 words) (60%, coursework). Evidence: management-leadership 0.85 \"Emphasis will be given to broad approaches to decision making, such as Systems Thinking, the PROACT method\"; psychology-behaviour 0.50 \"understanding common psychological biases in decision making\"."
     },
     {
       "id": "IEX-GLOBALECON",
@@ -3060,37 +3252,42 @@
       "sourceUrl": "https://www.imperial.ac.uk/horizons/module-options/years-3--4-undergraduates/global-economics/",
       "prerequisites": [],
       "capacity": 50,
+      "resources": [],
       "topics": {
-        "finance-economics": 0.85,
-        "global-development": 0.6,
-        "policy-ethics": 0.55
+        "finance-economics": 0.9,
+        "policy-ethics": 0.52,
+        "management-leadership": 0.33,
+        "global-development": 0.33,
+        "communication-writing": 0.2,
+        "sustainability-climate": 0.07
       },
       "skills": {
-        "commercial-awareness": 0.75,
-        "communication": 0.65,
-        "research": 0.4,
-        "teamwork": 0.4
+        "commercial-awareness": 0.8,
+        "communication": 0.6,
+        "research": 0.43,
+        "teamwork": 0.38,
+        "quantitative-analysis": 0.2
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0,
-        "energy-transition": 0.3,
-        "robotics-automation": 0,
-        "biomedical-devices": 0,
+        "aerospace-motorsport": 0.05,
+        "energy-transition": 0.25,
+        "robotics-automation": 0.05,
+        "biomedical-devices": 0.05,
         "software-data": 0.1,
-        "consulting": 0.85,
-        "startup-founder": 0.4,
-        "research-academia": 0.2
+        "consulting": 0.8,
+        "startup-founder": 0.38,
+        "research-academia": 0.18
       },
       "demand": {
         "examShare": 0,
         "groupShare": 0.4,
-        "applied": 0.45,
-        "mathsIntensity": 0.2,
+        "applied": 0.5,
+        "mathsIntensity": 0.13,
         "codingIntensity": 0,
-        "workload": 0.4
+        "workload": 0.32
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Imperial Horizons module on global economics, trade and policy, assessed by a group debate and two individual reports. Evidence: finance-economics 0.85 \"the key contemporary issues in global economics\"; global-development 0.60 \"pressing political, social and environmental issues\"; policy-ethics 0.55 \"conduct policy analysis of a global economic issue\"."
+      "derivedRationale": "Introduces key issues in global economics and the models used by institutions such as the WTO, IMF and World Bank. Students apply economic tools to analyse the international business environment and produce business strategy and policy recommendations. Published assessment: Group presentation (10 min) and participation in a classroom debate on a specific global economics issue. Group report (12-15 slides). (40%, practical), Individual report (two pages) analysing a global economic environment for a selected company, with a critical review of business strategy options. (30%, coursework), Individual report, submitted as a six-slide deck following a given template, on global economic risks and regulation for a selected area of technology. Topic selected by yourself and approved by module leader. (30%, coursework). Evidence: finance-economics 0.90 \"key contemporary issues in global economics and the leading models deployed by global economics institutions\"; policy-ethics 0.52 \"conduct policy analysis of a global economic issue\"."
     },
     {
       "id": "IEX-HISTSCI",
@@ -3114,35 +3311,41 @@
       "sourceUrl": "https://www.imperial.ac.uk/horizons/module-options/years-3--4-undergraduates/history-of-science-technology-and-industry/",
       "prerequisites": [],
       "capacity": 40,
+      "resources": [],
       "topics": {
         "history-philosophy": 0.95,
-        "global-development": 0.4,
-        "policy-ethics": 0.2
+        "global-development": 0.47,
+        "policy-ethics": 0.3,
+        "communication-writing": 0.3,
+        "finance-economics": 0.07,
+        "management-leadership": 0.1
       },
       "skills": {
         "research": 0.8,
-        "communication": 0.75
+        "communication": 0.77,
+        "commercial-awareness": 0.18,
+        "project-management": 0.05
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0,
-        "energy-transition": 0,
-        "robotics-automation": 0,
-        "biomedical-devices": 0,
-        "software-data": 0,
-        "consulting": 0.2,
-        "startup-founder": 0.1,
-        "research-academia": 0.6
+        "aerospace-motorsport": 0.05,
+        "energy-transition": 0.12,
+        "robotics-automation": 0.05,
+        "biomedical-devices": 0.05,
+        "software-data": 0.05,
+        "consulting": 0.23,
+        "startup-founder": 0.12,
+        "research-academia": 0.43
       },
       "demand": {
         "examShare": 0,
-        "groupShare": 0.15,
-        "applied": 0.2,
-        "mathsIntensity": 0,
+        "groupShare": 0,
+        "applied": 0.13,
+        "mathsIntensity": 0.01,
         "codingIntensity": 0,
-        "workload": 0.4
+        "workload": 0.37
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Imperial Horizons module on the global history of science, technology and industry, assessed by an essay, a presentation and a final written project. Evidence: history-philosophy 0.95 \"the histories of science, technology and industry within global history\"."
+      "derivedRationale": "A global history of science, technology and industry from ancient times to today, examining ideas of progress, historical change and the spread of knowledge. It draws on historical sources and social thinkers such as Marx, Weber and Foucault to explore themes like power, empire, globalisation, gender and work. Published assessment: Written task (1,200-1,500 words). (30%, coursework), Individual presentation (5 minutes). (15%, practical), Written task (1,500-2,000 words). (55%, coursework). Evidence: history-philosophy 0.95 \"situates the histories of science, technology and industry within global history\"."
     },
     {
       "id": "IEX-PHILMIND",
@@ -3167,35 +3370,39 @@
       "sourceUrl": "https://www.imperial.ac.uk/horizons/module-options/years-3--4-undergraduates/philosophy-of-mind/",
       "prerequisites": [],
       "capacity": 40,
+      "resources": [],
       "topics": {
         "history-philosophy": 0.95,
         "psychology-behaviour": 0.5,
-        "machine-learning-ai": 0.3
+        "machine-learning-ai": 0.3,
+        "policy-ethics": 0.15,
+        "communication-writing": 0.3
       },
       "skills": {
-        "communication": 0.8,
-        "research": 0.75
+        "research": 0.63,
+        "communication": 0.73,
+        "quantitative-analysis": 0.05
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0,
-        "energy-transition": 0,
-        "robotics-automation": 0.05,
-        "biomedical-devices": 0.1,
-        "software-data": 0.1,
-        "consulting": 0.1,
-        "startup-founder": 0,
-        "research-academia": 0.7
+        "aerospace-motorsport": 0.02,
+        "energy-transition": 0.02,
+        "robotics-automation": 0.14,
+        "biomedical-devices": 0.14,
+        "software-data": 0.14,
+        "consulting": 0.13,
+        "startup-founder": 0.08,
+        "research-academia": 0.35
       },
       "demand": {
         "examShare": 0,
         "groupShare": 0,
-        "applied": 0.1,
-        "mathsIntensity": 0,
+        "applied": 0.07,
+        "mathsIntensity": 0.02,
         "codingIntensity": 0,
-        "workload": 0.45
+        "workload": 0.3
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Imperial Horizons module on consciousness, mind and body, free will and whether AI is possible, assessed by two individual essays. Evidence: history-philosophy 0.95 \"a range of topics in the philosophy of mind\"; psychology-behaviour 0.50 \"the nature of consciousness and thought\"."
+      "derivedRationale": "An introduction to the philosophy of mind, covering consciousness, thought, action and determinism, the mind–body relation and the possibility of artificial intelligence. It links philosophical debates to neuroscience, medicine and computing through the work of thinkers such as Dennett, Putnam and Wittgenstein. Published assessment: 1,500-2,000 word essay, due after the end of autumn term (40%, coursework), 1,500-2,000 word essay, due after the end of spring term (60%, coursework). Evidence: history-philosophy 0.95 \"The module will explore a range of topics in the philosophy of mind\"; psychology-behaviour 0.50 \"the nature of consciousness and thought\"."
     },
     {
       "id": "IEX-PSYCHPERF",
@@ -3219,36 +3426,39 @@
       "sourceUrl": "https://www.imperial.ac.uk/horizons/module-options/years-3--4-undergraduates/psychology-of-performance/",
       "prerequisites": [],
       "capacity": 40,
+      "resources": [],
       "topics": {
-        "psychology-behaviour": 0.95,
-        "management-leadership": 0.5,
+        "psychology-behaviour": 0.92,
+        "management-leadership": 0.4,
         "communication-writing": 0.3,
-        "creative-arts-design": 0.3
+        "creative-arts-design": 0.2
       },
       "skills": {
-        "communication": 0.8,
-        "teamwork": 0.6
+        "communication": 0.7,
+        "teamwork": 0.5,
+        "research": 0.32,
+        "project-management": 0.2
       },
       "pathwayRelevance": {
         "aerospace-motorsport": 0.1,
-        "energy-transition": 0,
-        "robotics-automation": 0,
+        "energy-transition": 0.05,
+        "robotics-automation": 0.05,
         "biomedical-devices": 0.1,
-        "software-data": 0,
-        "consulting": 0.5,
-        "startup-founder": 0.4,
-        "research-academia": 0.1
+        "software-data": 0.1,
+        "consulting": 0.35,
+        "startup-founder": 0.33,
+        "research-academia": 0.2
       },
       "demand": {
         "examShare": 0,
         "groupShare": 0.4,
-        "applied": 0.6,
-        "mathsIntensity": 0,
+        "applied": 0.4,
+        "mathsIntensity": 0.02,
         "codingIntensity": 0,
-        "workload": 0.4
+        "workload": 0.28
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Imperial Horizons module on the psychology of expert performance, teamwork and stage fright, assessed by a group presentation and a reflective commentary. Evidence: psychology-behaviour 0.95 \"the psychology behind leadership, teamwork, motivation, creativity\"; management-leadership 0.50 \"leadership, teamwork, motivation\"."
+      "derivedRationale": "An interdisciplinary I-Explore module on the psychology of high performance, covering leadership, teamwork, motivation, creativity, expertise, bias in judging performance and managing stage fright. Students reflect on and plan improvements to their own performance. Published assessment: Group presentation (15 minutes) (40%, coursework), Reflective commentary (1,800-2,000 words) (60%, coursework). Evidence: psychology-behaviour 0.92 \"the latest science examining what it means to perform at the highest level\"."
     },
     {
       "id": "IEX-SCIPOLICY",
@@ -3272,36 +3482,41 @@
       "sourceUrl": "https://www.imperial.ac.uk/horizons/module-options/years-3--4-undergraduates/science-and-policy/",
       "prerequisites": [],
       "capacity": 40,
+      "resources": [],
       "topics": {
-        "policy-ethics": 0.95,
-        "entrepreneurship-innovation": 0.4,
+        "policy-ethics": 0.9,
+        "entrepreneurship-innovation": 0.5,
         "communication-writing": 0.4,
-        "law-ip": 0.2
+        "sustainability-climate": 0.18,
+        "psychology-behaviour": 0.17,
+        "history-philosophy": 0.12
       },
       "skills": {
-        "communication": 0.85,
-        "research": 0.7
+        "communication": 0.9,
+        "research": 0.7,
+        "commercial-awareness": 0.38,
+        "teamwork": 0.28
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0,
-        "energy-transition": 0.3,
-        "robotics-automation": 0,
-        "biomedical-devices": 0.1,
-        "software-data": 0,
+        "aerospace-motorsport": 0.05,
+        "energy-transition": 0.32,
+        "robotics-automation": 0.1,
+        "biomedical-devices": 0.18,
+        "software-data": 0.2,
         "consulting": 0.6,
-        "startup-founder": 0.3,
-        "research-academia": 0.5
+        "startup-founder": 0.4,
+        "research-academia": 0.38
       },
       "demand": {
         "examShare": 0,
-        "groupShare": 0.2,
+        "groupShare": 0.1,
         "applied": 0.4,
-        "mathsIntensity": 0,
+        "mathsIntensity": 0.03,
         "codingIntensity": 0,
-        "workload": 0.45
+        "workload": 0.3
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Imperial Horizons module on how evidence, media and politics shape science and innovation policy, assessed by a briefing, an essay and class performance. Evidence: policy-ethics 0.95 \"the intersection between science and policy\"."
+      "derivedRationale": "An interactive, discussion-led module on why policy does not always follow scientific evidence, using case studies such as abortion law, stem cell research, AI and climate change. It also examines innovation policy and what makes Silicon Valley successful, with guest speakers and student-led sessions. Published assessment: Science briefing (1,000 words) (30%, coursework), Analytical essay (2,000 words) (50%, coursework), Module performance (20%, practical). Evidence: policy-ethics 0.90 \"explores the intersection between science and policy using multidisciplinary methods\"; entrepreneurship-innovation 0.50 \"We also take a deep dive into innovation policy.\"."
     }
   ]
 }

@@ -22,6 +22,7 @@ import {
   type AnalystOutput,
   analystOutputSchema,
   applyAnalystChecks,
+  averageSamples,
   MODULES_NOTE,
   REVIEW_PREFIX,
 } from './lib/analyst.ts';
@@ -55,7 +56,8 @@ function systemPrompt(pathways: { id: string; title: string }[]): string {
     '- demand: examShare is the share of marks from exams (use the published assessment when given); groupShare is',
     '  the share of group work; applied is 0 for theory and 1 for hands-on application; mathsIntensity,',
     '  codingIntensity and workload are 0 to 1 relative to other engineering modules.',
-    '- summary: one or two plain sentences on what the module covers and how it is assessed.',
+    '- summary: one or two plain sentences on what the module covers. Do not restate the assessment; the published',
+    '  assessment is added to the record from the module page.',
     '',
     `Topics:\n${topics.join('\n')}`,
     '',
@@ -77,6 +79,13 @@ function modulePrompt(m: RawModule): string {
     '</module>',
   ].join('\n');
 }
+
+/** Token usage across every call, printed at the end so the run's cost is visible. */
+const usage = { input: 0, output: 0, calls: 0 };
+
+/** Modules analysed at once: enough to finish in a few minutes, few enough to stay clear of rate limits. */
+const CONCURRENCY = 4;
+
 
 async function analyse(
   client: Anthropic,
@@ -103,6 +112,9 @@ async function analyse(
       tool_choice: { type: 'auto' },
       messages: [{ role: 'user', content: `${modulePrompt(m)}\n\nRecord your analysis by calling ${TOOL_NAME}.` }],
     });
+    usage.input += response.usage.input_tokens;
+    usage.output += response.usage.output_tokens;
+    usage.calls += 1;
     const call = response.content.find((block) => block.type === 'tool_use');
     const parsed = schema.safeParse(call?.input);
     if (parsed.success) return parsed.data;
@@ -116,6 +128,8 @@ async function main(): Promise<void> {
   const envFile = resolve(REPO_ROOT, '.env');
   if (existsSync(envFile)) process.loadEnvFile(envFile);
   const client = new Anthropic({ apiKey: requireEnv('ANTHROPIC_API_KEY') });
+  // Samples per module, averaged so tags are stable between runs. Read after .env loads; 1 gives a cheap run.
+  const samples = Math.max(1, Number(process.env.ANALYST_SAMPLES ?? 3));
   const model = requireEnv('MODEL_SMART');
   const raw = readDataset(DATASET_FILES.rawModules, RawModulesFile);
   const pathways = readDataset(DATASET_FILES.pathways, PathwaysFile).pathways;
@@ -124,18 +138,28 @@ async function main(): Promise<void> {
   const schema = analystOutputSchema([first, ...rest]);
   const system = systemPrompt(pathways);
 
-  const modules: Module[] = [];
-  for (const m of raw.modules) {
-    console.log(`Analysing ${m.id} ${m.title}`);
-    const derived = applyAnalystChecks(m, await analyse(client, model, system, schema, m));
-    const { assessment: _assessment, publishedSlot: _publishedSlot, ...fields } = m;
-    modules.push({ ...fields, ...derived });
-  }
+  // A small worker pool; results are written back by index so the file keeps the raw order.
+  const modules: Module[] = new Array(raw.modules.length);
+  let next = 0;
+  const worker = async () => {
+    while (next < raw.modules.length) {
+      const index = next++;
+      const m = raw.modules[index]!;
+      console.log(`Analysing ${m.id} ${m.title}`);
+      const first = await analyse(client, model, system, schema, m);
+      const rest = await Promise.all(Array.from({ length: samples - 1 }, () => analyse(client, model, system, schema, m)));
+      const derived = applyAnalystChecks(m, averageSamples([first, ...rest], m.description));
+      const { assessment: _assessment, publishedSlot: _publishedSlot, ...fields } = m;
+      modules[index] = { ...fields, ...derived };
+    }
+  };
+  await Promise.all(Array.from({ length: CONCURRENCY }, worker));
 
   const file = ModulesFile.parse({ _note: MODULES_NOTE, modules });
   writeFileSync(resolve(DATA_DIR, DATASET_FILES.modules), `${JSON.stringify(file, null, 2)}\n`);
   const flagged = modules.filter((m) => m.derivedRationale.startsWith(REVIEW_PREFIX)).length;
   console.log(`Wrote ${modules.length} modules (${flagged} flagged for staff review).`);
+  console.log(`Usage: ${usage.calls} calls, ${usage.input} input and ${usage.output} output tokens.`);
 }
 
 await main();

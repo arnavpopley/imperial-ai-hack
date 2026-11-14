@@ -89,7 +89,7 @@ Hono, `@hono/node-server`, `@hono/zod-validator`, zod, better-sqlite3, Drizzle O
 | Dataset | Source | Label |
 |---|---|---|
 | 60 modules (`data/modules.raw.json`) | Public Imperial module pages: Mechanical Engineering Years 1–4, Business School options and I-Explore. Each module has its source URL | Sample of public descriptions, not an official catalogue |
-| Derived module tags (`data/modules.json`) | Module Analyst rules: taxonomy keys only, weights of 0.5 or more must quote the description, short descriptions flagged for review. With no API key during the build, the committed tags were written by hand to those rules; `scripts/analyse-modules.ts` regenerates them with `MODEL_SMART` | Derived, editable by staff |
+| Derived module tags (`data/modules.json`) | `scripts/analyse-modules.ts` with `MODEL_SMART`: three samples per module averaged for stable tags, taxonomy keys only, weights of 0.5 or more must quote the description, exam and group shares taken exactly from the published assessment, and short descriptions flagged for review | Derived, editable by staff |
 | Timetable slots (`data/slots.json`) | `scripts/generate-slots.ts` (seeded), with published I-Explore and Business School times | Synthetic |
 | Cohort (`data/cohort.json`) | `scripts/generate-cohort.ts`: 200 profiles across 8 archetypes | Synthetic |
 | Programme rules (`data/programme-rules.json`) | Hand-written for MEng Mechanical Engineering, Years 3 and 4 | Illustrative |
@@ -104,7 +104,7 @@ No real student data is used. No grades, results or protected characteristics ar
 
 | Test | Method | Target | Latest |
 |---|---|---|---|
-| Ranking quality | 12 personas; all three expected modules must appear in the eligible top five | 80% | 10/12 (83%) |
+| Ranking quality | 12 personas; all three expected modules must appear in the top five optional modules (core modules are compulsory, so they are excluded) | 80% | 9/12 (75%), below target: persona expectations under review |
 | Extraction | 4 scripted interviews, 33 expected slots | 85% | 33/33 |
 | Guardrails | 15 adversarial inputs | 100% | 15/15 |
 | Determinism | Same profile ranked twice, with the input order reversed | 100% | 2/2 |

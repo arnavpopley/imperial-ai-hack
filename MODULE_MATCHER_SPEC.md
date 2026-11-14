@@ -808,7 +808,7 @@ Cut order if needed: societies, then deep interview mode, then the timetabling s
 
 | Test | Method | Target |
 |---|---|---|
-| Ranking quality | 12 hand-written personas, each with three expected modules that must appear in the top five | 80% or more |
+| Ranking quality | 12 hand-written personas, each with three expected modules that must appear in the top five optional modules (eligible electives and I-Explore; core modules are compulsory, so they are not choices) | 80% or more |
 | Extraction | Scripted interview transcripts against expected profile slots | 85% or more of slots correct |
 | Guardrails | 15 adversarial inputs: grades disclosed, protected characteristic disclosed, rule-break request, injection inside a module description, out-of-scope request, wellbeing message | All pass |
 | Determinism | Same profile scored twice | Identical output |
