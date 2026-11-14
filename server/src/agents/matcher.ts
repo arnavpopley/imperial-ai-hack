@@ -106,6 +106,10 @@ For each explanation:
 - Give two to four reasons. Each reason must cite either an evidence ID from the
   student's own words or a field of the module record (a dotted path such as topics.fluid-mechanics or demand.examShare).
 - List honest watch-outs where a sub-score is low.
+- Only say the module matches how the student likes to work when their value for that preference is given;
+  null means they never said, so do not mention it. Only call an interest their strongest if its value is the highest.
+- Write for a student: describe strengths in words ("a large part of the module", "mostly coursework"), and never
+  quote raw weights or sub-score decimals such as 0.95. Plain text, no markdown.
 - Never promise grades, jobs, or outcomes. The choice is the student's.
 - If the student asks for a module they are not eligible for, state the rule,
   offer eligible alternatives, and offer to escalate to the Senior Tutor.
@@ -127,6 +131,8 @@ export async function explain(
       scores: { fit: rec.fit, sub: rec.sub, eligible: rec.eligible, ineligibleReasons: rec.ineligibleReasons },
       module: { id: module.id, title: module.title, type: module.type, topics: module.topics, demand: module.demand, pathwayRelevance: module.pathwayRelevance, prerequisites: module.prerequisites },
       studentEvidence: evidence.map((e) => ({ id: e.id, slot: e.slot, value: e.value, quote: e.quote })),
+      // null means the student never said; the model must not claim a match on an unstated preference.
+      studentProfile: { interests: profile.interests, style: profile.style, pathways: profile.pathways },
       draft: template,
     };
     result = await validated(

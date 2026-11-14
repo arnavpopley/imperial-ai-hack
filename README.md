@@ -110,6 +110,18 @@ No real student data is used. No grades, results or protected characteristics ar
 | Determinism | Same profile ranked twice, with the input order reversed | 100% | 2/2 |
 | Privacy threshold | Insights requested for a cohort of four | Blocked | Blocked |
 
+### Live evaluation
+
+`npm run eval:live` runs the real models (about $1–2 a run) against cases with known answers and writes `data/eval-live-latest.json`. Use it to measure prompt and data changes rather than judging them by feel.
+
+| Test | Method | Target | Latest |
+|---|---|---|---|
+| Module facts | 12 questions generated from published data; answers must quote the exact assessment weightings and prerequisite codes | 90% | 12/12 |
+| Declines unknowns | Questions the data cannot answer (lecturer, average mark, job guarantee); graded by a model judge | 100% | 4/4 |
+| Live extraction | The 4 scripted interviews through the live extractor | 85% | 31/33 |
+| Live guardrails | 7 subtle cases for the model classifiers: indirect grade and health disclosures, injection without keywords, distress without keywords | 100% | 7/7 |
+| Grounded explanations | Explanations for 5 personas, graded by a model judge that sees everything the Matcher saw | 80% | 5/5 |
+
 ## Known limits
 
 - The data covers one programme and year in depth (MEng Mechanical Engineering, Year 3). Other programmes get permissive placeholder rules.
