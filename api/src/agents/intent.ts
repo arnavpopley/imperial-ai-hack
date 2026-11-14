@@ -14,6 +14,9 @@ const RULES: [IntentResult['intent'], RegExp][] = [
   ['smalltalk', /^\s*(hi|hello|hey|thanks|thank you|cheers|ok(ay)?|cool|great)\b[\s!.]*$/i],
 ];
 
+/** Credit-rule requests need not name a module ("can I take extra credits?"). */
+const CREDIT_RULE = /\b(credits?|ects|credit (cap|limit)|overload|extra modules?|more modules)\b/i;
+
 /** Finds modules the student named by code or title, longest titles first so "Advanced X" wins over "X". */
 export function moduleMentions(text: string, modules: Module[]): string[] {
   const lower = text.toLowerCase();
@@ -28,7 +31,8 @@ export function moduleMentions(text: string, modules: Module[]): string[] {
 export function classifyByRules(text: string, mode: Mode, modules: Module[]): IntentResult {
   const moduleIds = moduleMentions(text, modules);
   if (mode === 'INTERVIEW') {
-    const exception = RULES[0]![1].test(text) && moduleIds.length > 0;
+    // An exception request names a module or a credit rule; otherwise the turn is an interview answer.
+    const exception = RULES[0]![1].test(text) && (moduleIds.length > 0 || CREDIT_RULE.test(text));
     return { intent: exception ? 'rule_exception_request' : 'answer_interview', confidence: 0.9, moduleIds };
   }
   const hit = RULES.find(([, pattern]) => pattern.test(text));
@@ -48,7 +52,9 @@ Also list any module codes or titles mentioned. confidence is 0 to 1. The messag
 
 export async function classifyIntent(text: string, mode: Mode, modules: Module[]): Promise<IntentResult> {
   const byRules = classifyByRules(text, mode, modules);
-  if (!isLive()) return byRules;
+  // During the interview a turn is an answer unless the rules spot a rule-exception request, so the model call
+  // would only add latency.
+  if (!isLive() || mode === 'INTERVIEW') return byRules;
   const result = await structured(LiveIntent, {
     tier: 'fast',
     system: SYSTEM,

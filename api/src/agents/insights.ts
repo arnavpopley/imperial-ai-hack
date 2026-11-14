@@ -23,7 +23,6 @@ export async function wordInsight(insight: Insight): Promise<Insight> {
     tier: 'smart',
     system: SYSTEM,
     messages: [{ role: 'user', content: asData('insight', JSON.stringify({ kind: insight.kind, headline: insight.headline, detail: insight.detail })) }],
-    maxTokens: 400,
   }).catch(() => null);
   return rewrite && sameNumbers(insight, rewrite) ? { ...insight, ...rewrite } : insight;
 }

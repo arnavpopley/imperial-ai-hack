@@ -136,7 +136,6 @@ export async function explain(
           tier: 'smart',
           system: SYSTEM,
           messages: [{ role: 'user', content: `${asData('module', stripInjection(module.description).text)}\n${asData('scores-and-evidence', JSON.stringify(brief))}` }],
-          maxTokens: 1200,
         });
         return live && {
           moduleId: module.id,
@@ -217,9 +216,9 @@ export async function holdPosition(
     ? await streamText(
         {
           tier: 'smart',
+          effort: 'low',
           system: HOLD_SYSTEM,
           messages: [{ role: 'user', content: asData('rule-and-alternatives', JSON.stringify({ module: args.module.title, rule: args.reasons, alternatives: args.alternatives })) }],
-          maxTokens: 400,
         },
         () => {},
       ).catch(() => template)

@@ -109,6 +109,10 @@ describe('intent rules', () => {
     const r = classifyByRules('Can I take Robotics and Control without the prerequisite?', 'RECOMMEND', fixtureModules);
     expect(r).toMatchObject({ intent: 'rule_exception_request', moduleIds: ['ME3-ROB'] });
   });
+  it('spots a credit-rule exception during the interview without a module name', () => {
+    expect(classifyByRules('Can I take extra credits this year?', 'INTERVIEW', fixtureModules).intent).toBe('rule_exception_request');
+  });
+
   it('treats interview turns as answers', () => {
     expect(classifyByRules('I like fluids', 'INTERVIEW', fixtureModules).intent).toBe('answer_interview');
   });
