@@ -4,7 +4,7 @@ import { fixtureModules, fixtureProfile, fixtureSession } from '@modulematch/sha
 import { describe, expect, it } from 'vitest';
 import { extract, extractByCues, mergeUpdates } from '../src/agents/extractor.ts';
 import { classifyByRules } from '../src/agents/intent.ts';
-import { nextQuestion, QUICK_PLAN, unfilledSlots, whatIHeard } from '../src/agents/interviewer.ts';
+import { nextQuestion, QUICK_PLAN, reflect, unfilledSlots, whatIHeard } from '../src/agents/interviewer.ts';
 import { explainByRules } from '../src/agents/matcher.ts';
 import { canTransition } from '../src/agents/modes.ts';
 
@@ -101,6 +101,16 @@ describe('interviewer', () => {
     const card = whatIHeard(fixtureProfile, { 'aerospace-motorsport': 'Aerospace and motorsport' });
     expect(card).toContain('Fluid mechanics');
     expect(card).toContain('Aerospace and motorsport');
+  });
+
+  it('spells out the days to keep free', () => {
+    const card = whatIHeard({ ...fixtureProfile, timetablePrefs: { avoidDays: ['fri'], earliestStart: null } }, {});
+    expect(card).toContain('Keep free: Friday');
+  });
+
+  it('keeps acronyms in the reflection', () => {
+    const heard: Evidence = { id: 'e1', sessionId: 's1', turnId: 't1', slot: 'interest:machine-learning-ai', value: 0.85, quote: 'I love ML', confidence: 0.7 };
+    expect(reflect([heard])).toBe('Got it: machine learning and AI.');
   });
 });
 
