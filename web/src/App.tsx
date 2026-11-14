@@ -4,6 +4,7 @@ import { motion, MotionConfig } from 'motion/react';
 import { cx } from './components/cx.ts';
 import { Icon, type IconName } from './components/Icon.tsx';
 import { LoadingState } from './components/StateViews.tsx';
+import { ThemeToggle } from './components/ThemeToggle.tsx';
 import { StudentApp } from './student/StudentApp.tsx';
 
 // The staff console and the "How it works" page load on demand, so students only download the student app.
@@ -114,6 +115,7 @@ function AppHeader({ role }: { role: Role }) {
             })}
           </ul>
         </nav>
+        <ThemeToggle />
       </div>
     </header>
   );
