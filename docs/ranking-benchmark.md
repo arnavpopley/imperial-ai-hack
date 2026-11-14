@@ -28,7 +28,7 @@ They cover all eight career pathways plus five undecided students (5 aerospace, 
 | NDCG@5 | Normalised discounted cumulative gain of the engine's top five, with votes as graded relevance |
 | mean rank | Mean position of the judge's picks in the engine's full list of 31, weighted by votes. Lower is better; random is 16 |
 
-There are two reference points. A **random ranking** (seeded Monte Carlo, 2,000 shuffles per persona) is the floor. **Judge self-agreement**, the top-five overlap between the judge's two samples, is a rough ceiling: an engine cannot be expected to agree with the judge more than the judge agrees with itself.
+There are two reference points. A **random ranking** (seeded Monte Carlo, 2,000 shuffles per persona) is the floor. **Judge self-agreement**, the top-five overlap between the judge's two samples, measures how consistent the judge is. It is not a strict ceiling: precision counts a pick from either sample, so a persona can score 60% precision with 0% self-agreement (`theorist-no-exams` does).
 
 **Robustness check.** The full benchmark was also run with Claude Opus 5.5 as the judge, with the same prompt, samples and metrics (`--judge-model claude-opus-5-5 --out <file>`). That run is not committed; its numbers are quoted below.
 
@@ -44,7 +44,7 @@ Run on 2026-11-14 with all 40 personas scored. The Opus columns come from the se
 | mean rank of the judge's picks (of 31) | **5.0** | 5.1 | 16.0 |
 | judge self-agreement | 84% | 88% | |
 
-The two judges' consensus top fives overlap by 84%. So the engine (72%) is about 12 points below the agreement between two independent strong judges, and far above random. The median persona NDCG@5 is 0.81, and 20 of the 40 personas reach 0.80 or more.
+The two judges' consensus top fives overlap by 84%, which gives a sense of how much two independent strong judges agree. The engine (72%) is about 12 points below that and far above random. The comparison is indicative, not exact, because precision@5 counts a pick from either sample. The median persona NDCG@5 is 0.81, and 20 of the 40 personas reach 0.80 or more.
 
 By trait (Sonnet judge):
 
@@ -188,7 +188,7 @@ None of these changes the scoring formula or the spec weights. Items 4 and 5 nee
    - `IEX-INNOVATE`: consider adding `design-manufacturing` (around 0.4), because the page describes a design process.
    - `MECH60004`: consider `finance-economics` (around 0.3) for the stated socio-economic content. `MECH60009`: `pathwayRelevance.energy-transition` 0.1 may be low.
 
-   After any tag edit, run `npm run benchmark -- --rescore`. The judge never sees tags, so its saved picks stay valid and re-scoring costs nothing.
+   After any tag edit, run `npm run benchmark -- --rescore --db`. The staff editor saves to the app's SQLite database, not to `data/modules.json`, and `--db` scores that catalogue. The judge never sees tags, so its saved picks stay valid and re-scoring costs nothing.
 3. **Prune minor tags (below about 0.4) on six-topic modules, case by case**, starting with `MECH60001` and `MECH60024`. This is a tag-level fix for the dilution cases. Do not change the formula: the primary-topics diagnostic shows no aggregate gain.
 4. **For the user's decision: let strong statements act as filters, not weights.** "No exams" and "no business modules" are the two clearest failures (sections 4 and 5). A catalogue filter such as "coursework-heavy only" or "hide Business School", set from the interview, would honour them without touching the spec weights.
 5. **For the user's decision: an "unknown" demand value.** Spec 8.3 has no way to say "assessment not published". Skipping that dimension, as null student values already are, would make item 1 principled rather than a workaround.
@@ -212,8 +212,9 @@ A fresh full run therefore costs about $0.50, well under the $3 to $5 planned. `
 ```bash
 npm run benchmark                     # judge any persona whose saved picks are stale, then score
 npm run benchmark -- --rescore        # no API calls: re-score the engine against the saved picks
+npm run benchmark -- --rescore --db   # the same, against the app's database (where staff tag edits are saved)
 npm run benchmark -- --fresh          # sample the judge again for every persona
 npm run benchmark -- --judge-model claude-opus-5-5 --out /tmp/benchmark-opus.json
 ```
 
-Saved picks are keyed by a hash of the judge prompt (including the module pages), the persona's description, the model and the effort. Editing a description or a module page re-judges only what changed.
+Every successful judge reply is saved, even when the persona's other sample fails, so a re-run never pays for it twice. Saved picks are keyed by a hash of the judge prompt (including the module pages), the persona's description, the model and the effort. Editing a description or a module page re-judges only what changed.

@@ -69,7 +69,7 @@ export function BenchmarkPanel() {
         ))}
       </dl>
       <p className="text-xs text-muted">
-        The tutor agrees with itself {pct(judgeSelfAgreement)} of the time across its two tries, a rough ceiling. Judge{' '}
+        Across its two tries the tutor repeats {pct(judgeSelfAgreement)} of its picks, a measure of how consistent it is. Judge{' '}
         {data.judge.model}, run {new Date(data.at).toLocaleDateString()}. Synthetic students; see
         docs/ranking-benchmark.md.
       </p>

@@ -8,6 +8,8 @@
 // medium effort, about $1.60 with --judge-model claude-opus-5-5). Options go after `--`, e.g.
 // `npm run benchmark -- --rescore`.
 //   --rescore        no API calls: re-score the engine against the judge picks already saved (free, for tag edits)
+//   --db             score the catalogue in the app's SQLite database (DATABASE_PATH), where the staff tag
+//                    editor saves its edits, instead of data/modules.json
 //   --fresh          ignore saved judge picks and sample the judge again
 //   --limit N        only the first N personas (a pilot)
 //   --effort E       judge effort, low or medium (default medium)
@@ -55,7 +57,11 @@ delete process.env.MODULEMATCH_OFFLINE;
 
 // ---------- data ----------
 
-const modules = readDataset(DATASET_FILES.modules, ModulesFile).modules;
+const useDb = flag('db');
+// Imported lazily so the default run never opens (or creates) the database.
+const modules = useDb ? (await import('../../server/src/db/repo.ts')).listModules() : readDataset(DATASET_FILES.modules, ModulesFile).modules;
+if (modules.length === 0) throw new Error('The database has no modules. Run `npm run seed` or start the app first.');
+const catalogueSource = useDb ? `database (${(await import('../../server/src/db/client.ts')).databasePath()})` : `data/${DATASET_FILES.modules}`;
 const rawById = new Map(readDataset(DATASET_FILES.rawModules, RawModulesFile).modules.map((m) => [m.id, m]));
 const byId = new Map(modules.map((m) => [m.id, m]));
 const programme = 'MEng Mechanical Engineering';
@@ -152,7 +158,10 @@ async function sampleJudge(p: BenchmarkPersona, sample: number): Promise<SavedSa
     try {
       const reply = await judgeOnce(systems[sample]!, codes, p.description, effort, model);
       runUsage = addUsage(runUsage, reply.usage);
-      return { key, model, effort, order, picks: reply.picks, usage: reply.usage };
+      const fresh: SavedSample = { key, model, effort, order, picks: reply.picks, usage: reply.usage };
+      // Saved at once, so a paid sample is kept even if this persona's other sample fails.
+      saved.set(key, fresh);
+      return fresh;
     } catch (error) {
       const usage = (error as { usage?: Usage }).usage;
       if (usage) runUsage = addUsage(runUsage, usage);
@@ -350,6 +359,7 @@ const output = {
     'Synthetic benchmark output (docs/ranking-benchmark.md). Personas are invented; the judge is an LLM given only the persona description and the public module pages. Regenerate with `npm run benchmark`.',
   at: new Date().toISOString(),
   judge: { model, effort, samplesPerPersona: SAMPLES, orderings: ['catalogue', 'reversed'] },
+  catalogue: catalogueSource,
   k: K,
   eligibleModules: optionalIds.length,
   weights: DEFAULT_WEIGHTS,
@@ -382,7 +392,8 @@ console.log(`precision@5   ${pct(overall.precisionAt5).padEnd(8)} ${pct(random.p
 console.log(`recall@5      ${pct(overall.recallAt5).padEnd(8)} ${pct(random.recallAt5)}`);
 console.log(`NDCG@5        ${overall.ndcgAt5.toFixed(2).padEnd(8)} ${random.ndcgAt5.toFixed(2)}`);
 console.log(`mean rank     ${overall.meanJudgeRank.toFixed(1).padEnd(8)} ${random.meanJudgeRank.toFixed(1)}   (of the judge's picks in the engine's list of ${optionalIds.length})`);
-console.log(`judge self-agreement ${pct(agreement)} (top-five overlap between its two samples)`);
+console.log(`judge self-agreement ${pct(agreement)} (top-five overlap between its two samples: how consistent the judge is)`);
+console.log(`catalogue: ${catalogueSource}`);
 console.log('\nBy trait:');
 for (const [t, m] of Object.entries(byTrait)) if (m.personas) console.log(`  ${t.padEnd(14)} n=${String(m.personas).padEnd(3)} P@5 ${pct(m.precisionAt5)}  R@5 ${pct(m.recallAt5)}  NDCG ${m.ndcgAt5.toFixed(2)}`);
 console.log('\nDiagnostics (same judge picks, engine variants; the engine itself is unchanged):');

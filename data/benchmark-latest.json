@@ -1,6 +1,6 @@
 {
   "_note": "Synthetic benchmark output (docs/ranking-benchmark.md). Personas are invented; the judge is an LLM given only the persona description and the public module pages. Regenerate with `npm run benchmark`.",
-  "at": "2026-11-14T22:57:03.607Z",
+  "at": "2026-11-14T23:11:01.507Z",
   "judge": {
     "model": "claude-sonnet-5-5",
     "effort": "medium",
@@ -10,6 +10,7 @@
       "reversed"
     ]
   },
+  "catalogue": "data/modules.json",
   "k": 5,
   "eligibleModules": 31,
   "weights": {
