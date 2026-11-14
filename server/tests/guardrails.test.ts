@@ -42,6 +42,48 @@ describe('G2 redaction', () => {
     expect(result.text).toBe('I love robotics.');
   });
 
+  it.each([
+    ['I have ADHD, but I enjoy electronics.', 'I enjoy electronics.', 'health'],
+    ['I have ADHD … but I enjoy electronics.', 'I enjoy electronics.', 'health'],
+    ['I love CFD but I got 52% in thermodynamics.', 'I love CFD.', 'grades'],
+    ["I'm an international student; I love robotics.", 'I love robotics.', 'protected'],
+    ["I can't afford the field trip, but I really like the design modules.", 'I really like the design modules.', 'finances'],
+    ['I have dyslexia so I prefer coursework, but I enjoy writing.', 'I enjoy writing.', 'health'],
+  ])('removes only the sensitive clause of "%s"', (input, kept, category) => {
+    const result = redactByPattern(input);
+    expect(result.categories).toContain(category);
+    expect(result.text).toBe(kept);
+  });
+
+  it.each([
+    'I have ADHD; it makes long exams hard.',
+    'I have ADHD, but that is why I like coursework.',
+    'I have ADHD so long exams are hard.',
+  ])('drops a clause that points back to the disclosure: "%s"', (input) => {
+    expect(redactByPattern(input).text).toBe('');
+  });
+
+  it.each([
+    'I must limit myself to twelve credits this term due to health reasons.',
+    "It's a huge source of anxiety for me, so I prefer written reports.",
+    'My anxiety makes exams really hard for me.',
+    'I require a quiet testing environment and extended time on exams.',
+  ])('removes a health disclosure without a diagnosis verb: "%s"', (sentence) => {
+    const result = redactByPattern(`I love robotics. ${sentence}`);
+    expect(result.categories).toContain('health');
+    expect(result.text).toBe('I love robotics.');
+  });
+
+  it('removes a GPA target', () => {
+    expect(redactByPattern("I love robotics. I'm aiming for a 3.8 to stay competitive.")).toEqual({ text: 'I love robotics.', categories: ['grades'] });
+  });
+
+  it('keeps the other sentences around a cut clause', () => {
+    expect(redactByPattern('I love fluids. I got 58% in thermo, but I liked the labs. Fridays off please.').text).toBe(
+      'I love fluids. I liked the labs. Fridays off please.',
+    );
+  });
+
   it('keeps stated interests about communities (fairness rule)', () => {
     const text = 'I want to get involved with the Indian community on campus.';
     expect(redactByPattern(text)).toEqual({ text, categories: [] });
