@@ -80,19 +80,37 @@ const ICONS: Record<PlanStepId, IconName> = {
  */
 export function planStatuses(session: SessionState): Map<PlanStepId, StepStatus> {
   const { askedSteps, finished } = session.interview;
-  const awaiting = finished ? undefined : askedSteps.at(-1);
+  const awaiting = finished ? undefined : sectionOf(askedSteps.at(-1));
   const statuses = new Map<PlanStepId, StepStatus>();
   for (const step of PLAN) {
     const asked = askedSteps.includes(step.id);
     const done = finished || (asked && step.id !== awaiting) || (step.id !== awaiting && step.filled(session));
     statuses.set(step.id, done ? 'done' : 'upcoming');
   }
-  const current =
-    isPlanStep(awaiting) && statuses.get(awaiting) === 'upcoming'
-      ? awaiting
-      : PLAN.find((step) => statuses.get(step.id) === 'upcoming')?.id;
+  // A follow-up question reopens the section it belongs to, even if that section was done before.
+  const current = awaiting ?? PLAN.find((step) => statuses.get(step.id) === 'upcoming')?.id;
   if (current && !finished) statuses.set(current, 'current');
   return statuses;
+}
+
+/** Follow-up question ids from the server's deep mode (`follow:<slot>`) and the plan section each belongs to. */
+const FOLLOW_UP_SECTIONS: Record<string, PlanStepId> = {
+  interest: 'love',
+  pathways: 'career',
+  'style.examPreference': 'assessment',
+  'style.appliedPreference': 'assessment',
+  'style.mathsComfort': 'comfort',
+  'style.codingComfort': 'comfort',
+  'style.groupPreference': 'team',
+  'style.workloadTolerance': 'team',
+  breadthAppetite: 'breadth',
+};
+
+/** The plan section an asked step id belongs to: a plan step itself, or the section of a follow-up. */
+function sectionOf(stepId: string | undefined): PlanStepId | undefined {
+  if (isPlanStep(stepId)) return stepId;
+  if (stepId?.startsWith('follow:')) return FOLLOW_UP_SECTIONS[stepId.slice('follow:'.length)];
+  return undefined;
 }
 
 export function buildTimeline(session: SessionState): TimelineStep[] {

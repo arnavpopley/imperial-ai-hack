@@ -45,8 +45,8 @@ export function ProfilePanel({ profile, evidence, highlightSlots, className }: P
   const confidence = confidenceLabel(profile.completeness);
   const { avoidDays, earliestStart } = profile.timetablePrefs;
   const glow = (slot: string, ev: Evidence | undefined) => isFresh(ev) || (highlightSlots?.has(slot) ?? false);
-  const timetableEv =
-    latestEvidence(evidence, 'timetablePrefs.avoidDays') ?? latestEvidence(evidence, 'timetablePrefs.earliestStart');
+  const avoidDaysEv = latestEvidence(evidence, 'timetablePrefs.avoidDays');
+  const earliestStartEv = latestEvidence(evidence, 'timetablePrefs.earliestStart');
   const pathwaysEv = latestEvidence(evidence, 'pathways');
   const breadthEv = latestEvidence(evidence, 'breadthAppetite');
 
@@ -172,32 +172,34 @@ export function ProfilePanel({ profile, evidence, highlightSlots, className }: P
         </ProfileSection>
 
         <ProfileSection title="Keep free">
-          <Quoted evidence={timetableEv} glow={glow('timetablePrefs.avoidDays', timetableEv)}>
-            <span className="grid gap-2">
-              <span className="flex gap-1.5" role="list" aria-label="Weekdays">
-                {WEEKDAYS.map((day) => {
-                  const free = avoidDays.includes(day);
-                  return (
-                    <span
-                      key={day}
-                      role="listitem"
-                      aria-label={`${DAY_NAMES[day]}${free ? ', kept free' : ''}`}
-                      className={cx(
-                        'grid h-9 flex-1 place-items-center rounded-lg text-[12px] font-medium transition-colors',
-                        free ? 'bg-brand text-on-brand' : 'bg-surface-2 text-muted',
-                      )}
-                    >
-                      {DAY_LABELS[day]}
-                    </span>
-                  );
-                })}
+          <span className="grid gap-1">
+            <Quoted evidence={avoidDaysEv} glow={glow('timetablePrefs.avoidDays', avoidDaysEv)}>
+              <span className="sr-only">
+                {avoidDays.length > 0
+                  ? `Days kept free: ${avoidDays.map((d) => DAY_NAMES[d]).join(', ')}`
+                  : 'No days kept free'}
               </span>
-              <span className="flex items-center gap-1.5 text-[12px] text-muted">
+              <span className="flex gap-1.5 py-1" aria-hidden="true">
+                {WEEKDAYS.map((day) => (
+                  <span
+                    key={day}
+                    className={cx(
+                      'grid h-9 flex-1 place-items-center rounded-lg text-[12px] font-medium transition-colors',
+                      avoidDays.includes(day) ? 'bg-brand text-on-brand' : 'bg-surface-2 text-muted',
+                    )}
+                  >
+                    {DAY_LABELS[day]}
+                  </span>
+                ))}
+              </span>
+            </Quoted>
+            <Quoted evidence={earliestStartEv} glow={glow('timetablePrefs.earliestStart', earliestStartEv)}>
+              <span className="flex items-center gap-1.5 py-1 text-[12px] text-muted">
                 <Icon name="clock" size={12} />
                 {earliestStart ? `Not before ${earliestStart}` : 'Any start time'}
               </span>
-            </span>
-          </Quoted>
+            </Quoted>
+          </span>
         </ProfileSection>
       </section>
     </MotionConfig>

@@ -198,7 +198,12 @@ export function InterviewProgressBar({ session, extras, activeExtra, onOpenExtra
         <span className="min-w-0 truncate">
           <span className="text-muted">Now: </span>
           <span className="font-semibold">
-            {current?.label ?? (session.interview.finished ? 'All done' : 'Getting started')}
+            {current?.label ??
+              (session.interview.finished
+                ? 'All done'
+                : session.interview.askedSteps.length > 0
+                  ? 'A few more questions'
+                  : 'Getting started')}
           </span>
         </span>
         <span className="shrink-0 text-muted tabular-nums">

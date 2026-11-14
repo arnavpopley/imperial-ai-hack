@@ -19,8 +19,8 @@ const SHOWN = 4;
 export function SocietiesPanel({ onSeen, onClose }: SocietiesPanelProps) {
   const { session } = useReadySession();
   const headingId = useId();
-  const interestsKey = Object.keys(session.profile.interests).sort().join(',');
-  const matches = useAsync(() => api.societyMatches(session.id), [session.id, interestsKey]);
+  // Any profile change (a new answer, an edit) can move the matches, so reload whenever the profile is saved.
+  const matches = useAsync(() => api.societyMatches(session.id), [session.id, session.profile.updatedAt]);
   const societies = useAsync(() => api.societies(), []);
   const names = new Map((societies.data ?? []).map((s) => [s.id, s.name]));
   const top = (matches.data ?? []).slice(0, SHOWN);

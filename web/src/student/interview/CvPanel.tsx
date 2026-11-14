@@ -2,12 +2,11 @@
 // skills, and returns the slots it filled, so the profile panel can light them up.
 import { AnimatePresence, motion } from 'motion/react';
 import { useId, useState, type FormEvent } from 'react';
-import { api } from '../../api.ts';
 import { Button } from '../../components/Button.tsx';
 import { Icon } from '../../components/Icon.tsx';
 import { errorMessage } from '../../components/StateViews.tsx';
 import { slotLabel } from '../labels.ts';
-import { useReadySession } from '../state/SessionProvider.tsx';
+import { BUSY_MESSAGE, useChat } from '../chat/ChatProvider.tsx';
 
 /** Matches the server's CvBody limit. */
 const MAX_LENGTH = 20000;
@@ -26,6 +25,7 @@ interface CvPanelProps {
 /** A 404 means the CV route is not deployed yet; say so plainly instead of showing a status code. */
 function cvErrorMessage(err: unknown): string {
   const message = errorMessage(err);
+  if (message === BUSY_MESSAGE) return message;
   if (message.startsWith('404')) return 'CV reading is not switched on yet. The conversation covers the same ground.';
   if (message.startsWith('400'))
     return 'That text could not be read. Try pasting plain text of up to 20,000 characters.';
@@ -33,7 +33,8 @@ function cvErrorMessage(err: unknown): string {
 }
 
 export function CvPanel({ onImported, onClose }: CvPanelProps) {
-  const { session, replace, invalidateRecs } = useReadySession();
+  // Imports go through the chat's send lock, so a CV and a chat answer never save the profile at once.
+  const { importCv, sending } = useChat();
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,13 +45,11 @@ export function CvPanel({ onImported, onClose }: CvPanelProps) {
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     const content = text.trim();
-    if (!content || busy) return;
+    if (!content || busy || sending) return;
     setBusy(true);
     setError(null);
     try {
-      const response = await api.submitCv(session.id, content);
-      replace(response.session);
-      invalidateRecs();
+      const response = await importCv(content);
       setResult({ slots: response.slots, redacted: response.redacted });
       setText('');
       onImported(response.slots);
@@ -156,9 +155,11 @@ export function CvPanel({ onImported, onClose }: CvPanelProps) {
             />
             <div className="flex flex-wrap items-center justify-between gap-3">
               <span className="text-[12px] text-muted tabular-nums">
-                {text.length.toLocaleString()} / {MAX_LENGTH.toLocaleString()}
+                {sending && !busy
+                  ? 'Finishing the current reply…'
+                  : `${text.length.toLocaleString()} / ${MAX_LENGTH.toLocaleString()}`}
               </span>
-              <Button type="submit" variant="primary" icon="sparkle" busy={busy} disabled={!text.trim()}>
+              <Button type="submit" variant="primary" icon="sparkle" busy={busy} disabled={!text.trim() || sending}>
                 Read my CV
               </Button>
             </div>

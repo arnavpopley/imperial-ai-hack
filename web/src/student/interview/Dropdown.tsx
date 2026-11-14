@@ -3,6 +3,9 @@
 // options are shown but skipped.
 import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
+
+/** Keys typed within this many milliseconds of each other build one type-ahead search. */
+const TYPE_AHEAD_MS = 500;
 import { cx } from '../../components/cx.ts';
 import { Icon } from '../../components/Icon.tsx';
 
@@ -34,6 +37,26 @@ export function Dropdown<T extends string>({ label, options, value, onChange, cl
   const rootRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const selected = options.find((o) => o.value === value);
+  const typed = useRef({ text: '', at: 0 });
+
+  /**
+   * Native-select type-ahead: keys typed in quick succession search for a label prefix ("year 3"), and
+   * pressing the same letter again cycles through the labels that start with it ("y", "y", "y").
+   */
+  const typeAhead = (char: string, from: number): number => {
+    const now = Date.now();
+    const text = (now - typed.current.at < TYPE_AHEAD_MS ? typed.current.text : '') + char.toLowerCase();
+    typed.current = { text, at: now };
+    const cycling = [...text].every((c) => c === text[0]);
+    const search = cycling ? text.charAt(0) : text;
+    const start = cycling ? from + 1 : from;
+    for (let k = 0; k < options.length; k += 1) {
+      const index = (start + k) % options.length;
+      const option = options[index];
+      if (option && !option.disabled && option.label.toLowerCase().startsWith(search)) return index;
+    }
+    return from;
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -80,6 +103,14 @@ export function Dropdown<T extends string>({ label, options, value, onChange, cl
         openList();
         if (key === 'Home') setActive(first());
         if (key === 'End') setActive(last());
+      } else if (key.length === 1 && !event.altKey && !event.ctrlKey && !event.metaKey) {
+        event.preventDefault();
+        const current = Math.max(
+          0,
+          options.findIndex((o) => o.value === value),
+        );
+        setOpen(true);
+        setActive(typeAhead(key, current));
       }
       return;
     }
@@ -100,8 +131,13 @@ export function Dropdown<T extends string>({ label, options, value, onChange, cl
         event.preventDefault();
         setActive(last());
         break;
-      case 'Enter':
       case ' ':
+        event.preventDefault();
+        // Mid-search, a space is part of the label being typed ("year 3"), as in a native select.
+        if (Date.now() - typed.current.at < TYPE_AHEAD_MS) setActive(typeAhead(key, active));
+        else choose(active);
+        break;
+      case 'Enter':
         event.preventDefault();
         choose(active);
         break;
@@ -113,9 +149,9 @@ export function Dropdown<T extends string>({ label, options, value, onChange, cl
         setOpen(false);
         break;
       default:
-        if (key.length === 1) {
-          const match = options.findIndex((o) => !o.disabled && o.label.toLowerCase().startsWith(key.toLowerCase()));
-          if (match >= 0) setActive(match);
+        if (key.length === 1 && !event.altKey && !event.ctrlKey && !event.metaKey) {
+          event.preventDefault();
+          setActive(typeAhead(key, active));
         }
     }
   };
