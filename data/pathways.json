@@ -1,0 +1,147 @@
+{
+  "_note": "Sample career pathways, hand-written for ModuleMatch. Skill weights are illustrative judgements and the opportunities are generic examples, not live listings.",
+  "pathways": [
+    {
+      "id": "aerospace-motorsport",
+      "title": "Aerospace and motorsport",
+      "description": "Performance engineering for aircraft, engines and race cars: aerodynamics, propulsion, structures and vehicle dynamics, usually backed by simulation and testing.",
+      "skills": {
+        "modelling-simulation": 0.9,
+        "quantitative-analysis": 0.8,
+        "design-cad": 0.7,
+        "teamwork": 0.6,
+        "experimental-skills": 0.5,
+        "coding": 0.4
+      },
+      "sampleOpportunities": [
+        "Formula Student or Racing Green design team",
+        "Summer placement in aerodynamics, powertrain or gas-turbine engineering",
+        "Graduate scheme at an aerospace or motorsport manufacturer"
+      ]
+    },
+    {
+      "id": "energy-transition",
+      "title": "Energy transition",
+      "description": "Low-carbon power, storage, nuclear and clean transport: analysing energy systems and making the engineering and economic case for decarbonisation.",
+      "skills": {
+        "quantitative-analysis": 0.8,
+        "modelling-simulation": 0.7,
+        "commercial-awareness": 0.5,
+        "research": 0.5,
+        "experimental-skills": 0.4,
+        "communication": 0.4
+      },
+      "sampleOpportunities": [
+        "Internship with a renewable energy or grid-storage developer",
+        "Graduate scheme in nuclear new build or decommissioning",
+        "Battery or electric-powertrain test engineer placement"
+      ]
+    },
+    {
+      "id": "robotics-automation",
+      "title": "Robotics and automation",
+      "description": "Robots, mechatronic products and automated systems: sensing, actuation, embedded software and control.",
+      "skills": {
+        "coding": 0.9,
+        "modelling-simulation": 0.6,
+        "experimental-skills": 0.6,
+        "design-cad": 0.6,
+        "quantitative-analysis": 0.6,
+        "teamwork": 0.5
+      },
+      "sampleOpportunities": [
+        "Robotics society or RoboCup team",
+        "Summer placement in warehouse or manufacturing automation",
+        "Embedded systems engineer graduate role"
+      ]
+    },
+    {
+      "id": "biomedical-devices",
+      "title": "Biomedical devices",
+      "description": "Implants, prosthetics and medical devices: materials, mechanics and testing applied to the human body.",
+      "skills": {
+        "experimental-skills": 0.8,
+        "design-cad": 0.7,
+        "research": 0.6,
+        "quantitative-analysis": 0.5,
+        "communication": 0.5,
+        "teamwork": 0.4
+      },
+      "sampleOpportunities": [
+        "Prosthetics or MedTech student project",
+        "Summer research placement in a biomechanics lab",
+        "Graduate role in medical-device design and regulatory testing"
+      ]
+    },
+    {
+      "id": "software-data",
+      "title": "Software and data",
+      "description": "Engineering software, data science and machine learning roles that value a mechanical engineer's modelling background.",
+      "skills": {
+        "coding": 1,
+        "quantitative-analysis": 0.8,
+        "modelling-simulation": 0.5,
+        "teamwork": 0.4,
+        "research": 0.3
+      },
+      "sampleOpportunities": [
+        "Software engineering internship",
+        "Data science placement in engineering or energy analytics",
+        "Hackathon team"
+      ]
+    },
+    {
+      "id": "consulting",
+      "title": "Consulting and finance",
+      "description": "Management, engineering and strategy consulting or finance roles: structuring problems, building the business case and presenting it to clients.",
+      "skills": {
+        "communication": 0.9,
+        "commercial-awareness": 0.9,
+        "project-management": 0.7,
+        "teamwork": 0.7,
+        "quantitative-analysis": 0.6
+      },
+      "sampleOpportunities": [
+        "Spring week or summer internship at a consultancy",
+        "Student consultancy project with a charity or start-up",
+        "Graduate analyst programme in banking or energy trading"
+      ]
+    },
+    {
+      "id": "startup-founder",
+      "title": "Start-up founder",
+      "description": "Building a venture from an engineering idea: customer discovery, prototyping, pitching and leading a small team.",
+      "skills": {
+        "commercial-awareness": 0.9,
+        "communication": 0.8,
+        "project-management": 0.7,
+        "teamwork": 0.7,
+        "design-cad": 0.4,
+        "coding": 0.4
+      },
+      "sampleOpportunities": [
+        "Imperial Enterprise Lab programmes and pitch competitions",
+        "Summer internship at an early-stage hardware start-up",
+        "Entrepreneurs society venture team"
+      ]
+    },
+    {
+      "id": "research-academia",
+      "title": "Research and academia",
+      "description": "A PhD or research career: deep analytical and computational work, experiments and writing for publication.",
+      "skills": {
+        "research": 1,
+        "quantitative-analysis": 0.9,
+        "modelling-simulation": 0.8,
+        "communication": 0.6,
+        "coding": 0.5,
+        "experimental-skills": 0.5
+      },
+      "sampleOpportunities": [
+        "Undergraduate Research Opportunities Programme (UROP) placement",
+        "Summer research internship in a department lab",
+        "PhD studentship after the MEng"
+      ]
+    }
+  ]
+}
