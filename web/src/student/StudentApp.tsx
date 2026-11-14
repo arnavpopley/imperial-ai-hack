@@ -1,11 +1,14 @@
 // WS4: the student app (spec 14, screens 1 to 7) as nested routes.
-//   /                    onboarding, or a redirect to the screen for the stored session's mode
+//   /                    the landing page, or a redirect to the screen for the stored session's mode
+//   /welcome             the landing page, always (with a resume button for a returning student)
+//   /start               onboarding, or that same redirect
 //   /interview           interview chat and live profile
 //   /catalogue           ranked modules with what-if weights
 //   /modules/:moduleId   explanation with evidence
 //   /timetable           weekly grid, clashes and swaps
 //   /pathways            pathways, progress and societies
 //   /your-data           what we hold, the quotes behind it, edit and delete (spec 20.3)
+import type { ReactNode } from 'react';
 import { Navigate, Route, Routes } from 'react-router';
 import { Button } from '../components/Button.tsx';
 import { ErrorState, LoadingState } from '../components/StateViews.tsx';
@@ -13,6 +16,7 @@ import { ChatProvider } from './chat/ChatProvider.tsx';
 import { paths, routeForMode } from './routes.ts';
 import { CatalogueScreen } from './screens/CatalogueScreen.tsx';
 import { InterviewScreen } from './screens/InterviewScreen.tsx';
+import { LandingScreen } from './screens/LandingScreen.tsx';
 import { ModuleDetailScreen } from './screens/ModuleDetailScreen.tsx';
 import { OnboardScreen } from './screens/OnboardScreen.tsx';
 import { PathwaysScreen } from './screens/PathwaysScreen.tsx';
@@ -29,7 +33,9 @@ export function StudentApp() {
     <ReferenceDataProvider>
       <SessionProvider>
         <Routes>
-          <Route index element={<EntryRoute />} />
+          <Route index element={<EntryRoute page={<LandingScreen />} />} />
+          <Route path={paths.welcome.slice(1)} element={<WelcomeRoute />} />
+          <Route path={paths.start.slice(1)} element={<EntryRoute page={<OnboardScreen />} />} />
           <Route element={<SessionGate />}>
             <Route path="interview" element={<InterviewScreen />} />
             <Route path="catalogue" element={<CatalogueScreen />} />
@@ -45,12 +51,18 @@ export function StudentApp() {
   );
 }
 
-/** Onboarding for a new student; a returning student resumes at the screen for their mode (spec 12). */
-function EntryRoute() {
+/** A page for a new student; a returning student resumes at the screen for their mode (spec 12). */
+function EntryRoute({ page }: { page: ReactNode }) {
   const { status, session } = useSession();
   if (status === 'ready' && session) return <Navigate to={routeForMode(session.mode)} replace />;
-  if (status === 'none') return <OnboardScreen />;
+  if (status === 'none') return page;
   return <SessionStatusView />;
+}
+
+/** The landing page for everyone; a returning student gets a button back to where they were. */
+function WelcomeRoute() {
+  const { status, session } = useSession();
+  return <LandingScreen resumeTo={status === 'ready' && session ? routeForMode(session.mode) : undefined} />;
 }
 
 /** Screens that need a session. Without one the student goes back to onboarding. */
