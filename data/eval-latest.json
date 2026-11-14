@@ -1,10 +1,10 @@
 {
-  "id": "674a4c36-666f-4cfd-980d-cc51027904d0",
-  "at": "2026-11-14T21:49:05.693Z",
+  "id": "1145be6a-e698-4119-aea6-0a8b60e391aa",
+  "at": "2026-11-14T21:57:38.580Z",
   "results": [
     {
       "name": "Ranking quality",
-      "passed": 10,
+      "passed": 9,
       "total": 12,
       "target": 0.8,
       "details": [
@@ -20,18 +20,18 @@
         },
         {
           "case": "robotics builder",
-          "pass": true,
-          "note": "3/3 in top five optional modules: MECH60009, MECH60018, IEX-VR, MECH60024, MECH60001"
+          "pass": false,
+          "note": "2/3 in top five optional modules: MECH60009, MECH60018, IEX-VR, MECH60024, IEX-ML"
         },
         {
           "case": "structural analyst",
           "pass": true,
-          "note": "3/3 in top five optional modules: MECH60021, MECH60007, MECH60016, MECH60002, MECH60014"
+          "note": "3/3 in top five optional modules: MECH60021, MECH60007, MECH60016, MECH60014, MECH60002"
         },
         {
           "case": "startup founder",
           "pass": true,
-          "note": "3/3 in top five optional modules: BUSI60041, BUSI60038, IEX-INNOVATE, IEX-SPACE, BUSI60043"
+          "note": "3/3 in top five optional modules: BUSI60041, IEX-INNOVATE, BUSI60038, IEX-SPACE, BUSI60043"
         },
         {
           "case": "future consultant",
@@ -41,7 +41,7 @@
         {
           "case": "data scientist",
           "pass": false,
-          "note": "2/3 in top five optional modules: MECH60017, IEX-ML, IEX-VR, MECH60009, BUSI60043"
+          "note": "2/3 in top five optional modules: IEX-ML, MECH60017, IEX-VR, MECH60009, BUSI60043"
         },
         {
           "case": "materials specialist",
@@ -56,17 +56,17 @@
         {
           "case": "climate policy advocate",
           "pass": true,
-          "note": "3/3 in top five optional modules: IEX-CLIMATE, IEX-SCIPOLICY, IEX-GLOBALECON, MECH60004, IEX-HISTSCI"
+          "note": "3/3 in top five optional modules: IEX-CLIMATE, IEX-SCIPOLICY, IEX-GLOBALECON, IEX-HISTSCI, MECH60004"
         },
         {
           "case": "humanities explorer",
           "pass": true,
-          "note": "3/3 in top five optional modules: IEX-PHILMIND, IEX-PSYCHPERF, IEX-HISTSCI, IEX-DECISIONS, IEX-INNOVATE"
+          "note": "3/3 in top five optional modules: IEX-PHILMIND, IEX-PSYCHPERF, IEX-HISTSCI, IEX-INNOVATE, IEX-DECISIONS"
         },
         {
           "case": "creative technologist",
           "pass": true,
-          "note": "3/3 in top five optional modules: IEX-VR, IEX-PSYCHPERF, IEX-CROWDS, MECH60024, IEX-INNOVATE"
+          "note": "3/3 in top five optional modules: IEX-VR, IEX-PSYCHPERF, IEX-INNOVATE, IEX-CROWDS, MECH60024"
         }
       ]
     },

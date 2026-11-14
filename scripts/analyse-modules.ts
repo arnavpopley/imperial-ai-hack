@@ -86,8 +86,6 @@ const usage = { input: 0, output: 0, calls: 0 };
 /** Modules analysed at once: enough to finish in a few minutes, few enough to stay clear of rate limits. */
 const CONCURRENCY = 4;
 
-/** Samples per module, averaged so tags are stable between runs (ANALYST_SAMPLES overrides; 1 for a cheap run). */
-const SAMPLES = Math.max(1, Number(process.env.ANALYST_SAMPLES ?? 3));
 
 async function analyse(
   client: Anthropic,
@@ -130,6 +128,8 @@ async function main(): Promise<void> {
   const envFile = resolve(REPO_ROOT, '.env');
   if (existsSync(envFile)) process.loadEnvFile(envFile);
   const client = new Anthropic({ apiKey: requireEnv('ANTHROPIC_API_KEY') });
+  // Samples per module, averaged so tags are stable between runs. Read after .env loads; 1 gives a cheap run.
+  const samples = Math.max(1, Number(process.env.ANALYST_SAMPLES ?? 3));
   const model = requireEnv('MODEL_SMART');
   const raw = readDataset(DATASET_FILES.rawModules, RawModulesFile);
   const pathways = readDataset(DATASET_FILES.pathways, PathwaysFile).pathways;
@@ -147,8 +147,8 @@ async function main(): Promise<void> {
       const m = raw.modules[index]!;
       console.log(`Analysing ${m.id} ${m.title}`);
       const first = await analyse(client, model, system, schema, m);
-      const rest = await Promise.all(Array.from({ length: SAMPLES - 1 }, () => analyse(client, model, system, schema, m)));
-      const derived = applyAnalystChecks(m, averageSamples([first, ...rest]));
+      const rest = await Promise.all(Array.from({ length: samples - 1 }, () => analyse(client, model, system, schema, m)));
+      const derived = applyAnalystChecks(m, averageSamples([first, ...rest], m.description));
       const { assessment: _assessment, publishedSlot: _publishedSlot, ...fields } = m;
       modules[index] = { ...fields, ...derived };
     }

@@ -103,6 +103,12 @@ describe('published assessment', () => {
     expect(aligned.applied).toBe(0.5);
   });
 
+  it("keeps the model's group estimate when no item is described as group work", () => {
+    const aligned = alignWithPublishedAssessment(demand, [{ type: 'coursework', description: 'Final pitch', weighting: 1 }]);
+    expect(aligned.examShare).toBe(0);
+    expect(aligned.groupShare).toBe(0.36);
+  });
+
   it("keeps the model's estimate when nothing is published", () => {
     expect(alignWithPublishedAssessment(demand, [])).toEqual(demand);
   });
@@ -118,7 +124,10 @@ describe('sample averaging and published assessment text', () => {
   });
 
   it('averages weights, keeps the first quote and summary, and counts missing topics as zero', () => {
-    const avg = averageSamples([sample(0.9, '', 0.6), sample(0.6, 'turbulent flow', 0.4), { ...sample(0.3, '', 0.5), topics: [] }]);
+    const avg = averageSamples(
+      [sample(0.9, 'a paraphrase not in the text', 0.6), sample(0.6, 'turbulent flow', 0.4), { ...sample(0.3, '', 0.5), topics: [] }],
+      'Covers turbulent flow in pipes.',
+    );
     expect(avg.topics).toEqual([{ topic: 'fluid-mechanics', weight: 0.5, quote: 'turbulent flow' }]);
     expect(avg.demand.examShare).toBe(0.5);
     expect(avg.summary).toBe('summary 0.9');

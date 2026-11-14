@@ -78,9 +78,9 @@ const MIN_AVERAGED_WEIGHT = 0.05;
 /**
  * Self-consistency: averages several analyst samples for one module, so tags do not swing between runs (current
  * models take no temperature setting). A topic or skill missing from a sample counts as 0 there. A topic's quote is
- * the first non-empty one any sample gave (applyAnalystChecks still verifies it), and the summary is the first sample's.
+ * the first one any sample gave that occurs in the description, and the summary is the first sample's.
  */
-export function averageSamples(samples: [AnalystOutput, ...AnalystOutput[]]): AnalystOutput {
+export function averageSamples(samples: [AnalystOutput, ...AnalystOutput[]], description: string): AnalystOutput {
   const averaged = <K extends string>(keys: K[], weightOf: (sample: AnalystOutput, key: K) => number | undefined) =>
     keys
       .map((key) => ({ key, weight: mean(samples.map((sample) => weightOf(sample, key) ?? 0)) }))
@@ -92,7 +92,11 @@ export function averageSamples(samples: [AnalystOutput, ...AnalystOutput[]]): An
     topics: averaged(topicIds, (sample, topic) => sample.topics.find((t) => t.topic === topic)?.weight).map(({ key, weight }) => ({
       topic: key,
       weight,
-      quote: samples.flatMap((sample) => sample.topics.filter((t) => t.topic === key && t.quote.trim())).map((t) => t.quote)[0] ?? '',
+      // The first quote any sample gave that really occurs in the description, so sample order cannot cost a valid quote.
+      quote:
+        samples
+          .flatMap((sample) => sample.topics.filter((t) => t.topic === key && t.quote.trim() && description.includes(t.quote)))
+          .map((t) => t.quote)[0] ?? '',
     })),
     skills: averaged(skillIds, (sample, skill) => sample.skills.find((t) => t.skill === skill)?.weight).map(({ key, weight }) => ({ skill: key, weight })),
     pathwayRelevance: first.pathwayRelevance.map(({ pathway }) => ({
@@ -117,7 +121,8 @@ const GROUP_WORK = /\b(group|team)\b/i;
 
 /**
  * Exam and group shares are published facts, so code sets them from the published assessment rather than taking the
- * model's estimate (which can round, for example 37.5% to 0.38). Without published assessment the estimate stands.
+ * model's estimate (which can round, for example 37.5% to 0.38). The exam share needs any published assessment; the
+ * group share needs an item described as group or team work. Otherwise the model's estimate stands.
  */
 export function alignWithPublishedAssessment(
   demand: AnalystOutput['demand'],
@@ -126,10 +131,12 @@ export function alignWithPublishedAssessment(
   if (assessment.length === 0) return demand;
   const share = (keep: (a: RawModule['assessment'][number]) => boolean) =>
     Math.round(assessment.filter(keep).reduce((sum, a) => sum + a.weighting, 0) * 1000) / 1000;
+  const groupItems = assessment.filter((a) => GROUP_WORK.test(a.description));
   return {
     ...demand,
     examShare: share((a) => a.type === 'examination'),
-    groupShare: share((a) => GROUP_WORK.test(a.description)),
+    // Group work is only established when an item says so; otherwise the estimate from the description stands.
+    groupShare: groupItems.length > 0 ? share((a) => GROUP_WORK.test(a.description)) : demand.groupShare,
   };
 }
 
