@@ -444,6 +444,8 @@ export const ProfileEditBody = z.object({
     .optional(),
   /** Confirms the "Here is what I heard" card and leaves the interview. */
   confirm: z.boolean().optional(),
+  /** Returns to the interview for two more questions when confidence is low (spec 8.6 and 12). */
+  resumeInterview: z.boolean().optional(),
 });
 
 export const ShortlistBody = z.object({
