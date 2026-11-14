@@ -626,6 +626,7 @@ export const SseEvent = z.discriminatedUnion('type', [
   }),
   z.object({
     type: z.literal('done'),
+    /** The stored assistant message id (chat) or a fresh id (module Q&A). Empty when the reply was not stored. */
     messageId: z.string(),
     /** Optional UI hint, for example an inline slider widget for the next question. */
     widget: z
