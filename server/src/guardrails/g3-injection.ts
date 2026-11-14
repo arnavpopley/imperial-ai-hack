@@ -35,7 +35,7 @@ export async function injectionScan(text: string, _ctx: InputContext): Promise<S
   let { text: cleaned, removed } = stripInjection(text);
   if (isLive() && cleaned) {
     const result = await structured(Verdict, {
-      tier: 'fast',
+      tier: 'light',
       system: SYSTEM,
       messages: [{ role: 'user', content: asData('student', cleaned) }],
       maxTokens: 300,
