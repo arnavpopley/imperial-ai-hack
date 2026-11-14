@@ -55,6 +55,18 @@ describe('applyAnalystChecks', () => {
     expect(schema.safeParse({ ...output([]), topics: [{ topic: 'astrology', weight: 0.5, quote: '' }] }).success).toBe(false);
     expect(schema.safeParse({ ...output([{ topic: 'fluid-mechanics', weight: 0.5, quote: '' }]), pathwayRelevance: [{ pathway: 'pirate', weight: 1 }] }).success).toBe(false);
   });
+  it('requires every pathway exactly once and no repeated topics or skills', () => {
+    const schema = analystOutputSchema(['research-academia', 'consulting']);
+    const base = { ...output([{ topic: 'fluid-mechanics', weight: 0.4, quote: '' }]) };
+    const both = [
+      { pathway: 'research-academia', weight: 0.5 },
+      { pathway: 'consulting', weight: 0.1 },
+    ];
+    expect(schema.safeParse({ ...base, pathwayRelevance: both }).success).toBe(true);
+    expect(schema.safeParse(base).success).toBe(false);
+    expect(schema.safeParse({ ...base, pathwayRelevance: [both[0], both[0]] }).success).toBe(false);
+    expect(schema.safeParse({ ...base, pathwayRelevance: both, skills: [...base.skills, ...base.skills] }).success).toBe(false);
+  });
 });
 
 describe('data/modules.json follows the analyst rules', () => {

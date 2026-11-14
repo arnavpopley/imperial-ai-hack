@@ -1,14 +1,15 @@
 // Offline Module Analyst agent (spec 10.4). Reads data/modules.raw.json, asks MODEL_SMART for taxonomy-keyed
 // topics, skills, pathway relevance and a demand profile through a forced tool call, validates the answer with
 // zod, applies the checks in lib/analyst.ts and writes data/modules.json.
-// Usage: npx tsx scripts/analyse-modules.ts   (needs ANTHROPIC_API_KEY and MODEL_SMART)
-import { writeFileSync } from 'node:fs';
+// Usage: npx tsx scripts/analyse-modules.ts   (needs ANTHROPIC_API_KEY and MODEL_SMART, from the env or .env)
+import { existsSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import Anthropic from '@anthropic-ai/sdk';
 import { type Module, taxonomy } from '@modulematch/shared';
 import { z } from 'zod';
 import {
   DATA_DIR,
+  REPO_ROOT,
   DATASET_FILES,
   ModulesFile,
   PathwaysFile,
@@ -108,6 +109,8 @@ async function analyse(
 }
 
 async function main(): Promise<void> {
+  const envFile = resolve(REPO_ROOT, '.env');
+  if (existsSync(envFile)) process.loadEnvFile(envFile);
   const client = new Anthropic({ apiKey: requireEnv('ANTHROPIC_API_KEY') });
   const model = requireEnv('MODEL_SMART');
   const raw = readDataset(DATASET_FILES.rawModules, RawModulesFile);

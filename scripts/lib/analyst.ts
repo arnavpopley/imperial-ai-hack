@@ -19,6 +19,8 @@ export const MODULES_NOTE =
   'catalogue. topics, skills, pathwayRelevance and demand were derived by the Module Analyst agent and are ' +
   `editable by staff; rationales starting with ${REVIEW_PREFIX} flag descriptions under ${MIN_DESCRIPTION_WORDS} words.`;
 
+const isUnique = (keys: string[]) => new Set(keys).size === keys.length;
+
 /** The structured output the analyst model must return through its tool call, for the given pathway ids. */
 export function analystOutputSchema(pathwayIds: [string, ...string[]]) {
   return z.object({
@@ -30,9 +32,16 @@ export function analystOutputSchema(pathwayIds: [string, ...string[]]) {
           quote: z.string().describe('Verbatim phrase from the description; required when weight >= 0.5, else empty.'),
         }),
       )
-      .min(1),
-    skills: z.array(z.object({ skill: z.enum(SKILL_IDS), weight: S.Fraction })).min(1),
-    pathwayRelevance: z.array(z.object({ pathway: z.enum(pathwayIds), weight: S.Fraction })),
+      .min(1)
+      .refine((entries) => isUnique(entries.map((t) => t.topic)), 'Each topic may appear only once'),
+    skills: z
+      .array(z.object({ skill: z.enum(SKILL_IDS), weight: S.Fraction }))
+      .min(1)
+      .refine((entries) => isUnique(entries.map((s) => s.skill)), 'Each skill may appear only once'),
+    pathwayRelevance: z
+      .array(z.object({ pathway: z.enum(pathwayIds), weight: S.Fraction }))
+      .length(pathwayIds.length)
+      .refine((entries) => isUnique(entries.map((p) => p.pathway)), 'Every pathway must appear exactly once'),
     demand: S.ModuleDemand,
     summary: z.string().min(1).describe('One or two sentences on what the module is and how it is assessed.'),
   });
