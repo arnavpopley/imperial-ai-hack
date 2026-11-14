@@ -5,7 +5,7 @@ import { useReadySession } from '../state/SessionProvider.tsx';
 
 /** Shortlist membership and mutations. The server's session response is the source of truth. */
 export function useShortlist() {
-  const { session, replace } = useReadySession();
+  const { session, replace, refresh } = useReadySession();
   const [pending, setPending] = useState<ReadonlySet<string>>(() => new Set());
   const [error, setError] = useState<string | null>(null);
   const sessionId = session.id;
@@ -42,13 +42,22 @@ export function useShortlist() {
     async (removeId: string, addId: string) => {
       mark([removeId, addId], true);
       try {
-        await api.shortlist(sessionId, { moduleId: removeId, action: 'remove' });
-        replace(await api.shortlist(sessionId, { moduleId: addId, action: 'add' }));
+        replace(await api.shortlist(sessionId, { moduleId: removeId, action: 'remove' }));
+        try {
+          replace(await api.shortlist(sessionId, { moduleId: addId, action: 'add' }));
+        } catch (err) {
+          // The removal was saved but the addition was not: put the original back so the student is not
+          // left a module short, or at least resync with the server, then report the failure.
+          await api
+            .shortlist(sessionId, { moduleId: removeId, action: 'add' })
+            .then(replace, () => refresh().catch(() => undefined));
+          throw err;
+        }
       } finally {
         mark([removeId, addId], false);
       }
     },
-    [sessionId, replace],
+    [sessionId, replace, refresh],
   );
 
   return {

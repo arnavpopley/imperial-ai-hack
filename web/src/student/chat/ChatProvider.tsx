@@ -37,7 +37,8 @@ interface ChatContextValue {
   /** Set once the stream reports that ranked recommendations are ready. */
   recommendationsReady: boolean;
   send: (content: string, structured?: Structured) => Promise<void>;
-  retry: () => void;
+  /** Resend the request behind a failed reply, identified by the reply's id. */
+  retry: (replyId: string) => void;
 }
 
 const ChatContext = createContext<ChatContextValue | null>(null);
@@ -72,9 +73,10 @@ const STAFF_AGENT = 'staff';
 
 const fromMessage = (m: Message): ChatTurn => ({ ...turn(m.role, m.content), id: m.id, agent: m.agent });
 
-interface LastSend {
+interface SentRequest {
   content: string;
   structured: Structured;
+  /** The student turn and the reply it produced, removed before a retry re-adds them. */
   turnIds: readonly string[];
 }
 
@@ -87,7 +89,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [widget, setWidget] = useState<ChatWidget | null>(null);
   const [recommendationsReady, setRecommendationsReady] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
-  const lastSendRef = useRef<LastSend | null>(null);
+  // The request behind each reply that is still in flight or failed, so a retry resends the right one.
+  const requestsRef = useRef(new Map<string, SentRequest>());
 
   useEffect(() => () => abortRef.current?.abort(), []);
 
@@ -111,7 +114,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       abortRef.current = controller;
       const student = turn('student', content);
       const reply = turn('assistant', '', { status: 'streaming' });
-      lastSendRef.current = { content, structured, turnIds: [student.id, reply.id] };
+      requestsRef.current.set(reply.id, { content, structured, turnIds: [student.id, reply.id] });
       setTurns((list) => [...list, student, reply]);
       setWidget(null);
       setSending(true);
@@ -162,6 +165,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         await sendMessage(sessionId, { content, structured }, onEvent, controller.signal);
         // A stream that closes without `done` still ends the reply.
         patchReply((t) => (t.status === 'streaming' ? { ...t, status: 'done' } : t));
+        requestsRef.current.delete(reply.id);
       } catch (err) {
         if (!controller.signal.aborted) patchReply((t) => ({ ...t, status: 'error', error: errorMessage(err) }));
       } finally {
@@ -172,12 +176,16 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     [sessionId, update, offerDraft, invalidateRecs],
   );
 
-  const retry = useCallback(() => {
-    const last = lastSendRef.current;
-    if (!last || abortRef.current) return;
-    setTurns((list) => list.filter((t) => !last.turnIds.includes(t.id)));
-    void send(last.content, last.structured);
-  }, [send]);
+  const retry = useCallback(
+    (replyId: string) => {
+      const request = requestsRef.current.get(replyId);
+      if (!request || abortRef.current) return;
+      requestsRef.current.delete(replyId);
+      setTurns((list) => list.filter((t) => !request.turnIds.includes(t.id)));
+      void send(request.content, request.structured);
+    },
+    [send],
+  );
 
   const value = useMemo(
     () => ({ turns, sending, widget, recommendationsReady, send, retry }),

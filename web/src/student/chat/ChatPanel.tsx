@@ -44,9 +44,10 @@ export function ChatPanel({ variant, prefill = '', className }: ChatPanelProps) 
   const lastTurn = turns.at(-1);
   const lastAssistant = turns.findLast((t) => t.role === 'assistant' && t.status === 'done' && t.content);
   const { finished, confirmed } = session.interview;
-  // On resume the `done` widget is gone, so fall back to the stored interview state.
+  // On resume the `done` widget is gone, so fall back to the stored interview state. Once the
+  // profile is confirmed the card stays hidden, even if the last widget asked for it.
   const showConfirm =
-    widget?.kind === 'confirm-profile' || (variant === 'interview' && finished && !confirmed && !sending);
+    !confirmed && (widget?.kind === 'confirm-profile' || (variant === 'interview' && finished && !sending));
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -92,7 +93,7 @@ export function ChatPanel({ variant, prefill = '', className }: ChatPanelProps) 
         ) : (
           <ol aria-label="Conversation" className="grid gap-4">
             {turns.map((t) => (
-              <TurnView key={t.id} turn={t} onRetry={retry} />
+              <TurnView key={t.id} turn={t} onRetry={() => retry(t.id)} />
             ))}
           </ol>
         )}
