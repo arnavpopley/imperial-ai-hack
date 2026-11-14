@@ -78,6 +78,12 @@ function modulePrompt(m: RawModule): string {
   ].join('\n');
 }
 
+/** Token usage across every call, printed at the end so the run's cost is visible. */
+const usage = { input: 0, output: 0, calls: 0 };
+
+/** Modules analysed at once: enough to finish in a few minutes, few enough to stay clear of rate limits. */
+const CONCURRENCY = 4;
+
 async function analyse(
   client: Anthropic,
   model: string,
@@ -103,6 +109,9 @@ async function analyse(
       tool_choice: { type: 'auto' },
       messages: [{ role: 'user', content: `${modulePrompt(m)}\n\nRecord your analysis by calling ${TOOL_NAME}.` }],
     });
+    usage.input += response.usage.input_tokens;
+    usage.output += response.usage.output_tokens;
+    usage.calls += 1;
     const call = response.content.find((block) => block.type === 'tool_use');
     const parsed = schema.safeParse(call?.input);
     if (parsed.success) return parsed.data;
@@ -124,18 +133,26 @@ async function main(): Promise<void> {
   const schema = analystOutputSchema([first, ...rest]);
   const system = systemPrompt(pathways);
 
-  const modules: Module[] = [];
-  for (const m of raw.modules) {
-    console.log(`Analysing ${m.id} ${m.title}`);
-    const derived = applyAnalystChecks(m, await analyse(client, model, system, schema, m));
-    const { assessment: _assessment, publishedSlot: _publishedSlot, ...fields } = m;
-    modules.push({ ...fields, ...derived });
-  }
+  // A small worker pool; results are written back by index so the file keeps the raw order.
+  const modules: Module[] = new Array(raw.modules.length);
+  let next = 0;
+  const worker = async () => {
+    while (next < raw.modules.length) {
+      const index = next++;
+      const m = raw.modules[index]!;
+      console.log(`Analysing ${m.id} ${m.title}`);
+      const derived = applyAnalystChecks(m, await analyse(client, model, system, schema, m));
+      const { assessment: _assessment, publishedSlot: _publishedSlot, ...fields } = m;
+      modules[index] = { ...fields, ...derived };
+    }
+  };
+  await Promise.all(Array.from({ length: CONCURRENCY }, worker));
 
   const file = ModulesFile.parse({ _note: MODULES_NOTE, modules });
   writeFileSync(resolve(DATA_DIR, DATASET_FILES.modules), `${JSON.stringify(file, null, 2)}\n`);
   const flagged = modules.filter((m) => m.derivedRationale.startsWith(REVIEW_PREFIX)).length;
   console.log(`Wrote ${modules.length} modules (${flagged} flagged for staff review).`);
+  console.log(`Usage: ${usage.calls} calls, ${usage.input} input and ${usage.output} output tokens.`);
 }
 
 await main();
