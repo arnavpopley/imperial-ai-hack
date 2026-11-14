@@ -1,0 +1,59 @@
+@import 'tailwindcss';
+
+/*
+ * One token set for colour, type and spacing across the student and staff apps (spec 14.1).
+ * Mirror these in the Figma file's variables so design and code stay in step.
+ */
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --color-canvas: #f7f7f4;
+  --color-surface: #ffffff;
+  --color-ink: #16181d;
+  --color-muted: #5d6270;
+  --color-line: #e3e3dc;
+
+  --color-brand: #3b4fd8;
+  --color-brand-soft: #e7eafc;
+
+  /* Fit and confidence */
+  --color-fit-high: #1f8a5b;
+  --color-fit-mid: #c48a12;
+  --color-fit-low: #b4483c;
+
+  /* Clash markers (certain, likely, possible) */
+  --color-clash-certain: #c0392b;
+  --color-clash-likely: #e07b1a;
+  --color-clash-possible: #d9b310;
+
+  /* Mode chip colours */
+  --color-mode-onboard: #6b7280;
+  --color-mode-interview: #3b4fd8;
+  --color-mode-recommend: #1f8a5b;
+  --color-mode-explain: #7a4fd8;
+  --color-mode-plan: #0e7490;
+  --color-mode-escalated: #c0392b;
+
+  --radius-card: 0.875rem;
+}
+
+@layer base {
+  html {
+    color-scheme: light dark;
+  }
+  body {
+    @apply bg-canvas text-ink font-sans antialiased;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-canvas: #111318;
+      --color-surface: #1a1d24;
+      --color-ink: #eceef2;
+      --color-muted: #9aa0ad;
+      --color-line: #2b2f39;
+      --color-brand: #7c8cff;
+      --color-brand-soft: #232a52;
+    }
+  }
+}

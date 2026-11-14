@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "topics": {
+    "mathematics-modelling": { "label": "Mathematics and modelling", "group": "technical" },
+    "statistics-data": { "label": "Statistics and data", "group": "technical" },
+    "programming-software": { "label": "Programming and software", "group": "technical" },
+    "machine-learning-ai": { "label": "Machine learning and AI", "group": "technical" },
+    "fluid-mechanics": { "label": "Fluid mechanics", "group": "technical" },
+    "thermodynamics-energy": { "label": "Thermodynamics and energy", "group": "technical" },
+    "solid-mechanics-materials": { "label": "Solid mechanics and materials", "group": "technical" },
+    "design-manufacturing": { "label": "Design and manufacturing", "group": "technical" },
+    "control-robotics": { "label": "Control and robotics", "group": "technical" },
+    "electronics-embedded": { "label": "Electronics and embedded systems", "group": "technical" },
+    "nuclear-energy": { "label": "Nuclear energy", "group": "technical" },
+    "sustainability-climate": { "label": "Sustainability and climate", "group": "technical" },
+    "biomedical-engineering": { "label": "Biomedical engineering", "group": "technical" },
+    "computational-simulation": { "label": "Computational simulation", "group": "technical" },
+    "experimental-lab": { "label": "Experimental and lab work", "group": "technical" },
+    "finance-economics": { "label": "Finance and economics", "group": "business-society" },
+    "entrepreneurship-innovation": { "label": "Entrepreneurship and innovation", "group": "business-society" },
+    "management-leadership": { "label": "Management and leadership", "group": "business-society" },
+    "policy-ethics": { "label": "Policy and ethics", "group": "business-society" },
+    "law-ip": { "label": "Law and intellectual property", "group": "business-society" },
+    "languages": { "label": "Languages", "group": "breadth" },
+    "history-philosophy": { "label": "History and philosophy", "group": "breadth" },
+    "creative-arts-design": { "label": "Creative arts and design", "group": "breadth" },
+    "communication-writing": { "label": "Communication and writing", "group": "breadth" },
+    "psychology-behaviour": { "label": "Psychology and behaviour", "group": "breadth" },
+    "global-development": { "label": "Global development", "group": "breadth" }
+  },
+  "skills": {
+    "quantitative-analysis": { "label": "Quantitative analysis" },
+    "coding": { "label": "Coding" },
+    "modelling-simulation": { "label": "Modelling and simulation" },
+    "experimental-skills": { "label": "Experimental skills" },
+    "design-cad": { "label": "Design and CAD" },
+    "communication": { "label": "Communication" },
+    "teamwork": { "label": "Teamwork" },
+    "project-management": { "label": "Project management" },
+    "research": { "label": "Research" },
+    "commercial-awareness": { "label": "Commercial awareness" }
+  }
+}
