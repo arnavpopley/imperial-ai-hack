@@ -2,7 +2,9 @@
 
 Design rule: **numbers come from code, words come from models.** Scores, clashes, eligibility, pathway progress and counterfactuals are computed by deterministic TypeScript in `server/src/engines`. Agents decide what to ask, call the engines, and explain the results. Scores are therefore stable, testable and defensible.
 
-Every agent also has an offline path: deterministic rules and templates that run when no `ANTHROPIC_API_KEY` is set (or `MODULEMATCH_OFFLINE=1`). The tests and the evaluation harness use it, and the demo cannot fail on network access.
+Every agent also has an offline path: deterministic rules and templates that run when no `ANTHROPIC_API_KEY` is set (or `MODULEMATCH_OFFLINE=1`). The tests and the offline evaluation harness use it, and the demo cannot fail on network access. A live call that fails or returns an incomplete reply falls back to the same path.
+
+The backend is in `server/` (Hono on Node), the web app in `web/` (React, Vite and Tailwind), and the shared zod contracts in `packages/shared`.
 
 ## System overview
 
@@ -30,6 +32,20 @@ flowchart LR
   MOD --> INS
 ```
 
+Two student routes skip the Supervisor but still pass the input guardrails first. The module page's "Ask about this module" chat goes to the module knowledge agent, which reads one module's record. A pasted CV goes to the Profile Extractor:
+
+```mermaid
+flowchart LR
+  MP[Module page question] --> GIN2[Input guardrails G1-G4]
+  CV[Pasted CV text] --> GIN2
+  GIN2 --> KN[Module knowledge agent]
+  KN --> MOD2[(One module's record and public page)]
+  KN --> G8[G8 claims filter]
+  G8 --> S2[Student]
+  GIN2 --> EXT2[Profile Extractor: interests and pathways only]
+  EXT2 --> PROF2[(Profile and evidence)]
+```
+
 ## Session modes
 
 ```mermaid
@@ -52,17 +68,18 @@ The mode machine lives in `server/src/agents/modes.ts`. A transition outside thi
 
 ## Agents
 
-Agents never compute numbers. The Supervisor calls the engine tools for each agent and passes the results in as data, and each call is written to the trace as a `tool` event. Every agent has a narrow job, and all model output is validated with zod.
+Agents never compute numbers. For most agents the Supervisor calls the engine tools and passes the results in as data. The Catalogue agent is the exception: the model chooses its own tool calls in a loop of at most four rounds, and every tool runs deterministic code. Each tool call is written to the trace as a `tool` event. Every agent has a narrow job, and all model output is validated with zod.
 
 | Agent | Inputs | Knowledge | Engine tools | Decisions | Outputs | Model |
 |---|---|---|---|---|---|---|
-| Supervisor (`agents/supervisor.ts`) | Redacted student turn, session state | Mode machine, intent list | Intent classifier, every agent below | Which agent handles the turn; when to change mode; when to draft an escalation; asks a clarifying question when intent confidence is under 0.6 | SSE events, mode changes, escalation drafts | `MODEL_FAST` for intent, plus rules |
+| Supervisor (`agents/supervisor.ts`, `agents/intent.ts`) | Redacted student turn, session state | Mode machine, the 12 intents of spec 10.1 (including `catalogue_question`) | Intent classifier, every agent below | Which agent handles the turn; when to change mode; when to draft an escalation; asks a clarifying question when intent confidence is under 0.6 | SSE events, mode changes, escalation drafts | `MODEL_FAST` for intent, plus rules |
 | Interviewer (`agents/interviewer.ts`) | Conversation, profile, unfilled slots, question budget | Quick-mode question plan (8 questions) and follow-ups | None | Which slot to ask about next; when to finish | Streamed question, slider widget, the "Here is what I heard" card | `MODEL_SMART`, streamed |
-| Profile Extractor (`agents/extractor.ts`) | One redacted turn, the slots the last question targeted | Slot whitelist, taxonomy, pathway list | None | Which slots the turn fills and with what value | `{ slot, value, quote, confidence }[]`, merged by deterministic rules | `MODEL_FAST`, structured output |
+| Profile Extractor (`agents/extractor.ts`) | One redacted turn and the slots the last question targeted, or redacted CV text | Slot whitelist, taxonomy, pathway list | None | Which slots the turn fills and with what value; from a CV, interest and pathway slots only | `{ slot, value, quote, confidence }[]`, merged by deterministic rules | `MODEL_FAST`, structured output |
 | Module Analyst (`scripts/analyse-modules.ts`, offline) | Public module description | Taxonomy | None | Topic, skill, pathway and demand weights | Derived module fields with a quoted rationale; short descriptions flagged for review | `MODEL_SMART`, batch |
 | Matcher (`agents/matcher.ts`) | Recommendation, module record, evidence | Engine output only | `score_modules`, `get_module`, `get_evidence`, `check_rules` | How to explain a score; which eligible alternatives to offer | `Explanation` (every reason cites an evidence ID or module field); the refusal when a student asks to break a rule | `MODEL_SMART` |
 | Timetabler (`agents/timetabler.ts`) | Clashes and swaps from the engine | None | `build_timetable`, `find_clashes`, `suggest_swaps` | Wording only; a swap is applied only on confirmation | Clash summary | `MODEL_FAST` |
-| Catalogue (`agents/catalogue.ts`) | Redacted question, modules it names, the student's ranking | Catalogue records, published assessment, taxonomy | `search_modules`, `get_module`, `compare_modules` (tool loop, at most four rounds) | Which searches to run; which modules answer the question | Plain-text answer under 120 words citing module codes, ineligible modules marked; offline, the search results as a list | `MODEL_SMART`, low effort |
+| Catalogue (`agents/catalogue.ts`) | Redacted question, modules it names, the student's ranking | Catalogue records, published assessment, taxonomy | `search_modules`, `get_module`, `compare_modules` (tool loop, at most four rounds) | Which searches to run; which modules answer the question | Plain-text answer under 120 words citing module codes, ineligible modules marked. A reply naming a module code that is not in the catalogue is blocked and replaced by the search results; G8 runs on the buffered reply. Offline, the search results as a list | `MODEL_SMART`, low effort |
+| Module knowledge (`agents/knowledge.ts`) | One module's record and public page (G3-scanned), the student's fit for it, a redacted question | Description, learning outcomes, published assessment, prerequisites, resources, source URL | None (the facts are passed in as data) | Whether the record answers the question; if not, say so and point to the module page | Two-sentence AI summary with highlight chips (cached per module), and answers under 90 words, buffered so G8 runs first. Offline, rule-based answers from the same facts | `MODEL_SMART`, low effort |
 | Insights (`agents/insights.ts`) | Insight cards from the engine | Cohort statistics | `cohort_stats`, `counterfactuals`, `clash_priorities` | Wording only; a rewrite that changes any number is rejected | Insight cards awaiting a staff decision | `MODEL_SMART` |
 
 ## Engines
@@ -75,6 +92,7 @@ Agents never compute numbers. The Supervisor calls the engine tools for each age
 | `insights.ts` | 9.3 | Interested-but-unconvinced group, counterfactual uplift, overlooked, demand and clash cards, minimum cohort of five |
 | `pathways.ts` | 9.4 | Pathway progress and the next-best module |
 | `societies.ts` | Could 14 | Top five societies plus one wildcard |
+| `feedback.ts` | 13 | Staff feedback totals, recent down-votes and the JSONL export |
 
 ## Guardrail pipeline
 
@@ -118,3 +136,20 @@ The client sends the question and an excerpt of the answer (at most 600 characte
 
 Staff see totals, up and down by answer type, and recent down-votes at `/staff/feedback` (`GET /api/staff/feedback`). Items carry no student or session id. `GET /api/staff/feedback/export` returns JSONL rows `{ question, answer, rating, reason, comment, kind, moduleId }` as a seed set for prompt evaluation or later fine-tuning. The export contains only redacted text, and in this prototype every session is synthetic.
 
+
+## CV input
+
+`POST /api/sessions/:id/cv` takes pasted CV or personal-statement text (up to 20,000 characters). The text runs through the input guardrails first: G2 removes grades and personal disclosures, and G3 strips instructions. If G4 flags a wellbeing concern, nothing is extracted and a support hand-off is offered, as in the chat. The Profile Extractor then reads the redacted text for interest and pathway slots only. A CV shows what a student has done, not how they like to learn, so it never overwrites a stated learning-style preference. The CV itself is never stored. Only evidence quotes of at most 200 characters from the redacted text are kept, and each one links back to its profile item like any other evidence.
+
+## Evaluation
+
+| Harness | Command | Models | What it checks | Results |
+|---|---|---|---|---|
+| Offline | `npm run eval` (`scripts/run-evals.ts`) | None | Ranking quality (12 personas), extraction (4 scripted interviews, 33 slots), 15 adversarial guardrail inputs, determinism, the privacy threshold | `data/eval-latest.json`, stored in `eval_runs` and shown on the "How it works" page |
+| Live | `npm run eval:live` (`scripts/run-live-evals.ts`) | `MODEL_SMART` and `MODEL_FAST`, with `MODEL_JUDGE` (Fable 5.1) as judge | Module facts from published data, declining questions the data cannot answer, live extraction, 7 subtle guardrail cases, grounded explanations | `data/eval-live-latest.json` |
+
+The cases live in `scripts/eval-cases.ts`. A live answer that silently fell back to a template never counts as a live pass, and a live run that misses any target exits non-zero. The README lists the latest numbers.
+
+## Deployment
+
+https://modulematch.vercel.app is built by Vercel's GitHub integration on every push to `main`, with a preview for each pull request. `scripts/build-vercel.ts` writes a Build Output API bundle: the web app as static files, and the Hono API (`server/src/vercel.ts`) as one Node function. Each function instance seeds SQLite into its own `/tmp` from `data/` on a cold start, so a session lasts only while the instance is warm. Live models switch on when `ANTHROPIC_API_KEY` is set in the Vercel project; without it the site runs in offline mode.

@@ -9,6 +9,7 @@ import { cx } from '../components/cx.ts';
 import { Icon, type IconName } from '../components/Icon.tsx';
 import { AgentFlowchart } from './AgentFlowchart.tsx';
 import { AgentRoster } from './AgentRoster.tsx';
+import { BenchmarkPanel } from './benchmark/BenchmarkPanel.tsx';
 import { nodesInTrace } from './flow.ts';
 
 const SESSION_KEY = 'modulematch.sessionId';
@@ -125,6 +126,7 @@ export function TraceApp() {
           the bar it has to clear.
         </SectionHeading>
         <EvalPanel />
+        <BenchmarkPanel />
       </section>
 
       <section aria-labelledby="trace-heading" className="grid gap-6">

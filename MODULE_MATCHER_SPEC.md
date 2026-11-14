@@ -84,9 +84,12 @@ Other legs of Reply's Student Tech Clash were asked for a problem and metrics wr
 16. Voice interview.
 17. Societies submitting their own information through a form.
 
+**Should (added 14 November, see section 23)**
+- Optional, consented transcript or mark-sheet upload at the start of the interview, giving informational performance nudges on modules.
+- Exam feedback: examiners describe each exam question (topics, what good answers did, common mistakes, revision pointers), with an AI-drafted form they review and publish, and students get tailored feedback from it and their own question marks.
+
 **Won't this weekend**
-- Anything using grades, exam results, or performance data.
-- The anonymised exam-feedback loop from module leads (needs staff work that cannot be demonstrated).
+- Using marks to change fit scores or rankings. Marks only produce informational nudges.
 - Real university systems, single sign-on, or real timetable feeds.
 - Real enrolment. The product stops at a shortlist and a mock timetable.
 
@@ -137,8 +140,10 @@ Model IDs are environment variables, never hard-coded:
 
 ```
 ANTHROPIC_API_KEY=
-MODEL_SMART=claude-sonnet-5-5   # interviewer, matcher explanations, analyst, insights
-MODEL_FAST=claude-haiku-4-5  # intent, extraction, guardrail classifiers (no Haiku 5.5 exists; Haiku 4.5 is current)
+MODEL_SMART=claude-opus-5-5     # interviewer, matcher explanations, analyst, insights, catalogue and knowledge agents
+MODEL_FAST=claude-sonnet-5-5    # extraction and G2 span finding, at low effort
+MODEL_LIGHT=claude-haiku-4-5    # intent and the G1, G3, G4 classifiers, timetable wording: simple, cheap, fast
+MODEL_JUDGE=claude-fable-5-1    # grader for the live evaluation
 ```
 
 Confirm the current model IDs and SDK usage at https://docs.claude.com/en/api/overview before the first call.
@@ -854,7 +859,7 @@ Success metrics to state in `LEVEL1.md`:
 ## 20. Privacy and ethics rules
 
 1. The profile holds interests, goals, and learning preferences only.
-2. Grades, results, health, ethnicity, religion, nationality, sexuality, disability, and finances are never requested, stored, or inferred.
+2. Health, ethnicity, religion, nationality, sexuality, disability, and finances are never requested, stored, or inferred. Grades and results are stored only through the consented results upload (section 23). Grades typed into the chat are still redacted, and marks are never inferred.
 3. The student can see, edit, and delete everything held about them.
 4. Staff views are aggregate only, with a minimum cohort of five.
 5. The advisor recommends and explains. The student decides.
@@ -862,6 +867,20 @@ Success metrics to state in `LEVEL1.md`:
 7. All sample and synthetic data is labelled.
 
 ---
+
+## 23. Results, performance nudges and exam feedback
+
+Added on 14 November at the team's request. This reverses the earlier "no grades" rule, under these safeguards.
+
+**Consent.** Results are shared only through the dedicated upload, with an explicit consent tick on every upload, and are optional but recommended. Consent can be withdrawn at any time, which deletes every stored mark; deleting the profile deletes them too. Grades typed into the chat are still redacted by G2.
+
+**Upload.** A PDF transcript, a photo of a mark sheet, or pasted text. Live, `MODEL_FAST` reads the document (PDF and image input) into structured module results. Offline, a parser reads lines such as `MECH50010 Fluid Mechanics 2 62`. Codes that match no catalogue module are kept but not used.
+
+**Performance view (code, not a model).** For each taxonomy topic, the student's topic-weighted average mark over the modules they took, and its difference from their own overall average. Nudges are attached to modules whose main topics (weight 0.5 or more) are topics where the student is at least 5 marks below their own average. For example: "You're interested in fluid mechanics, but your Fluid Mechanics 2 mark was 8 below your average. Worth keeping in mind." **Nudges never change fit scores or rankings**: they inform; the student decides.
+
+**Exam feedback.** For each module exam, an examiner fills in a form of questions, each with max marks, topics, what good answers did, common mistakes and revision pointers, plus general comments. Or they paste marking notes and the AI drafts the form (`MODEL_SMART`). Drafts are never shown to students until an examiner publishes them (human in the loop). A student who uploaded per-question marks for that exam gets tailored feedback, written by `MODEL_SMART` from facts computed by code: which questions lost the most marks and their topics, the examiner's mistakes and pointers for them, a short revision plan, and the future modules that build on those topics (prerequisite chains and topic overlap). Offline, a template builds it from the same facts.
+
+**Privacy.** Marks and tailored feedback are visible only to the student. Staff never see an individual's marks. Any staff view of exam performance is aggregate, with a minimum cohort of five. Demo marks and exam forms are synthetic and labelled.
 
 ## 21. Open items
 
