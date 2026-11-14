@@ -162,7 +162,7 @@
 
 @layer base {
   html {
-    color-scheme: light dark;
+    color-scheme: light;
   }
   body {
     @apply bg-canvas text-ink font-sans antialiased;
@@ -175,45 +175,45 @@
   h3 {
     text-wrap: balance;
   }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --color-canvas: #111318;
-      --color-surface: #1a1d24;
-      --color-ink: #eceef2;
-      --color-muted: #9aa0ad;
-      --color-line: #2b2f39;
-      --color-brand: #7c8cff;
-      --color-brand-soft: #232a52;
-      --color-surface-2: #22252e;
-      --color-line-strong: #3d4250;
-      --color-on-brand: #0c0f24;
-      --color-scrim: rgb(0 0 0 / 0.6);
+  /* The theme comes from data-theme on <html>, set before first paint by index.html and toggled in the header. */
+  :root[data-theme='dark'] {
+    color-scheme: dark;
+    --color-canvas: #111318;
+    --color-surface: #1a1d24;
+    --color-ink: #eceef2;
+    --color-muted: #9aa0ad;
+    --color-line: #2b2f39;
+    --color-brand: #7c8cff;
+    --color-brand-soft: #232a52;
+    --color-surface-2: #22252e;
+    --color-line-strong: #3d4250;
+    --color-on-brand: #0c0f24;
+    --color-scrim: rgb(0 0 0 / 0.6);
 
-      --color-fit-high: #4cc38a;
-      --color-fit-mid: #e3b341;
-      --color-fit-low: #f0806f;
-      --color-clash-certain: #f2705f;
-      --color-clash-likely: #f5a04a;
-      --color-clash-possible: #e8cb4a;
-      --color-mode-onboard: #a1a7b4;
-      --color-mode-interview: #8b99ff;
-      --color-mode-recommend: #4cc38a;
-      --color-mode-explain: #b08cff;
-      --color-mode-plan: #4cc0dc;
-      --color-mode-escalated: #f2705f;
+    --color-fit-high: #4cc38a;
+    --color-fit-mid: #e3b341;
+    --color-fit-low: #f0806f;
+    --color-clash-certain: #f2705f;
+    --color-clash-likely: #f5a04a;
+    --color-clash-possible: #e8cb4a;
+    --color-mode-onboard: #a1a7b4;
+    --color-mode-interview: #8b99ff;
+    --color-mode-recommend: #4cc38a;
+    --color-mode-explain: #b08cff;
+    --color-mode-plan: #4cc0dc;
+    --color-mode-escalated: #f2705f;
 
-      --color-module-1: #8b99ff;
-      --color-module-2: #3fcfbf;
-      --color-module-3: #f29a5c;
-      --color-module-4: #c58bf0;
-      --color-module-5: #e3b341;
-      --color-module-6: #f07fae;
-      --color-module-7: #6cb6f0;
-      --color-module-8: #a3c95a;
+    --color-module-1: #8b99ff;
+    --color-module-2: #3fcfbf;
+    --color-module-3: #f29a5c;
+    --color-module-4: #c58bf0;
+    --color-module-5: #e3b341;
+    --color-module-6: #f07fae;
+    --color-module-7: #6cb6f0;
+    --color-module-8: #a3c95a;
 
-      --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 16px -4px rgb(0 0 0 / 0.4);
-      --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.3), 0 18px 40px -12px rgb(0 0 0 / 0.6);
-    }
+    --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 16px -4px rgb(0 0 0 / 0.4);
+    --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.3), 0 18px 40px -12px rgb(0 0 0 / 0.6);
   }
   :focus-visible {
     outline: 2px solid var(--color-brand);
