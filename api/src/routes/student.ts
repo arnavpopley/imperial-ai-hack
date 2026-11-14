@@ -101,6 +101,8 @@ export const studentRoutes = new Hono()
     const session = load(c);
     if (session instanceof Response) return session;
     repo.deleteProfileAndEvidence(session.id);
+    // A pending draft can quote the student, so it goes too.
+    repo.updateSession(session.id, { escalationDraft: null });
     createTracer(session.id, tracerSink).record({ actor: 'supervisor', kind: 'agent', input: 'delete profile', output: 'profile and evidence deleted', verdict: null });
     clearExplanationCache();
     return c.json(fresh(session.id));

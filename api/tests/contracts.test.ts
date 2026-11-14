@@ -136,10 +136,12 @@ describe('every route returns a valid response', () => {
     const id = S.SessionState.parse(await created.json()).id;
     await (await app.request(`/api/sessions/${id}/messages`, json({ content: 'I love fluid mechanics.' }))).text();
     await app.request(`/api/sessions/${id}/escalations`, json({ type: 'COMPLAINT', summary: 'x' }));
+    await (await app.request(`/api/sessions/${id}/messages`, json({ content: 'I want to complain, this advisor is useless.' }))).text();
     const after = S.SessionState.parse(await (await app.request(`/api/sessions/${id}/profile`, { method: 'DELETE' })).json());
     expect(after.messages.filter((m) => m.role === 'student')).toEqual([]);
     expect(after.escalations).toEqual([]);
     expect(after.evidence).toEqual([]);
+    expect(after.escalationDraft).toBeNull();
   });
 
   it('serialises concurrent turns on one session', async () => {
