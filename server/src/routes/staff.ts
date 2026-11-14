@@ -6,7 +6,7 @@ import { clearSummaryCache } from '../agents/knowledge.ts';
 import { catalogue, clearExplanationCache, rulesForProfile, setMode, tracerSink } from '../agents/session.ts';
 import { rulesFor } from '../db/catalogue.ts';
 import * as repo from '../db/repo.ts';
-import { buildInsights, clashPriorities, cohortStats, type InsightContext } from '../engines/index.ts';
+import { buildInsights, clashPriorities, cohortStats, feedbackJsonl, summariseFeedback, type InsightContext } from '../engines/index.ts';
 import { createTracer } from '../trace/tracer.ts';
 import { body } from './validate.ts';
 
@@ -73,6 +73,15 @@ export const staffRoutes = new Hono()
       return [{ ...e, studentContext: { programme: session.profile.programme, yearOfStudy: session.profile.yearOfStudy, shortlist: session.shortlist } }];
     });
     return c.json(rows.sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
+  })
+  // Student ratings of AI answers. Comments and texts were redacted (G2, G3) before storage, and no item carries a
+  // session id. In this prototype every session is synthetic (spec 20.7).
+  .get('/feedback', (c) => c.json(summariseFeedback(repo.listFeedback())))
+  .get('/feedback/export', (c) => {
+    // JSONL eval or fine-tuning seed rows: { question, answer, rating, reason, comment, kind, moduleId }.
+    c.header('content-type', 'application/x-ndjson; charset=utf-8');
+    c.header('content-disposition', 'attachment; filename="modulematch-feedback.jsonl"');
+    return c.body(feedbackJsonl(repo.listFeedback()));
   })
   .post('/escalations/:id/respond', body(schemas.EscalationRespondBody), (c) => {
     const { response, resolve } = c.req.valid('json');

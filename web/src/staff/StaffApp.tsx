@@ -2,12 +2,13 @@
 import { motion } from 'motion/react';
 import type { ReactNode } from 'react';
 import { Link, Route, Routes, useLocation } from 'react-router';
-import { ClockAlertIcon, GridIcon, InboxIcon, LockIcon } from './components/icons.tsx';
+import { ClockAlertIcon, GridIcon, InboxIcon, LockIcon, MessageIcon } from './components/icons.tsx';
 import { PrivacyNote } from './components/PrivacyNote.tsx';
 import { EmptyState } from './components/ui.tsx';
 import { focusRing } from './lib/format.ts';
 import { EscalationDetail } from './pages/EscalationDetail.tsx';
 import { EscalationPlaceholder, EscalationsPage } from './pages/EscalationsPage.tsx';
+import { FeedbackPage } from './pages/FeedbackPage.tsx';
 import { ModuleDashboard } from './pages/ModuleDashboard.tsx';
 import { FirstModuleRedirect, ModuleLayout, ModulesPage } from './pages/ModulesPage.tsx';
 import { TagEditor } from './pages/TagEditor.tsx';
@@ -49,6 +50,7 @@ export function StaffApp() {
             <Route index element={<EscalationPlaceholder />} />
             <Route path=":escalationId" element={<EscalationDetail />} />
           </Route>
+          <Route path="feedback" element={<FeedbackPage />} />
           <Route
             path="*"
             element={
@@ -66,6 +68,7 @@ const SECTIONS = [
   { key: 'modules', to: '/staff', label: 'Modules', Icon: GridIcon },
   { key: 'timetable', to: '/staff/timetable', label: 'Timetabling', Icon: ClockAlertIcon },
   { key: 'escalations', to: '/staff/escalations', label: 'Escalations', Icon: InboxIcon },
+  { key: 'feedback', to: '/staff/feedback', label: 'Feedback', Icon: MessageIcon },
 ] as const;
 
 type SectionKey = (typeof SECTIONS)[number]['key'];
@@ -73,6 +76,7 @@ type SectionKey = (typeof SECTIONS)[number]['key'];
 function sectionFor(pathname: string): SectionKey {
   if (pathname.startsWith('/staff/timetable')) return 'timetable';
   if (pathname.startsWith('/staff/escalations')) return 'escalations';
+  if (pathname.startsWith('/staff/feedback')) return 'feedback';
   // "/staff" itself redirects into a module, so the Modules tab owns both.
   return 'modules';
 }

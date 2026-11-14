@@ -672,6 +672,7 @@ All routes are under `/api`. Bodies and responses are validated with the shared 
 | `POST /sessions/:id/escalations` | Create an escalation from an approved summary. |
 | `GET /sessions/:id/pathways/:pathwayId/progress` | Progress and next-best module. |
 | `GET /sessions/:id/societies` | Society matches. |
+| `POST /sessions/:id/feedback` | Thumbs up or down on one AI answer, with an optional reason and comment. Text is redacted before storage. |
 
 SSE event types on `/messages`: `mode`, `token`, `profile_update`, `guardrail`, `recommendations_ready`, `escalation`, `done`.
 
@@ -686,6 +687,8 @@ SSE event types on `/messages`: `mode`, `token`, `profile_update`, `guardrail`, 
 | `GET /staff/timetable/clash-priorities` | Ranked clashing pairs. |
 | `GET /staff/escalations` | Queue. |
 | `POST /staff/escalations/:id/respond` | Claim and respond. |
+| `GET /staff/feedback` | Feedback totals and recent down-votes (redacted, no session ids). |
+| `GET /staff/feedback/export` | JSONL seed rows for evals or fine-tuning: redacted text from synthetic sessions only. |
 
 **Shared**
 

@@ -1,4 +1,4 @@
-// Drizzle schema for the twelve tables in spec section 7. JSON columns hold shared contract objects and are
+// Drizzle schema for the twelve tables in spec section 7, plus answer feedback. JSON columns hold shared contract objects and are
 // parsed with the zod schemas in repo.ts on every read. client.ts creates these tables; keep both in step.
 import { integer, real, sqliteTable, text, unique } from 'drizzle-orm/sqlite-core';
 
@@ -133,6 +133,29 @@ export const evalRuns = sqliteTable('eval_runs', {
   results: text('results', { mode: 'json' }).notNull(),
 });
 
+/**
+ * Student ratings of AI answers (thumbs up or down). Free text (comment, question, answer excerpt) is stored only
+ * after G2 redaction and G3 injection stripping. One vote per answer: a second vote on the same target replaces it.
+ */
+export const feedback = sqliteTable(
+  'feedback',
+  {
+    seq: integer('seq').primaryKey({ autoIncrement: true }),
+    id: text('id').notNull().unique(),
+    sessionId: sessionRef(),
+    targetKind: text('target_kind').notNull(),
+    targetId: text('target_id').notNull(),
+    moduleId: text('module_id'),
+    rating: text('rating').notNull(),
+    reason: text('reason'),
+    comment: text('comment'),
+    question: text('question'),
+    answerExcerpt: text('answer_excerpt'),
+    createdAt: text('created_at').notNull(),
+  },
+  (t) => [unique('feedback_session_target').on(t.sessionId, t.targetKind, t.targetId)],
+);
+
 export const tables = {
   sessions,
   messages,
@@ -146,4 +169,5 @@ export const tables = {
   traceEvents,
   cohortProfiles,
   evalRuns,
+  feedback,
 };

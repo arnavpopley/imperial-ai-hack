@@ -69,3 +69,6 @@ export const MODE_LABELS = {
   PLAN: 'Planning timetable',
   ESCALATED: 'With a tutor',
 } as const;
+
+/** Length limits on answer feedback, defined beside the Feedback schemas and re-exported here for the web app. */
+export { FEEDBACK_COMMENT_MAX, FEEDBACK_EXCERPT_MAX, FEEDBACK_QUESTION_MAX } from './schemas.ts';

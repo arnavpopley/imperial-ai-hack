@@ -16,8 +16,8 @@ describe('database schema', () => {
     },
   );
 
-  it('creates the twelve spec tables', () => {
-    expect(Object.keys(tables)).toHaveLength(12);
+  it('creates the twelve spec tables plus feedback', () => {
+    expect(Object.keys(tables)).toHaveLength(13);
   });
 });
 
