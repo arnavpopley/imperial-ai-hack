@@ -1,0 +1,191 @@
+// Spec 9.2: overlap, clash probabilities and labels, timetables, swaps and staff clash priorities.
+import type { Recommendation } from '@modulematch/shared';
+import { describe, expect, it } from 'vitest';
+import {
+  buildTimetable,
+  clashLabel,
+  clashPriorities,
+  clashProbability,
+  findClashes,
+  overlap,
+  suggestSwaps,
+} from '../src/engines/index.ts';
+import { makeProfile, makeSlot } from './engines-fixtures.ts';
+
+describe('overlap', () => {
+  const nine = makeSlot('a', 'mon', '09:00', '10:00');
+
+  it('detects a partial overlap on the same term and day', () => {
+    expect(overlap(nine, makeSlot('b', 'mon', '09:30', '10:30'))).toBe(true);
+  });
+
+  it('treats back-to-back slots, other days and other terms as free', () => {
+    expect(overlap(nine, makeSlot('b', 'mon', '10:00', '11:00'))).toBe(false);
+    expect(overlap(nine, makeSlot('b', 'tue', '09:00', '10:00'))).toBe(false);
+    expect(overlap(nine, makeSlot('b', 'mon', '09:00', '10:00', { term: 'spring' }))).toBe(false);
+  });
+});
+
+describe('clashProbability', () => {
+  const confirmedB = [makeSlot('b', 'mon', '09:00', '10:00')];
+
+  it('is 1 for two confirmed overlapping slots', () => {
+    expect(clashProbability([makeSlot('a', 'mon', '09:00', '10:00')], confirmedB)).toBe(1);
+  });
+
+  it('is 0.5 when one of two equally likely candidates overlaps', () => {
+    const provisionalA = [
+      makeSlot('a', 'mon', '09:00', '10:00', { probability: 0.5 }),
+      makeSlot('a', 'tue', '09:00', '10:00', { probability: 0.5 }),
+    ];
+    expect(clashProbability(provisionalA, confirmedB)).toBeCloseTo(0.5);
+  });
+
+  it('combines independent session pairs as 1 − Π(1 − P)', () => {
+    const twoSessions = [
+      makeSlot('a', 'mon', '09:00', '10:00', { probability: 0.5, sessionKey: 'lecture' }),
+      makeSlot('a', 'tue', '09:00', '10:00', { probability: 0.5, sessionKey: 'lecture' }),
+      makeSlot('a', 'mon', '09:00', '10:00', { probability: 0.5, sessionKey: 'lab', kind: 'lab' }),
+      makeSlot('a', 'wed', '09:00', '10:00', { probability: 0.5, sessionKey: 'lab', kind: 'lab' }),
+    ];
+    expect(clashProbability(twoSessions, confirmedB)).toBeCloseTo(0.75);
+  });
+
+  it('multiplies candidate probabilities on both sides', () => {
+    const provisionalA = [
+      makeSlot('a', 'mon', '09:00', '10:00', { probability: 0.5 }),
+      makeSlot('a', 'tue', '09:00', '10:00', { probability: 0.5 }),
+    ];
+    const provisionalB = [
+      makeSlot('b', 'mon', '09:00', '10:00', { probability: 0.5 }),
+      makeSlot('b', 'thu', '09:00', '10:00', { probability: 0.5 }),
+    ];
+    expect(clashProbability(provisionalA, provisionalB)).toBeCloseTo(0.25);
+  });
+
+  it('is 0 when nothing overlaps', () => {
+    expect(clashProbability([makeSlot('a', 'fri', '09:00', '10:00')], confirmedB)).toBe(0);
+  });
+});
+
+describe('clashLabel', () => {
+  it('labels certain, likely and possible clashes', () => {
+    expect(clashLabel(1)).toBe('certain');
+    expect(clashLabel(1 - 1e-12)).toBe('certain');
+    expect(clashLabel(0.999)).toBe('likely');
+    expect(clashLabel(0.3)).toBe('likely');
+    expect(clashLabel(0.29)).toBe('possible');
+  });
+});
+
+describe('buildTimetable', () => {
+  it('returns one grid per term with slots, in term order, for shortlisted modules only', () => {
+    const slots = [
+      makeSlot('a', 'tue', '09:00', '10:00', { term: 'spring' }),
+      makeSlot('a', 'wed', '11:00', '12:00'),
+      makeSlot('b', 'mon', '14:00', '15:00'),
+      makeSlot('x', 'mon', '09:00', '10:00', { term: 'summer' }),
+    ];
+    const grids = buildTimetable(['a', 'b'], slots);
+    expect(grids.map((grid) => grid.term)).toEqual(['autumn', 'spring']);
+    expect(grids[0]?.slots.map((slot) => slot.day)).toEqual(['mon', 'wed']);
+  });
+});
+
+describe('findClashes', () => {
+  const slots = [
+    makeSlot('b', 'mon', '09:00', '10:00'),
+    makeSlot('a', 'mon', '09:30', '10:30'),
+    makeSlot('a', 'tue', '09:00', '10:00', { term: 'spring' }),
+    makeSlot('b', 'tue', '09:00', '10:00', { term: 'spring', probability: 0.4 }),
+    makeSlot('b', 'wed', '09:00', '10:00', { term: 'spring', probability: 0.6 }),
+    makeSlot('c', 'mon', '10:30', '11:30'),
+  ];
+
+  it('gives one clash per module pair per term with the overlapping slot pairs', () => {
+    const clashes = findClashes(['b', 'a', 'c'], slots);
+    expect(clashes.map(({ moduleA, moduleB, term, label }) => ({ moduleA, moduleB, term, label }))).toEqual([
+      { moduleA: 'a', moduleB: 'b', term: 'autumn', label: 'certain' },
+      { moduleA: 'a', moduleB: 'b', term: 'spring', label: 'likely' },
+    ]);
+    expect(clashes[1]?.probability).toBeCloseTo(0.4);
+    expect(clashes[0]?.overlaps).toHaveLength(1);
+    expect(clashes[0]?.overlaps[0]?.a.moduleId).toBe('a');
+  });
+
+  it('labels a low-probability clash as possible', () => {
+    const lowSlots = [
+      makeSlot('a', 'mon', '09:00', '10:00'),
+      makeSlot('b', 'mon', '09:00', '10:00', { probability: 0.2 }),
+      makeSlot('b', 'tue', '09:00', '10:00', { probability: 0.8 }),
+    ];
+    expect(findClashes(['a', 'b'], lowSlots)[0]?.label).toBe('possible');
+  });
+});
+
+describe('suggestSwaps', () => {
+  const rec = (moduleId: string, fit: number, eligible = true): Recommendation => ({
+    moduleId,
+    fit,
+    sub: { interest: 0, goal: null, style: 0, breadth: 0 },
+    eligible,
+    ineligibleReasons: [],
+    confidence: 'high',
+  });
+  const slots = [
+    makeSlot('a', 'mon', '09:00', '10:00'),
+    makeSlot('b', 'mon', '09:00', '10:00'),
+    makeSlot('c', 'tue', '09:00', '10:00'),
+    makeSlot('clashes-with-c', 'tue', '09:30', '10:30'),
+  ];
+  const shortlist = ['a', 'b', 'c'];
+  const [clash] = findClashes(shortlist, slots);
+  const ranked = [
+    rec('a', 70),
+    rec('b', 60),
+    rec('c', 65),
+    rec('clashes-with-c', 80),
+    rec('ineligible', 75, false),
+    rec('completed', 59),
+    rec('d', 55),
+    rec('k', 53),
+    rec('i', 52),
+    rec('j', 51),
+    rec('too-weak', 49),
+  ];
+
+  it('replaces the lower-fit module with eligible, clash-free alternatives within 10 points', () => {
+    if (!clash) throw new Error('expected a clash between a and b');
+    const profile = makeProfile({ completedModuleIds: ['completed'] });
+    const swaps = suggestSwaps(profile, shortlist, clash, ranked, slots);
+    expect(swaps).toEqual([
+      { replaceModuleId: 'b', withModuleId: 'd', fit: 55, fitDelta: -5 },
+      { replaceModuleId: 'b', withModuleId: 'k', fit: 53, fitDelta: -7 },
+      { replaceModuleId: 'b', withModuleId: 'i', fit: 52, fitDelta: -8 },
+    ]);
+  });
+
+  it('considers both modules when their fits are equal', () => {
+    if (!clash) throw new Error('expected a clash between a and b');
+    const tied = [rec('a', 60), rec('b', 60), rec('d', 55)];
+    const swaps = suggestSwaps(makeProfile(), shortlist, clash, tied, slots);
+    expect(swaps.map((swap) => swap.replaceModuleId)).toEqual(['a', 'b']);
+  });
+});
+
+describe('clashPriorities', () => {
+  it('ranks clashing pairs by students × probability', () => {
+    const slots = [
+      makeSlot('a', 'mon', '09:00', '10:00'),
+      makeSlot('b', 'mon', '09:00', '10:00'),
+      makeSlot('c', 'mon', '09:00', '10:00', { probability: 0.5 }),
+      makeSlot('c', 'thu', '09:00', '10:00', { probability: 0.5 }),
+      makeSlot('d', 'fri', '09:00', '10:00'),
+    ];
+    const shortlists = [['a', 'b'], ['b', 'a'], ['a', 'b', 'b'], ['c', 'b'], ['c', 'd']];
+    expect(clashPriorities(shortlists, slots)).toEqual([
+      { moduleA: 'a', moduleB: 'b', students: 3, probability: 1, priority: 3 },
+      { moduleA: 'b', moduleB: 'c', students: 1, probability: 0.5, priority: 0.5 },
+    ]);
+  });
+});
