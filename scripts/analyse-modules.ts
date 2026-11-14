@@ -1,5 +1,5 @@
 // Offline Module Analyst agent (spec 10.4). Reads data/modules.raw.json, asks MODEL_SMART for taxonomy-keyed
-// topics, skills, pathway relevance and a demand profile through a forced tool call, validates the answer with
+// topics, skills, pathway relevance and a demand profile through a tool call, validates the answer with
 // zod, applies the checks in lib/analyst.ts and writes data/modules.json.
 // Usage: npx tsx scripts/analyse-modules.ts   (needs ANTHROPIC_API_KEY and MODEL_SMART, from the env or .env)
 import { existsSync, writeFileSync } from 'node:fs';
@@ -7,6 +7,7 @@ import { resolve } from 'node:path';
 import Anthropic from '@anthropic-ai/sdk';
 import { type Module, taxonomy } from '@modulematch/shared';
 import { z } from 'zod';
+import { stripInjection } from '../api/src/guardrails/g3-injection.ts';
 import {
   DATA_DIR,
   REPO_ROOT,
@@ -69,8 +70,9 @@ function modulePrompt(m: RawModule): string {
   return [
     '<module>',
     `Title: ${m.title} (${m.code}, ${m.department}, ${m.ects} ECTS, ${m.type})`,
-    `Description: ${m.description}`,
-    `Learning outcomes:\n${m.learningOutcomes.map((o) => `- ${o}`).join('\n') || '- not published'}`,
+    // G3 (spec 11): ingested text is scanned for injected instructions before any model sees it.
+    `Description: ${stripInjection(m.description).text}`,
+    `Learning outcomes:\n${m.learningOutcomes.map((o) => `- ${stripInjection(o).text}`).join('\n') || '- not published'}`,
     `Assessment:\n${assessment.map((a) => `- ${a}`).join('\n') || '- not published'}`,
     '</module>',
   ].join('\n');
@@ -93,11 +95,13 @@ async function analyse(
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     const response = await client.messages.create({
       model,
-      max_tokens: 2000,
+      // Thinking is on by default for current models, so leave room for it before the tool call.
+      max_tokens: 8000,
       system,
       tools: [tool],
-      tool_choice: { type: 'tool', name: TOOL_NAME },
-      messages: [{ role: 'user', content: modulePrompt(m) }],
+      // Current Sonnet and Opus models reject a forced tool_choice, so the prompt asks for the call instead.
+      tool_choice: { type: 'auto' },
+      messages: [{ role: 'user', content: `${modulePrompt(m)}\n\nRecord your analysis by calling ${TOOL_NAME}.` }],
     });
     const call = response.content.find((block) => block.type === 'tool_use');
     const parsed = schema.safeParse(call?.input);
