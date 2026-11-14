@@ -534,6 +534,78 @@ export const CvResponse = z.object({
   redacted: z.boolean(),
 });
 
+// ---------- answer feedback (POST /sessions/:id/feedback, GET /staff/feedback) ----------
+
+export const FEEDBACK_COMMENT_MAX = 500;
+export const FEEDBACK_EXCERPT_MAX = 600;
+export const FEEDBACK_QUESTION_MAX = 1000;
+
+export const FeedbackTargetKind = z.enum(['message', 'module-answer', 'explanation', 'summary']);
+export const FeedbackRating = z.enum(['up', 'down']);
+export const FeedbackReason = z.enum(['wrong', 'unhelpful', 'unclear', 'unsafe', 'other']);
+
+/**
+ * The answer being rated. `id` is the stored assistant message id for `message`, the streamed `done.messageId`
+ * for `module-answer`, and the module id for `explanation` and `summary`.
+ */
+export const FeedbackTarget = z.object({
+  kind: FeedbackTargetKind,
+  id: z.string().min(1).max(200),
+  moduleId: z.string().min(1).max(100).optional(),
+});
+
+const feedbackFields = {
+  target: FeedbackTarget,
+  rating: FeedbackRating,
+  /** Why an answer was down-voted. Only allowed with a down-vote. */
+  reason: FeedbackReason.optional(),
+  comment: z.string().max(FEEDBACK_COMMENT_MAX).optional(),
+  /** Client-supplied excerpt of the rated answer, so a down-vote can be reviewed later. Redacted (G2, G3) before storage. */
+  answerExcerpt: z.string().max(FEEDBACK_EXCERPT_MAX).optional(),
+  /** Client-supplied question the answer replied to. Redacted (G2, G3) before storage. */
+  question: z.string().max(FEEDBACK_QUESTION_MAX).optional(),
+};
+
+const reasonNeedsDownVote = (f: { rating: string; reason?: string }) => f.rating === 'down' || f.reason === undefined;
+const REASON_MESSAGE = { message: 'a reason is only given with a down-vote', path: ['reason'] };
+
+export const Feedback = z
+  .object({ id: z.string(), sessionId: z.string(), ...feedbackFields, createdAt: IsoDate })
+  .refine(reasonNeedsDownVote, REASON_MESSAGE);
+
+export const FeedbackBody = z.object(feedbackFields).refine(reasonNeedsDownVote, REASON_MESSAGE);
+
+/** Staff view of feedback (GET /staff/feedback). Items carry no session id; all text is already redacted. */
+export const FeedbackSummary = z.object({
+  total: z.number().int().min(0),
+  up: z.number().int().min(0),
+  down: z.number().int().min(0),
+  byKind: z.array(z.object({ kind: FeedbackTargetKind, up: z.number().int().min(0), down: z.number().int().min(0) })),
+  recentDown: z.array(
+    z.object({
+      id: z.string(),
+      kind: FeedbackTargetKind,
+      moduleId: z.string().nullable(),
+      reason: FeedbackReason.nullable(),
+      comment: z.string().nullable(),
+      question: z.string().nullable(),
+      answerExcerpt: z.string().nullable(),
+      createdAt: IsoDate,
+    }),
+  ),
+});
+
+/** One line of GET /staff/feedback/export (JSONL): an eval or fine-tuning seed row, redacted text only. */
+export const FeedbackExportRow = z.object({
+  question: z.string().nullable(),
+  answer: z.string().nullable(),
+  rating: FeedbackRating,
+  reason: FeedbackReason.nullable(),
+  comment: z.string().nullable(),
+  kind: FeedbackTargetKind,
+  moduleId: z.string().nullable(),
+});
+
 // ---------- SSE events on POST /sessions/:id/messages ----------
 
 export const SseEvent = z.discriminatedUnion('type', [

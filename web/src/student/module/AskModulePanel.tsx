@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { askModule } from '../../api.ts';
 import { Button } from '../../components/Button.tsx';
 import { cx } from '../../components/cx.ts';
+import { FeedbackControls } from '../../components/FeedbackControls.tsx';
 import { GuardrailNotice, type GuardrailVariant } from '../../components/GuardrailNotice.tsx';
 import { Icon } from '../../components/Icon.tsx';
 import { errorMessage } from '../../components/StateViews.tsx';
@@ -25,6 +26,8 @@ interface Turn {
   status: 'streaming' | 'done' | 'error';
   error: string | null;
   notices: Notice[];
+  /** The `done.messageId` of the answer, which answer feedback refers to. */
+  messageId: string | null;
 }
 
 interface AskModulePanelProps {
@@ -62,7 +65,7 @@ export function AskModulePanel({ sessionId, moduleId, moduleTitle, className }: 
     if (!text || busy) return;
     const id = nextId.current++;
     setDraft('');
-    setTurns((current) => [...current, { id, question: text, answer: '', status: 'streaming', error: null, notices: [] }]);
+    setTurns((current) => [...current, { id, question: text, answer: '', status: 'streaming', error: null, notices: [], messageId: null }]);
     const controller = new AbortController();
     abort.current = controller;
     try {
@@ -75,7 +78,7 @@ export function AskModulePanel({ sessionId, moduleId, moduleTitle, className }: 
           else if (event.type === 'guardrail' && event.notice) {
             const notice = { variant: guardrailVariant(event.stage, event.verdict), message: event.notice, stage: event.stage };
             patch(id, (t) => ({ ...t, notices: [...t.notices, notice] }));
-          } else if (event.type === 'done') patch(id, (t) => ({ ...t, status: 'done' }));
+          } else if (event.type === 'done') patch(id, (t) => ({ ...t, status: 'done', messageId: event.messageId }));
         },
         controller.signal,
       );
@@ -149,6 +152,14 @@ export function AskModulePanel({ sessionId, moduleId, moduleTitle, className }: 
                   )}
                   {turn.status === 'streaming' && !turn.answer && <span className="text-muted">Reading the module record…</span>}
                 </p>
+              )}
+              {turn.status === 'done' && turn.messageId && turn.answer && (
+                <FeedbackControls
+                  sessionId={sessionId}
+                  target={{ kind: 'module-answer', id: turn.messageId, moduleId }}
+                  answer={turn.answer}
+                  question={turn.question}
+                />
               )}
               {turn.status === 'error' && (
                 <div role="alert" className="flex flex-wrap items-center gap-2 rounded-xl bg-fit-low/8 px-3 py-2 text-[13px]">

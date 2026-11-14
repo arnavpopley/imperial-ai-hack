@@ -1,5 +1,5 @@
 // Student routes (spec 13). Every body is validated with the shared zod schemas.
-import { schemas, type Evidence, type ProfileEditBody, type SessionState, type SseEvent } from '@modulematch/shared';
+import { schemas, type Evidence, type Feedback, type FeedbackBody, type ProfileEditBody, type SessionState, type SseEvent } from '@modulematch/shared';
 import { Hono, type Context } from 'hono';
 import { streamSSE } from 'hono/streaming';
 import { randomUUID } from 'node:crypto';
@@ -14,6 +14,7 @@ import { rawModule } from '../db/catalogue.ts';
 import * as repo from '../db/repo.ts';
 import { WELLBEING_NOTICE } from '../guardrails/g4-wellbeing.ts';
 import { runInputGuardrails } from '../guardrails/pipeline.ts';
+import { cleanForStorage } from '../guardrails/stored-text.ts';
 import { matchSocieties, pathwayProgress } from '../engines/index.ts';
 import { createTracer } from '../trace/tracer.ts';
 import { body } from './validate.ts';
@@ -39,6 +40,16 @@ function editEvidence(sessionId: string, edits: ProfileEditBody): Evidence[] {
     ...(edits.pathwaysSkipped !== undefined ? [item('pathwaysSkipped', edits.pathwaysSkipped)] : []),
     ...(edits.timetablePrefs?.avoidDays ? [item('timetablePrefs.avoidDays', edits.timetablePrefs.avoidDays)] : []),
   ];
+}
+
+/** Checks that the rated answer exists: a stored assistant message in this session, or a known module. */
+function feedbackTargetError(session: SessionState, target: FeedbackBody['target']): string | null {
+  if (target.kind === 'message') {
+    const found = session.messages.some((m) => m.id === target.id && m.role === 'assistant');
+    return found ? null : 'answer not found in this session';
+  }
+  if (!target.moduleId) return 'moduleId is required for module answers, explanations and summaries';
+  return catalogue.modules().some((m) => m.id === target.moduleId) ? null : 'unknown module';
 }
 
 /** Slots the student cleared (set to null or emptied), whose old evidence must no longer count (spec 8.6). */
@@ -241,6 +252,39 @@ export const studentRoutes = new Hono()
     session.profile = saveProfile(session, merged.profile);
     clearExplanationCache();
     return c.json({ session: fresh(session.id), slots: [...new Set(merged.evidence.map((e) => e.slot))], redacted });
+  })
+  .post('/:id/feedback', body(schemas.FeedbackBody), async (c) => {
+    // A thumbs up or down on one AI answer. The comment, question and answer excerpt pass G2 and G3 first,
+    // so raw sensitive text is never stored; the trace gets a one-line summary only.
+    const session = load(c);
+    if (session instanceof Response) return session;
+    const input = c.req.valid('json');
+    const targetError = feedbackTargetError(session, input.target);
+    if (targetError) return c.json({ error: targetError }, input.target.kind === 'message' ? 404 : 400);
+    const tracer = createTracer(session.id, tracerSink);
+    const clean = (text: string | undefined) => cleanForStorage(text ?? '', { mode: session.mode, tracer });
+    const [comment, question, answer] = await Promise.all([clean(input.comment), clean(input.question), clean(input.answerExcerpt)]);
+    const stored: Feedback = repo.addFeedback({
+      id: randomUUID(),
+      sessionId: session.id,
+      target: input.target,
+      rating: input.rating,
+      reason: input.reason,
+      comment: comment.text || undefined,
+      question: question.text || undefined,
+      answerExcerpt: answer.text || undefined,
+      createdAt: new Date().toISOString(),
+    });
+    const redacted = [comment, question, answer].some((t) => t.changed);
+    const details = [stored.reason && `reason ${stored.reason}`, stored.comment && 'with comment', redacted && 'text redacted'].filter(Boolean);
+    tracer.record({
+      actor: 'student',
+      kind: 'agent',
+      input: `feedback ${stored.rating} on ${stored.target.kind}`,
+      output: ['stored', ...details].join(', '),
+      verdict: redacted ? 'redact' : null,
+    });
+    return c.json(stored, 201);
   })
   .get('/:id/societies', (c) => {
     const session = load(c);

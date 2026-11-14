@@ -7,6 +7,9 @@ import type {
   Escalation,
   EvalRun,
   ExplanationResponse,
+  Feedback,
+  FeedbackBody,
+  FeedbackSummary,
   Insight,
   InsightDecisionBody,
   Module,
@@ -63,6 +66,8 @@ export const api = {
   societyMatches: (id: string) => call<SocietyMatch[]>(`${s(id)}/societies`),
   /** Pasted CV or personal statement: redacted on the server, then mined for interests and skills. */
   submitCv: (id: string, text: string) => call<CvResponse>(`${s(id)}/cv`, { body: { text } }),
+  /** Thumbs up or down on one AI answer. Free text is redacted on the server before it is stored. */
+  feedback: (id: string, body: FeedbackBody) => call<Feedback>(`${s(id)}/feedback`, { body }),
 
   staff: {
     modules: () => call<StaffModuleSummary[]>('/staff/modules'),
@@ -75,6 +80,9 @@ export const api = {
     escalations: () => call<StaffEscalation[]>('/staff/escalations'),
     respond: (escalationId: string, body: RespondInput) =>
       call<Escalation>(`/staff/escalations/${encodeURIComponent(escalationId)}/respond`, { body }),
+    feedback: () => call<FeedbackSummary>('/staff/feedback'),
+    /** JSONL download of redacted feedback rows, for eval or fine-tuning seed sets. */
+    feedbackExportUrl: '/api/staff/feedback/export',
   },
 
   modules: () => call<Module[]>('/modules'),

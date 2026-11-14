@@ -6,6 +6,7 @@ import { useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent 
 import { Link } from 'react-router';
 import { buttonClass } from '../../components/Button.tsx';
 import { cx } from '../../components/cx.ts';
+import { FeedbackControls } from '../../components/FeedbackControls.tsx';
 import { GuardrailNotice } from '../../components/GuardrailNotice.tsx';
 import { Icon } from '../../components/Icon.tsx';
 import { InterviewerAvatar } from '../interview/InterviewerAvatar.tsx';
@@ -121,13 +122,15 @@ export function ChatPanel({ variant, prefill = '', className, onAddCv }: ChatPan
           ) : (
             <ol aria-label="Conversation" className={cx('grid', interview ? 'gap-7' : 'gap-5')}>
               <AnimatePresence initial={false}>
-                {turns.map((t) => (
+                {turns.map((t, i) => (
                   <TurnView
                     key={t.id}
                     turn={t}
                     persona={persona}
                     prominent={interview && t.id === latestAssistantId}
                     onRetry={() => retry(t.id)}
+                    sessionId={session.id}
+                    question={turns.slice(0, i).findLast((p) => p.role === 'student')?.content}
                   />
                 ))}
               </AnimatePresence>
@@ -321,16 +324,24 @@ function EmptyConversation({
   );
 }
 
+/** Interview questions and staff replies are not AI answers, so they get no feedback controls. */
+const UNRATED_AGENTS = new Set([STAFF_AGENT, 'interviewer']);
+
 function TurnView({
   turn,
   persona,
   prominent,
   onRetry,
+  sessionId,
+  question,
 }: {
   turn: ChatTurn;
   persona: Persona;
   prominent: boolean;
   onRetry: () => void;
+  sessionId: string;
+  /** The student turn this reply answers, sent with feedback for review. */
+  question?: string;
 }) {
   if (turn.role === 'system') {
     return (
@@ -396,6 +407,14 @@ function TurnView({
             {turn.content}
             {streaming && (turn.content ? <Caret /> : <TypingDots />)}
           </p>
+        )}
+        {turn.status === 'done' && turn.messageId && turn.content && !UNRATED_AGENTS.has(turn.agent ?? '') && (
+          <FeedbackControls
+            sessionId={sessionId}
+            target={{ kind: 'message', id: turn.messageId }}
+            answer={turn.content}
+            question={question}
+          />
         )}
         {turn.status === 'error' && (
           <div role="alert" className="flex flex-wrap items-center gap-2 text-[13px] text-fit-low">

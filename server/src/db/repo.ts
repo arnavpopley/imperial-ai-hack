@@ -5,6 +5,7 @@ import {
   type Escalation,
   type EvalRun,
   type Evidence,
+  type Feedback,
   type Insight,
   type InsightDecision,
   type Message,
@@ -25,6 +26,7 @@ import {
   escalations,
   evalRuns,
   evidence,
+  feedback,
   insights,
   messages,
   modules,
@@ -210,8 +212,8 @@ export function saveProfile(sessionId: string, profile: StudentProfile, db: Db =
 }
 
 /**
- * Spec 20.3: the student deletes everything held about them: profile, evidence, chat, escalations, shortlist
- * and trace. The profile is reset to an empty one that keeps only programme and year.
+ * Spec 20.3: the student deletes everything held about them: profile, evidence, chat, escalations, shortlist,
+ * answer feedback and trace. The profile is reset to an empty one that keeps only programme and year.
  */
 export function deleteProfileAndEvidence(sessionId: string, db: Db = getDb()): StudentProfile | null {
   const row = db.select().from(profiles).where(eq(profiles.sessionId, sessionId)).get();
@@ -243,6 +245,7 @@ export function deleteProfileAndEvidence(sessionId: string, db: Db = getDb()): S
     tx.delete(messages).where(eq(messages.sessionId, sessionId)).run();
     tx.delete(escalations).where(eq(escalations.sessionId, sessionId)).run();
     tx.delete(shortlistItems).where(eq(shortlistItems.sessionId, sessionId)).run();
+    tx.delete(feedback).where(eq(feedback.sessionId, sessionId)).run();
     tx.delete(traceEvents).where(eq(traceEvents.sessionId, sessionId)).run();
     tx.update(profiles).set({ data: blank }).where(eq(profiles.sessionId, sessionId)).run();
     tx.update(sessions).set({ updatedAt: blank.updatedAt }).where(eq(sessions.id, sessionId)).run();
@@ -372,6 +375,65 @@ export function setInsightDecision(id: string, decision: InsightDecision, db: Db
   db.update(insights).set({ decision: S.InsightDecision.parse(decision) }).where(eq(insights.id, id)).run();
   const row = db.select().from(insights).where(eq(insights.id, id)).get();
   return row ? S.Insight.parse(row) : null;
+}
+
+// ---------- answer feedback ----------
+
+type FeedbackRow = typeof feedback.$inferSelect;
+
+/** Nullable columns map to absent optional fields, so a read parses as the contract object. */
+const optional = <T>(value: T | null): T | undefined => value ?? undefined;
+
+function toFeedback(row: FeedbackRow): Feedback {
+  return S.Feedback.parse({
+    id: row.id,
+    sessionId: row.sessionId,
+    target: { kind: row.targetKind, id: row.targetId, moduleId: optional(row.moduleId) },
+    rating: row.rating,
+    reason: optional(row.reason),
+    comment: optional(row.comment),
+    answerExcerpt: optional(row.answerExcerpt),
+    question: optional(row.question),
+    createdAt: row.createdAt,
+  });
+}
+
+/**
+ * Stores a vote on one answer. Callers redact the free text first (routes do, through G2 and G3). A second vote
+ * from the same session on the same target replaces the first, so each answer counts once.
+ */
+export function addFeedback(f: Feedback, db: Db = getDb()): Feedback {
+  const v = S.Feedback.parse(f);
+  const values = {
+    id: v.id,
+    targetKind: v.target.kind,
+    targetId: v.target.id,
+    moduleId: v.target.moduleId ?? null,
+    rating: v.rating,
+    reason: v.reason ?? null,
+    comment: v.comment ?? null,
+    question: v.question ?? null,
+    answerExcerpt: v.answerExcerpt ?? null,
+    createdAt: v.createdAt,
+  };
+  db.insert(feedback)
+    .values({ ...values, sessionId: v.sessionId })
+    .onConflictDoUpdate({ target: [feedback.sessionId, feedback.targetKind, feedback.targetId], set: values })
+    .run();
+  const row = db.select().from(feedback).where(eq(feedback.id, v.id)).get();
+  if (!row) throw new Error(`Feedback ${v.id} was not stored`);
+  return toFeedback(row);
+}
+
+/** Feedback for one session, or across every session when sessionId is omitted; newest first. */
+export function listFeedback(sessionId?: string, db: Db = getDb()): Feedback[] {
+  return db
+    .select()
+    .from(feedback)
+    .where(sessionId === undefined ? undefined : eq(feedback.sessionId, sessionId))
+    .orderBy(desc(feedback.createdAt), desc(feedback.seq))
+    .all()
+    .map(toFeedback);
 }
 
 // ---------- trace ----------

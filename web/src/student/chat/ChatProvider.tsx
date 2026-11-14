@@ -24,6 +24,8 @@ export interface ChatTurn {
   /** Guardrail notices raised while this reply was produced. */
   notices: ChatNotice[];
   error: string | null;
+  /** The stored message id (from `done.messageId` or the saved transcript), which answer feedback refers to. */
+  messageId: string | null;
 }
 
 export type ChatWidget = NonNullable<Extract<SseEvent, { type: 'done' }>['widget']>;
@@ -72,14 +74,14 @@ let localCounter = 0;
 const localId = (prefix: string) => `${prefix}-${Date.now().toString(36)}-${(localCounter += 1)}`;
 
 function turn(role: ChatTurn['role'], content: string, extra: Partial<ChatTurn> = {}): ChatTurn {
-  return { id: localId(role), role, agent: null, content, status: 'done', notices: [], error: null, ...extra };
+  return { id: localId(role), role, agent: null, content, status: 'done', notices: [], error: null, messageId: null, ...extra };
 }
 
 const STAFF_AGENT = 'staff';
 
 export const BUSY_MESSAGE = 'Wait for the current reply to finish, then try again.';
 
-const fromMessage = (m: Message): ChatTurn => ({ ...turn(m.role, m.content), id: m.id, agent: m.agent });
+const fromMessage = (m: Message): ChatTurn => ({ ...turn(m.role, m.content), id: m.id, agent: m.agent, messageId: m.id });
 
 interface SentRequest {
   content: string;
@@ -190,7 +192,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           }
           case 'done':
             setWidget(event.widget);
-            patchReply((t) => ({ ...t, status: 'done' }));
+            patchReply((t) => ({ ...t, status: 'done', messageId: event.messageId }));
             break;
         }
       };

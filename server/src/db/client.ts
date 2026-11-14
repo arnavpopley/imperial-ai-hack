@@ -117,11 +117,27 @@ CREATE TABLE IF NOT EXISTS eval_runs (
   at TEXT NOT NULL,
   results TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS feedback (
+  seq INTEGER PRIMARY KEY AUTOINCREMENT,
+  id TEXT NOT NULL UNIQUE,
+  session_id TEXT NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+  target_kind TEXT NOT NULL,
+  target_id TEXT NOT NULL,
+  module_id TEXT,
+  rating TEXT NOT NULL,
+  reason TEXT,
+  comment TEXT,
+  question TEXT,
+  answer_excerpt TEXT,
+  created_at TEXT NOT NULL,
+  CONSTRAINT feedback_session_target UNIQUE (session_id, target_kind, target_id)
+);
 CREATE INDEX IF NOT EXISTS messages_session ON messages(session_id);
 CREATE INDEX IF NOT EXISTS evidence_session ON evidence(session_id);
 CREATE INDEX IF NOT EXISTS escalations_session ON escalations(session_id);
 CREATE INDEX IF NOT EXISTS insights_module ON insights(module_id);
 CREATE INDEX IF NOT EXISTS trace_events_session ON trace_events(session_id);
+CREATE INDEX IF NOT EXISTS feedback_created ON feedback(created_at);
 `;
 
 /** Default database file, relative to the repository root (spec section 5). */

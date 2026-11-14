@@ -106,3 +106,12 @@ The agent drafts a summary, and the student approves or edits it. The escalation
 SQLite (better-sqlite3 and Drizzle) holds the sessions, messages, profiles, evidence, modules, slots, shortlist items, escalations, insights, trace events, synthetic cohort and evaluation runs. A session persists its mode, profile, evidence, messages, weights, shortlist, interview state and escalations, so reloading resumes exactly where the student left off.
 
 Contracts are defined once, as zod schemas in `packages/shared/src/schemas.ts`. The API validates every body against them, and the web app imports the same types.
+
+## Answer feedback
+
+Students can rate any AI answer with a thumbs up or down: advisor chat replies (target `message`, the stored message id from `done.messageId`), module Q&A answers (`module-answer`, the streamed `done.messageId` plus the module id), explanations and AI summaries (`explanation` and `summary`, keyed by module). A down-vote can carry a reason (`wrong`, `unhelpful`, `unclear`, `unsafe`, `other`) and a comment of up to 500 characters.
+
+The client sends the question and an excerpt of the answer (at most 600 characters) with the vote, so a down-vote can be reviewed later. The comment and both texts pass G2 redaction (pattern pass, then the live model pass) and G3 injection stripping before they are stored in the `feedback` table, so raw sensitive text is never kept. Each vote writes one trace event (actor `student`, kind `agent`) with a summary only. One vote counts per answer: voting again replaces the earlier vote. Deleting the profile deletes the session's feedback with everything else (spec 20.3).
+
+Staff see totals, up and down by answer type, and recent down-votes at `/staff/feedback` (`GET /api/staff/feedback`). Items carry no student or session id. `GET /api/staff/feedback/export` returns JSONL rows `{ question, answer, rating, reason, comment, kind, moduleId }` as a seed set for prompt evaluation or later fine-tuning. The export contains only redacted text, and in this prototype every session is synthetic.
+
