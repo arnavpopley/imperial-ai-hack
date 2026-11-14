@@ -3,3 +3,5 @@ export * from './scoring.ts';
 export * from './rules.ts';
 export * from './timetable.ts';
 export * from './insights.ts';
+export * from './pathways.ts';
+export * from './societies.ts';
