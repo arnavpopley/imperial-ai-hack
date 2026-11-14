@@ -1,6 +1,6 @@
 // One conversation per session, shared by the interview screen and the "Ask the advisor" drawer.
 // Applies each SSE event (spec 13) to the transcript and to the session state.
-import type { Evidence, SendMessageBody, SseEvent, Verdict } from '@modulematch/shared';
+import type { Evidence, Message, SendMessageBody, SseEvent, Verdict } from '@modulematch/shared';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { sendMessage } from '../../api.ts';
 import type { GuardrailVariant } from '../../components/GuardrailNotice.tsx';
@@ -68,6 +68,10 @@ function turn(role: ChatTurn['role'], content: string, extra: Partial<ChatTurn> 
   return { id: localId(role), role, agent: null, content, status: 'done', notices: [], error: null, ...extra };
 }
 
+const STAFF_AGENT = 'staff';
+
+const fromMessage = (m: Message): ChatTurn => ({ ...turn(m.role, m.content), id: m.id, agent: m.agent });
+
 interface LastSend {
   content: string;
   structured: Structured;
@@ -78,9 +82,7 @@ interface LastSend {
 export function ChatProvider({ children }: { children: ReactNode }) {
   const { session, update, offerDraft, invalidateRecs } = useReadySession();
   const sessionId = session.id;
-  const [turns, setTurns] = useState<ChatTurn[]>(() =>
-    session.messages.map((m) => ({ ...turn(m.role, m.content), id: m.id, agent: m.agent })),
-  );
+  const [turns, setTurns] = useState<ChatTurn[]>(() => session.messages.map(fromMessage));
   const [sending, setSending] = useState(false);
   const [widget, setWidget] = useState<ChatWidget | null>(null);
   const [recommendationsReady, setRecommendationsReady] = useState(false);
@@ -88,6 +90,19 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const lastSendRef = useRef<LastSend | null>(null);
 
   useEffect(() => () => abortRef.current?.abort(), []);
+
+  // Staff replies also arrive as assistant messages (agent "staff") through the session poll.
+  // The transcript is otherwise local, so append only those, once each.
+  const { messages } = session;
+  useEffect(() => {
+    const staff = messages.filter((m) => m.agent === STAFF_AGENT);
+    if (staff.length === 0) return;
+    setTurns((list) => {
+      const known = new Set(list.map((t) => t.id));
+      const fresh = staff.filter((m) => !known.has(m.id));
+      return fresh.length > 0 ? [...list, ...fresh.map(fromMessage)] : list;
+    });
+  }, [messages]);
 
   const send = useCallback(
     async (content: string, structured?: Structured) => {

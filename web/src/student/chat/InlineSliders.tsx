@@ -4,8 +4,8 @@ import { Button } from '../../components/Button.tsx';
 import { RangeSlider } from '../../components/RangeSlider.tsx';
 import { humanise, isStyleKey, percent, STYLE_META } from '../labels.ts';
 
-/** Used when the widget arrives without fields. */
-const DEFAULT_FIELDS = ['style.mathsComfort', 'style.codingComfort'] as const;
+/** Used when the widget arrives without fields. The server sends bare style keys. */
+const DEFAULT_FIELDS = ['mathsComfort', 'codingComfort'] as const;
 
 /** Accepts "style.mathsComfort" or "mathsComfort" and returns display labels for it. */
 function fieldMeta(field: string): { label: string; low: string; high: string } {
