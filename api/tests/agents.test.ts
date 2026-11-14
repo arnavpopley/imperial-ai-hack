@@ -71,7 +71,7 @@ describe('interviewer', () => {
     ...fixtureSession,
     profile: emptyProfile,
     evidence,
-    interview: { depth: 'quick', questionsAsked, budget: 8, finished: false, confirmed: false },
+    interview: { depth: 'quick', questionsAsked, budget: 8, finished: false, confirmed: false, askedSteps: [], targetSlots: [], disputes: 0 },
   });
 
   it('starts with the opening interest question', () => {
