@@ -139,8 +139,11 @@ export async function answerModuleQuestion(
   facts: ReturnType<typeof moduleFacts>,
   rec: Recommendation | undefined,
   onToken: (text: string) => void,
+  /** Told whether the answer came from the model or the rule-based template (used by the live eval). */
+  onSource?: (source: 'model' | 'template') => void,
 ): Promise<string> {
   const template = answerByRules(question, facts);
+  let source: 'model' | 'template' = isLive() ? 'model' : 'template';
   const drafted = isLive()
     ? await streamText(
         {
@@ -155,9 +158,15 @@ export async function answerModuleQuestion(
           ],
         },
         () => {},
-      ).catch(() => template)
+      ).catch(() => {
+        source = 'template';
+        return template;
+      })
     : template;
-  const text = filterClaims(drafted).text || template;
+  const filtered = filterClaims(drafted).text;
+  if (!filtered) source = 'template';
+  const text = filtered || template;
+  onSource?.(source);
   emitWords(text, onToken);
   return text;
 }

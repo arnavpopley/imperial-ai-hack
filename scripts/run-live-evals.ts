@@ -38,6 +38,25 @@ const titleOf = (id: string) => byId.get(id)?.title ?? id;
 const rules = rulesFor('MEng Mechanical Engineering', 3)!;
 const baseProfile = (): StudentProfile => emptyProfile({ programme: 'MEng Mechanical Engineering', yearOfStudy: 3, completedModuleIds: [], interviewDepth: 'quick' }, 'live-eval');
 const pct = (x: number) => `${Math.round(x * 100)}%`;
+/** Words that identify an assessment item, such as "exam", "project" or "labs" (generic words are ignored). */
+const itemWords = (description: string) =>
+  description
+    .toLowerCase()
+    .split(/[^a-z]+/)
+    .filter((w) => w.length > 3 && !['hour', 'hours', 'minute', 'minutes', 'individual', 'written', 'final'].includes(w));
+
+/** True when the percentage appears within a short window of a word that identifies the assessment item. */
+function mentionsNear(answer: string, percentage: string, description: string): boolean {
+  const lower = answer.toLowerCase();
+  const words = itemWords(description).map((w) => w.replace(/s$/, ''));
+  if (words.length === 0) return lower.includes(percentage);
+  for (let at = lower.indexOf(percentage); at !== -1; at = lower.indexOf(percentage, at + 1)) {
+    const window = lower.slice(Math.max(0, at - 80), at + percentage.length + 80);
+    if (words.some((w) => window.includes(w))) return true;
+  }
+  return false;
+}
+
 const collect = async (run: (onToken: (t: string) => void) => Promise<string>) => run(() => {});
 
 // ---------- 1. module knowledge: facts that must appear, generated from the published data ----------
@@ -45,25 +64,32 @@ const collect = async (run: (onToken: (t: string) => void) => Promise<string>) =
 async function moduleKnowledge(): Promise<EvalResult> {
   const withAssessment = modules.filter((m) => m.type !== 'core' && m.level === 3 && (rawModule(m.id)?.assessment.length ?? 0) > 0).slice(0, 8);
   const withPrereqs = modules.filter((m) => m.type !== 'core' && m.prerequisites.length > 0).slice(0, 4);
-  const cases: { name: string; moduleId: string; question: string; mustInclude: string[] }[] = [
+  // Each check is a predicate on the answer, so an assessment weighting only counts when it is attached to the right item.
+  const cases: { name: string; moduleId: string; question: string; checks: { label: string; ok: (answer: string) => boolean }[] }[] = [
     ...withAssessment.map((m) => ({
       name: `${m.code} assessment`,
       moduleId: m.id,
       question: 'How is this module assessed?',
-      mustInclude: rawModule(m.id)!.assessment.map((a) => pct(a.weighting)),
+      checks: rawModule(m.id)!.assessment.map((a) => ({ label: `${a.description} ${pct(a.weighting)}`, ok: (answer: string) => mentionsNear(answer, pct(a.weighting), a.description) })),
     })),
     ...withPrereqs.map((m) => ({
       name: `${m.code} prerequisites`,
       moduleId: m.id,
       question: 'What do I need to have done before taking this?',
-      mustInclude: m.prerequisites.map((id) => id),
+      checks: m.prerequisites.map((id) => ({ label: id, ok: (answer: string) => answer.includes(id) || answer.includes(titleOf(id)) })),
     })),
   ];
   const details: Detail[] = [];
   for (const c of cases) {
     const facts = moduleFacts(byId.get(c.moduleId)!, rawModule(c.moduleId), titleOf);
-    const answer = await collect((onToken) => answerModuleQuestion(c.question, facts, undefined, onToken));
-    const missing = c.mustInclude.filter((needle) => !answer.includes(needle) && !answer.includes(titleOf(needle)));
+    // A holder object, because TypeScript cannot see the callback assign a plain variable.
+    const seen: { source: 'model' | 'template' } = { source: 'template' };
+    const answer = await collect((onToken) => answerModuleQuestion(c.question, facts, undefined, onToken, (s) => (seen.source = s)));
+    if (seen.source !== 'model') {
+      details.push({ case: c.name, pass: false, note: 'the model call failed and the template answered, so this is not a live result' });
+      continue;
+    }
+    const missing = c.checks.filter((check) => !check.ok(answer)).map((check) => check.label);
     details.push({ case: c.name, pass: missing.length === 0, note: missing.length ? `missing ${missing.join(', ')}: ${answer.slice(0, 160)}` : undefined });
   }
   return result('Live: module facts', 0.9, details);
@@ -95,7 +121,13 @@ async function honesty(): Promise<EvalResult> {
   const details: Detail[] = [];
   for (const c of cases) {
     const facts = moduleFacts(byId.get(c.moduleId)!, rawModule(c.moduleId), titleOf);
-    const answer = await collect((onToken) => answerModuleQuestion(c.question, facts, undefined, onToken));
+    // A holder object, because TypeScript cannot see the callback assign a plain variable.
+    const seen: { source: 'model' | 'template' } = { source: 'template' };
+    const answer = await collect((onToken) => answerModuleQuestion(c.question, facts, undefined, onToken, (s) => (seen.source = s)));
+    if (seen.source !== 'model') {
+      details.push({ case: `${c.moduleId}: ${c.question}`, pass: false, note: 'template answer, not a live result' });
+      continue;
+    }
     const verdict = await judge(`${rubric}\nModule data the advisor had: ${JSON.stringify(facts)}`, c.question, answer);
     details.push({ case: `${c.moduleId}: ${c.question}`, pass: verdict.pass, note: verdict.reason });
   }
@@ -109,24 +141,32 @@ async function liveExtraction(): Promise<EvalResult> {
   const details: Detail[] = [];
   for (const t of EXTRACTION_TRANSCRIPTS) {
     let profile = baseProfile();
+    let fellBack = false;
     for (const turn of t.turns) {
-      const updates = await extract(turn.text, turn.targetSlots, pathwayIds);
+      const updates = await extract(turn.text, turn.targetSlots, pathwayIds, undefined, () => (fellBack = true));
       profile = mergeUpdates(profile, updates, { sessionId: 'live-eval', turnId: randomUUID() }).profile;
     }
     for (const [slot, expected] of Object.entries(t.expected)) {
       const actual = readSlot(profile, slot);
-      // Live strengths vary, so numbers pass on the right side of the scale (within 0.35), lists and flags exactly.
+      // Live strengths vary, so numbers pass within 0.35; lists must match exactly as sets, and flags exactly.
       const pass =
         typeof expected === 'number'
           ? typeof actual === 'number' && Math.abs(actual - expected) <= 0.35
           : Array.isArray(expected) && Array.isArray(actual)
-            ? expected.every((e) => (actual as unknown[]).includes(e))
+            ? sameSet(expected, actual)
             : JSON.stringify(actual) === JSON.stringify(expected);
-      details.push({ case: `${t.name}: ${slot}`, pass, note: `expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}` });
+      details.push({
+        case: `${t.name}: ${slot}`,
+        pass: pass && !fellBack,
+        note: fellBack ? 'the live extractor failed in this interview, so these are keyword-cue results' : `expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`,
+      });
     }
   }
   return result('Live: extraction', 0.85, details);
 }
+
+/** Equal as sets, including size, so values the student never stated make a case fail. */
+const sameSet = (a: unknown[], b: unknown[]) => a.length === b.length && a.every((x) => b.includes(x));
 
 function readSlot(profile: StudentProfile, slot: string): unknown {
   if (slot.startsWith('interest:')) return profile.interests[slot.slice('interest:'.length)] ?? null;
@@ -174,7 +214,15 @@ async function grounding(): Promise<EvalResult> {
     }));
     const rec = rankModules(profile, modules, DEFAULT_WEIGHTS, rules).find((r) => r.eligible)!;
     const module = byId.get(rec.moduleId)!;
-    const explanation = await explain(profile, module, rec, evidence, createTracer('live-eval', () => {}));
+    let templateUsed = false;
+    const tracer = createTracer('live-eval', (event) => {
+      if (event.actor === 'G5 schema' && event.verdict === 'block') templateUsed = true;
+    });
+    const explanation = await explain(profile, module, rec, evidence, tracer);
+    if (templateUsed) {
+      details.push({ case: `${persona.name}: ${module.code}`, pass: false, note: 'the model explanation failed validation and the template was used' });
+      continue;
+    }
     const valid = schemas.Explanation.safeParse(explanation).success && explanation.because.every((b) => b.evidenceId || b.moduleField);
     // The judge sees everything the Matcher saw, so a true fact is never marked as invented.
     const brief = {
@@ -211,3 +259,4 @@ for (const r of run.results) {
   for (const d of r.details.filter((x) => !x.pass)) console.log(`      ✗ ${d.case}${d.note ? `: ${d.note}` : ''}`);
 }
 console.log(`Took ${Math.round((Date.now() - started) / 1000)} s.`);
+if (run.results.some((r) => r.total === 0 || r.passed / r.total < r.target)) process.exitCode = 1;

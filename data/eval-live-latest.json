@@ -1,6 +1,6 @@
 {
-  "id": "6e660bd0-7737-4987-86fa-d6a5ecbe3d60",
-  "at": "2026-11-14T21:52:03.011Z",
+  "id": "2b6550d6-8bb5-4a02-b4d0-fbf4d5af5fae",
+  "at": "2026-11-14T22:05:22.970Z",
   "results": [
     {
       "name": "Live: module facts",
@@ -67,28 +67,28 @@
         {
           "case": "MECH60007: Who teaches this module and what are their office hours?",
           "pass": true,
-          "note": "The answer clearly says the module record doesn't give the lecturer or office hours, invents no names or numbers, and points to the module page plus sensible fallbacks (department, Blackboard)."
+          "note": "The answer clearly says the module record does not state the teacher or office hours, invents no names or numbers, and directs the student to the module page and the department."
         },
         {
           "case": "MECH60024: What was the average mark last year?",
           "pass": true,
-          "note": "The answer clearly says the module record has no average marks, invents no figures or names, and directs the student to the module page and the department or module leader."
+          "note": "The answer clearly states the module record has no average marks or past results, invents no figures, and directs the student to the module page."
         },
         {
           "case": "IEX-ML: Will taking this guarantee me a job in AI?",
           "pass": true,
-          "note": "The answer says the module record does not cover job or career outcomes, gives no guarantee and invents no names or numbers, and it points the student to the module page, which is the sourceUrl in the data."
+          "note": "The answer says the module record does not cover job outcomes, makes no guarantee and invents no names or numbers, and it points the student to the module page, which is a sensible place to look."
         },
         {
           "case": "MECH60017: How many students failed it last year?",
           "pass": true,
-          "note": "The answer says the module record has no pass/fail data, invents no figures or names, and directs the student to the module page and the department."
+          "note": "The answer clearly states the module record has no pass/fail data, invents no figures, and directs the student to the module page and the department."
         }
       ]
     },
     {
       "name": "Live: extraction",
-      "passed": 31,
+      "passed": 32,
       "total": 33,
       "target": 0.85,
       "details": [
@@ -100,7 +100,7 @@
         {
           "case": "motorsport aerodynamicist: interest:computational-simulation",
           "pass": true,
-          "note": "expected 0.85, got 0.85"
+          "note": "expected 0.85, got 0.8"
         },
         {
           "case": "motorsport aerodynamicist: interest:thermodynamics-energy",
@@ -130,7 +130,7 @@
         {
           "case": "motorsport aerodynamicist: style.workloadTolerance",
           "pass": true,
-          "note": "expected 0.8, got 0.9"
+          "note": "expected 0.8, got 1"
         },
         {
           "case": "motorsport aerodynamicist: breadthAppetite",
@@ -220,27 +220,27 @@
         {
           "case": "robotics founder: style.workloadTolerance",
           "pass": true,
-          "note": "expected 0.3, got 0.3"
+          "note": "expected 0.3, got 0.35"
         },
         {
           "case": "robotics founder: breadthAppetite",
           "pass": true,
-          "note": "expected 0.85, got 0.8"
+          "note": "expected 0.85, got 0.85"
         },
         {
           "case": "robotics founder: interest:entrepreneurship-innovation",
           "pass": true,
-          "note": "expected 0.85, got 0.7"
+          "note": "expected 0.85, got 0.8"
         },
         {
           "case": "sustainability engineer: interest:sustainability-climate",
           "pass": true,
-          "note": "expected 0.85, got 0.85"
+          "note": "expected 0.85, got 0.9"
         },
         {
           "case": "sustainability engineer: interest:solid-mechanics-materials",
-          "pass": false,
-          "note": "expected 0.85, got null"
+          "pass": true,
+          "note": "expected 0.85, got 0.75"
         },
         {
           "case": "sustainability engineer: interest:programming-software",
@@ -304,34 +304,34 @@
     },
     {
       "name": "Live: grounded explanations",
-      "passed": 5,
+      "passed": 4,
       "total": 5,
       "target": 0.8,
       "details": [
         {
           "case": "motorsport aerodynamicist: MECH60006",
-          "pass": true,
-          "note": "Every claim is backed by the data (fluid mechanics topic weight 1 and strongest interest, pathway relevance 0.95, maths intensity 0.9 vs comfort 0.8, exam share 1, coding 0, applied 0.3 vs preference 0.8, prerequisites listed), no raw decimals are quoted, and no grades or jobs are promised."
+          "pass": false,
+          "note": "The watch-out that the module 'will not draw on your interest in computational simulation' is unsupported, since the module's learning outcomes include analysing numerical solutions and the coding intensity of 0 only shows no coding is required; the claim 'involves no coding' is supported, but stating no link to simulation is an overreach."
         },
         {
           "case": "nuclear and energy engineer: MECH60004",
           "pass": true,
-          "note": "Every claim is backed by the data (nuclear topic 0.95 and top interest, thermodynamics at 0.45 as a smaller part, energy-transition relevance 0.9, no prerequisites, maths intensity 0.5 versus comfort 0.7, sustainability at 0.3, examShare 1 with no stated exam preference), no raw decimals are quoted, and no grades or jobs are promised."
+          "note": "Every claim traces to the data (nuclear topic 0.95 and top interest, thermodynamics a smaller topic, energy-transition relevance 0.9, examShare 1 with groupShare 0, unstated exam preference, policy-ethics not among student interests, 'basic introduction' in description), no raw decimals are quoted, and no grades or jobs are promised."
         },
         {
           "case": "robotics builder: MECH60009",
           "pass": true,
-          "note": "Every claim traces to the data (topics 0.9/0.85/0.5, pathway relevance 0.9, applied 0.95 vs. preference 0.9, coding intensity 0.9, workload 0.75, prerequisites listed), no raw decimals are quoted, and nothing promises grades or jobs."
+          "note": "Every claim is backed by the data (topics, pathway relevance 0.9, applied 0.95 vs preference 0.9, control-robotics 0.5 vs strongest interest, coding intensity 0.9 and workload 0.75, prerequisites listed), no raw decimals are quoted, and no grades or jobs are promised."
         },
         {
           "case": "structural analyst: MECH60016",
           "pass": true,
-          "note": "Every reason is backed by the data (mathematics-modelling topic weight 1, research-academia relevance 0.9, examShare 1 vs exam preference 0.6, mathsIntensity 1 vs comfort 0.85, no coding, low computational share, prerequisites listed), no raw decimals are quoted, and no grades or jobs are promised."
+          "note": "Every claim traces to the data (maths-modelling as core topic, 0.9 pathway relevance for research-academia, examShare 1 against a 0.6 exam preference, mathsIntensity 1 against 0.85 comfort, no solid mechanics topic, computational at 0.2, prerequisites and eligibility), no raw decimals are quoted, and no grades or jobs are promised."
         },
         {
           "case": "startup founder: BUSI60041",
           "pass": true,
-          "note": "Every claim is supported by the data (topic weights, pathway relevance 1, examShare 0, groupShare 0.6, student's low exam and high group preference, quotes ev-0 and ev-2), no raw decimals are quoted, and no grades or jobs are promised."
+          "note": "Every claim is backed by the data (top interest 0.95, startup-founder relevance 1, examShare 0, groupShare 0.6, finance at 0.5, management at 0.55, student quotes ev-0 and ev-2), no raw decimals are quoted, and no grades or jobs are promised."
         }
       ]
     }

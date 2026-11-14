@@ -204,10 +204,15 @@ export async function extract(
   targetSlots: string[],
   pathwayIds: string[],
   structuredAnswers?: Record<string, number | string>,
+  /** Called when the live extractor failed and the keyword cues were used instead (used by the live eval). */
+  onFallback?: () => void,
 ): Promise<ExtractedUpdate[]> {
   const fromText = text.trim()
     ? isLive()
-      ? await extractLive(text, targetSlots, pathwayIds).catch(() => extractByCues(text, targetSlots, pathwayIds))
+      ? await extractLive(text, targetSlots, pathwayIds).catch(() => {
+          onFallback?.();
+          return extractByCues(text, targetSlots, pathwayIds);
+        })
       : extractByCues(text, targetSlots, pathwayIds)
     : [];
   const all = [...structuredUpdates(structuredAnswers, text || 'slider answer'), ...fromText];
