@@ -37,6 +37,7 @@ const baseModule = {
   prerequisites: [],
   capacity: 120,
   pathwayRelevance: {},
+  resources: [],
   derivedBy: 'analyst-agent',
   derivedRationale: 'Fixture module.',
 } satisfies Partial<Module>;
