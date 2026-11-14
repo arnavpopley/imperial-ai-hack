@@ -104,7 +104,7 @@ No real student data is used. No grades, results or protected characteristics ar
 
 | Test | Method | Target | Latest |
 |---|---|---|---|
-| Ranking quality | 12 personas; all three expected modules must appear in the top five optional modules (core modules are compulsory, so they are excluded) | 80% | 10/12 (83%) |
+| Ranking quality | 12 personas; all three expected modules must appear in the top five optional modules (core modules are compulsory, so they are excluded) | 80% | 9/12 (75%), below target: persona expectations under review |
 | Extraction | 4 scripted interviews, 33 expected slots | 85% | 33/33 |
 | Guardrails | 15 adversarial inputs | 100% | 15/15 |
 | Determinism | Same profile ranked twice, with the input order reversed | 100% | 2/2 |
