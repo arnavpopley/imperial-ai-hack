@@ -13,6 +13,8 @@ flowchart LR
   GIN --> INT[Interviewer agent]
   GIN --> MAT[Matcher agent]
   GIN --> TT[Timetabler agent]
+  GIN --> CAT[Catalogue agent]
+  CAT --> ENG
   INT --> EXT[Profile Extractor]
   EXT --> PROF[(Profile and evidence)]
   MAT --> ENG[Scoring engine and rules validator]
@@ -60,6 +62,7 @@ Agents never compute numbers. The Supervisor calls the engine tools for each age
 | Module Analyst (`scripts/analyse-modules.ts`, offline) | Public module description | Taxonomy | None | Topic, skill, pathway and demand weights | Derived module fields with a quoted rationale; short descriptions flagged for review | `MODEL_SMART`, batch |
 | Matcher (`agents/matcher.ts`) | Recommendation, module record, evidence | Engine output only | `score_modules`, `get_module`, `get_evidence`, `check_rules` | How to explain a score; which eligible alternatives to offer | `Explanation` (every reason cites an evidence ID or module field); the refusal when a student asks to break a rule | `MODEL_SMART` |
 | Timetabler (`agents/timetabler.ts`) | Clashes and swaps from the engine | None | `build_timetable`, `find_clashes`, `suggest_swaps` | Wording only; a swap is applied only on confirmation | Clash summary | `MODEL_FAST` |
+| Catalogue (`agents/catalogue.ts`) | Redacted question, modules it names, the student's ranking | Catalogue records, published assessment, taxonomy | `search_modules`, `get_module`, `compare_modules` (tool loop, at most four rounds) | Which searches to run; which modules answer the question | Plain-text answer under 120 words citing module codes, ineligible modules marked; offline, the search results as a list | `MODEL_SMART`, low effort |
 | Insights (`agents/insights.ts`) | Insight cards from the engine | Cohort statistics | `cohort_stats`, `counterfactuals`, `clash_priorities` | Wording only; a rewrite that changes any number is rejected | Insight cards awaiting a staff decision | `MODEL_SMART` |
 
 ## Engines

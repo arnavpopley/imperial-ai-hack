@@ -8,6 +8,7 @@ import { WELLBEING_NOTICE } from '../guardrails/g4-wellbeing.ts';
 import { RULES_NOTICE, keepEligible } from '../guardrails/g7-rules.ts';
 import { runInputGuardrails } from '../guardrails/pipeline.ts';
 import { createTracer, type Tracer } from '../trace/tracer.ts';
+import { answerCatalogueQuestion } from './catalogue.ts';
 import { draftComplaint, draftLowConfidence, draftRuleException, draftWellbeing } from './escalation.ts';
 import { extract, mergeUpdates } from './extractor.ts';
 import { classifyIntent, needsClarification } from './intent.ts';
@@ -21,7 +22,10 @@ import { describeTimetable, explainTimetable } from './timetabler.ts';
 
 export type Emit = (event: SseEvent) => Promise<void>;
 
-const COMPLAINT = /\b(complain\w*|complaint|unfair|this advisor is (useless|wrong|bad)|report (this|a problem))\b/i;
+/** Modes in which the catalogue agent answers; ESCALATED waits for staff. */
+const CATALOGUE_MODES = new Set<SessionState['mode']>(['RECOMMEND', 'EXPLAIN', 'PLAN']);
+
+const COMPLAINT =/\b(complain\w*|complaint|unfair|this advisor is (useless|wrong|bad)|report (this|a problem))\b/i;
 
 interface Turn {
   session: SessionState;
@@ -195,6 +199,24 @@ async function explainTurn(turn: Turn, moduleIds: string[]) {
   } finally {
     await changeMode(turn, RESTING_MODE, 'explanation given');
   }
+}
+
+/** Cross-catalogue questions ("which modules use Python?"): the catalogue agent searches with tools, read-only. */
+async function catalogueTurn(turn: Turn, moduleIds: string[]) {
+  const { session, tracer } = turn;
+  if (!CATALOGUE_MODES.has(session.mode)) {
+    return say(turn, 'supervisor', 'I can search the catalogue again once your request to staff has been answered. You can still browse it on the catalogue page.');
+  }
+  let outcome: Awaited<ReturnType<typeof answerCatalogueQuestion>> | null = null;
+  await tracer.timed(
+    { actor: 'catalogue', kind: 'agent', input: `catalogue question in ${session.mode}` },
+    () =>
+      reply(turn, 'catalogue', async (onToken) => {
+        outcome = await answerCatalogueQuestion(turn.text, moduleIds, session, tracer, onToken);
+        return outcome.text;
+      }),
+    () => ({ output: outcome ? `${outcome.source} answer after ${outcome.toolCalls} tool call(s)` : 'no answer', verdict: null }),
+  );
 }
 
 /** "What if I cared more about X": shifts one weight, re-ranks, and reports what moved (spec 10.5). */
@@ -380,6 +402,8 @@ async function runTurn(sessionId: string, body: SendMessageBody, emit: Emit): Pr
       return timetableTurn(turn);
     case 'pathway_action':
       return pathwayTurn(turn);
+    case 'catalogue_question':
+      return catalogueTurn(turn, intent.moduleIds);
     case 'edit_profile':
     case 'answer_interview':
       return editProfileTurn(turn);

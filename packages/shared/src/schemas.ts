@@ -387,6 +387,7 @@ export const Intent = z.enum([
   'timetable_action',
   'rule_exception_request',
   'pathway_action',
+  'catalogue_question',
   'smalltalk',
   'out_of_scope',
   'wellbeing',
