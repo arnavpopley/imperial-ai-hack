@@ -1,5 +1,6 @@
 // One clash with its swap suggestions. Spec 10.6: a swap is applied only after the student confirms.
 import type { Clash, SwapSuggestion } from '@modulematch/shared';
+import { motion, useReducedMotion } from 'motion/react';
 import { useState } from 'react';
 import { Button } from '../../components/Button.tsx';
 import { ClashMarker } from '../../components/ClashMarker.tsx';
@@ -31,6 +32,7 @@ function overlapText(clash: Clash): string {
 export function ClashCard({ clash, swaps, titleFor, onSwap, onAsk }: ClashCardProps) {
   const [confirming, setConfirming] = useState<SwapSuggestion | null>(null);
   const [busy, setBusy] = useState(false);
+  const reduce = useReducedMotion();
   const [error, setError] = useState<string | null>(null);
   const a = titleFor(clash.moduleA);
   const b = titleFor(clash.moduleB);
@@ -49,9 +51,15 @@ export function ClashCard({ clash, swaps, titleFor, onSwap, onAsk }: ClashCardPr
   };
 
   return (
-    <li
+    // Clashes slide in when the shortlist creates them and fold away when a swap resolves them.
+    <motion.li
+      layout={!reduce}
+      initial={reduce ? false : { opacity: 0, y: 10, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={reduce ? { opacity: 0, transition: { duration: 0 } } : { opacity: 0, x: 24, transition: { duration: 0.25 } }}
+      transition={{ duration: 0.35, ease: [0.2, 0.8, 0.2, 1] }}
       className={cx(
-        'animate-rise rounded-card border bg-surface p-4 shadow-soft',
+        'rounded-card border bg-surface p-4 shadow-soft',
         clash.label === 'certain' ? 'border-clash-certain/40' : 'border-line',
       )}
     >
@@ -61,6 +69,10 @@ export function ClashCard({ clash, swaps, titleFor, onSwap, onAsk }: ClashCardPr
         {clash.label === 'certain' ? 'overlap' : 'may overlap'}.
       </p>
       <p className="mt-0.5 text-[12px] text-muted">{overlapText(clash)}</p>
+      <p className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-medium text-muted">
+        <Icon name="clock" size={11} />
+        Based on last year's timetable
+      </p>
 
       {swaps.length > 0 ? (
         <div className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-2">
@@ -124,6 +136,6 @@ export function ClashCard({ clash, swaps, titleFor, onSwap, onAsk }: ClashCardPr
           The swap did not go through: {error}
         </p>
       )}
-    </li>
+    </motion.li>
   );
 }

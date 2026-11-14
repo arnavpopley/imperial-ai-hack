@@ -1,25 +1,35 @@
-// Screen 4: why a module fits, with every reason linked to the student's words or the module record.
+// Screen 4: a module at a glance. A hero with the fit ring, a short summary, why it fits as expandable rows,
+// the record as accordions, resources, and a chat with the module knowledge agent.
 import type { Evidence } from '@modulematch/shared';
+import { motion, useReducedMotion } from 'motion/react';
 import { Link, useParams } from 'react-router';
 import { api } from '../../api.ts';
 import { buttonClass } from '../../components/Button.tsx';
 import { ConfidenceBadge } from '../../components/ConfidenceBadge.tsx';
-import { EvidencePopover } from '../../components/EvidencePopover.tsx';
-import { FIT_BAND_LABELS, fitBand, FitScore } from '../../components/FitScore.tsx';
+import { cx } from '../../components/cx.ts';
+import { FIT_BAND_LABELS, fitBand } from '../../components/FitScore.tsx';
 import { Icon } from '../../components/Icon.tsx';
 import { ModuleTypeChip } from '../../components/ModuleTypeChip.tsx';
 import { SampleDataLabel } from '../../components/SampleDataLabel.tsx';
 import { EmptyState, ErrorState, Skeleton } from '../../components/StateViews.tsx';
 import { SubScoreBars } from '../../components/SubScoreBars.tsx';
 import { reasonSource } from '../catalogue/reasonSource.ts';
+import { ScoreRing } from '../catalogue/ScoreRing.tsx';
 import { ShortlistButton } from '../catalogue/ShortlistButton.tsx';
 import { useAsync } from '../hooks/useAsync.ts';
 import { useShortlist } from '../hooks/useShortlist.ts';
 import { TERM_LABELS } from '../labels.ts';
+import { Accordion } from '../module/Accordion.tsx';
+import { AiSummaryCard } from '../module/AiSummaryCard.tsx';
+import { AskModulePanel } from '../module/AskModulePanel.tsx';
+import { ReasonRow } from '../module/ReasonRow.tsx';
+import { ResourcesSection } from '../module/ResourcesSection.tsx';
 import { paths } from '../routes.ts';
 import { useCatalogue } from '../state/CatalogueProvider.tsx';
 import { useReferenceData } from '../state/ReferenceDataProvider.tsx';
 import { useReadySession } from '../state/SessionProvider.tsx';
+
+const EASE = [0.2, 0.8, 0.2, 1] as const;
 
 export function ModuleDetailScreen() {
   const { moduleId = '' } = useParams();
@@ -27,6 +37,7 @@ export function ModuleDetailScreen() {
   const { moduleById, pathwayById, modules } = useReferenceData();
   const { byId } = useCatalogue();
   const shortlist = useShortlist();
+  const reduce = useReducedMotion();
   const sessionId = session.id;
   const explanation = useAsync(
     () => api.explanation(sessionId, moduleId),
@@ -65,9 +76,21 @@ export function ModuleDetailScreen() {
   // Quotes come back with the explanation; fall back to the session's evidence for any it omits.
   const evidence: readonly Evidence[] = [...(explanation.data?.evidence ?? []), ...session.evidence];
   const dimmed = !rec?.eligible || rec.confidence === 'low';
+  /** Sections rise in one after another; reduced motion renders them in place. */
+  const rise = (delay: number) =>
+    reduce
+      ? {}
+      : { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.45, delay, ease: EASE } };
+  const facts = [
+    module.code,
+    module.department,
+    `Level ${module.level}`,
+    `${module.ects} ECTS`,
+    module.terms.map((t) => TERM_LABELS[t]).join(', '),
+  ];
 
   return (
-    <div className="grid grid-cols-1 gap-5">
+    <div className="grid grid-cols-1 gap-6">
       <div className="flex items-center justify-between gap-3">
         <Link
           to={paths.catalogue}
@@ -79,9 +102,16 @@ export function ModuleDetailScreen() {
         <SampleDataLabel />
       </div>
 
-      <header className="rounded-[1.25rem] border border-line bg-surface p-5 shadow-soft sm:p-7">
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-          {rec && <FitScore value={rec.fit} size="lg" dimmed={dimmed} />}
+      <motion.header
+        {...rise(0)}
+        className="relative overflow-hidden rounded-[1.5rem] border border-line bg-surface p-5 shadow-soft sm:p-8"
+      >
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 right-0 w-2/3 bg-gradient-to-l from-brand-soft/70 to-transparent"
+        />
+        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-7">
+          {rec && <ScoreRing value={rec.fit} size="lg" dimmed={dimmed} delay={0.15} />}
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-1.5">
               <ModuleTypeChip variant={module.type} />
@@ -92,17 +122,20 @@ export function ModuleDetailScreen() {
                 </span>
               )}
             </div>
-            <h1 className="mt-2 text-2xl leading-tight font-semibold tracking-tight text-balance sm:text-3xl">
+            <h1 className="mt-2 text-2xl leading-tight font-semibold tracking-tight text-balance sm:text-[2rem]">
               {module.title}
             </h1>
-            <p className="mt-1 text-[13px] text-muted">
-              <span className="font-mono">{module.code}</span> · {module.department} · Level {module.level} ·{' '}
-              {module.ects} ECTS · {module.terms.map((t) => TERM_LABELS[t]).join(', ')}
-            </p>
+            <ul className="mt-3 flex flex-wrap gap-1.5 text-[12px] font-medium" aria-label="Module facts">
+              {facts.map((fact, i) => (
+                <li key={`${i}-${fact}`} className={cx('rounded-full bg-surface-2 px-2.5 py-1 text-muted', i === 0 && 'font-mono')}>
+                  {fact}
+                </li>
+              ))}
+            </ul>
           </div>
-          <div className="flex flex-wrap items-center gap-2 sm:flex-col sm:items-end">
+          <div className="flex flex-wrap items-center gap-3 sm:flex-col sm:items-end">
             <ShortlistButton
-              size="md"
+              size="lg"
               title={module.title}
               shortlisted={shortlist.isShortlisted(module.id)}
               pending={shortlist.isPending(module.id)}
@@ -121,12 +154,12 @@ export function ModuleDetailScreen() {
           </div>
         </div>
         {shortlist.error && (
-          <p role="alert" className="mt-3 text-[13px] text-fit-low">
+          <p role="alert" className="relative mt-3 text-[13px] text-fit-low">
             {shortlist.error}
           </p>
         )}
         {rec && !rec.eligible && rec.ineligibleReasons.length > 0 && (
-          <ul className="mt-4 grid gap-1 rounded-xl bg-surface-2 px-4 py-3 text-[13px]">
+          <ul className="relative mt-4 grid gap-1 rounded-xl bg-surface-2 px-4 py-3 text-[13px]">
             {rec.ineligibleReasons.map((reason) => (
               <li key={reason} className="flex gap-2">
                 <Icon name="lock" size={13} className="mt-0.5 shrink-0 text-muted" />
@@ -135,72 +168,120 @@ export function ModuleDetailScreen() {
             ))}
           </ul>
         )}
-      </header>
+      </motion.header>
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
-        <section
-          aria-labelledby="why-heading"
-          className="rounded-[1.25rem] border border-line bg-surface p-5 shadow-soft sm:p-7"
-        >
-          <h2 id="why-heading" className="flex items-center gap-2 text-sm font-semibold">
-            <Icon name="sparkle" size={15} className="text-brand" />
-            Why this fits you
-          </h2>
-          {explanation.data ? (
-            <>
-              <p className="mt-3 text-[17px] leading-relaxed text-pretty">{explanation.data.explanation.summary}</p>
-              <h3 className="mt-6 text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">Because</h3>
-              <ul className="mt-2 grid gap-2">
-                {explanation.data.explanation.because.map((reason) => {
-                  const source = reasonSource(reason, evidence, module, pathwayTitle);
-                  return (
-                    <li
-                      key={reason.text}
-                      className="relative flex flex-col gap-2 rounded-xl border border-line bg-canvas px-4 py-3 sm:flex-row sm:items-start sm:gap-3"
-                    >
-                      {source && <EvidencePopover {...source} className="sm:order-last sm:ml-auto" />}
-                      <span className="text-[15px] leading-relaxed">{reason.text}</span>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_23rem] lg:items-start">
+        <div className="grid min-w-0 gap-6">
+          <motion.div {...rise(0.08)}>
+            <AiSummaryCard moduleId={module.id} />
+          </motion.div>
+
+          <motion.section
+            {...rise(0.14)}
+            aria-labelledby="why-heading"
+            className="rounded-[1.25rem] border border-line bg-surface p-5 shadow-soft sm:p-6"
+          >
+            <h2 id="why-heading" className="flex items-center gap-2 text-sm font-semibold">
+              <span className="grid size-7 place-items-center rounded-full bg-fit-high/12 text-fit-high" aria-hidden="true">
+                <Icon name="heart" size={14} />
+              </span>
+              Why it fits you
+            </h2>
+            {explanation.data ? (
+              <>
+                <p className="mt-3 text-[15px] leading-relaxed text-pretty">{explanation.data.explanation.summary}</p>
+                <ul className="mt-4 grid gap-2" aria-label="Reasons">
+                  {explanation.data.explanation.because.map((reason) => (
+                    <ReasonRow key={reason.text} text={reason.text} source={reasonSource(reason, evidence, module, pathwayTitle)} />
+                  ))}
+                </ul>
+                {explanation.data.explanation.watchOuts.length > 0 && (
+                  <>
+                    <h3 className="mt-5 text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">Watch out for</h3>
+                    <ul className="mt-2 grid gap-2">
+                      {explanation.data.explanation.watchOuts.map((w) => (
+                        <ReasonRow key={w} text={w} source={null} tone="watch-out" />
+                      ))}
+                    </ul>
+                  </>
+                )}
+                <p className="mt-5 text-[12px] text-muted">
+                  Scores are worked out by code from your profile. The advisor explains them but cannot change them, and the
+                  choice is yours.
+                </p>
+              </>
+            ) : explanation.error ? (
+              <ErrorState
+                className="mt-4"
+                title="The explanation did not load"
+                message={explanation.error}
+                onRetry={explanation.reload}
+              />
+            ) : (
+              <div className="mt-4 grid gap-3" role="status" aria-label="Writing your explanation">
+                <Skeleton className="h-5 w-full" />
+                <Skeleton className="h-5 w-4/5" />
+                <Skeleton className="mt-2 h-12 w-full" />
+                <Skeleton className="h-12 w-full" />
+              </div>
+            )}
+          </motion.section>
+
+          <motion.div {...rise(0.2)} className="grid gap-3">
+            <Accordion title="About the module" icon="info" as="h2">
+              <p className="text-[14px] leading-relaxed text-muted">{module.description}</p>
+            </Accordion>
+            <Accordion
+              title="Learning outcomes"
+              icon="check"
+              as="h2"
+              meta={module.learningOutcomes.length > 0 ? String(module.learningOutcomes.length) : undefined}
+            >
+              {module.learningOutcomes.length > 0 ? (
+                <ul className="grid gap-2 text-[14px] leading-relaxed">
+                  {module.learningOutcomes.map((o) => (
+                    <li key={o} className="flex gap-2.5">
+                      <span className="mt-2 size-1.5 shrink-0 rounded-full bg-brand" aria-hidden="true" />
+                      {o}
                     </li>
-                  );
-                })}
-              </ul>
-              {explanation.data.explanation.watchOuts.length > 0 && (
-                <>
-                  <h3 className="mt-6 text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">Watch out for</h3>
-                  <ul className="mt-2 grid gap-2">
-                    {explanation.data.explanation.watchOuts.map((w) => (
-                      <li key={w} className="flex gap-2.5 rounded-xl bg-fit-mid/8 px-4 py-3 text-[15px] leading-relaxed">
-                        <Icon name="info" size={16} className="mt-1 shrink-0 text-fit-mid" />
-                        {w}
-                      </li>
-                    ))}
-                  </ul>
-                </>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-[13px] text-muted">Not listed in the public description.</p>
               )}
-              <p className="mt-6 text-[12px] text-muted">
-                Scores are computed by code from your profile. The advisor explains them and cannot change them. The
-                choice is yours.
-              </p>
-            </>
-          ) : explanation.error ? (
-            <ErrorState
-              className="mt-4"
-              title="The explanation did not load"
-              message={explanation.error}
-              onRetry={explanation.reload}
-            />
-          ) : (
-            <div className="mt-4 grid gap-3" role="status" aria-label="Writing your explanation">
-              <Skeleton className="h-5 w-full" />
-              <Skeleton className="h-5 w-4/5" />
-              <Skeleton className="mt-4 h-14 w-full" />
-              <Skeleton className="h-14 w-full" />
-              <p className="text-[12px] text-muted">Writing your explanation…</p>
-            </div>
-          )}
-        </section>
+            </Accordion>
+            <Accordion
+              title="Prerequisites"
+              icon="lock"
+              as="h2"
+              meta={module.prerequisites.length === 0 ? 'None' : String(module.prerequisites.length)}
+            >
+              {module.prerequisites.length === 0 ? (
+                <p className="text-[13px] text-muted">None listed for this module.</p>
+              ) : (
+                <ul className="grid gap-1.5 text-[14px]">
+                  {module.prerequisites.map((id) => {
+                    const done = session.profile.completedModuleIds.includes(id);
+                    return (
+                      <li key={id} className="flex items-center gap-2">
+                        <Icon name={done ? 'check' : 'x'} size={14} className={done ? 'text-fit-high' : 'text-fit-low'} />
+                        {moduleById.get(id)?.title ?? id}
+                        <span className="sr-only">{done ? '(completed)' : '(not completed)'}</span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </Accordion>
+          </motion.div>
 
-        <aside className="grid gap-5">
+          <motion.div {...rise(0.26)}>
+            <ResourcesSection resources={module.resources} />
+          </motion.div>
+        </div>
+
+        <motion.aside {...rise(0.18)} className="grid min-w-0 gap-6 lg:sticky lg:top-20">
+          <AskModulePanel sessionId={sessionId} moduleId={module.id} moduleTitle={module.title} />
           {rec && (
             <section aria-labelledby="sub-heading" className="rounded-card border border-line bg-surface p-5 shadow-soft">
               <h2 id="sub-heading" className="mb-3 text-sm font-semibold">
@@ -209,44 +290,7 @@ export function ModuleDetailScreen() {
               <SubScoreBars sub={rec.sub} dimmed={dimmed} />
             </section>
           )}
-          <section aria-labelledby="prereq-heading" className="rounded-card border border-line bg-surface p-5 shadow-soft">
-            <h2 id="prereq-heading" className="text-sm font-semibold">
-              Prerequisites
-            </h2>
-            {module.prerequisites.length === 0 ? (
-              <p className="mt-2 text-[13px] text-muted">None.</p>
-            ) : (
-              <ul className="mt-2 grid gap-1.5 text-[13px]">
-                {module.prerequisites.map((id) => {
-                  const done = session.profile.completedModuleIds.includes(id);
-                  return (
-                    <li key={id} className="flex items-center gap-2">
-                      <Icon name={done ? 'check' : 'x'} size={14} className={done ? 'text-fit-high' : 'text-fit-low'} />
-                      {moduleById.get(id)?.title ?? id}
-                      <span className="sr-only">{done ? '(completed)' : '(not completed)'}</span>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </section>
-          <section aria-labelledby="about-heading" className="rounded-card border border-line bg-surface p-5 shadow-soft">
-            <h2 id="about-heading" className="text-sm font-semibold">
-              About the module
-            </h2>
-            <p className="mt-2 text-[13px] leading-relaxed text-muted">{module.description}</p>
-            <h3 className="mt-4 text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">Learning outcomes</h3>
-            {module.learningOutcomes.length > 0 ? (
-              <ul className="mt-2 grid list-disc gap-1 pl-4 text-[13px] leading-relaxed">
-                {module.learningOutcomes.map((o) => (
-                  <li key={o}>{o}</li>
-                ))}
-              </ul>
-            ) : (
-              <p className="mt-2 text-[13px] text-muted">Not listed in the public description.</p>
-            )}
-          </section>
-        </aside>
+        </motion.aside>
       </div>
     </div>
   );

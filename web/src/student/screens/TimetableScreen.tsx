@@ -1,6 +1,7 @@
 // Screen 5: weekly grid per term with clashes highlighted, swaps beside each clash, and the
 // programme rules result (spec 9.1, 9.2).
 import type { SwapSuggestion, Term, TimetableView } from '@modulematch/shared';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { api } from '../../api.ts';
@@ -14,6 +15,7 @@ import { EmptyState, ErrorState, Skeleton } from '../../components/StateViews.ts
 import { useAsync } from '../hooks/useAsync.ts';
 import { useShortlist } from '../hooks/useShortlist.ts';
 import { TERM_LABELS } from '../labels.ts';
+import { PhotoBanner } from '../catalogue/PhotoBanner.tsx';
 import { paths } from '../routes.ts';
 import { useAdvisor } from '../shell/StudentShell.tsx';
 import { useReferenceData } from '../state/ReferenceDataProvider.tsx';
@@ -29,14 +31,15 @@ export function TimetableScreen() {
   const timetable = useAsync(() => api.timetable(sessionId), [sessionId, shortlistKey]);
 
   return (
-    <div className="grid grid-cols-1 gap-5">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Your timetable</h1>
-          <p className="mt-1 text-sm text-muted">A mock week built from your shortlist, with clashes caught before you commit.</p>
-        </div>
-        <SampleDataLabel variant="synthetic" />
-      </header>
+    <div className="grid grid-cols-1 gap-6">
+      <PhotoBanner
+        image="timetable-whiteboard"
+        alt="Students planning together at a whiteboard"
+        title="Your timetable"
+        subtitle="A mock week built from your shortlist, with clashes caught before you commit."
+        aside={<SampleDataLabel variant="synthetic" />}
+      />
+      <ProvisionalNotice />
 
       {session.shortlist.length === 0 ? (
         <EmptyState
@@ -69,6 +72,7 @@ function TimetableBody({ view, onChanged, refreshing }: { view: TimetableView; o
   const { moduleById } = useReferenceData();
   const { openAdvisor } = useAdvisor();
   const shortlist = useShortlist();
+  const reduce = useReducedMotion();
   const terms = view.grids.map((g) => g.term);
   const defaultTerm =
     view.grids.find((g) => view.clashes.some((c) => c.term === g.term))?.term ??
@@ -127,13 +131,24 @@ function TimetableBody({ view, onChanged, refreshing }: { view: TimetableView; o
           <h2 id="clash-heading" className="mb-2 text-sm font-semibold">
             {view.clashes.length === 0 ? 'No clashes' : `${view.clashes.length} clash${view.clashes.length > 1 ? 'es' : ''} to resolve`}
           </h2>
-          {view.clashes.length === 0 ? (
-            <p className="flex items-center gap-2 rounded-card border border-fit-high/30 bg-fit-high/6 px-4 py-3 text-[13px]">
-              <Icon name="check" size={15} className="text-fit-high" />
-              Your shortlist fits together in every term.
-            </p>
-          ) : (
-            <ul className="grid grid-cols-[minmax(0,1fr)] gap-3">
+          <AnimatePresence initial={false}>
+            {view.clashes.length === 0 && (
+              <motion.p
+                key="no-clashes"
+                initial={reduce ? false : { opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.35, delay: reduce ? 0 : 0.2 }}
+                className="flex items-center gap-2.5 rounded-card border border-fit-high/30 bg-fit-high/6 px-4 py-3 text-[13px]"
+              >
+                <span className="grid size-6 shrink-0 place-items-center rounded-full bg-fit-high text-on-brand" aria-hidden="true">
+                  <Icon name="check" size={13} />
+                </span>
+                Your shortlist fits together in every term, going by last year's timetable.
+              </motion.p>
+            )}
+          </AnimatePresence>
+          <ul className="grid grid-cols-[minmax(0,1fr)] gap-3">
+            <AnimatePresence initial={false}>
               {view.clashes.map((clash) => (
                 <ClashCard
                   key={`${clash.moduleA}-${clash.moduleB}-${clash.term}`}
@@ -144,8 +159,8 @@ function TimetableBody({ view, onChanged, refreshing }: { view: TimetableView; o
                   onAsk={openAdvisor}
                 />
               ))}
-            </ul>
-          )}
+            </AnimatePresence>
+          </ul>
         </section>
 
         <RulesPanel view={view} />
@@ -186,12 +201,40 @@ function TimetableBody({ view, onChanged, refreshing }: { view: TimetableView; o
   );
 }
 
+/** All times come from previous years, so the whole view is provisional; say so before anything else. */
+function ProvisionalNotice() {
+  return (
+    <div
+      role="note"
+      className="flex items-start gap-3 rounded-card border border-dashed border-fit-mid/50 bg-fit-mid/8 px-4 py-3.5"
+    >
+      <span className="grid size-8 shrink-0 place-items-center rounded-full bg-fit-mid/15 text-fit-mid" aria-hidden="true">
+        <Icon name="clock" size={16} />
+      </span>
+      <div className="min-w-0 text-[13px] leading-relaxed">
+        <p className="font-semibold text-ink">
+          Times are based on previous years' timetables and are provisional, so they may change.
+        </p>
+        <p className="text-muted">
+          Use this to spot likely clashes early. Check the confirmed timetable once your department publishes it.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function Legend() {
   return (
-    <ul className="flex flex-wrap items-center gap-2 text-[11px] text-muted" aria-label="Legend">
+    <ul className="flex flex-wrap items-center gap-x-3 gap-y-2 text-[11px] text-muted" aria-label="Legend">
       <li className="flex items-center gap-1.5">
-        <span className="h-3 w-5 rounded border border-dashed border-line-strong" aria-hidden="true" />
-        Provisional
+        <span className="h-3.5 w-6 rounded border border-dashed border-ink/50 bg-surface-2" aria-hidden="true" />
+        Dashed: provisional slot
+      </li>
+      <li className="flex items-center gap-1.5">
+        <span className="rounded-full border border-dashed border-ink/50 px-1.5 text-[10px] font-semibold text-ink" aria-hidden="true">
+          80%
+        </span>
+        Chance it runs at that time, from past years
       </li>
       <li>
         <ClashMarker variant="certain" />

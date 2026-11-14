@@ -104,8 +104,9 @@ export function WeekGrid({ term, slots, clashes, colourFor, codeFor, titleFor }:
                         {slot.kind} · {slot.start}–{slot.end}
                       </span>
                       {slot.provisional && (
-                        <span className="mt-0.5 w-fit rounded bg-surface/80 px-1 text-[10px] font-semibold">
+                        <span className="mt-0.5 inline-flex w-fit max-w-full items-center gap-0.5 truncate rounded-full border border-dashed border-current bg-surface px-1.5 text-[10px] font-semibold text-ink">
                           Provisional · {Math.round(slot.probability * 100)}%
+                          <span className="sr-only"> chance it runs at this time</span>
                         </span>
                       )}
                       <span className="sr-only">
