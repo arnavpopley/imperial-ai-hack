@@ -42,6 +42,9 @@ export const ProgrammeRulesFile = z.object({ _note: Note, rules: z.array(S.Progr
 export const PathwaysFile = z.object({ _note: Note, pathways: z.array(S.Pathway) });
 export const SocietiesFile = z.object({ _note: Note, societies: z.array(S.Society) });
 
+/** Staff-provided links per module (past papers, reading, video), keyed by module id. */
+export const ModuleResourcesFile = z.object({ _note: Note, resources: z.record(z.string(), z.array(S.ModuleResource)) });
+
 /** One synthetic student: a profile and the modules they shortlisted. */
 export const CohortStudent = z.object({ profile: S.StudentProfile, shortlist: z.array(z.string()).min(1) });
 export const CohortFile = z.object({ _note: Note, students: z.array(CohortStudent) });
@@ -58,6 +61,7 @@ export const DATASET_FILES = {
   pathways: 'pathways.json',
   societies: 'societies.json',
   cohort: 'cohort.json',
+  moduleResources: 'module-resources.json',
 } as const;
 
 /**

@@ -1,0 +1,4 @@
+{
+  "_note": "Links shown in each module's Resources section (past papers, reading lists, recordings), keyed by module id. Add entries as { \"label\": \"2025 exam\", \"url\": \"https://...\", \"kind\": \"past-paper\" }. kind is one of past-paper, reading, video, other.",
+  "resources": {}
+}

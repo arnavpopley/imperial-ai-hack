@@ -108,6 +108,16 @@ export const ModuleDerived = z.object({
   derivedRationale: z.string(),
 });
 
+/**
+ * A link for a module: past papers, reading lists, recordings. Provided by staff in data/module-resources.json,
+ * keyed by module id, and merged into every module the API serves. It is not stored in SQLite or derived.
+ */
+export const ModuleResource = z.object({
+  label: z.string().min(1),
+  url: z.string().url(),
+  kind: z.enum(['past-paper', 'reading', 'video', 'other']),
+});
+
 export const Module = z
   .object({
     id: z.string(),
@@ -123,6 +133,7 @@ export const Module = z
     sourceUrl: z.string().url(),
     prerequisites: z.array(z.string()),
     capacity: z.number().int().positive().nullable(),
+    resources: z.array(ModuleResource).default([]),
   })
   .extend(ModuleDerived.shape);
 
@@ -499,6 +510,28 @@ export const StaffEscalation = Escalation.extend({
     yearOfStudy: YearOfStudy,
     shortlist: z.array(z.string()),
   }),
+});
+
+/** A short AI summary of a module, written from its public description (GET /modules/:id/summary). */
+export const ModuleSummary = z.object({
+  moduleId: z.string(),
+  summary: z.string(),
+  highlights: z.array(z.string()).max(4),
+  /** 'model' when written live, 'template' when built from the module record offline. */
+  source: z.enum(['model', 'template']),
+});
+
+/** Ask the module knowledge agent about one module (POST /sessions/:id/modules/:moduleId/ask, SSE). */
+export const AskModuleBody = z.object({ question: z.string().min(1).max(1000) });
+
+/** Pasted CV or personal statement text (POST /sessions/:id/cv). It is redacted before anything is extracted. */
+export const CvBody = z.object({ text: z.string().min(1).max(20000) });
+
+export const CvResponse = z.object({
+  session: z.lazy(() => SessionState),
+  /** Slots the CV filled, so the UI can highlight them. */
+  slots: z.array(z.string()),
+  redacted: z.boolean(),
 });
 
 // ---------- SSE events on POST /sessions/:id/messages ----------

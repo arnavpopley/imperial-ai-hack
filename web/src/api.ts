@@ -10,6 +10,8 @@ import type {
   Insight,
   InsightDecisionBody,
   Module,
+  ModuleSummary,
+  CvResponse,
   Pathway,
   PathwayProgress,
   ProfileEditBody,
@@ -59,6 +61,8 @@ export const api = {
   pathwayProgress: (id: string, pathwayId: string) =>
     call<PathwayProgress>(`${s(id)}/pathways/${encodeURIComponent(pathwayId)}/progress`),
   societyMatches: (id: string) => call<SocietyMatch[]>(`${s(id)}/societies`),
+  /** Pasted CV or personal statement: redacted on the server, then mined for interests and skills. */
+  submitCv: (id: string, text: string) => call<CvResponse>(`${s(id)}/cv`, { body: { text } }),
 
   staff: {
     modules: () => call<StaffModuleSummary[]>('/staff/modules'),
@@ -74,23 +78,17 @@ export const api = {
   },
 
   modules: () => call<Module[]>('/modules'),
+  /** Short AI summary of a module's public description, cached on the server. */
+  moduleSummary: (moduleId: string) => call<ModuleSummary>(`/modules/${encodeURIComponent(moduleId)}/summary`),
   pathways: () => call<Pathway[]>('/pathways'),
   societies: () => call<Society[]>('/societies'),
   trace: (sessionId: string) => call<TraceEvent[]>(`/trace/${encodeURIComponent(sessionId)}`),
   latestEval: () => call<EvalRun | null>('/eval/latest'),
 };
 
-/**
- * Send a student turn and stream SSE events back (spec 13). POST bodies rule out EventSource,
- * so this parses the event stream from fetch directly. Each event is validated against the schema.
- */
-export async function sendMessage(
-  sessionId: string,
-  body: SendMessageBody,
-  onEvent: (event: SseEvent) => void,
-  signal?: AbortSignal,
-): Promise<void> {
-  const res = await fetch(`/api${s(sessionId)}/messages`, {
+/** POSTs a body and streams the SSE events back. POST bodies rule out EventSource, so the stream is parsed here. */
+async function streamEvents(path: string, body: unknown, onEvent: (event: SseEvent) => void, signal?: AbortSignal): Promise<void> {
+  const res = await fetch(`/api${path}`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(body),
@@ -115,4 +113,28 @@ export async function sendMessage(
       if (data) onEvent(schemas.SseEvent.parse(JSON.parse(data)));
     }
   }
+}
+
+/** Send a student turn to the advisor and stream its SSE events back (spec 13). */
+export function sendMessage(
+  sessionId: string,
+  body: SendMessageBody,
+  onEvent: (event: SseEvent) => void,
+  signal?: AbortSignal,
+): Promise<void> {
+  return streamEvents(`${s(sessionId)}/messages`, body, onEvent, signal);
+}
+
+/**
+ * Ask the module knowledge agent a question about one module. It answers from that module's record and public
+ * description only, streaming the same token, guardrail and done events as the advisor chat.
+ */
+export function askModule(
+  sessionId: string,
+  moduleId: string,
+  question: string,
+  onEvent: (event: SseEvent) => void,
+  signal?: AbortSignal,
+): Promise<void> {
+  return streamEvents(`${s(sessionId)}/modules/${encodeURIComponent(moduleId)}/ask`, { question }, onEvent, signal);
 }

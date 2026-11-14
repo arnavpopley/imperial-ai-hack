@@ -38,6 +38,7 @@ export function makeModule(id: string, overrides: Partial<Module> = {}): Module 
     terms: ['autumn'],
     description: 'Test module.',
     learningOutcomes: [],
+    resources: [],
     sourceUrl: 'https://www.imperial.ac.uk/',
     prerequisites: [],
     capacity: 100,
