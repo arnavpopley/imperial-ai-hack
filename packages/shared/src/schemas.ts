@@ -607,6 +607,124 @@ export const FeedbackExportRow = z.object({
   moduleId: z.string().nullable(),
 });
 
+// ---------- results and exam feedback (spec section 23) ----------
+
+/** One module result from a student's own transcript or mark sheet, shared with explicit consent. */
+export const ModuleResult = z.object({
+  /** Catalogue module id when matched, otherwise the code as written on the transcript. */
+  moduleId: z.string(),
+  code: z.string(),
+  title: z.string().nullable(),
+  /** Overall mark as a percentage. */
+  mark: z.number().min(0).max(100),
+  /** Per-question marks, when the mark sheet shows them; needed for tailored exam feedback. */
+  questionMarks: z
+    .array(z.object({ questionId: z.string(), mark: z.number().min(0), maxMarks: z.number().positive() }))
+    .default([]),
+  matched: z.boolean(),
+  source: z.enum(['transcript-pdf', 'transcript-image', 'pasted-text', 'manual']),
+});
+
+export const ResultsConsent = z.object({ granted: z.boolean(), at: IsoDate.nullable() });
+
+/** Everything held about a student's marks. Visible to the student only; never shown to staff individually. */
+export const StudentResults = z.object({
+  consent: ResultsConsent,
+  results: z.array(ModuleResult),
+  updatedAt: IsoDate.nullable(),
+});
+
+/** Upload a transcript or mark sheet. Consent must be given explicitly with every upload. */
+export const ResultsUploadBody = z
+  .object({
+    consent: z.literal(true),
+    text: z.string().min(1).max(20000).optional(),
+    file: z
+      .object({
+        mediaType: z.enum(['application/pdf', 'image/png', 'image/jpeg']),
+        /** Base64 file contents, at most about 6 MB once decoded. */
+        base64: z.string().max(8_000_000),
+      })
+      .optional(),
+  })
+  .refine((b) => b.text !== undefined || b.file !== undefined, 'text or file is required');
+
+export const ResultsUploadResponse = z.object({
+  results: StudentResults,
+  /** Codes on the transcript that match no catalogue module (kept, but not used for nudges). */
+  unmatched: z.array(z.string()),
+  source: z.enum(['model', 'parser']),
+});
+
+/** How a student did on a topic, from the modules they took that teach it, against their own average. */
+export const TopicStrength = z.object({
+  topic: TopicId,
+  /** Topic-weighted average mark across the student's modules on this topic. */
+  average: z.number().min(0).max(100),
+  /** average minus the student's overall average, in marks; negative means weaker than usual. */
+  delta: z.number(),
+  modules: z.array(z.string()),
+});
+
+/** An informational nudge on a module: it never changes the fit score. */
+export const PerformanceNudge = z.object({
+  moduleId: z.string(),
+  topics: z.array(TopicId),
+  delta: z.number(),
+  message: z.string(),
+});
+
+export const PerformanceView = z.object({
+  consent: z.boolean(),
+  overallAverage: z.number().min(0).max(100).nullable(),
+  topics: z.array(TopicStrength),
+  nudges: z.array(PerformanceNudge),
+});
+
+/** One exam question as described by the examiner. */
+export const ExamQuestion = z.object({
+  id: z.string().min(1),
+  label: z.string().min(1),
+  maxMarks: z.number().positive(),
+  topics: z.array(TopicId),
+  whatGoodAnswersDid: z.string(),
+  commonMistakes: z.array(z.string()),
+  revisionPointers: z.array(z.string()),
+});
+
+/** The examiner's feedback form for one exam: cohort-level, never about an individual student. */
+export const ExamFeedbackForm = z.object({
+  id: z.string(),
+  moduleId: z.string(),
+  examLabel: z.string().min(1),
+  questions: z.array(ExamQuestion).min(1),
+  generalComments: z.string(),
+  status: z.enum(['draft', 'published']),
+  /** 'ai-draft' until an examiner edits or publishes it; drafts are never shown to students. */
+  authoredBy: z.enum(['examiner', 'ai-draft']),
+  updatedAt: IsoDate,
+});
+
+export const ExamFormSaveBody = ExamFeedbackForm.omit({ id: true, moduleId: true, status: true, authoredBy: true, updatedAt: true });
+
+/** The examiner pastes marking notes and an AI agent drafts the structured form for them to review. */
+export const ExamFormDraftBody = z.object({ examLabel: z.string().min(1), notes: z.string().min(1).max(20000) });
+
+/** Feedback for one student on one exam, from the examiner's form and the student's own question marks. */
+export const TailoredFeedback = z.object({
+  moduleId: z.string(),
+  examLabel: z.string(),
+  overall: z.string(),
+  strengths: z.array(z.string()),
+  weakPoints: z.array(
+    z.object({ questionId: z.string(), topics: z.array(TopicId), lostMarks: z.number().min(0), advice: z.string() }),
+  ),
+  revisionPlan: z.array(z.string()),
+  /** Future modules that build on the weak topics, with a short note each. */
+  affectsModules: z.array(z.object({ moduleId: z.string(), note: z.string() })),
+  source: z.enum(['model', 'template']),
+});
+
 // ---------- SSE events on POST /sessions/:id/messages ----------
 
 export const SseEvent = z.discriminatedUnion('type', [
