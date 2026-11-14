@@ -13,11 +13,11 @@ These mirror the `@theme` block in `web/src/index.css`. Create them as Figma var
 | line | #e3e3dc | #2b2f39 | Borders and dividers |
 | brand | #3b4fd8 | #7c8cff | Primary actions and focus |
 | brand-soft | #e7eafc | #232a52 | Selected and highlighted backgrounds |
-| fit-high | #1a7f53 | | Fit 75 and above, high confidence |
-| fit-mid | #956600 | | Fit 55 to 74, medium confidence |
-| fit-low | #b4483c | | Fit under 55, low confidence |
-| clash-certain | #c0392b | | Certain clash |
-| clash-likely | #ad5a10 | | Likely clash (30% or more) |
+| fit-high | #156e48 | | Fit 75 and above, high confidence |
+| fit-mid | #7d5500 | | Fit 55 to 74, medium confidence |
+| fit-low | #a8402f | | Fit under 55, low confidence |
+| clash-certain | #b0352a | | Certain clash |
+| clash-likely | #964c0e | | Likely clash (30% or more) |
 | clash-possible | #d9b310 | | Possible clash (under 30%) |
 | mode-onboard | #6b7280 | | Mode chip: Getting started |
 | mode-interview | #3b4fd8 | | Mode chip: Interview |

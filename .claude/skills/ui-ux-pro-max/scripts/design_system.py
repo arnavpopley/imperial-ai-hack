@@ -633,6 +633,20 @@ class DesignSystemGenerator:
 BOX_WIDTH = 90  # Wider box for more content
 
 
+def unmatched_sources_note(design_system: dict) -> str:
+    """One line naming the sections that fell back to built-in defaults, or "" when every section matched data.
+
+    Added in the ModuleMatch copy so an unmatched default is never read as a verified recommendation.
+    """
+    identities = design_system.get("source_identities") or {}
+    missing = [name for name in ("product", "reasoning", "style", "color", "typography", "landing") if not identities.get(name)]
+    if design_system.get("reasoning_default") and "reasoning" not in missing:
+        missing.append("reasoning")
+    if not missing:
+        return ""
+    return "UNMATCHED " + ", ".join(missing) + ": general defaults, not a verified match for this query"
+
+
 def hex_to_ansi(hex_color: str) -> str:
     """Convert hex color to ANSI True Color swatch (██) with fallback."""
     if not hex_color or not hex_color.startswith('#'):
@@ -710,6 +724,8 @@ def format_ascii_box(design_system: dict) -> str:
     # Header with double-line box
     lines.append("╔" + "═" * w + "╗")
     lines.append(ansi_ljust(f"║  TARGET: {project} - RECOMMENDED DESIGN SYSTEM", BOX_WIDTH) + "║")
+    if unmatched_sources_note(design_system):
+        lines.append(ansi_ljust(f"║  {unmatched_sources_note(design_system)}", BOX_WIDTH) + "║")
     lines.append("╚" + "═" * w + "╝")
     lines.append("┌" + "─" * w + "┐")
 
@@ -829,6 +845,9 @@ def format_markdown(design_system: dict) -> str:
     lines = []
     lines.append(f"## Design System: {project}")
     lines.append("")
+    if unmatched_sources_note(design_system):
+        lines.append(f"> **{unmatched_sources_note(design_system)}**")
+        lines.append("")
 
     # Design Dials section (only if at least one dial was set)
     if any(dials.get(k) is not None for k in ("variance", "motion", "density")):
@@ -1118,6 +1137,9 @@ def format_master_md(design_system: dict) -> str:
     # Logic header
     lines.append("# Design System Master File")
     lines.append("")
+    if unmatched_sources_note(design_system):
+        lines.append(f"> **{unmatched_sources_note(design_system)}**")
+        lines.append("")
     lines.append("> **LOGIC:** When building a specific page, first check `design-system/pages/[page-name].md`.")
     lines.append("> If that file exists, its rules **override** this Master file.")
     lines.append("> If not, strictly follow the rules below.")

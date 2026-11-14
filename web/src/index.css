@@ -18,14 +18,17 @@
   --color-brand: #3b4fd8;
   --color-brand-soft: #e7eafc;
 
-  /* Fit and confidence. Light values clear 4.5:1 as text on surface and canvas (UI/UX Pro Max rule 1). */
-  --color-fit-high: #1a7f53;
-  --color-fit-mid: #956600;
-  --color-fit-low: #b4483c;
+  /*
+   * Fit and confidence. Light values clear 4.5:1 as text on surface and canvas, and on their own 10 to 15% tints,
+   * the badge pattern (UI/UX Pro Max rule 1).
+   */
+  --color-fit-high: #156e48;
+  --color-fit-mid: #7d5500;
+  --color-fit-low: #a8402f;
 
   /* Clash markers (certain, likely, possible) */
-  --color-clash-certain: #c0392b;
-  --color-clash-likely: #ad5a10;
+  --color-clash-certain: #b0352a;
+  --color-clash-likely: #964c0e;
   --color-clash-possible: #d9b310;
 
   /* Mode chip colours */

@@ -9,7 +9,10 @@ styles and stack notes. It is MIT licensed, Copyright (c) 2024 Next Level Builde
 
 A trimmed copy is vendored at `.claude/skills/ui-ux-pro-max/` with its `LICENSE`, so anyone on the team can use it:
 `SKILL.md`, `references/`, the four runtime scripts and the data they load. We left out the upstream tests, the
-icon and font licence dumps (not read at runtime) and every stack file except `react` and `html-tailwind`. Run it with:
+icon and font licence dumps (not read at runtime) and every stack file except `react` and `html-tailwind`. Two local
+changes: `SKILL.md` points at this repository's path instead of the plugin root variable, and the design-system
+output labels any section that fell back to general defaults (`UNMATCHED ...`), so a default is never read as a
+verified pick. Run it from the repository root with:
 
 ```bash
 python3 .claude/skills/ui-ux-pro-max/scripts/search.py "focus states keyboard" --domain ux
@@ -71,9 +74,10 @@ Skill guidance cited for each rule (all from `--domain ux` unless stated):
 
 | # | Rule | Evidence | Fix |
 |---|---|---|---|
-| 1 | 1 Accessibility: contrast | `fit-mid` text measured 3.00:1 on white ("near cap" in the staff module picker). The staff "New" escalation badge, white on `fit-mid`, was also 3.00:1 | `--color-fit-mid` light value `#c48a12` to `#956600`: 5.03:1 on surface, 4.68:1 on canvas |
-| 2 | 1 Accessibility: contrast | `fit-high` text measured 4.04:1 on canvas (landing fit score "92"). It is used as text on about 20 screens | `--color-fit-high` light value `#1f8a5b` to `#1a7f53`: 4.99:1 on surface, 4.65:1 on canvas |
-| 3 | 1 Accessibility: contrast | `clash-likely` is used as text in staff insight cards and escalation badges: 2.99:1 on white (computed from the token) | `--color-clash-likely` light value `#e07b1a` to `#ad5a10`: 4.94:1 |
+| 1 | 1 Accessibility: contrast | `fit-mid` text measured 3.00:1 on white ("near cap" in the staff module picker). The staff "New" escalation badge, white on `fit-mid`, was also 3.00:1 | `--color-fit-mid` light value `#c48a12` to `#7d5500`: 6.62:1 on surface, 4.97:1 on its own 15% tint over canvas |
+| 2 | 1 Accessibility: contrast | `fit-high` text measured 4.04:1 on canvas (landing fit score "92"). It is used as text on about 20 screens | `--color-fit-high` light value `#1f8a5b` to `#156e48`: 6.26:1 on surface, 4.70:1 on its own 15% tint over canvas |
+| 3 | 1 Accessibility: contrast | `clash-likely` is used as text in staff insight cards and escalation badges: 2.99:1 on white (computed from the token) | `--color-clash-likely` light value `#e07b1a` to `#964c0e`: 6.29:1 on surface, 4.72:1 on its own 15% tint over canvas |
+| 3b | 1 Accessibility: contrast | Status badges put the colour as text on its own 10 to 15% tint (`text-fit-low bg-fit-low/10`, `ConfidenceBadge`, clash badges). Computed for the old values: `fit-low` 4.05:1 and `clash-certain` 4.07:1 on a 15% tint over canvas | `--color-fit-low` `#b4483c` to `#a8402f` and `--color-clash-certain` `#c0392b` to `#b0352a`. All five status colours now clear 4.5:1 on their 10 and 15% tints over surface and canvas. The dark-theme values already passed and are unchanged |
 | 4 | 1 Accessibility: contrast | Sub-score labels on not-yet-eligible module cards were 2.51:1 to 2.59:1 (light) and 3.18:1 (dark), because `opacity-60` dimmed the whole list | `SubScoreBars` now dims only the bars; the labels keep full contrast |
 | 5 | 6 Typography | 24 places in shared components, staff pages, chat and the shell set `text-[11px]` (chips, badges, sample-data label, slider hints, histogram axes, chat headings) | New `--text-2xs` token (12px, 16px line height) in `index.css`; those 24 places use `text-2xs` |
 | 6 | 2 Touch | Advisor send button and close button were 40 x 40 px. They are the main controls in the chat on a phone | Both now `size-11` (44 x 44 px) |
