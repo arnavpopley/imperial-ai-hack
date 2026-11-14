@@ -15,15 +15,15 @@ Every Imperial student picks modules from the same flat catalogue. The descripti
 
 ## Scenario
 
-This is an illustrative journey. Priya is a persona, and the figures are examples rather than measured results.
+This is an illustrative journey. Tom is a persona, and every student in the data is synthetic. The figures come from the prototype running offline on that synthetic data (see `docs/EXAMPLES.md`); they are not measured results with real students.
 
-Priya is a third-year MEng Mechanical Engineering student. In a three-minute conversation she says she lost track of time in the wind tunnel lab, dreads heavy proofs, wants to work in motorsport, and would try something outside engineering. Her profile fills in as she talks, and every item carries her own words.
+Tom is a third-year MEng Mechanical Engineering student. In a three-minute conversation he says he lost track of time in the wind tunnel lab, would avoid nuclear topics, wants to work in Formula 1 aerodynamics, and prefers coursework and hands-on work. His profile fills in as he talks, and every item carries his own words.
 
-The catalogue then ranks every module from 0 to 100. Computational Fluid Dynamics comes top, and its reasons quote her wind-tunnel answer. She raises the career slider and the ranking moves instantly. She shortlists three modules, the timetable flags a certain clash on Tuesday morning, and she accepts a suggested swap that keeps her fit within ten points.
+The catalogue then ranks every module from 0 to 100. Fluid Mechanics 3A comes top, and its reasons quote his own answers. He raises the career slider and the ranking moves instantly: Automotive Design with Motorsport A climbs from fifth to second. He shortlists three modules, the timetable flags a certain clash on Monday at 10:00, and he accepts a suggested swap that keeps his fit within ten points.
 
-She then asks for a module whose prerequisite she has not taken. The advisor states the rule, offers similar modules she can take, and drafts a request to the Senior Tutor, which she edits and sends. The Senior Tutor replies from the staff console, and the reply appears in her session.
+He then asks for a module whose prerequisite he has not taken. The advisor states the rule, offers similar modules he can take, and drafts a request to the Senior Tutor, which he edits and sends. The Senior Tutor replies from the staff console, and the reply appears in his session.
 
-Meanwhile, the module lead for Robotics sees that 38 interested students score under 75 because of the coding load, and that lowering it would raise their fit by about 6 points. They accept the card.
+Meanwhile, the module lead for Mechatronics 3A sees that 30 students in the synthetic cohort shortlisted both it and Embedded C for Microcontrollers A, which clash with certainty in spring. That is the second-highest clash priority in the cohort, so they note the card for the timetabling team.
 
 ## Success metrics
 
@@ -34,4 +34,4 @@ Meanwhile, the module lead for Robotics sees that 38 interested students score u
 | Time from first visit to a valid shortlist | From session creation to the first shortlist that passes the rules validator | The quick interview targets about three minutes, and the whole journey should take well under ten. |
 | Module-lead insight cards acted on | Insight cards marked accepted or noted, out of all cards shown | Shows the feedback loop to module leads is useful, not just informative. |
 
-Prototype quality is tracked by the evaluation harness (`npm run eval`): ranking quality, extraction accuracy, guardrail pass rate, determinism, and the privacy threshold.
+Prototype quality is tracked by two evaluation harnesses. `npm run eval` runs offline and covers ranking quality, extraction accuracy, guardrail pass rate, determinism and the privacy threshold. `npm run eval:live` runs the real models on module facts, declining unknowns, extraction, subtle guardrail cases and grounded explanations. The latest numbers are in the README.
