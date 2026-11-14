@@ -78,8 +78,9 @@ Model IDs are configuration, set in `.env`.
 
 | Variable | Default | Used for |
 |---|---|---|
-| `MODEL_SMART` | `claude-sonnet-5-5` | Interviewer, Matcher explanations and refusals, Catalogue agent (tool loop), module knowledge agent (summaries and Q&A), Insights wording, Module Analyst, and the live-eval judge |
-| `MODEL_FAST` | `claude-haiku-4-5` | Intent classification, profile and CV extraction, guardrail classifiers (G1–G4), timetable wording |
+| `MODEL_SMART` | `claude-opus-5-5` | Interviewer, Matcher explanations and refusals, Catalogue agent (tool loop), module knowledge agent (summaries and Q&A), Insights wording, Module Analyst |
+| `MODEL_FAST` | `claude-sonnet-5-5` (low effort) | Intent classification, profile and CV extraction, guardrail classifiers (G1–G4), timetable wording |
+| `MODEL_JUDGE` | `claude-fable-5-1` | The grader in `npm run eval:live`, stronger than the models it grades |
 
 Calls go through the official Anthropic TypeScript SDK (`@anthropic-ai/sdk`). They use token streaming for the interviewer, tool use for the catalogue agent, structured outputs validated with zod, and prompt caching on system prompts. Sonnet-tier calls use server-side refusal fallbacks. Scoring makes no model calls. Explanations are cached by profile and module, and the top ten are precomputed when recommendations open.
 

@@ -137,8 +137,9 @@ Model IDs are environment variables, never hard-coded:
 
 ```
 ANTHROPIC_API_KEY=
-MODEL_SMART=claude-sonnet-5-5   # interviewer, matcher explanations, analyst, insights
-MODEL_FAST=claude-haiku-4-5  # intent, extraction, guardrail classifiers (no Haiku 5.5 exists; Haiku 4.5 is current)
+MODEL_SMART=claude-opus-5-5     # interviewer, matcher explanations, analyst, insights, catalogue and knowledge agents
+MODEL_FAST=claude-sonnet-5-5    # intent, extraction, guardrail classifiers, at low effort (Haiku's quality was lower)
+MODEL_JUDGE=claude-fable-5-1    # grader for the live evaluation
 ```
 
 Confirm the current model IDs and SDK usage at https://docs.claude.com/en/api/overview before the first call.
