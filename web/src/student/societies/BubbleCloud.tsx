@@ -54,7 +54,7 @@ export function BubbleCloud({ featured, others, selectedId, onSelect, detailId }
           whileHover={reduce ? undefined : { scale: scale * 1.08 }}
           transition={{ type: 'spring', stiffness: 260, damping: 20, delay: reduce ? 0 : 0.05 * index }}
           className={cx(
-            'block rounded-full text-center leading-tight font-semibold shadow-soft transition-colors',
+            'pointer-events-auto block rounded-full text-center leading-tight font-semibold shadow-soft transition-colors',
             prominent
               ? 'max-w-[5.75rem] px-2.5 py-2 text-[10.5px] sm:max-w-[8.5rem] sm:px-3.5 sm:text-[12px]'
               : 'max-w-[5.5rem] px-2 py-1 text-[10px] font-medium sm:max-w-[7rem] sm:text-[11px]',
@@ -86,7 +86,7 @@ export function BubbleCloud({ featured, others, selectedId, onSelect, detailId }
         <span className="px-2 text-[11px] leading-tight font-semibold text-brand sm:text-[12px]">Picked for you</span>
       </div>
 
-      <ul aria-label="Other societies" className="society-ring absolute inset-0" data-direction="reverse" style={{ '--orbit-duration': '140s' } as CSSProperties}>
+      <ul aria-label="Other societies" className="society-ring pointer-events-none absolute inset-0" data-direction="reverse" style={{ '--orbit-duration': '140s' } as CSSProperties}>
         {others.map((item, i) => (
           <li
             key={item.id}
@@ -97,7 +97,7 @@ export function BubbleCloud({ featured, others, selectedId, onSelect, detailId }
           </li>
         ))}
       </ul>
-      <ul aria-label="Your top matches" className="society-ring absolute inset-0" style={{ '--orbit-duration': '90s' } as CSSProperties}>
+      <ul aria-label="Your top matches" className="society-ring pointer-events-none absolute inset-0" style={{ '--orbit-duration': '90s' } as CSSProperties}>
         {featured.map((item, i) => (
           <li key={item.id} className="absolute -translate-x-1/2 -translate-y-1/2" style={position(i, featured.length, 27)}>
             {bubble(item, i, true)}
