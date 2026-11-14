@@ -145,7 +145,7 @@ async function waitForHttp(url, name, child, timeout = 60_000) {
 
 /** The API environment: offline strips any key and sets MODULEMATCH_OFFLINE; live adds .env (never printed). */
 function apiEnv(port, databasePath) {
-  const env = { ...process.env, PORT: String(port), DATABASE_PATH: databasePath, NODE_ENV: 'development' };
+  const env = { ...process.env };
   if (LIVE) {
     const file = join(ROOT, '.env');
     if (!existsSync(file)) throw new Error('--live needs a .env with ANTHROPIC_API_KEY at the repo root.');
@@ -157,7 +157,8 @@ function apiEnv(port, databasePath) {
     delete env.ANTHROPIC_API_KEY;
     env.MODULEMATCH_OFFLINE = '1';
   }
-  return env;
+  // Set last, so a PORT or DATABASE_PATH in .env never points the run at the presenter's own server or data.
+  return { ...env, PORT: String(port), DATABASE_PATH: databasePath, NODE_ENV: 'development' };
 }
 
 let apiRun = 0;
@@ -386,18 +387,22 @@ function summarise(all) {
 function usageSummary() {
   const file = join(OUT, 'usage.jsonl');
   if (!existsSync(file)) return null;
-  // USD per million tokens: input, output, cache write, cache read.
+  // USD per million tokens: input, output, cache write (1.25x input), cache read. First matching prefix wins;
+  // an unknown model is priced as Opus 5.5 so the estimate errs high.
   const PRICES = {
-    sonnet: [3, 15, 3.75, 0.3],
-    haiku: [1, 5, 1.25, 0.1],
-    opus: [5, 25, 6.25, 0.5],
+    'claude-opus-5-5': [4, 20, 5, 0.2],
+    'claude-sonnet-5-5': [2, 10, 2.5, 0.2],
+    'claude-sonnet-5': [2, 10, 2.5, 0.2],
+    'claude-haiku-4-5': [1, 5, 1.25, 0.1],
+    'claude-fable-5-1': [10, 50, 12.5, 0.25],
+    'claude-opus': [5, 25, 6.25, 0.5],
   };
   let calls = 0;
   let cost = 0;
   const tokens = { input: 0, output: 0, cacheWrite: 0, cacheRead: 0 };
   for (const line of readFileSync(file, 'utf8').split('\n').filter(Boolean)) {
     const u = JSON.parse(line);
-    const price = PRICES[Object.keys(PRICES).find((k) => u.model.includes(k)) ?? 'sonnet'];
+    const price = PRICES[Object.keys(PRICES).find((k) => u.model.startsWith(k)) ?? 'claude-opus-5-5'];
     calls += 1;
     tokens.input += u.input_tokens ?? 0;
     tokens.output += u.output_tokens ?? 0;

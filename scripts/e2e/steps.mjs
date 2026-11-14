@@ -82,6 +82,12 @@ async function chatTurn(ctx, page, scopeCss, label, submit) {
   }
 }
 
+/** The student's mode chip (the first one on the page, beside the section tabs) reads `label`. */
+function modeIs(label) {
+  const chip = [...document.querySelectorAll('main p[aria-live]')].find((p) => p.querySelector(':scope > .sr-only')?.textContent === 'Mode: ');
+  return Boolean(chip) && window.__e2e.norm(chip.textContent.replace('Mode:', '')) === label;
+}
+
 const pathIs = (page, path, timeout) =>
   page.waitFor((p) => (p instanceof Object ? new RegExp(p.re).test(location.pathname) : location.pathname === p), [path], {
     desc: `the URL to become ${typeof path === 'string' ? path : path.re}`,
@@ -233,7 +239,7 @@ export const STEPS = [
       const before = await rankedIds(page);
       const moved = [];
       let after = before;
-      for (const [label, value] of [['Learning style', 1], ['Interest', 0], ['Breadth', 1]]) {
+      for (const [label, value] of [['Career', 1], ['Learning style', 1], ['Interest', 0]]) {
         const got = await page.drag({ forLabel: { exact: label } }, value, { desc: `the ${label} weight slider` });
         moved.push(`${label} to ${got}`);
         try {
@@ -285,9 +291,17 @@ export const STEPS = [
     async run(ctx) {
       const page = ctx.student;
       ctx.active = page;
-      const ids = await rankedIds(page);
-      // Eligible modules rank first, so this is the best eligible module that is not one of the pair.
-      const third = ids.find((id) => !CLASHING.includes(id));
+      // A swap must come within 10 fit points of the lower-fit module in the clash, and the closest
+      // candidates are the modules ranked just below the pair. Taking the third pick from further down
+      // keeps those free to swap in (with live models the next one or two are often the only candidates).
+      const eligible = await page.eval(() =>
+        [...document.querySelectorAll('section[aria-labelledby="ranked-heading"] ol > li')]
+          .filter((li) => li.querySelector('a[href^="/modules/"]') && !li.textContent.includes('Not eligible yet'))
+          .map((li) => decodeURIComponent(li.querySelector('a[href^="/modules/"]').getAttribute('href').slice('/modules/'.length))),
+      );
+      const others = eligible.filter((id) => !CLASHING.includes(id));
+      const third = others[3] ?? others.at(-1) ?? fail('Not enough eligible modules to shortlist three');
+      if (!CLASHING.every((id) => eligible.includes(id))) fail(`${CLASHING.join(' and ')} are not both open to this student`);
       const picks = [...CLASHING, third];
       for (const id of picks) {
         const button = { css: `section[aria-labelledby="ranked-heading"] ol > li:has(a[href="/modules/${id}"]) button[aria-pressed]` };
@@ -361,6 +375,7 @@ export const STEPS = [
       );
       await page.click({ css: 'dialog[open] header button' }, { desc: 'Close the advisor' });
       await page.waitFor(() => !document.querySelector('dialog[open]'), [], { desc: 'the advisor to close' });
+      await page.waitFor(modeIs, ['With a tutor'], { desc: 'the mode chip to read "With a tutor"' });
       const count = await page.eval(() => /(\d+) shortlisted/.exec(document.querySelector('nav[aria-label="Student sections"]')?.textContent ?? '')?.[1]);
       if (count !== '3') fail(`The shortlist changed after the refused request (now ${count ?? 'none'})`);
       await page.scrollTo('top');
@@ -406,6 +421,7 @@ export const STEPS = [
         { desc: 'the staff reply in the student session', timeout: 20_000 },
       );
       ctx.note(`reply reached the open student tab ${((Date.now() - arrived) / 1000).toFixed(1)} s after resolving`);
+      await student.waitFor(modeIs, ['Recommendations'], { desc: 'the mode chip to return to "Recommendations"' });
       await student.waitFor(() => document.querySelector('button[aria-haspopup="dialog"]')?.getAttribute('aria-label') === 'Ask the advisor, new activity', [], {
         desc: 'the advisor launcher to flag the staff reply as new',
       });
@@ -432,6 +448,10 @@ export const STEPS = [
       await staff.bringToFront();
       await staff.click(STAFF_TAB('Modules'));
       await pathIs(staff, { re: '^/staff/modules/[^/]+$' });
+      // The module from the demo script: Mechatronics 3A, one half of the student's clash.
+      await staff.click({ css: `a[href="/staff/modules/${CLASHING[1]}"]` }, { desc: `${CLASHING[1]} in the module picker` });
+      await pathIs(staff, `/staff/modules/${CLASHING[1]}`);
+      await staff.waitForElement({ css: 'article', text: 'Timetable clash' }, { desc: 'the timetable clash card', timeout: ctx.timeout });
       const card = { css: 'article', text: 'Counterfactual' };
       await staff.waitForElement({ css: 'article button', text: { exact: 'Accept' }, within: card }, { desc: 'a counterfactual card', timeout: ctx.timeout });
       const headline = await staff.text({ css: 'h3', within: card });
