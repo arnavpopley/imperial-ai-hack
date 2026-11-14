@@ -22,6 +22,7 @@ import {
   type AnalystOutput,
   analystOutputSchema,
   applyAnalystChecks,
+  averageSamples,
   MODULES_NOTE,
   REVIEW_PREFIX,
 } from './lib/analyst.ts';
@@ -55,7 +56,8 @@ function systemPrompt(pathways: { id: string; title: string }[]): string {
     '- demand: examShare is the share of marks from exams (use the published assessment when given); groupShare is',
     '  the share of group work; applied is 0 for theory and 1 for hands-on application; mathsIntensity,',
     '  codingIntensity and workload are 0 to 1 relative to other engineering modules.',
-    '- summary: one or two plain sentences on what the module covers and how it is assessed.',
+    '- summary: one or two plain sentences on what the module covers. Do not restate the assessment; the published',
+    '  assessment is added to the record from the module page.',
     '',
     `Topics:\n${topics.join('\n')}`,
     '',
@@ -83,6 +85,9 @@ const usage = { input: 0, output: 0, calls: 0 };
 
 /** Modules analysed at once: enough to finish in a few minutes, few enough to stay clear of rate limits. */
 const CONCURRENCY = 4;
+
+/** Samples per module, averaged so tags are stable between runs (ANALYST_SAMPLES overrides; 1 for a cheap run). */
+const SAMPLES = Math.max(1, Number(process.env.ANALYST_SAMPLES ?? 3));
 
 async function analyse(
   client: Anthropic,
@@ -141,7 +146,9 @@ async function main(): Promise<void> {
       const index = next++;
       const m = raw.modules[index]!;
       console.log(`Analysing ${m.id} ${m.title}`);
-      const derived = applyAnalystChecks(m, await analyse(client, model, system, schema, m));
+      const first = await analyse(client, model, system, schema, m);
+      const rest = await Promise.all(Array.from({ length: SAMPLES - 1 }, () => analyse(client, model, system, schema, m)));
+      const derived = applyAnalystChecks(m, averageSamples([first, ...rest]));
       const { assessment: _assessment, publishedSlot: _publishedSlot, ...fields } = m;
       modules[index] = { ...fields, ...derived };
     }

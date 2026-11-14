@@ -1,6 +1,6 @@
 {
-  "id": "c0cce6a8-0b86-4665-8fac-9caa3de42b4d",
-  "at": "2026-11-14T21:39:36.515Z",
+  "id": "674a4c36-666f-4cfd-980d-cc51027904d0",
+  "at": "2026-11-14T21:49:05.693Z",
   "results": [
     {
       "name": "Ranking quality",
@@ -11,32 +11,32 @@
         {
           "case": "motorsport aerodynamicist",
           "pass": true,
-          "note": "3/3 in top five optional modules: MECH60006, MECH60007, MECH60024, MECH60019, MECH60021"
+          "note": "3/3 in top five optional modules: MECH60006, MECH60024, MECH60007, MECH60019, MECH60021"
         },
         {
           "case": "nuclear and energy engineer",
           "pass": true,
-          "note": "3/3 in top five optional modules: MECH60004, IEX-CLIMATE, MECH60011, MECH60006, MECH60024"
+          "note": "3/3 in top five optional modules: MECH60004, IEX-CLIMATE, MECH60011, MECH60024, MECH60006"
         },
         {
           "case": "robotics builder",
-          "pass": false,
-          "note": "2/3 in top five optional modules: MECH60009, MECH60018, MECH60024, IEX-VR, IEX-ML"
+          "pass": true,
+          "note": "3/3 in top five optional modules: MECH60009, MECH60018, IEX-VR, MECH60024, MECH60001"
         },
         {
           "case": "structural analyst",
           "pass": true,
-          "note": "3/3 in top five optional modules: MECH60021, MECH60007, MECH60014, MECH60002, MECH60016"
+          "note": "3/3 in top five optional modules: MECH60021, MECH60007, MECH60016, MECH60002, MECH60014"
         },
         {
           "case": "startup founder",
           "pass": true,
-          "note": "3/3 in top five optional modules: BUSI60041, IEX-INNOVATE, BUSI60038, IEX-SPACE, BUSI60043"
+          "note": "3/3 in top five optional modules: BUSI60041, BUSI60038, IEX-INNOVATE, IEX-SPACE, BUSI60043"
         },
         {
           "case": "future consultant",
-          "pass": true,
-          "note": "3/3 in top five optional modules: IEX-GLOBALECON, BUSI60038, BUSI60043, BUSI60041, IEX-DECISIONS"
+          "pass": false,
+          "note": "2/3 in top five optional modules: IEX-GLOBALECON, BUSI60038, BUSI60043, BUSI60041, IEX-CLIMATE"
         },
         {
           "case": "data scientist",
@@ -51,22 +51,22 @@
         {
           "case": "mathematical modeller",
           "pass": true,
-          "note": "3/3 in top five optional modules: MECH60016, MECH60021, MECH60017, MECH60007, MECH60001"
+          "note": "3/3 in top five optional modules: MECH60016, MECH60021, MECH60017, MECH60007, MECH60006"
         },
         {
           "case": "climate policy advocate",
           "pass": true,
-          "note": "3/3 in top five optional modules: IEX-CLIMATE, IEX-SCIPOLICY, IEX-GLOBALECON, MECH60004, IEX-SPACE"
+          "note": "3/3 in top five optional modules: IEX-CLIMATE, IEX-SCIPOLICY, IEX-GLOBALECON, MECH60004, IEX-HISTSCI"
         },
         {
           "case": "humanities explorer",
           "pass": true,
-          "note": "3/3 in top five optional modules: IEX-PHILMIND, IEX-PSYCHPERF, IEX-HISTSCI, IEX-INNOVATE, IEX-DECISIONS"
+          "note": "3/3 in top five optional modules: IEX-PHILMIND, IEX-PSYCHPERF, IEX-HISTSCI, IEX-DECISIONS, IEX-INNOVATE"
         },
         {
           "case": "creative technologist",
           "pass": true,
-          "note": "3/3 in top five optional modules: IEX-VR, IEX-PSYCHPERF, IEX-INNOVATE, IEX-CROWDS, MECH60024"
+          "note": "3/3 in top five optional modules: IEX-VR, IEX-PSYCHPERF, IEX-CROWDS, MECH60024, IEX-INNOVATE"
         }
       ]
     },
