@@ -11,10 +11,9 @@ import { EmptyState, ErrorState, Skeleton } from '../../components/StateViews.ts
 import { useAsync } from '../hooks/useAsync.ts';
 import { useReadySession } from '../state/SessionProvider.tsx';
 import { BubbleCloud, type CloudItem } from './BubbleCloud.tsx';
+import { MAX_PER_RING } from './cloudLayout.ts';
 
 const TOP_SOCIETIES = 5;
-/** Other societies on the outer ring; enough to feel like a directory without crowding a phone screen. */
-const OUTER_RING = 9;
 
 export function SocietiesSection() {
   const { session } = useReadySession();
@@ -35,7 +34,7 @@ export function SocietiesSection() {
   const featured: CloudItem[] = shown.map((m) => ({ id: m.societyId, name: nameOf(m.societyId), fit: m.fit, wildcard: m.wildcard }));
   const others: CloudItem[] = (societies.data ?? [])
     .filter((s) => !shownIds.has(s.id))
-    .slice(0, OUTER_RING)
+    .slice(0, MAX_PER_RING)
     .map((s) => ({ id: s.id, name: s.name, fit: null, wildcard: false }));
   const selectedId = chosen ?? shown[0]?.societyId ?? null;
 
