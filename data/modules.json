@@ -2427,35 +2427,36 @@
       "prerequisites": [],
       "capacity": 40,
       "topics": {
-        "biomedical-engineering": 0.95,
+        "biomedical-engineering": 0.9,
         "solid-mechanics-materials": 0.6,
-        "design-manufacturing": 0.2
+        "experimental-lab": 0.1,
+        "communication-writing": 0.1
       },
       "skills": {
-        "research": 0.6,
-        "communication": 0.5,
-        "experimental-skills": 0.3
+        "research": 0.4,
+        "communication": 0.3,
+        "quantitative-analysis": 0.1
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0,
-        "energy-transition": 0,
-        "robotics-automation": 0,
-        "biomedical-devices": 1,
-        "software-data": 0,
+        "aerospace-motorsport": 0.05,
+        "energy-transition": 0.05,
+        "robotics-automation": 0.1,
+        "biomedical-devices": 0.95,
+        "software-data": 0.03,
         "consulting": 0.1,
         "startup-founder": 0.3,
-        "research-academia": 0.6
+        "research-academia": 0.5
       },
       "demand": {
-        "examShare": 0.6,
-        "groupShare": 0.1,
-        "applied": 0.5,
-        "mathsIntensity": 0.2,
+        "examShare": 1,
+        "groupShare": 0,
+        "applied": 0.25,
+        "mathsIntensity": 0.1,
         "codingIntensity": 0,
-        "workload": 0.5
+        "workload": 0.4
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Year 4 biomaterials for implants and tissue engineering; assessment is not published, so the exam share is an estimate. Evidence: biomedical-engineering 0.95 \"biomedical implant materials\"; solid-mechanics-materials 0.60 \"metals, ceramics and polymers\"."
+      "derivedRationale": "Introduces metal, ceramic and polymer implant materials, their clinical use, failure modes, and tissue engineering as an approach to regenerate tissues. Assessed entirely by a written exam. Evidence: biomedical-engineering 0.90 \"introduce major classes of biomedical implant materials including metals, ceramics and polymers\"; solid-mechanics-materials 0.60 \"metals, ceramics and polymers\"."
     },
     {
       "id": "BUSI60038",
@@ -2469,41 +2470,50 @@
         "autumn"
       ],
       "description": "Economics provides a useful set of tools for analysing the world and aiding decision-making by businesses and governments. This module aims to give you an overview of several of these tools and of the insights that can be obtained with them. We will particularly focus on the tools most relevant to businesses. We will pay particular attention to the actions of firms and individuals in the context of market interaction and strategic (game theoretic) interactions in business contexts.",
-      "learningOutcomes": [],
+      "learningOutcomes": [
+        "Define key concepts in economics such as Nash equilibrium and Adverse selection.",
+        "Recognise how common social institutions reflect economic concepts, such as demand and supply.",
+        "Calculate the outcomes of simple quantitative economic questions.",
+        "Discuss economic articles in a newspaper such as the Financial Times or The Economist.",
+        "Appraise the welfare merits of simple government regulations and interventions."
+      ],
       "sourceUrl": "https://www.imperial.ac.uk/business-school/undergraduate/bpes/",
       "prerequisites": [],
       "capacity": 100,
       "topics": {
         "finance-economics": 0.9,
-        "management-leadership": 0.4,
-        "mathematics-modelling": 0.3,
-        "psychology-behaviour": 0.2
+        "mathematics-modelling": 0.35,
+        "policy-ethics": 0.25,
+        "management-leadership": 0.2,
+        "communication-writing": 0.1
       },
       "skills": {
-        "commercial-awareness": 0.9,
+        "commercial-awareness": 0.8,
         "quantitative-analysis": 0.5,
-        "communication": 0.3
+        "communication": 0.4,
+        "teamwork": 0.3,
+        "research": 0.2
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0,
+        "aerospace-motorsport": 0.05,
         "energy-transition": 0.2,
-        "robotics-automation": 0,
-        "biomedical-devices": 0,
-        "software-data": 0.2,
+        "robotics-automation": 0.05,
+        "biomedical-devices": 0.08,
+        "software-data": 0.15,
         "consulting": 0.85,
-        "startup-founder": 0.6,
-        "research-academia": 0.1
+        "startup-founder": 0.55,
+        "research-academia": 0.2
       },
       "demand": {
-        "examShare": 0.6,
-        "groupShare": 0.2,
-        "applied": 0.5,
-        "mathsIntensity": 0.4,
+        "examShare": 0.7,
+        "groupShare": 0.3,
+        "applied": 0.35,
+        "mathsIntensity": 0.3,
         "codingIntensity": 0,
-        "workload": 0.45
+        "workload": 0.3
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Business School economics toolkit for firms, markets and game-theoretic strategy; it has a final exam, and the 60% exam share is an estimate. Evidence: finance-economics 0.90 \"Economics provides a useful set of tools\"."
+      "derivedRationale": "An introductory business economics elective covering market interaction, game theory (Nash equilibrium), adverse selection and the welfare effects of regulation, with a business focus. Assessed by a 70% written exam and a 30% group report. Evidence: finance-economics 0.90 \"Economics provides a useful set of tools for analysing the world and aiding decision-making by businesses and governments.\"."
     },
     {
       "id": "BUSI60041",
@@ -2517,42 +2527,52 @@
         "autumn"
       ],
       "description": "Entrepreneurship is the process of identifying and exploiting a new business opportunity. An entrepreneur must understand the competitive landscape, estimate the potential demand for their products or services, assess risks and returns, and develop and execute the possible ways to deliver their claims to the best set of consumers. The entrepreneur also needs to acquire resources (funding), compile a team, and generate a vision for the fledgling enterprise.",
-      "learningOutcomes": [],
+      "learningOutcomes": [
+        "Apply key methods and tools used in the start-up ecosystem.",
+        "Recognise key steps in discovering, evaluating, and implementing a startup idea in practice.",
+        "Identify challenges and ways to overcome them in testing and validating a new idea.",
+        "Describe systemic issues (i.e., gender and racial inequality) prevalent in entrepreneurship more broadly.",
+        "Recognise key organisational aspects in starting up a new business.",
+        "Develop teamwork, project management and presentation skills."
+      ],
       "sourceUrl": "https://www.imperial.ac.uk/business-school/undergraduate/bpes/",
       "prerequisites": [],
       "capacity": 100,
       "topics": {
-        "entrepreneurship-innovation": 0.95,
-        "management-leadership": 0.55,
-        "finance-economics": 0.5,
-        "communication-writing": 0.3
+        "entrepreneurship-innovation": 0.92,
+        "management-leadership": 0.4,
+        "finance-economics": 0.3,
+        "policy-ethics": 0.12,
+        "communication-writing": 0.15
       },
       "skills": {
-        "commercial-awareness": 0.95,
-        "teamwork": 0.6,
+        "commercial-awareness": 0.85,
+        "teamwork": 0.7,
+        "project-management": 0.55,
         "communication": 0.6,
-        "project-management": 0.5
+        "research": 0.2,
+        "quantitative-analysis": 0.15
       },
       "pathwayRelevance": {
         "aerospace-motorsport": 0.05,
-        "energy-transition": 0.1,
-        "robotics-automation": 0.1,
-        "biomedical-devices": 0.1,
-        "software-data": 0.1,
+        "energy-transition": 0.2,
+        "robotics-automation": 0.15,
+        "biomedical-devices": 0.2,
+        "software-data": 0.25,
         "consulting": 0.5,
-        "startup-founder": 1,
-        "research-academia": 0
+        "startup-founder": 0.95,
+        "research-academia": 0.05
       },
       "demand": {
         "examShare": 0,
-        "groupShare": 0.6,
-        "applied": 0.85,
-        "mathsIntensity": 0.1,
+        "groupShare": 0.8,
+        "applied": 0.7,
+        "mathsIntensity": 0.08,
         "codingIntensity": 0,
-        "workload": 0.5
+        "workload": 0.35
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "Business School module on spotting, funding and building a new venture; the BPES timetable lists no exam, so it is treated as coursework only. Evidence: entrepreneurship-innovation 0.95 \"identifying and exploiting a new business opportunity\"; management-leadership 0.55 \"compile a team, and generate a vision\"; finance-economics 0.50 \"assess risks and returns\"."
+      "derivedRationale": "An elective introducing how to identify, validate and launch a new business, covering competitive landscape, demand, risk, funding, team building and vision. It is assessed 80% by group coursework (Lean Canvas, pitch video, playbook) and 20% by participation and reflection, with no exam. Evidence: entrepreneurship-innovation 0.92 \"Entrepreneurship is the process of identifying and exploiting a new business opportunity.\"."
     },
     {
       "id": "BUSI60043",
@@ -2566,39 +2586,47 @@
         "spring"
       ],
       "description": "The aim of this module is to enable students to understand of of the core purposed of finance: the setting of prices in a market. The first half of the course works at a market-level, dealing with risk-management and diversification. The second half of the course works at the security-level, thinking about bond, stock, and derivative valuation.",
-      "learningOutcomes": [],
+      "learningOutcomes": [
+        "Analyse the interplay between value and risk for the most common financial instruments.",
+        "Interpret financial and economic news and policy with improved comprehension",
+        "Discuss current financial issues intelligently and understand the financial mechanisms that cause prices to move.",
+        "Develop intuition for pricing models for stocks, bonds, and options."
+      ],
       "sourceUrl": "https://www.imperial.ac.uk/business-school/undergraduate/bpes/",
       "prerequisites": [],
       "capacity": 100,
       "topics": {
-        "finance-economics": 1,
+        "finance-economics": 0.95,
         "mathematics-modelling": 0.4,
-        "statistics-data": 0.3
+        "statistics-data": 0.3,
+        "policy-ethics": 0.15
       },
       "skills": {
+        "quantitative-analysis": 0.7,
         "commercial-awareness": 0.8,
-        "quantitative-analysis": 0.75
+        "modelling-simulation": 0.3,
+        "research": 0.2
       },
       "pathwayRelevance": {
-        "aerospace-motorsport": 0,
-        "energy-transition": 0.1,
-        "robotics-automation": 0,
-        "biomedical-devices": 0,
-        "software-data": 0.3,
-        "consulting": 0.9,
-        "startup-founder": 0.5,
-        "research-academia": 0.1
+        "aerospace-motorsport": 0.05,
+        "energy-transition": 0.25,
+        "robotics-automation": 0.05,
+        "biomedical-devices": 0.05,
+        "software-data": 0.25,
+        "consulting": 0.95,
+        "startup-founder": 0.55,
+        "research-academia": 0.2
       },
       "demand": {
-        "examShare": 0.7,
+        "examShare": 0.55,
         "groupShare": 0,
-        "applied": 0.4,
-        "mathsIntensity": 0.6,
-        "codingIntensity": 0,
-        "workload": 0.5
+        "applied": 0.3,
+        "mathsIntensity": 0.5,
+        "codingIntensity": 0.05,
+        "workload": 0.4
       },
       "derivedBy": "analyst-agent",
-      "derivedRationale": "REVIEW: description is 57 words (under 60), so staff should check these tags. Business School finance: risk, diversification and bond, stock and derivative valuation; it has a final exam, and the 70% exam share is an estimate. Evidence: finance-economics 1.00 \"the setting of prices in a market\"."
+      "derivedRationale": "REVIEW: description is 57 words (under 60), so staff should check these tags. Introduces how financial markets set prices, covering risk management and diversification at market level and bond, stock and derivative valuation at security level. Assessed by a 55% written exam, a 35% individual assignment and 10% individual quizzes. Evidence: finance-economics 0.95 \"the setting of prices in a market\"."
     },
     {
       "id": "IEX-CLIMATE",
