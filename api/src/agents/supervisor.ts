@@ -310,7 +310,22 @@ async function editProfileTurn(turn: Turn) {
 
 // ---------- entry point ----------
 
-export async function handleTurn(sessionId: string, body: SendMessageBody, emit: Emit): Promise<void> {
+/** One turn at a time per session, so concurrent tabs cannot overwrite each other's profile changes. */
+const sessionQueues = new Map<string, Promise<void>>();
+
+export function handleTurn(sessionId: string, body: SendMessageBody, emit: Emit): Promise<void> {
+  const previous = sessionQueues.get(sessionId) ?? Promise.resolve();
+  const run = previous.then(() => runTurn(sessionId, body, emit));
+  const settled = run.catch(() => {});
+  sessionQueues.set(sessionId, settled);
+  void settled.then(() => {
+    if (sessionQueues.get(sessionId) === settled) sessionQueues.delete(sessionId);
+  });
+  return run;
+}
+
+async function runTurn(sessionId: string, body: SendMessageBody, emit: Emit): Promise<void> {
+  // Loaded inside the queue, so each turn starts from the state the previous turn saved.
   const session = repo.getSession(sessionId);
   if (!session) throw new Error(`unknown session ${sessionId}`);
   const tracer = createTracer(sessionId, tracerSink);
@@ -318,7 +333,11 @@ export async function handleTurn(sessionId: string, body: SendMessageBody, emit:
   for (const e of guarded.events) await emit({ type: 'guardrail', stage: e.stage, verdict: e.verdict, notice: e.notice });
 
   const turnId = randomUUID();
-  const stored = guarded.text || (body.structured ? 'Slider answer' : '[removed]');
+  // A message that triggered the wellbeing check is never stored: it may disclose health details (spec 20.2).
+  const stored =
+    guarded.action === 'wellbeing'
+      ? '[Not stored: support contacts were shown]'
+      : guarded.text || (body.structured ? 'Slider answer' : '[removed]');
   repo.addMessage({ ...message(session.id, 'student', stored, null), id: turnId });
   session.messages.push({ ...message(session.id, 'student', stored, null), id: turnId });
   const changedBy = (stage: string) => guarded.events.some((e) => e.stage === stage && e.verdict === 'redact');

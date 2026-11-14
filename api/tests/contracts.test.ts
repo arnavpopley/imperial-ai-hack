@@ -71,14 +71,18 @@ describe('every route returns a valid response', () => {
     await check(`${s}/modules/${ids.module}/explanation`, undefined, S.ExplanationResponse);
     await check(`${s}/shortlist`, json({ moduleId: ids.module, action: 'add' }), S.SessionState);
     await check(`${s}/timetable`, undefined, S.TimetableView);
-    const escalation = (await check(`${s}/escalations`, json({ type: 'RULE_EXCEPTION', summary: 'x' }), S.Escalation)) as { id: string };
-    escalationId = escalation.id;
+    await check(`${s}/escalations`, json({ type: 'RULE_EXCEPTION', summary: 'x' }), S.Escalation);
     await check(`${s}/pathways/${ids.pathway}/progress`, undefined, S.PathwayProgress);
     await check(`${s}/societies`, undefined, S.SocietyMatch.array());
     await check(`${s}/profile`, { method: 'DELETE' }, S.SessionState);
   });
 
   it('staff routes', async () => {
+    // A separate session, because the student-route test deletes its own data at the end.
+    const created = await app.request('/api/sessions', json({ programme: 'MEng Mechanical Engineering', yearOfStudy: 3 }));
+    const other = S.SessionState.parse(await created.json()).id;
+    const escalation = (await check(`/api/sessions/${other}/escalations`, json({ type: 'RULE_EXCEPTION', summary: 'x' }), S.Escalation)) as { id: string };
+    escalationId = escalation.id;
     await check('/api/staff/modules', undefined, S.StaffModuleSummary.array());
     const insights = (await check(`/api/staff/modules/${ids.insightModule}/insights`, undefined, S.Insight.array())) as { id: string }[];
     expect(insights.length).toBeGreaterThan(0);
@@ -116,6 +120,37 @@ describe('every route returns a valid response', () => {
     expect(reply).toContain('already completed');
     const after = S.SessionState.parse(await (await app.request(`/api/sessions/${id}`)).json());
     expect(after.mode).toBe('RECOMMEND');
+  });
+
+  it('never stores a message that triggered the wellbeing check', async () => {
+    const created = await app.request('/api/sessions', json({ programme: 'MEng Mechanical Engineering', yearOfStudy: 3 }));
+    const id = S.SessionState.parse(await created.json()).id;
+    await (await app.request(`/api/sessions/${id}/messages`, json({ content: 'I keep hurting myself and I cannot cope.' }))).text();
+    const after = S.SessionState.parse(await (await app.request(`/api/sessions/${id}`)).json());
+    expect(after.messages.some((m) => m.content.includes('hurting'))).toBe(false);
+    expect(after.escalationDraft?.type).toBe('WELLBEING');
+  });
+
+  it('deleting the profile removes the chat, escalations and shortlist too', async () => {
+    const created = await app.request('/api/sessions', json({ programme: 'MEng Mechanical Engineering', yearOfStudy: 3 }));
+    const id = S.SessionState.parse(await created.json()).id;
+    await (await app.request(`/api/sessions/${id}/messages`, json({ content: 'I love fluid mechanics.' }))).text();
+    await app.request(`/api/sessions/${id}/escalations`, json({ type: 'COMPLAINT', summary: 'x' }));
+    const after = S.SessionState.parse(await (await app.request(`/api/sessions/${id}/profile`, { method: 'DELETE' })).json());
+    expect(after.messages.filter((m) => m.role === 'student')).toEqual([]);
+    expect(after.escalations).toEqual([]);
+    expect(after.evidence).toEqual([]);
+  });
+
+  it('serialises concurrent turns on one session', async () => {
+    const created = await app.request('/api/sessions', json({ programme: 'MEng Mechanical Engineering', yearOfStudy: 3 }));
+    const id = S.SessionState.parse(await created.json()).id;
+    await Promise.all([
+      (async () => (await app.request(`/api/sessions/${id}/messages`, json({ content: 'I love fluid mechanics and robotics.' }))).text())(),
+      (async () => (await app.request(`/api/sessions/${id}/messages`, json({ content: 'I also enjoy statistics.' }))).text())(),
+    ]);
+    const after = S.SessionState.parse(await (await app.request(`/api/sessions/${id}`)).json());
+    expect(Object.keys(after.profile.interests).sort()).toEqual(['control-robotics', 'fluid-mechanics', 'statistics-data']);
   });
 
   it('rejects an invalid body with 400 and an unknown session with 404', async () => {

@@ -8,7 +8,7 @@ import {
   type RecommendationsResponse,
   type Weights,
 } from '@modulematch/shared';
-import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { api } from '../../api.ts';
 import { useAsync, type AsyncResult } from '../hooks/useAsync.ts';
 import { useDebouncedCallback } from '../hooks/useDebouncedCallback.ts';
@@ -58,6 +58,22 @@ export function CatalogueProvider({ children }: { children: ReactNode }) {
   const recs = useAsync(() => api.recommendations(sessionId), [sessionId, recsVersion, session.profile.updatedAt]);
   const [weights, setWeights] = useState<Weights>(session.weights);
   const [saveState, setSaveState] = useState<SaveState>('idle');
+
+  // A chat what-if changes the weights on the server and bumps recsVersion; adopt the server's weights then,
+  // so the sliders and the client-side re-rank match what the advisor just said.
+  useEffect(() => {
+    if (recsVersion === 0) return;
+    let live = true;
+    api.recommendations(sessionId).then(
+      (response) => {
+        if (live) setWeights(response.weights);
+      },
+      () => {},
+    );
+    return () => {
+      live = false;
+    };
+  }, [recsVersion, sessionId]);
   const saveSeq = useRef(0);
   const { setData } = recs;
 

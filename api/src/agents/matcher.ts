@@ -163,9 +163,10 @@ export async function explain(
 
   const summary = filterClaims(final.summary);
   const because = final.because.map((b) => ({ ...b, text: filterClaims(b.text).text })).filter((b) => b.text);
-  const removed = summary.removed + final.because.length - because.length;
+  const watchOuts = final.watchOuts.map((w) => filterClaims(w).text).filter(Boolean);
+  const removed = summary.removed + (final.because.length - because.length) + (final.watchOuts.length - watchOuts.length);
   tracer.record({ actor: 'G8 claims', kind: 'guardrail', input: `explanation ${module.id}`, output: removed ? `${removed} claim(s) removed` : 'no outcome claims', verdict: removed ? 'redact' : 'pass' });
-  return { ...final, summary: summary.text || template.summary, because: because.length ? because : template.because };
+  return { ...final, summary: summary.text || template.summary, because: because.length ? because : template.because, watchOuts };
 }
 
 /** Topic-vector cosine similarity, used to offer alternatives close to a module the student cannot take. */

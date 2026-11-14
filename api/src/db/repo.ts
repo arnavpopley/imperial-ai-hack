@@ -210,8 +210,8 @@ export function saveProfile(sessionId: string, profile: StudentProfile, db: Db =
 }
 
 /**
- * Spec 20.3: the student deletes their profile and evidence. The profile is reset to an empty one that keeps
- * only the onboarding answers (programme, year, completed modules), so the session can still be resumed.
+ * Spec 20.3: the student deletes everything held about them: profile, evidence, chat, escalations, shortlist
+ * and trace. The profile is reset to an empty one that keeps only programme and year.
  */
 export function deleteProfileAndEvidence(sessionId: string, db: Db = getDb()): StudentProfile | null {
   const row = db.select().from(profiles).where(eq(profiles.sessionId, sessionId)).get();
@@ -221,7 +221,7 @@ export function deleteProfileAndEvidence(sessionId: string, db: Db = getDb()): S
     studentId: old.studentId,
     programme: old.programme,
     yearOfStudy: old.yearOfStudy,
-    completedModuleIds: old.completedModuleIds,
+    completedModuleIds: [],
     interests: {},
     pathways: [],
     pathwaysSkipped: false,
@@ -240,6 +240,10 @@ export function deleteProfileAndEvidence(sessionId: string, db: Db = getDb()): S
   };
   db.transaction((tx) => {
     tx.delete(evidence).where(eq(evidence.sessionId, sessionId)).run();
+    tx.delete(messages).where(eq(messages.sessionId, sessionId)).run();
+    tx.delete(escalations).where(eq(escalations.sessionId, sessionId)).run();
+    tx.delete(shortlistItems).where(eq(shortlistItems.sessionId, sessionId)).run();
+    tx.delete(traceEvents).where(eq(traceEvents.sessionId, sessionId)).run();
     tx.update(profiles).set({ data: blank }).where(eq(profiles.sessionId, sessionId)).run();
     tx.update(sessions).set({ updatedAt: blank.updatedAt }).where(eq(sessions.id, sessionId)).run();
   });
