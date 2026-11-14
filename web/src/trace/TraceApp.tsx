@@ -135,7 +135,8 @@ export function TraceApp() {
     return () => clearInterval(timer);
   }, [load, sessionId]);
 
-  const shown = useMemo(() => (filter === 'all' ? events : events.filter((e) => e.kind === filter)), [events, filter]);
+  // Newest first, so the latest verdicts are at the top during a live demo.
+  const shown = useMemo(() => (filter === 'all' ? events : events.filter((e) => e.kind === filter)).toReversed(), [events, filter]);
   const verdicts = useMemo(
     () => events.filter((e) => e.kind === 'guardrail').reduce<Record<string, number>>((acc, e) => ({ ...acc, [e.verdict ?? 'none']: (acc[e.verdict ?? 'none'] ?? 0) + 1 }), {}),
     [events],

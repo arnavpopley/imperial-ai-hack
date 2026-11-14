@@ -39,7 +39,7 @@ export async function injectionScan(text: string, _ctx: InputContext): Promise<S
       system: SYSTEM,
       messages: [{ role: 'user', content: asData('student', cleaned) }],
       maxTokens: 300,
-    });
+    }).catch(() => null); // A failed call keeps the pattern-cleaned text and never restores what was removed.
     for (const sentence of result?.injection ? result.instructionSentences : []) {
       if (sentence.trim() && cleaned.includes(sentence)) {
         cleaned = cleaned.replace(sentence, '').trim();

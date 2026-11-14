@@ -2,8 +2,8 @@
 // latency low, then verdicts are applied in stage order and every verdict is written to the trace.
 import type { Verdict } from '@modulematch/shared';
 import { scopeCheck } from './g1-scope.ts';
-import { redaction } from './g2-redaction.ts';
-import { injectionScan } from './g3-injection.ts';
+import { redactByPattern, redaction } from './g2-redaction.ts';
+import { injectionScan, stripInjection } from './g3-injection.ts';
 import { wellbeingCheck } from './g4-wellbeing.ts';
 import type { InputContext, StageResult } from './types.ts';
 
@@ -21,18 +21,24 @@ export interface InputOutcome {
   action: 'continue' | 'redirect' | 'wellbeing';
 }
 
-/** Result of a stage that failed to run; treated as a pass so a classifier outage never blocks the student. */
-const failed = (text: string, error: unknown): StageResult => ({
-  verdict: 'pass',
-  text,
-  notice: null,
-  detail: `classifier unavailable (${error instanceof Error ? error.name : 'error'}), pattern rules only`,
-});
+/**
+ * Result of a stage that failed to run. Classifying stages pass so an outage never blocks the student;
+ * rewriting stages fall back to their pattern pass, so a failure can never restore text that was removed.
+ */
+const failed = (text: string, error: unknown, rewrite: (t: string) => string = (t) => t): StageResult => {
+  const cleaned = rewrite(text);
+  return {
+    verdict: cleaned === text ? 'pass' : 'redact',
+    text: cleaned,
+    notice: null,
+    detail: `stage failed (${error instanceof Error ? error.name : 'error'}), pattern rules only`,
+  };
+};
 
 export async function runInputGuardrails(raw: string, ctx: InputContext): Promise<InputOutcome> {
-  const timedStage = async (name: string, run: () => Promise<StageResult>, input: string) => {
+  const timedStage = async (name: string, run: () => Promise<StageResult>, input: string, rewrite?: (t: string) => string) => {
     const started = performance.now();
-    const result = await run().catch((error: unknown) => failed(input, error));
+    const result = await run().catch((error: unknown) => failed(input, error, rewrite));
     return { name, result, latencyMs: Math.round(performance.now() - started) };
   };
 
@@ -41,8 +47,8 @@ export async function runInputGuardrails(raw: string, ctx: InputContext): Promis
     timedStage('G1 scope', () => scopeCheck(raw, ctx), raw),
     timedStage('G4 wellbeing', () => wellbeingCheck(raw, ctx), raw),
     (async () => {
-      const g2 = await timedStage('G2 redaction', () => redaction(raw, ctx), raw);
-      const g3 = await timedStage('G3 injection', () => injectionScan(g2.result.text, ctx), g2.result.text);
+      const g2 = await timedStage('G2 redaction', () => redaction(raw, ctx), raw, (t) => redactByPattern(t).text);
+      const g3 = await timedStage('G3 injection', () => injectionScan(g2.result.text, ctx), g2.result.text, (t) => stripInjection(t).text);
       return [g2, g3] as const;
     })(),
   ]);

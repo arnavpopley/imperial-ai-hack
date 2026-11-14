@@ -16,7 +16,7 @@ import {
   type TraceEvent,
   schemas as S,
 } from '@modulematch/shared';
-import { and, asc, desc, eq } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 import { type Db, getDb } from './client.ts';
 import type { CohortStudent } from './datasets.ts';
@@ -249,6 +249,12 @@ export function deleteProfileAndEvidence(sessionId: string, db: Db = getDb()): S
 export function addEvidence(items: Evidence[], db: Db = getDb()): void {
   const rows = items.map((e) => S.Evidence.parse(e));
   if (rows.length > 0) db.insert(evidence).values(rows).run();
+}
+
+/** Removes evidence for the given slots, used when the student clears an answer (spec 20.3). */
+export function deleteEvidenceForSlots(sessionId: string, slots: string[], db: Db = getDb()): void {
+  if (slots.length === 0) return;
+  db.delete(evidence).where(and(eq(evidence.sessionId, sessionId), inArray(evidence.slot, slots))).run();
 }
 
 export function listEvidence(sessionId: string, db: Db = getDb()): Evidence[] {

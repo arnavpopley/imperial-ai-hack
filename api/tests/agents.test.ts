@@ -135,3 +135,17 @@ describe('mode machine', () => {
     expect(canTransition('EXPLAIN', 'PLAN')).toBe(false);
   });
 });
+
+describe('review fixes', () => {
+  it('keeps the pattern-redacted text when a rewriting stage fails', async () => {
+    const { runInputGuardrails } = await import('../src/guardrails/pipeline.ts');
+    const g2 = await import('../src/guardrails/g2-redaction.ts');
+    const { createTracer } = await import('../src/trace/tracer.ts');
+    const { vi } = await import('vitest');
+    const spy = vi.spyOn(g2, 'redaction').mockRejectedValue(new Error('outage'));
+    const out = await runInputGuardrails('I love robotics. I have ADHD.', { mode: 'INTERVIEW', tracer: createTracer('s', () => {}) });
+    expect(spy).toHaveBeenCalled();
+    spy.mockRestore();
+    expect(out.text).toBe('I love robotics.');
+  });
+});

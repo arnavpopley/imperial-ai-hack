@@ -9,11 +9,13 @@ export const QUEUE: Record<EscalationType, string> = {
   COMPLAINT: 'Admin',
 };
 
-export function draftRuleException(profile: StudentProfile, module: Module, reasons: string[], request: string): EscalationDraft {
+/** A rule-exception request, for one ineligible module or for a shortlist rule such as the credit cap. */
+export function draftRuleException(profile: StudentProfile, reasons: string[], request: string, module?: Module): EscalationDraft {
+  const asks = module ? `asks to take ${module.code} ${module.title}` : 'asks for an exception to a programme rule';
   return {
     type: 'RULE_EXCEPTION',
     summary:
-      `${profile.programme}, Year ${profile.yearOfStudy}, asks to take ${module.code} ${module.title}. ` +
+      `${profile.programme}, Year ${profile.yearOfStudy}, ${asks}. ` +
       `The advisor could not allow it: ${reasons.join(' ')} ` +
       `In the student's words: "${request.slice(0, 200)}"`,
   };

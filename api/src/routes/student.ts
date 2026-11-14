@@ -25,12 +25,22 @@ function editEvidence(sessionId: string, edits: ProfileEditBody): Evidence[] {
   const turnId = randomUUID();
   const item = (slot: string, value: Evidence['value']): Evidence => ({ id: randomUUID(), sessionId, turnId, slot, value, quote, confidence: 1 });
   return [
-    ...Object.entries(edits.interests ?? {}).map(([topic, v]) => item(`interest:${topic}`, v)),
+    ...Object.entries(edits.interests ?? {}).flatMap(([topic, v]) => (v > 0 ? [item(`interest:${topic}`, v)] : [])),
     ...Object.entries(edits.style ?? {}).flatMap(([k, v]) => (v === null || v === undefined ? [] : [item(`style.${k}`, v)])),
     ...(edits.breadthAppetite !== undefined && edits.breadthAppetite !== null ? [item('breadthAppetite', edits.breadthAppetite)] : []),
     ...(edits.pathways ? [item('pathways', edits.pathways)] : []),
     ...(edits.pathwaysSkipped !== undefined ? [item('pathwaysSkipped', edits.pathwaysSkipped)] : []),
     ...(edits.timetablePrefs?.avoidDays ? [item('timetablePrefs.avoidDays', edits.timetablePrefs.avoidDays)] : []),
+  ];
+}
+
+/** Slots the student cleared (set to null or emptied), whose old evidence must no longer count (spec 8.6). */
+function clearedSlots(edits: ProfileEditBody): string[] {
+  return [
+    ...Object.entries(edits.interests ?? {}).flatMap(([topic, v]) => (v === 0 ? [`interest:${topic}`] : [])),
+    ...Object.entries(edits.style ?? {}).flatMap(([k, v]) => (v === null ? [`style.${k}`] : [])),
+    ...(edits.breadthAppetite === null ? ['breadthAppetite'] : []),
+    ...(edits.pathways?.length === 0 && !edits.pathwaysSkipped ? ['pathways', 'pathwaysSkipped'] : []),
   ];
 }
 
@@ -68,8 +78,10 @@ export const studentRoutes = new Hono()
     const input = c.req.valid('json');
     const { confirm, resumeInterview: resume, style, timetablePrefs, ...edits } = input;
     const evidence = editEvidence(session.id, input);
+    const cleared = clearedSlots(input);
+    repo.deleteEvidenceForSlots(session.id, cleared);
     repo.addEvidence(evidence);
-    session.evidence.push(...evidence);
+    session.evidence = [...session.evidence.filter((e) => !cleared.includes(e.slot)), ...evidence];
     const profile = {
       ...session.profile,
       ...Object.fromEntries(Object.entries(edits).filter(([, v]) => v !== undefined)),
@@ -118,6 +130,15 @@ export const studentRoutes = new Hono()
     const { moduleId, action } = c.req.valid('json');
     if (!catalogue.modules().some((m) => m.id === moduleId)) return c.json({ error: 'unknown module' }, 400);
     const tracer = createTracer(session.id, tracerSink);
+    if (action === 'add') {
+      // The same eligibility gate as the chat: a module the advisor would refuse cannot be saved here either.
+      const rec = ranked(session).find((r) => r.moduleId === moduleId);
+      if (!rec?.eligible) {
+        const reasons = rec?.ineligibleReasons ?? ['This module is already completed.'];
+        tracer.record({ actor: 'G7 rules', kind: 'guardrail', input: `shortlist add ${moduleId}`, output: 'ineligible, not added', verdict: 'block' });
+        return c.json({ error: 'not eligible', reasons }, 422);
+      }
+    }
     if (action === 'add') repo.addToShortlist(session.id, moduleId);
     else repo.removeFromShortlist(session.id, moduleId);
     tracer.record({ actor: 'supervisor', kind: 'tool', input: `shortlist ${action} ${moduleId}`, output: `${repo.listShortlist(session.id).length} on shortlist`, verdict: null });

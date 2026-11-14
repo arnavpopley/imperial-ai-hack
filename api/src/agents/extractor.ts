@@ -188,8 +188,8 @@ async function extractLive(text: string, targetSlots: string[], pathwayIds: stri
     ],
     maxTokens: 1500,
   });
-  // Grounding: a quote the student never wrote is dropped.
-  return (result?.updates ?? []).filter((u) => u.quote.length > 0 && text.includes(u.quote.slice(0, 40)));
+  // Grounding: a quote the student never wrote, in full, is dropped.
+  return (result?.updates ?? []).filter((u) => u.quote.length > 0 && text.includes(u.quote));
 }
 
 /** Runs the extractor and keeps only whitelisted updates whose value matches the slot (spec 10.3). */

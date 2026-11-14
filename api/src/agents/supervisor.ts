@@ -15,7 +15,8 @@ import { askNext, nextQuestion, reflect, studentTurn, unfilledSlots, whatIHeard,
 import { emitWords, type ChatMessage } from './llm.ts';
 import { alternativesTo, holdPosition } from './matcher.ts';
 import { RESTING_MODE } from './modes.ts';
-import { catalogue, explanationFor, moduleTitle, precomputeTopExplanations, ranked, saveProfile, setMode, timetableView, tracerSink } from './session.ts';
+import { checkShortlist } from '../engines/index.ts';
+import { catalogue, explanationFor, moduleTitle, precomputeTopExplanations, ranked, rulesForProfile, saveProfile, setMode, timetableView, tracerSink } from './session.ts';
 import { describeTimetable, explainTimetable } from './timetabler.ts';
 
 export type Emit = (event: SseEvent) => Promise<void>;
@@ -98,16 +99,16 @@ async function interviewTurn(turn: Turn, structuredAnswers: SendMessageBody['str
     await say(turn, 'interviewer', whatIHeard(session.profile, titles), { kind: 'confirm-profile', fields: [] });
     return;
   }
-  session.interview = {
+  const asked = {
     ...session.interview,
     questionsAsked: session.interview.questionsAsked + 1,
     askedSteps: [...session.interview.askedSteps, next.step.id],
     targetSlots: next.targetSlots,
   };
-  repo.updateSession(session.id, { interview: session.interview });
   const gaps = unfilledSlots(session.profile, session.evidence);
+  const budgetLeft = session.interview.budget - session.interview.questionsAsked;
   await tracer.timed(
-    { actor: 'interviewer', kind: 'agent', input: `gaps: ${gaps.join(', ') || 'none'}; budget ${session.interview.budget - session.interview.questionsAsked + 1}` },
+    { actor: 'interviewer', kind: 'agent', input: `gaps: ${gaps.join(', ') || 'none'}; budget ${budgetLeft}` },
     () =>
       reply(
         turn,
@@ -116,14 +117,20 @@ async function interviewTurn(turn: Turn, structuredAnswers: SendMessageBody['str
           askNext(
             history(session),
             next,
-            { gaps, budgetLeft: session.interview.budget - session.interview.questionsAsked + 1, reflection: reflect(merged.evidence), redacted: turn.redacted, injected: turn.injected },
+            { gaps, budgetLeft, reflection: reflect(merged.evidence), redacted: turn.redacted, injected: turn.injected },
             onToken,
           ),
         next.step.widget,
       ),
     () => ({ output: `asked ${next.step.id}`, verdict: null }),
   );
+  // Only once the question has actually been shown is it recorded as asked (a failed reply can be retried).
+  session.interview = asked;
+  repo.updateSession(session.id, { interview: asked });
 }
+
+/** Shortlist violations a student might ask to be excused from; missing credits are not exceptions. */
+const EXCEPTION_CODES = new Set(['ECTS_CAP_EXCEEDED', 'NOT_ALLOWED', 'PREREQUISITE_MISSING']);
 
 async function ruleExceptionTurn(turn: Turn, moduleIds: string[]) {
   const { session, tracer } = turn;
@@ -131,10 +138,20 @@ async function ruleExceptionTurn(turn: Turn, moduleIds: string[]) {
   const recs = ranked(session);
   const target = modules.find((m) => moduleIds.includes(m.id) && recs.find((r) => r.moduleId === m.id && !r.eligible));
   if (!target) {
+    // The named modules are each allowed, but the whole proposed shortlist may still break a rule (the credit cap).
+    const proposed = [...new Set([...session.shortlist, ...moduleIds])];
+    const result = checkShortlist(proposed, session.profile, modules, rulesForProfile(session.profile));
+    const broken = result.violations.filter((v) => EXCEPTION_CODES.has(v.code));
+    tracer.record({ actor: 'matcher', kind: 'tool', input: `check_rules(${proposed.length} modules)`, output: broken.length ? `violation: ${broken.map((v) => v.code).join(', ')}` : 'no violation', verdict: broken.length ? 'block' : 'pass' });
+    if (broken.length) {
+      const reasons = broken.map((v) => v.message);
+      await say(turn, 'matcher', `I can't approve that: ${reasons.join(' ')} The rule is set by your programme, so I can't make an exception. I have drafted a request to the Senior Tutor below, and it is only sent if you approve it.`);
+      return offerDraft(turn, draftRuleException(session.profile, reasons, turn.text, modules.find((m) => moduleIds.includes(m.id))));
+    }
     const named = modules.find((m) => moduleIds.includes(m.id));
     const text = named
       ? `Good news: ${named.title} is open to you under your programme rules, so no exception is needed. Add it to your shortlist from the catalogue.`
-      : 'Which module do you have in mind? Tell me its code or title and I will check the rules.';
+      : 'Which module or rule do you have in mind? Tell me the module code or title and I will check it.';
     await say(turn, 'matcher', text);
     return;
   }
@@ -154,22 +171,30 @@ async function ruleExceptionTurn(turn: Turn, moduleIds: string[]) {
       ),
     () => ({ output: 'held position, offered alternatives and escalation', verdict: 'block' }),
   );
-  await offerDraft(turn, draftRuleException(session.profile, target, reasons, turn.text));
+  await offerDraft(turn, draftRuleException(session.profile, reasons, turn.text, target));
 }
 
 async function explainTurn(turn: Turn, moduleIds: string[]) {
   const { session } = turn;
   const recs = ranked(session);
   const moduleId = moduleIds[0] ?? recs[0]?.moduleId;
+  const rec = recs.find((r) => r.moduleId === moduleId);
   if (!moduleId) return say(turn, 'matcher', 'Which module would you like me to explain?');
+  if (!rec) {
+    // Completed modules are not in the catalogue, so they have no score to explain.
+    const completed = session.profile.completedModuleIds.includes(moduleId);
+    return say(turn, 'matcher', completed ? `You have already completed ${moduleTitle(moduleId)}, so it is not scored.` : `${moduleTitle(moduleId)} is not in your catalogue.`);
+  }
   await changeMode(turn, 'EXPLAIN', 'student asked why');
-  const explanation = await explanationFor(session, moduleId, turn.tracer, recs);
-  const rec = recs.find((r) => r.moduleId === moduleId)!;
-  const text = explanation
-    ? [explanation.summary, ...explanation.because.map((b) => `• ${b.text}`), ...explanation.watchOuts.map((w) => `Watch out: ${w}`)].join('\n')
-    : `${moduleTitle(moduleId)} scores ${rec.fit}.`;
-  await say(turn, 'matcher', text);
-  await changeMode(turn, RESTING_MODE, 'explanation given');
+  try {
+    const explanation = await explanationFor(session, moduleId, turn.tracer, recs);
+    const text = explanation
+      ? [explanation.summary, ...explanation.because.map((b) => `• ${b.text}`), ...explanation.watchOuts.map((w) => `Watch out: ${w}`)].join('\n')
+      : `${moduleTitle(moduleId)} scores ${rec.fit}.`;
+    await say(turn, 'matcher', text);
+  } finally {
+    await changeMode(turn, RESTING_MODE, 'explanation given');
+  }
 }
 
 /** "What if I cared more about X": shifts one weight, re-ranks, and reports what moved (spec 10.5). */
@@ -253,6 +278,20 @@ async function pathwayTurn(turn: Turn) {
   await say(turn, 'supervisor', `Pathways set: ${turn.session.profile.pathways.join(', ')}. The Pathways page shows your progress.`);
 }
 
+/** After the "Here is what I heard" card, a chat message is a correction: apply it and show the card again. */
+async function correctSummaryTurn(turn: Turn) {
+  const { session } = turn;
+  const updates = await extract(turn.text, [], catalogue.pathways().map((p) => p.id));
+  const merged = mergeUpdates(session.profile, updates, { sessionId: session.id, turnId: turn.turnId });
+  repo.addEvidence(merged.evidence);
+  session.evidence.push(...merged.evidence);
+  session.profile = saveProfile(session, merged.profile);
+  await turn.emit({ type: 'profile_update', profile: session.profile, evidence: session.evidence });
+  const titles = Object.fromEntries(catalogue.pathways().map((p) => [p.id, p.title]));
+  const lead = merged.evidence.length ? 'Updated.' : 'I could not tell what to change, so here is the summary again. You can also edit it directly.';
+  await say(turn, 'interviewer', `${lead}\n${whatIHeard(session.profile, titles)}`, { kind: 'confirm-profile', fields: [] });
+}
+
 async function editProfileTurn(turn: Turn) {
   const { session } = turn;
   const updates = await extract(turn.text, [], catalogue.pathways().map((p) => p.id));
@@ -307,9 +346,7 @@ export async function handleTurn(sessionId: string, body: SendMessageBody, emit:
   }
   if (intent.intent === 'rule_exception_request') return ruleExceptionTurn(turn, intent.moduleIds);
   if (session.mode === 'INTERVIEW' && !session.interview.finished) return interviewTurn(turn, body.structured);
-  if (session.mode === 'INTERVIEW') {
-    return say(turn, 'interviewer', 'Confirm the summary above to see your ranked modules, or tell me what to change.', { kind: 'confirm-profile', fields: [] });
-  }
+  if (session.mode === 'INTERVIEW') return correctSummaryTurn(turn);
   if (needsClarification(intent)) {
     return say(turn, 'supervisor', 'Do you want me to explain a module, change what matters most to you, edit your shortlist, or check your timetable?');
   }

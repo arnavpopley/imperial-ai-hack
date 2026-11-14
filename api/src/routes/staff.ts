@@ -43,8 +43,11 @@ export const staffRoutes = new Hono()
     const cards: Insight[] = await Promise.all(
       buildInsights(module, ctx).map(async (i) => ({ ...(await wordInsight(i)), decision: decided.get(i.id) ?? 'pending' })),
     );
-    repo.upsertInsights(cards.filter((i) => i.cohortSize >= MIN_COHORT));
-    return c.json(repo.listInsights(module.id));
+    const current = cards.filter((i) => i.cohortSize >= MIN_COHORT);
+    repo.upsertInsights(current);
+    // Only cards the current calculation still produces are shown; stored decisions carry over by id.
+    const ids = new Set(current.map((i) => i.id));
+    return c.json(repo.listInsights(module.id).filter((i) => ids.has(i.id)));
   })
   .post('/insights/:id/decision', body(schemas.InsightDecisionBody), (c) => {
     const insight = repo.setInsightDecision(c.req.param('id'), c.req.valid('json').decision);

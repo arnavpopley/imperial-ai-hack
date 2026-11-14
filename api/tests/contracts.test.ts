@@ -97,6 +97,27 @@ describe('every route returns a valid response', () => {
     await check('/api/eval/latest', undefined, S.EvalRun.nullable());
   });
 
+  it('refuses to shortlist an ineligible module, as the chat does', async () => {
+    const res = await app.request(`/api/sessions/${sid}/shortlist`, json({ moduleId: 'MECH70002', action: 'add' }));
+    expect(res.status).toBe(422);
+  });
+
+  it('answers a why question about a completed module without failing', async () => {
+    const created = await app.request('/api/sessions', json({ programme: 'MEng Mechanical Engineering', yearOfStudy: 3 }));
+    const id = S.SessionState.parse(await created.json()).id;
+    await app.request(`/api/sessions/${id}/profile`, put({ confirm: true }));
+    const stream = await (await app.request(`/api/sessions/${id}/messages`, json({ content: 'Why is Fluid Mechanics 1 scored like that?' }))).text();
+    const reply = stream
+      .split('\n')
+      .filter((l) => l.startsWith('data: '))
+      .map((l) => S.SseEvent.parse(JSON.parse(l.slice(6))))
+      .flatMap((e) => (e.type === 'token' ? [e.text] : []))
+      .join('');
+    expect(reply).toContain('already completed');
+    const after = S.SessionState.parse(await (await app.request(`/api/sessions/${id}`)).json());
+    expect(after.mode).toBe('RECOMMEND');
+  });
+
   it('rejects an invalid body with 400 and an unknown session with 404', async () => {
     expect((await app.request(`/api/sessions/${sid}/shortlist`, json({ moduleId: 'x', action: 'steal' }))).status).toBe(400);
     expect((await app.request('/api/sessions/nope')).status).toBe(404);
