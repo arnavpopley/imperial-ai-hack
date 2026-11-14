@@ -16,11 +16,15 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "seed": "npm run seed -w api",
-    "eval": "npm run eval -w api"
+    "eval": "npm run eval -w api",
+    "build:vercel": "tsx scripts/build-vercel.ts",
+    "deploy:vercel": "npm run build:vercel && npx vercel@latest deploy --prebuilt --prod"
   },
   "devDependencies": {
     "concurrently": "^10.0.7",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "esbuild": "^0.28.2",
+    "tsx": "^4.23.15"
   },
   "allowScripts": {
     "better-sqlite3@13.2.0": true,
