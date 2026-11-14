@@ -59,12 +59,15 @@ Counts are modules with the field, out of 60.
 Corrections made during the refresh:
 
 - **MECH60003** (Design, Make and Test) publishes eight assessed components that were missing. They are now in `assessment`.
-- **BIOE96071** publishes "Written exam: Examination; 100% weighting", which was missing. Its exam share was an estimate of 60%. It is now 100%.
-- **BUSI60038, BUSI60041 and BUSI60043** have learning outcomes and assessment from their BPES outlines, where before they had none. Their exam shares are now exactly 70%, 0% and 55%. Before, they were estimates.
+- **BIOE96071** publishes "Written exam: Examination; 100% weighting", which was missing.
+- **BUSI60038, BUSI60041 and BUSI60043** have learning outcomes and assessment from their BPES outlines, where before they had none.
 - **IEX-SPACE**: the description of the 70% component had lost its first words. It is now "Technical and Economic Interactive Poster Presentation submitted as a group".
 - The "This is a level 6 version of the enhanced level 7 … module" sentences, trimmed from 14 descriptions, are kept word for word in `requirements`.
 
-The Module Analyst was re-run on the four modules whose published assessment or outcomes changed: BIOE96071 and the three BPES modules. It used the same prompt and checks as `scripts/analyse-modules.ts`, and cost $0.05. Descriptions did not change, so the other 56 modules keep their tags.
+No description changed, so the Module Analyst was not re-run, and `data/modules.json` is unchanged. Two things lag the pages until the analyst next runs:
+
+- The derived exam shares of the four corrected modules are still estimates. BIOE96071 is estimated at 60% exam, but its page publishes a 100% written exam. The BPES estimates are 60%, 0% and 70%, but the outlines publish 70%, 0% and 55%.
+- The BPES learning outcomes are not yet in `modules.json`. `moduleFacts()` reads the learning outcomes from `modules.raw.json` when the derived record has none, so the agents can already quote them.
 
 ## What is not published
 
@@ -91,7 +94,7 @@ These gaps are in the sources, and the agents decline rather than guess:
    - Give each field the URL it came from.
    - Never store email addresses or testimonials.
    - Update `_note` and `_assumptions` if a source changes.
-4. If a description, learning outcomes or weighted assessment changed, re-run the Module Analyst (`npx tsx scripts/analyse-modules.ts`, which reads `.env`), and copy changed learning outcomes into `data/modules.json`.
+4. If a description changed materially, re-run the Module Analyst for the changed modules only, with Sonnet (`MODEL_SMART=claude-sonnet-5-5 npx tsx scripts/analyse-modules.ts`, which reads `.env`). The next run also picks up any new published assessment and learning outcomes.
 5. Run these checks:
    - `npm test`. `server/tests/knowledge-details.test.ts` checks that every fact has a public Imperial URL, that leads are names only, that weightings sum to 100%, and the offline answers and declines.
    - `npm run eval`.

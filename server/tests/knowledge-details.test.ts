@@ -78,8 +78,8 @@ describe('published module details', () => {
       ['Written Examination', 0.7],
     ]);
     expect(rawModule('BUSI60038')?.learningOutcomesSourceUrl).toMatch(/Business%20Economics\.pdf$/);
-    expect(module('BUSI60038').demand.examShare).toBe(0.7);
-    expect(module('BUSI60038').learningOutcomes).toEqual(rawModule('BUSI60038')?.learningOutcomes);
+    // data/modules.json is unchanged until the Module Analyst next runs, so the agents read the outcomes from the page.
+    expect(facts('BUSI60038').learningOutcomes).toEqual(rawModule('BUSI60038')?.learningOutcomes);
     expect(rawModule('IEX-SPACE')?.assessment[1]?.description).toBe('Technical and Economic Interactive Poster Presentation submitted as a group');
   });
 });

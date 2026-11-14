@@ -53,7 +53,8 @@ export function moduleFacts(module: Module, raw: RawModule | undefined, titleOf:
     type: module.type,
     terms: module.terms,
     description: stripInjection(module.description).text,
-    learningOutcomes: module.learningOutcomes.map((o) => stripInjection(o).text),
+    // The public pages are the source; the derived record only lags them until the Module Analyst next runs.
+    learningOutcomes: (module.learningOutcomes.length ? module.learningOutcomes : (raw?.learningOutcomes ?? [])).map(clean),
     // Weightings as the page prints them ("80%"), so the model never quotes a raw fraction such as 1 or 0.8.
     publishedAssessment: (raw?.assessment ?? []).map((a) => ({ ...a, weighting: `${Number((a.weighting * 100).toFixed(2))}%`, description: clean(a.description) })),
     ...publishedDetails(raw),
