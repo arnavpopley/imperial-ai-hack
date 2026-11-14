@@ -3,6 +3,7 @@
 import { schemas, taxonomy, type Evidence, type Explanation, type Module, type Recommendation, type StudentProfile } from '@modulematch/shared';
 import { z } from 'zod';
 import { filterClaims } from '../guardrails/g8-claims.ts';
+import { stripInjection } from '../guardrails/g3-injection.ts';
 import { groundExplanation } from '../guardrails/g6-grounding.ts';
 import { validated } from '../guardrails/g5-schema.ts';
 import type { Tracer } from '../trace/tracer.ts';
@@ -134,7 +135,7 @@ export async function explain(
         const live = await structured(LiveExplanation, {
           tier: 'smart',
           system: SYSTEM,
-          messages: [{ role: 'user', content: `${asData('module', module.description)}\n${asData('scores-and-evidence', JSON.stringify(brief))}` }],
+          messages: [{ role: 'user', content: `${asData('module', stripInjection(module.description).text)}\n${asData('scores-and-evidence', JSON.stringify(brief))}` }],
           maxTokens: 1200,
         });
         return live && {

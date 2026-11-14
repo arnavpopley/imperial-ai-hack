@@ -30,6 +30,8 @@ interface Turn {
   text: string;
   turnId: string;
   redacted: boolean;
+  /** G3 stripped an instruction from this turn. */
+  injected: boolean;
 }
 
 function message(sessionId: string, role: Message['role'], content: string, agent: string | null): Message {
@@ -114,7 +116,7 @@ async function interviewTurn(turn: Turn, structuredAnswers: SendMessageBody['str
           askNext(
             history(session),
             next,
-            { gaps, budgetLeft: session.interview.budget - session.interview.questionsAsked + 1, reflection: reflect(merged.evidence), redacted: turn.redacted },
+            { gaps, budgetLeft: session.interview.budget - session.interview.questionsAsked + 1, reflection: reflect(merged.evidence), redacted: turn.redacted, injected: turn.injected },
             onToken,
           ),
         next.step.widget,
@@ -280,7 +282,8 @@ export async function handleTurn(sessionId: string, body: SendMessageBody, emit:
   const stored = guarded.text || (body.structured ? 'Slider answer' : '[removed]');
   repo.addMessage({ ...message(session.id, 'student', stored, null), id: turnId });
   session.messages.push({ ...message(session.id, 'student', stored, null), id: turnId });
-  const turn: Turn = { session, tracer, emit, text: guarded.text, turnId, redacted: guarded.events.some((e) => e.stage === 'G2 redaction' && e.verdict === 'redact') };
+  const changedBy = (stage: string) => guarded.events.some((e) => e.stage === stage && e.verdict === 'redact');
+  const turn: Turn = { session, tracer, emit, text: guarded.text, turnId, redacted: changedBy('G2 redaction'), injected: changedBy('G3 injection') };
 
   if (guarded.action === 'wellbeing') {
     await say(turn, 'supervisor', WELLBEING_NOTICE);
