@@ -18,7 +18,8 @@
     "seed": "npm run seed -w server",
     "eval": "npm run eval -w server",
     "build:vercel": "tsx scripts/build-vercel.ts",
-    "deploy:vercel": "npm run build:vercel && npx vercel@latest deploy --prebuilt --prod"
+    "deploy:vercel": "npm run build:vercel && npx vercel@latest deploy --prebuilt --prod",
+    "eval:live": "npm run eval:live -w server"
   },
   "devDependencies": {
     "concurrently": "^10.0.7",
