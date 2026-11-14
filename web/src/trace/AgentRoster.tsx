@@ -78,9 +78,10 @@ export function AgentRoster({ seen }: { seen: ReadonlySet<NodeId> }) {
           <motion.li
             key={agent.id}
             initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            // The stagger delay belongs to the entrance only, so hovering in and out responds at once.
+            whileInView={{ opacity: 1, y: 0, transition: { delay: i * 0.07, duration: 0.5, ease: EASE } }}
             viewport={{ once: true, amount: 0.3 }}
-            transition={{ delay: i * 0.07, duration: 0.5, ease: EASE }}
+            transition={{ duration: 0.2 }}
             whileHover={{ y: -6 }}
             className={cx(
               'relative flex flex-col overflow-hidden rounded-panel bg-surface shadow-soft ring-1 transition-shadow hover:shadow-lift',
