@@ -1,9 +1,24 @@
 // Thin wrapper over the Anthropic SDK shared by every agent (spec 5 and 10).
 // Model IDs come from the environment. With no credentials the app runs in offline mode: each agent
 // falls back to its deterministic path, so the demo and the tests never depend on network access.
+import { appendFileSync } from 'node:fs';
 import Anthropic from '@anthropic-ai/sdk';
 import { betaZodOutputFormat } from '@anthropic-ai/sdk/helpers/beta/zod';
 import type { z } from 'zod';
+
+/**
+ * When MODULEMATCH_USAGE_LOG names a file, each API call appends its model and token usage there as a JSON
+ * line, so a live run (npm run e2e -- --live) can report what it spent. Off unless set.
+ */
+export function logUsage(model: string, usage: Anthropic.Beta.BetaUsage | undefined): void {
+  const file = process.env.MODULEMATCH_USAGE_LOG;
+  if (!file || !usage) return;
+  try {
+    appendFileSync(file, `${JSON.stringify({ model, ...usage })}\n`);
+  } catch {
+    // Usage logging must never break a reply.
+  }
+}
 
 export type ModelTier = 'smart' | 'fast';
 
@@ -78,6 +93,7 @@ export async function streamText(opts: CallOptions, onToken: (text: string) => v
   const stream = anthropic().beta.messages.stream({ ...baseParams(opts, 1024), output_config: effort(opts) });
   stream.on('text', onToken);
   const message = await stream.finalMessage();
+  logUsage(message.model, message.usage);
   const text = message.content.flatMap((b) => (b.type === 'text' ? [b.text] : [])).join('');
   if (message.stop_reason === 'max_tokens' || message.stop_reason === 'refusal' || !text.trim()) {
     throw new IncompleteReplyError(message.stop_reason);
@@ -97,6 +113,7 @@ export async function structured<T extends z.ZodType>(
     ...baseParams(opts, 2048),
     output_config: { ...effort(opts), format: betaZodOutputFormat(schema) },
   });
+  logUsage(response.model, response.usage);
   if (response.stop_reason === 'refusal' || response.stop_reason === 'max_tokens') return null;
   return response.parsed_output;
 }
