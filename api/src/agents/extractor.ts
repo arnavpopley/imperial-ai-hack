@@ -29,7 +29,7 @@ const TOPIC_CUES: Record<string, string[]> = {
   'nuclear-energy': ['nuclear', 'fission', 'fusion', 'reactor'],
   'sustainability-climate': ['sustainability', 'climate', 'renewables', 'net zero', 'environment', 'green'],
   'biomedical-engineering': ['biomedical', 'medical devices', 'prosthetics', 'healthcare tech', 'biomechanics'],
-  'computational-simulation': ['simulation', 'simulations', 'computational', 'numerical', 'finite element'],
+  'computational-simulation': ['simulation', 'simulations', 'computational', 'numerical', 'finite element', 'cfd'],
   'experimental-lab': ['lab', 'labs', 'experiments', 'experimental', 'testing rigs'],
   'finance-economics': ['finance', 'economics', 'markets', 'investment', 'banking'],
   'entrepreneurship-innovation': ['startup', 'start-up', 'entrepreneurship', 'business idea', 'innovation', 'founder'],
@@ -77,7 +77,10 @@ function styleCues(sentence: string): ExtractedUpdate[] {
   const add = (slot: string, value: number, confidence = 0.7) =>
     out.push({ slot, value, quote: quoteOf(sentence), confidence });
   const s = sentence.toLowerCase();
-  if (/\bexams?\b/.test(s) && !/\bcoursework|projects?\b/.test(s)) add('style.examPreference', DISLIKE.test(s) ? 0.15 : 0.85);
+  // "Coursework over exams": the first-named option is the preferred one.
+  const ranked = s.match(/\b(exams?|coursework|projects?)\b.*\b(over|rather than|instead of|more than)\b.*\b(exams?|coursework|projects?)\b/);
+  if (ranked?.[1]) add('style.examPreference', ranked[1].startsWith('exam') ? 0.85 : 0.2);
+  else if (/\bexams?\b/.test(s) && !/\b(coursework|projects?)\b/.test(s)) add('style.examPreference', DISLIKE.test(s) ? 0.15 : 0.85);
   else if (/\b(coursework|projects?|assignments?)\b/.test(s) && !/\bexams?\b/.test(s)) add('style.examPreference', DISLIKE.test(s) ? 0.8 : 0.2);
   else if (/\b(mix|both|balance)\b/.test(s) && /\bexams?\b/.test(s)) add('style.examPreference', 0.5);
   if (/\b(team|group|together|collaborat\w*)\b/.test(s)) add('style.groupPreference', DISLIKE.test(s) ? 0.2 : 0.8);
