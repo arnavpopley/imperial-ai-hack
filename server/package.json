@@ -10,7 +10,8 @@
     "test": "vitest run",
     "seed": "tsx --env-file-if-exists=../.env ../scripts/seed.ts",
     "eval": "tsx --env-file-if-exists=../.env ../scripts/run-evals.ts",
-    "eval:live": "tsx --env-file-if-exists=../.env ../scripts/run-live-evals.ts"
+    "eval:live": "tsx --env-file-if-exists=../.env ../scripts/run-live-evals.ts",
+    "benchmark": "tsx --env-file-if-exists=../.env ../scripts/benchmark/run-benchmark.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",
