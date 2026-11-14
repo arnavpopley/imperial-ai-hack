@@ -170,6 +170,21 @@
     line-height: var(--text-base--line-height);
     text-rendering: optimizeLegibility;
   }
+  /*
+   * A soft, fixed colour wash behind every page, so the canvas never reads as a flat slab. It uses the theme's
+   * brand and mode colours, so it follows light and dark. Content sits above it because body::before is z -1.
+   */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(60rem 40rem at 0% -10%, color-mix(in oklab, var(--color-brand) 22%, transparent), transparent 70%),
+      radial-gradient(50rem 36rem at 100% 0%, color-mix(in oklab, var(--color-mode-explain) 18%, transparent), transparent 70%),
+      radial-gradient(56rem 40rem at 50% 110%, color-mix(in oklab, var(--color-mode-plan) 15%, transparent), transparent 70%);
+  }
   h1,
   h2,
   h3 {
