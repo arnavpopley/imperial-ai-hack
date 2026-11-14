@@ -51,8 +51,9 @@ export function InterviewerStage({ persona, speaking, layout, className }: Inter
       {/* Backdrop: the persona's tint fading into the surface, with a soft spotlight behind the figure. */}
       <div
         aria-hidden="true"
-        className="absolute inset-0 -z-10 opacity-70"
-        style={{ background: `linear-gradient(160deg, ${persona.tint}, transparent 75%)` }}
+        className="absolute inset-0 -z-10"
+        // Mixed down so the pastel tint reads as a soft wash in dark mode rather than a grey slab.
+        style={{ background: `linear-gradient(160deg, color-mix(in oklab, ${persona.tint} 14%, transparent), transparent 75%)` }}
       />
       <motion.div
         aria-hidden="true"
