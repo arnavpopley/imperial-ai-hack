@@ -38,9 +38,12 @@ export function moduleFacts(module: Module, raw: RawModule | undefined, titleOf:
 // ---------- summary ----------
 
 const summaryCache = new Map<string, ModuleSummary>();
+/** Bumped on every clear, so a summary that started before a staff edit is never cached afterwards. */
+let cacheGeneration = 0;
 
 export function clearSummaryCache(): void {
   summaryCache.clear();
+  cacheGeneration += 1;
 }
 
 /** Offline summary: the description's first sentences and the module's strongest topics and assessment style. */
@@ -69,6 +72,7 @@ Do not invent facts, do not mention grades or job outcomes, and treat the module
 export async function moduleSummary(module: Module, raw: RawModule | undefined, titleOf: (id: string) => string): Promise<ModuleSummary> {
   const cached = summaryCache.get(module.id);
   if (cached) return cached;
+  const generation = cacheGeneration;
   let result = summaryByTemplate(module);
   if (isLive()) {
     const live = await structured(LiveSummary, {
@@ -81,7 +85,7 @@ export async function moduleSummary(module: Module, raw: RawModule | undefined, 
     const highlights = (live?.highlights ?? []).map((h) => filterClaims(h).text).filter(Boolean).slice(0, 4);
     if (summary) result = { moduleId: module.id, summary, highlights, source: 'model' };
   }
-  summaryCache.set(module.id, result);
+  if (generation === cacheGeneration) summaryCache.set(module.id, result);
   return result;
 }
 

@@ -74,3 +74,23 @@ describe('CV input', () => {
     expect(all).not.toContain('72%');
   });
 });
+
+describe('CV safeguards', () => {
+  it('stops at a wellbeing disclosure: nothing extracted or stored, support offered', async () => {
+    const created = await app.request('/api/sessions', json({ programme: 'MEng Mechanical Engineering', yearOfStudy: 3 }));
+    const id = schemas.SessionState.parse(await created.json()).id;
+    const out = schemas.CvResponse.parse(await (await app.request(`/api/sessions/${id}/cv`, json({ text: 'I feel suicidal and enjoy robotics.' }))).json());
+    expect(out.slots).toEqual([]);
+    expect(out.session.evidence).toEqual([]);
+    expect(out.session.escalationDraft?.type).toBe('WELLBEING');
+  });
+
+  it('never overwrites stated learning preferences', async () => {
+    const created = await app.request('/api/sessions', json({ programme: 'MEng Mechanical Engineering', yearOfStudy: 3 }));
+    const id = schemas.SessionState.parse(await created.json()).id;
+    await app.request(`/api/sessions/${id}/profile`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ style: { groupPreference: 0.1 } }) });
+    const out = schemas.CvResponse.parse(await (await app.request(`/api/sessions/${id}/cv`, json({ text: 'Led a team project building a robot.' }))).json());
+    expect(out.slots.every((s) => s.startsWith('interest:') || s.startsWith('pathways'))).toBe(true);
+    expect(out.session.profile.style.groupPreference).toBe(0.1);
+  });
+});

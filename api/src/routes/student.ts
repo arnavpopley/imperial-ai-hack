@@ -3,6 +3,7 @@ import { schemas, type Evidence, type ProfileEditBody, type SessionState, type S
 import { Hono, type Context } from 'hono';
 import { streamSSE } from 'hono/streaming';
 import { randomUUID } from 'node:crypto';
+import { draftWellbeing } from '../agents/escalation.ts';
 import { extract, mergeUpdates } from '../agents/extractor.ts';
 import { QUICK_PLAN } from '../agents/interviewer.ts';
 import { answerModuleQuestion, moduleFacts } from '../agents/knowledge.ts';
@@ -218,11 +219,22 @@ export const studentRoutes = new Hono()
     const tracer = createTracer(session.id, tracerSink);
     const guarded = await runInputGuardrails(c.req.valid('json').text, { mode: session.mode, tracer });
     const redacted = guarded.events.some((e) => e.verdict === 'redact');
-    const updates = await tracer.timed(
-      { actor: 'extractor', kind: 'agent', input: `CV (${guarded.text.length} chars after redaction)` },
-      () => extract(guarded.text, ['interest', 'pathways'], catalogue.pathways().map((p) => p.id)),
-      (u) => ({ output: `${u.length} slot update(s)`, verdict: null }),
-    );
+    if (guarded.action === 'wellbeing') {
+      // As in the chat: nothing is extracted or stored, and a support hand-off is offered with consent (spec 11).
+      const draft = draftWellbeing(session.profile);
+      repo.updateSession(session.id, { escalationDraft: draft });
+      tracer.record({ actor: 'supervisor', kind: 'escalation', input: 'WELLBEING', output: 'CV not processed, support offered', verdict: 'escalate' });
+      return c.json({ session: fresh(session.id), slots: [], redacted: true });
+    }
+    // A CV shows what the student has done, which is evidence of interests and goals, not of how they like to
+    // learn, so only interest and pathway updates are kept and stated preferences are never overwritten.
+    const updates = (
+      await tracer.timed(
+        { actor: 'extractor', kind: 'agent', input: `CV (${guarded.text.length} chars after redaction)` },
+        () => extract(guarded.text, ['interest', 'pathways'], catalogue.pathways().map((p) => p.id)),
+        (u) => ({ output: `${u.length} slot update(s)`, verdict: null }),
+      )
+    ).filter((u) => u.slot.startsWith('interest:') || u.slot === 'pathways' || u.slot === 'pathwaysSkipped');
     const merged = mergeUpdates(session.profile, updates, { sessionId: session.id, turnId: randomUUID() });
     repo.addEvidence(merged.evidence);
     session.evidence.push(...merged.evidence);
