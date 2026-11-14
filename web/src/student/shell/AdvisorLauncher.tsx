@@ -48,9 +48,11 @@ export function AdvisorLauncher({ state, onOpen, onClose, showBubble }: AdvisorL
   const { open } = state;
 
   // Anything that happens while the window is open counts as seen.
+  // Seen while the window is open, and on the interview, where the same conversation is already on screen
+  // (otherwise the dot lights up on the first screen after the interview with nothing new to read).
   useEffect(() => {
-    if (open) setSeen(signature);
-  }, [open, signature]);
+    if (open || !showBubble) setSeen(signature);
+  }, [open, showBubble, signature]);
   const unread = !open && signature !== seen;
 
   // Show the dialog as soon as it opens; it is closed after the exit animation (onExitComplete).
