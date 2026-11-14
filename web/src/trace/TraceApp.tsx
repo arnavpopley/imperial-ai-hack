@@ -8,6 +8,7 @@ import { CountUp } from '../components/CountUp.tsx';
 import { cx } from '../components/cx.ts';
 import { Icon, type IconName } from '../components/Icon.tsx';
 import { AgentFlowchart } from './AgentFlowchart.tsx';
+import { AgentRoster } from './AgentRoster.tsx';
 import { nodesInTrace } from './flow.ts';
 
 const SESSION_KEY = 'modulematch.sessionId';
@@ -101,6 +102,14 @@ export function TraceApp() {
   return (
     <div className="grid gap-section">
       <Intro />
+
+      <section aria-labelledby="agents-heading" className="grid gap-6">
+        <SectionHeading id="agents-heading" eyebrow="The AI agents" title="Five agents, one job each">
+          Each agent writes words, never numbers. Scores, rules and clashes come from plain code.
+          {seen.size > 0 && ' A green outline marks the agents your session has used.'}
+        </SectionHeading>
+        <AgentRoster seen={seen} />
+      </section>
 
       <section aria-labelledby="flow-heading" className="grid gap-6">
         <SectionHeading id="flow-heading" eyebrow="The process" title="What happens to one message">
