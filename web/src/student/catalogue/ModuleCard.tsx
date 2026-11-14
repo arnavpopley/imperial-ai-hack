@@ -1,0 +1,133 @@
+import type { Ref } from 'react';
+import { Link } from 'react-router';
+import { ConfidenceBadge } from '../../components/ConfidenceBadge.tsx';
+import { cx } from '../../components/cx.ts';
+import { FitScore } from '../../components/FitScore.tsx';
+import { Icon } from '../../components/Icon.tsx';
+import { ModuleTypeChip } from '../../components/ModuleTypeChip.tsx';
+import { SubScoreBars } from '../../components/SubScoreBars.tsx';
+import { TERM_LABELS } from '../labels.ts';
+import { paths } from '../routes.ts';
+import type { RankedModule } from '../state/CatalogueProvider.tsx';
+import { ShortlistButton } from './ShortlistButton.tsx';
+
+interface ModuleCardProps {
+  item: RankedModule;
+  /** Low profile confidence greys every score (spec 8.6). */
+  lowConfidence: boolean;
+  shortlisted: boolean;
+  pending: boolean;
+  onToggleShortlist: () => void;
+  /** Opens the advisor about an ineligible module. */
+  onAsk: (question: string) => void;
+  listRef: Ref<HTMLLIElement>;
+}
+
+export function ModuleCard({ item, lowConfidence, shortlisted, pending, onToggleShortlist, onAsk, listRef }: ModuleCardProps) {
+  const { module, eligible } = item;
+  const title = module?.title ?? item.moduleId;
+  const dimmed = lowConfidence || !eligible;
+
+  return (
+    <li
+      ref={listRef}
+      className={cx(
+        'group relative rounded-card border bg-surface p-4 shadow-soft transition-[box-shadow,border-color] duration-200 hover:border-line-strong hover:shadow-lift sm:p-5',
+        eligible ? 'border-line' : 'border-dashed border-line-strong bg-surface/70',
+      )}
+    >
+      <div className="flex gap-4 sm:gap-5">
+        <div className="flex flex-col items-center gap-1.5">
+          <FitScore value={item.fit} dimmed={dimmed} />
+          <RankShift rank={item.rank} shift={item.rankShift} />
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-1.5">
+                {module && <ModuleTypeChip variant={module.type} />}
+                <ConfidenceBadge variant={item.confidence} />
+                {!eligible && (
+                  <span className="inline-flex items-center gap-1 rounded-md bg-ink/6 px-1.5 py-0.5 text-[11px] font-semibold text-muted">
+                    <Icon name="lock" size={11} />
+                    Not eligible yet
+                  </span>
+                )}
+              </div>
+              <h3 className={cx('mt-1.5 text-[17px] leading-snug font-semibold tracking-tight', !eligible && 'text-muted')}>
+                <Link
+                  to={paths.module(item.moduleId)}
+                  className="rounded-sm outline-none after:absolute after:inset-0 after:rounded-card focus-visible:after:ring-2 focus-visible:after:ring-brand"
+                >
+                  {title}
+                </Link>
+              </h3>
+              {module && (
+                <p className="mt-0.5 text-[13px] text-muted">
+                  <span className="font-mono text-[12px]">{module.code}</span> · {module.ects} ECTS ·{' '}
+                  {module.terms.map((t) => TERM_LABELS[t]).join(', ')}
+                </p>
+              )}
+            </div>
+            <ShortlistButton
+              title={title}
+              shortlisted={shortlisted}
+              pending={pending}
+              onToggle={onToggleShortlist}
+              className="relative z-10 max-sm:hidden"
+            />
+          </div>
+
+          <SubScoreBars sub={item.sub} variant="compact" dimmed={dimmed} className="mt-3.5 max-w-lg" />
+
+          {!eligible && item.ineligibleReasons.length > 0 && (
+            <div className="relative z-10 mt-3 flex flex-wrap items-start justify-between gap-2 rounded-xl bg-surface-2 px-3 py-2 text-[13px]">
+              <ul className="min-w-0 flex-1">
+                {item.ineligibleReasons.map((reason) => (
+                  <li key={reason} className="flex gap-1.5">
+                    <Icon name="info" size={13} className="mt-0.5 shrink-0 text-muted" />
+                    {reason}
+                  </li>
+                ))}
+              </ul>
+              <button
+                type="button"
+                onClick={() => onAsk(`Can I take ${title} without meeting the requirement?`)}
+                className="font-semibold text-brand underline-offset-2 hover:underline"
+              >
+                Ask the advisor
+              </button>
+            </div>
+          )}
+
+          <ShortlistButton
+            title={title}
+            shortlisted={shortlisted}
+            pending={pending}
+            onToggle={onToggleShortlist}
+            className="relative z-10 mt-3 sm:hidden"
+          />
+        </div>
+      </div>
+    </li>
+  );
+}
+
+function RankShift({ rank, shift }: { rank: number; shift: number }) {
+  return (
+    <span className="flex items-center gap-1 text-[12px] font-semibold text-muted tabular-nums">
+      #{rank}
+      {shift !== 0 && (
+        <span
+          key={`${rank}-${shift}`}
+          className={cx('animate-rise inline-flex items-center', shift > 0 ? 'text-fit-high' : 'text-fit-low')}
+        >
+          <Icon name={shift > 0 ? 'arrow-up' : 'arrow-down'} size={11} />
+          {Math.abs(shift)}
+          <span className="sr-only">{shift > 0 ? ' places up' : ' places down'} against the default weights</span>
+        </span>
+      )}
+    </span>
+  );
+}
