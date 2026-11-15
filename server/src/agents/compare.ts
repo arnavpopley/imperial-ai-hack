@@ -25,12 +25,18 @@ export function assessmentSplit(published: readonly Component[], examShare: numb
   return { exam, coursework: 100 - exam - practical, practical, source: 'published' };
 }
 
-/** The compare view for two or three module ids or codes, or an error naming any that are not in the catalogue. */
-export function compareView(session: SessionState, ids: readonly string[]): CompareView | { error: string } {
+export type CompareError = { error: string; reason: 'unknown' | 'duplicate' };
+
+/**
+ * The compare view for two or three module ids or codes. Errors name any module that is not in the catalogue,
+ * or say the same module was asked for twice (also when an id and a code name it).
+ */
+export function compareView(session: SessionState, ids: readonly string[]): CompareView | CompareError {
   const facts = compareModules(session, [...ids], []);
-  if ('error' in facts) return { error: facts.error ?? 'Not in the catalogue.' };
-  // An id and a code can name the same module; a comparison needs two or three different ones.
-  if (new Set(facts.modules.map((m) => m.id)).size !== facts.modules.length) return { error: 'Compare two or three different modules.' };
+  if ('error' in facts) return { error: facts.error ?? 'Not in the catalogue.', reason: 'unknown' };
+  if (new Set(facts.modules.map((m) => m.id)).size !== facts.modules.length) {
+    return { error: 'Compare two or three different modules.', reason: 'duplicate' };
+  }
   const slots = catalogue.slots();
   const core = coreInPlan(rulesForProfile(session.profile), session.profile);
   const coreSet = new Set(core);

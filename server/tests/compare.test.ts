@@ -67,7 +67,10 @@ describe('GET /sessions/:id/compare', () => {
     expect((await compare('MECH60006,MECH60009')).status).toBe(200);
     expect((await compare('MECH60006')).status).toBe(400);
     expect((await compare('MECH60006,MECH60009,MECH60018,MECH60017')).status).toBe(400);
-    expect((await compare('MECH60006,mech60006')).status).toBe(404);
+    // Repeats count as sent: four ids with one repeated is still four, and a repeated module is refused.
+    expect((await compare('MECH60006,MECH60006,MECH60009,MECH60018')).status).toBe(400);
+    expect((await compare('MECH60006,MECH60006,MECH60009')).status).toBe(400);
+    expect((await compare('MECH60006,mech60006')).status).toBe(400);
     expect((await compare('MECH60006,NOPE')).status).toBe(404);
   });
 });

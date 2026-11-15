@@ -180,10 +180,12 @@ export const studentRoutes = new Hono()
     // Issue 62: two or three modules side by side, from the records and the engines (no model call).
     const session = load(c);
     if (session instanceof Response) return session;
-    const ids = [...new Set((c.req.query('ids') ?? '').split(',').map((id) => id.trim()).filter(Boolean))];
+    // Counted as sent: a repeated module is refused below, never silently dropped.
+    const ids = (c.req.query('ids') ?? '').split(',').map((id) => id.trim()).filter(Boolean);
     if (ids.length < 2 || ids.length > 3) return c.json({ error: 'compare two or three different modules' }, 400);
     const view = compareView(session, ids);
-    return 'error' in view ? c.json(view, 404) : c.json(view);
+    if (!('error' in view)) return c.json(view);
+    return c.json({ error: view.error }, view.reason === 'duplicate' ? 400 : 404);
   })
   .get('/:id/timetable', (c) => {
     // Read-only: the mode follows the shortlist POST, never this GET.
