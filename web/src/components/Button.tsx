@@ -7,8 +7,8 @@ export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 export type ButtonSize = 'sm' | 'md';
 
 const variantClass: Record<ButtonVariant, string> = {
-  primary: 'bg-brand text-on-brand shadow-soft hover:brightness-110 active:brightness-95',
-  secondary: 'border border-line-strong bg-surface text-ink hover:bg-surface-2',
+  primary: 'bg-brand text-on-brand shadow-soft hover:-translate-y-px hover:shadow-lift hover:brightness-110 active:brightness-95',
+  secondary: 'border border-line-strong bg-surface text-ink hover:-translate-y-px hover:border-brand/40 hover:bg-surface-2',
   ghost: 'text-muted hover:bg-surface-2 hover:text-ink',
   danger: 'bg-fit-low text-on-brand hover:brightness-110',
 };
@@ -18,10 +18,14 @@ const sizeClass: Record<ButtonSize, string> = {
   md: 'h-10 gap-2 rounded-xl px-4 text-sm',
 };
 
-/** Shared button styling for links and other elements that look like buttons. */
+/**
+ * Shared button styling for links and other elements that look like buttons. Buttons lift a pixel on hover and
+ * press down slightly when clicked, so every action feels responsive; the reduced-motion rule in index.css keeps
+ * the change instant for those who ask.
+ */
 export function buttonClass(variant: ButtonVariant = 'secondary', size: ButtonSize = 'md'): string {
   return cx(
-    'inline-flex shrink-0 items-center justify-center font-medium whitespace-nowrap transition duration-150 select-none disabled:pointer-events-none disabled:opacity-50',
+    'inline-flex shrink-0 items-center justify-center font-medium whitespace-nowrap transition duration-150 select-none active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50',
     variantClass[variant],
     sizeClass[size],
   );
