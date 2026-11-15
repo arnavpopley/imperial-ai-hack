@@ -26,7 +26,7 @@ export function DraftProgress() {
       <p className="text-sm font-semibold">Drafting your form…</p>
       <div aria-hidden="true" className="h-1.5 overflow-hidden rounded-full bg-line">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-brand to-mode-explain transition-[width] duration-700 ease-out"
+          className="h-full rounded-full bg-brand transition-[width] duration-700 ease-out"
           style={{ width: `${((step + 1) / (STEPS.length + 1)) * 100}%` }}
         />
       </div>

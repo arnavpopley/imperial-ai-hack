@@ -311,7 +311,7 @@ function Bar({ value, delay, label }: { value: number; delay: number; label: str
       className="h-2.5 overflow-hidden rounded-full bg-surface-2"
     >
       <motion.div
-        className="h-full rounded-full bg-gradient-to-r from-brand to-mode-explain"
+        className="h-full rounded-full bg-brand"
         initial={{ width: 0 }}
         animate={{ width: `${pct}%` }}
         transition={{ duration: 0.8, delay, ease: [0.2, 0.8, 0.2, 1] }}

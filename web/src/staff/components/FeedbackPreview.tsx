@@ -65,8 +65,8 @@ export function FeedbackPreview({
           aria-label="Sample tailored feedback"
           className="overflow-hidden rounded-panel bg-surface shadow-lift ring-1 ring-line"
         >
-          <header className="bg-gradient-to-br from-brand to-mode-explain px-5 py-4 text-on-brand">
-            <p className="text-xs font-medium text-white/80">Your exam feedback · {moduleTitle(moduleId)}</p>
+          <header className="bg-brand px-5 py-4 text-on-brand">
+            <p className="text-xs font-medium text-on-brand">Your exam feedback · {moduleTitle(moduleId)}</p>
             <p className="mt-0.5 text-base font-semibold">{preview.feedback.examLabel}</p>
           </header>
           <div className="grid gap-5 p-5">

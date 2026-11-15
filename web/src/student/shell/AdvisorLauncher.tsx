@@ -192,7 +192,7 @@ export function AdvisorLauncher({ state, onOpen, onClose, showBubble }: AdvisorL
                 whileTap={{ scale: 0.94 }}
                 transition={{ type: 'spring', stiffness: 380, damping: 26 }}
                 className={cx(
-                  'relative flex h-16 items-center gap-3 rounded-full bg-gradient-to-br from-brand to-mode-explain pr-4 pl-4 text-on-brand shadow-lift sm:h-[4.5rem]',
+                  'relative flex h-16 items-center gap-3 rounded-full bg-brand pr-4 pl-4 text-on-brand shadow-lift sm:h-[4.5rem]',
                   collapsed ? 'sm:px-4' : 'sm:pr-7 sm:pl-5',
                 )}
               >
@@ -255,7 +255,7 @@ export function AdvisorLauncher({ state, onOpen, onClose, showBubble }: AdvisorL
               style={{ transformOrigin: 'bottom right' }}
               className="flex h-full flex-col overflow-hidden bg-surface shadow-lift sm:rounded-panel sm:ring-1 sm:ring-line"
             >
-              <header className="flex items-center gap-3 bg-gradient-to-br from-brand to-mode-explain px-5 py-4 text-on-brand">
+              <header className="flex items-center gap-3 bg-brand px-5 py-4 text-on-brand">
                 <span aria-hidden="true" className="grid size-11 shrink-0 place-items-center rounded-full bg-on-brand/15 ring-1 ring-on-brand/30">
                   <Icon name="sparkle" size={22} />
                 </span>

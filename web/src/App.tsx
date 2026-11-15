@@ -76,7 +76,7 @@ function AppHeader({ role }: { role: Role }) {
         <Link to="/" className="flex shrink-0 items-center gap-2.5 rounded-lg" aria-label="ModuleMatch, home">
           <span
             aria-hidden="true"
-            className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-brand to-mode-explain text-on-brand shadow-soft"
+            className="grid size-9 place-items-center rounded-xl bg-brand text-on-brand shadow-soft"
           >
             <Icon name="compass" size={20} />
           </span>
