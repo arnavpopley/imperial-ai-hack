@@ -85,7 +85,8 @@ export function ModuleCard({ item, lowConfidence, scored, shortlisted, pending, 
                     </span>
                   )}
                   {item.exception && <ExceptionChip decision={item.exception} />}
-                  {demand && <DemandChip signal={demand} />}
+                  {/* Above the stretched card link, so hovering shows where the count comes from. */}
+                  {demand && <DemandChip signal={demand} className="relative z-10" />}
                 </div>
                 <h3 className={cx('mt-1.5 text-[17px] leading-snug font-semibold tracking-tight', !eligible && 'text-muted')}>
                   <Link
