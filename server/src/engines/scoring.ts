@@ -17,10 +17,10 @@ import { checkModuleEligibility } from './rules.ts';
 import { clamp01, compareIds, mean } from './util.ts';
 
 export type TopicWeights = Record<TopicId, number>;
-type StyleSlot = (typeof STYLE_SLOTS)[number];
+export type StyleSlot = (typeof STYLE_SLOTS)[number];
 
 /** The module demand field each style dimension is compared against (spec 8.3). */
-const DEMAND_FIELD: Record<StyleSlot, keyof ModuleDemand> = {
+export const DEMAND_FIELD: Record<StyleSlot, keyof ModuleDemand> = {
   examPreference: 'examShare',
   groupPreference: 'groupShare',
   appliedPreference: 'applied',
@@ -30,7 +30,7 @@ const DEMAND_FIELD: Record<StyleSlot, keyof ModuleDemand> = {
 };
 
 /** Capability dimensions are penalised only when the module demands more than the student offers (spec 8.3). */
-const CAPABILITY_SLOTS: ReadonlySet<StyleSlot> = new Set(schemas.CapabilityDimensions);
+export const CAPABILITY_SLOTS: ReadonlySet<StyleSlot> = new Set(schemas.CapabilityDimensions);
 
 /**
  * Style fit when the student has no style values yet (K = 0 in spec 8.3). Every module gets the same

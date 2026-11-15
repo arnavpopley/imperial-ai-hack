@@ -255,13 +255,19 @@ export const Escalation = z.object({
 export const InsightKind = z.enum(['COUNTERFACTUAL', 'OVERLOOKED', 'DEMAND', 'CLASH']);
 export const InsightDecision = z.enum(['pending', 'accepted', 'noted', 'dismissed']);
 
+/** Spec 9.3 insight card. Headline and detail are plain English, with every number from the engine. */
 export const Insight = z.object({
   id: z.string(),
   moduleId: z.string(),
   kind: InsightKind,
   headline: z.string(),
   detail: z.string(),
+  /** Students behind the card; never under MIN_COHORT (spec 20.4). */
   cohortSize: z.number().int().min(0),
+  /**
+   * Average fit uplift, in points, of a counterfactual change worth a card of its own. Null for every other
+   * kind, and for the counterfactual summary card that stands in for changes too small to act on.
+   */
   upliftPoints: z.number().nullable(),
   decision: InsightDecision,
 });
