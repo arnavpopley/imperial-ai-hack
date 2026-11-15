@@ -18,6 +18,7 @@ import type {
   ProgrammeInfo,
   ModuleSummary,
   CvResponse,
+  ExamAwaitingMarks,
   ExamFeedbackForm,
   ExamFormDraftBody,
   ExamFormSaveBody,
@@ -86,6 +87,8 @@ export const api = {
   performance: (id: string) => call<PerformanceView>(`${s(id)}/performance`),
   /** Tailored feedback for each exam that has a published examiner form and the student's question marks. */
   examFeedback: (id: string) => call<TailoredFeedback[]>(`${s(id)}/exam-feedback`),
+  /** Published exams the student has a mark for but no matching question marks, so no feedback yet (issue #108). */
+  examAwaitingMarks: (id: string) => call<ExamAwaitingMarks[]>(`${s(id)}/exam-feedback/awaiting-marks`),
   /** Pasted CV or personal statement: redacted on the server, then mined for interests and skills. */
   submitCv: (id: string, text: string) => call<CvResponse>(`${s(id)}/cv`, { body: { text } }),
   /** Thumbs up or down on one AI answer. Free text is redacted on the server before it is stored. */

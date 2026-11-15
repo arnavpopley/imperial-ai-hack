@@ -14,6 +14,7 @@ import { useResults } from '../results/ResultsProvider.tsx';
 import { OPEN_RESULTS_STATE, paths } from '../routes.ts';
 import { useReferenceData } from '../state/ReferenceDataProvider.tsx';
 import { useReadySession } from '../state/SessionProvider.tsx';
+import { AwaitingMarks } from './AwaitingMarks.tsx';
 import { ExamFeedbackCard, MarkBadge, type ExamView } from './ExamFeedbackCard.tsx';
 import { byGap, examAnchor, examGap, examMark, questionBars } from './plan.ts';
 import { MiniBars } from './QuestionChart.tsx';
@@ -22,7 +23,7 @@ const EASE = [0.2, 0.8, 0.2, 1] as const;
 
 export function FeedbackScreen() {
   const { session } = useReadySession();
-  const { feedback, results } = useResults();
+  const { feedback, results, awaiting } = useResults();
   const reduce = useReducedMotion();
   // A 404 means the route is not deployed yet: show the empty state rather than an error.
   const failed = feedback.error !== null && errorStatus(feedback.error) !== 404 && !feedback.data;
@@ -85,6 +86,16 @@ export function FeedbackScreen() {
           </div>
         )}
         {failed && <ErrorState title="Your feedback did not load" message={feedback.error ?? ''} onRetry={feedback.reload} />}
+        {!loading && <AwaitingMarks exams={awaiting.data ?? []} />}
+        {/* A failed check for waiting feedback says so, rather than hiding it; a 404 means the route is not deployed. */}
+        {!loading && awaiting.error !== null && errorStatus(awaiting.error) !== 404 && (
+          <p role="alert" className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
+            We could not check for feedback waiting on your question marks.
+            <button type="button" onClick={awaiting.reload} className="font-semibold text-brand underline-offset-2 hover:underline">
+              Try again
+            </button>
+          </p>
+        )}
         {!loading && !failed && exams.length === 0 && <EmptyFeedback />}
         {exams.length > 1 && <AtAGlance exams={exams} onJump={jumpTo} />}
         {exams.map((exam, index) => (

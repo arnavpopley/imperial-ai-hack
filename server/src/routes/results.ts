@@ -1,7 +1,7 @@
 // Consented results upload, performance nudges and tailored exam feedback (spec 23). Marks are visible to the student
 // only, are never written to the trace (summaries only), and reach no model except the transcript reader and the
 // tailored-feedback agent. Withdrawing consent, or deleting the profile, deletes every stored mark.
-import { RESULTS_BODY_MAX_BYTES, schemas, type SessionState, type TailoredFeedback } from '@modulematch/shared';
+import { RESULTS_BODY_MAX_BYTES, schemas, type ExamAwaitingMarks, type SessionState, type TailoredFeedback } from '@modulematch/shared';
 import { Hono, type Context } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { createHash } from 'node:crypto';
@@ -159,4 +159,19 @@ export const resultsRoutes = new Hono()
     // Stored only if the results were not deleted while the feedback was being written.
     if (repo.getResults(session.id).updatedAt === results.updatedAt) feedbackCache.set(session.id, cache);
     return c.json(items.filter((f): f is TailoredFeedback => f !== null));
+  })
+  .get('/:id/exam-feedback/awaiting-marks', (c) => {
+    // Published exams the student has a mark for, but no question marks matching the examiner's questions (issue
+    // #108), so the feedback page can say what would unlock it instead of showing nothing.
+    const session = load(c);
+    if (session instanceof Response) return session;
+    const results = repo.getResults(session.id);
+    if (!results.consent.granted) return c.json([]);
+    const modules = catalogue.modules();
+    const awaiting: ExamAwaitingMarks[] = repo.listExamForms('published').flatMap((form) => {
+      const result = results.results.find((r) => r.matched && r.moduleId === form.moduleId);
+      if (!result || examFacts(form, result, modules) !== null) return [];
+      return [{ moduleId: form.moduleId, examLabel: form.examLabel, questionIds: form.questions.map((q) => q.id) }];
+    });
+    return c.json(awaiting);
   });
