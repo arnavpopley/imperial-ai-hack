@@ -20,10 +20,18 @@ import { parseEnv } from 'node:util';
 import { Cdp, Page, sleep } from './cdp.mjs';
 import { STEPS } from './steps.mjs';
 
-/** Demo steps are numbered 1 to 8 as in spec 18.2; an optional step takes the number before it plus "b". */
+/** Demo steps are numbered 1 to 8 as in spec 18.2; optional steps take the number before them plus b, c, …. */
 const LABELS = (() => {
   let n = 0;
-  return STEPS.map((step) => (step.optional ? `${n}b` : String((n += 1))));
+  let extra = 0;
+  return STEPS.map((step) => {
+    if (!step.optional) {
+      extra = 0;
+      return String((n += 1));
+    }
+    extra += 1;
+    return `${n}${String.fromCharCode(97 + extra)}`;
+  });
 })();
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
@@ -364,7 +372,9 @@ async function runCombo(cdp, comboName, ports) {
         // the page may be gone
       }
       if (step.optional) {
-        // An optional step reports its failure but does not stop the demo steps; put the student back on the catalogue.
+        // An optional step reports its failure but does not stop the demo steps; put the student back on the catalogue,
+        // in front (a background tab gets no animation frames, which the page helpers wait on).
+        await ctx.student.bringToFront().catch(() => {});
         await ctx.student.goto(`${ctx.web}/catalogue`).catch(() => {});
       } else {
         blocked = `step ${LABELS[i]}`;
