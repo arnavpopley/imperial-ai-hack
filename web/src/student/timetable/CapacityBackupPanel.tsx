@@ -61,11 +61,11 @@ export function CapacityBackupPanel({ backups, titleFor }: CapacityBackupPanelPr
         <Icon name="lifebuoy" size={15} className="text-muted" />
         Keep a backup in mind
       </h2>
-      <p className="mt-0.5 text-[12px] text-muted">
+      <p className="mt-0.5 text-2xs text-muted">
         From the synthetic cohort’s shortlists. Modules over or near capacity can run out of places; your fit scores are unchanged.
       </p>
       {stale && (
-        <p role="status" className="mt-1 text-[12px] text-muted">
+        <p role="status" className="mt-1 text-2xs text-muted">
           Checking these against your updated shortlist…
         </p>
       )}
@@ -134,7 +134,7 @@ function BackupItem({
 
   return (
     <li className="rounded-xl bg-surface-2 p-3">
-      <p className="text-[13px] leading-snug">
+      <p className="text-xs leading-snug">
         <span className="font-semibold">{pick}</span>
         {signal ? (
           <DemandChip signal={signal} className="mt-1 flex w-fit" />
@@ -144,7 +144,7 @@ function BackupItem({
       </p>
       <div className="mt-2 flex items-center gap-3">
         {scored && <FitScore value={backup.fit} variant="compact" className="text-sm" />}
-        <p className="min-w-0 flex-1 text-[13px] leading-snug">
+        <p className="min-w-0 flex-1 text-xs leading-snug">
           Backup: <span className="font-medium">{alternative}</span>
           {scored && (
             <span className={cx('ml-1 tabular-nums', backup.fitDelta > 0 ? 'text-fit-high' : 'text-muted')}>
@@ -152,7 +152,7 @@ function BackupItem({
             </span>
           )}
           {backup.keepFreeConflicts > 0 && (
-            <span className="mt-0.5 flex w-fit items-center gap-1 rounded-full bg-mode-explain/10 px-1.5 text-[11px] font-medium text-mode-explain">
+            <span className="mt-0.5 flex w-fit items-center gap-1 rounded-full bg-mode-explain/10 px-1.5 text-2xs font-medium text-mode-explain">
               <Icon name="moon" size={10} />
               Uses kept-free time
             </span>
@@ -172,14 +172,14 @@ function BackupItem({
         </div>
       )}
       {!backup.canAdd && !confirming && (
-        <p className="mt-1.5 text-[12px] text-muted">It clashes with {pick} or would break a programme rule, so it can only replace it.</p>
+        <p className="mt-1.5 text-2xs text-muted">It clashes with {pick} or would break a programme rule, so it can only replace it.</p>
       )}
       {confirming && (
         <div role="group" aria-label="Confirm swap" className="animate-rise mt-3 border-t border-line pt-3">
-          <p className="text-[13px] font-medium">
+          <p className="text-xs font-medium">
             Swap {pick} for {alternative}?
           </p>
-          <p className="text-[12px] text-muted">Your shortlist changes only when you confirm.</p>
+          <p className="text-2xs text-muted">Your shortlist changes only when you confirm.</p>
           <div className="mt-2 flex flex-wrap gap-2">
             <Button size="sm" variant="primary" icon="check" busy={busy} disabled={pending} onClick={() => void swap()}>
               Confirm swap
@@ -191,7 +191,7 @@ function BackupItem({
         </div>
       )}
       {(error ?? shortlist.error) && (
-        <p role="alert" className="mt-2 text-[13px] text-fit-low">
+        <p role="alert" className="mt-2 text-xs text-fit-low">
           That did not go through: {error ?? shortlist.error}
         </p>
       )}

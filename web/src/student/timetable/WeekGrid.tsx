@@ -107,13 +107,13 @@ export function WeekGrid({
                 aria-pressed={d === shownDay}
                 onClick={() => setPicked(d)}
                 className={cx(
-                  'relative grid h-11 place-items-center rounded-lg text-[13px] font-semibold transition-colors',
+                  'relative grid h-11 place-items-center rounded-lg text-xs font-semibold transition-colors',
                   d === shownDay ? 'bg-surface text-ink shadow-soft ring-1 ring-line' : 'text-muted',
                 )}
               >
                 <span>
                   {DAY_LABELS[d]}
-                  <span className="block text-[10px] font-medium text-muted tabular-nums">
+                  <span className="block text-2xs font-medium text-muted tabular-nums">
                     {count > 0 ? count : '·'}
                     <span className="sr-only"> sessions</span>
                   </span>
@@ -129,7 +129,7 @@ export function WeekGrid({
         </div>
       )}
       <div role="group" aria-label={`${TERM_LABELS[term]} term week`} className={cx(!narrow && 'min-w-[36rem]')}>
-        <div className={cx('grid pb-2 text-[12px] font-semibold text-muted', columns, narrow && 'sr-only')}>
+        <div className={cx('grid pb-2 text-2xs font-semibold text-muted', columns, narrow && 'sr-only')}>
           <span />
           {days.map((d) => (
             <span key={d} className="px-1.5">
@@ -143,7 +143,7 @@ export function WeekGrid({
             {HOURS.map((h, i) => (
               <div key={h} className="absolute inset-x-0 border-t border-line/70 first:border-0" style={{ top: `${(i / hourCount) * 100}%` }}>
                 {i < hourCount && (
-                  <span className="absolute top-1 left-2 text-[11px] text-muted tabular-nums">{String(h).padStart(2, '0')}:00</span>
+                  <span className="absolute top-1 left-2 text-2xs text-muted tabular-nums">{String(h).padStart(2, '0')}:00</span>
                 )}
               </div>
             ))}
@@ -164,7 +164,7 @@ export function WeekGrid({
                   >
                     {/* The early-start band repeats every day, so only the first is labelled; the legend covers the rest. */}
                     {(w.reason !== 'early' || day === firstEarlyDay || narrow) && (
-                      <span className="absolute top-0.5 right-1 inline-flex items-center gap-0.5 text-[10px] font-semibold" aria-hidden="true">
+                      <span className="absolute top-0.5 right-1 inline-flex items-center gap-0.5 text-2xs font-semibold" aria-hidden="true">
                         <Icon name="moon" size={10} />
                         {w.reason === 'early' ? `Before ${w.to}` : 'Kept free'}
                       </span>
@@ -196,7 +196,7 @@ export function WeekGrid({
                     <span aria-hidden="true" className="absolute inset-[3px] rounded-lg bg-canvas" />
                     <div
                       className={cx(
-                        'animate-fade relative flex h-full flex-col overflow-hidden rounded-lg border-l-[3px] px-2 py-1.5 text-[11px] leading-tight',
+                        'animate-fade relative flex h-full flex-col overflow-hidden rounded-lg border-l-[3px] px-2 py-1.5 text-2xs leading-tight',
                         core ? CORE_BLOCK : colour.block,
                         slot.provisional && 'border-y border-r border-dashed',
                         inKeptFree && 'outline-2 -outline-offset-2 outline-mode-explain outline-dashed',
@@ -213,7 +213,7 @@ export function WeekGrid({
                         {core && 'Core · '}{slot.kind} · {slot.start}–{slot.end}
                       </span>
                       {slot.provisional && (
-                        <span className="mt-0.5 inline-flex w-fit max-w-full items-center gap-0.5 truncate rounded-full border border-dashed border-current bg-surface px-1.5 text-[10px] font-semibold text-ink">
+                        <span className="mt-0.5 inline-flex w-fit max-w-full items-center gap-0.5 truncate rounded-full border border-dashed border-current bg-surface px-1.5 text-2xs font-semibold text-ink">
                           Provisional · {Math.round(slot.probability * 100)}%
                           <span className="sr-only"> chance it runs at this time</span>
                         </span>

@@ -128,7 +128,7 @@ export function CatalogueScreen() {
           <Icon name="sliders" size={15} className="text-brand" />
           Weights and filters
           {filtered && (
-            <span className="rounded-full bg-brand px-1.5 text-[11px] text-on-brand tabular-nums">
+            <span className="rounded-full bg-brand px-1.5 text-2xs text-on-brand tabular-nums">
               {[type !== 'all', term !== 'all', onlyShortlisted].filter(Boolean).length}
             </span>
           )}
@@ -139,7 +139,7 @@ export function CatalogueScreen() {
           <section aria-label="Filters" className="grid gap-3 rounded-card border border-line bg-surface p-4 shadow-soft">
             <SegmentedControl legend="Module type" options={TYPE_OPTIONS} value={type} onChange={setType} />
             <SegmentedControl legend="Term" options={TERM_OPTIONS} value={term} onChange={setTerm} />
-            <label className="flex cursor-pointer items-center justify-between gap-3 text-[13px] font-medium">
+            <label className="flex cursor-pointer items-center justify-between gap-3 text-xs font-medium">
               Shortlisted only
               <input
                 type="checkbox"
@@ -154,14 +154,14 @@ export function CatalogueScreen() {
         <section aria-labelledby="ranked-heading" className="min-w-0">
           {recs.data && <CatalogueSearch value={query} onChange={setQuery} controls={listId} className="mb-3" />}
           <div className="mb-4 flex items-center justify-between gap-3">
-            <h2 id="ranked-heading" className="text-[13px] font-medium text-muted" aria-live="polite">
+            <h2 id="ranked-heading" className="text-xs font-medium text-muted" aria-live="polite">
               {recs.data ? catalogueCount(visible.length, eligibleCount, recs.data.rules) : 'Loading your ranking'}
             </h2>
-            {recs.loading && recs.data && <span className="text-[12px] text-muted">Updating…</span>}
+            {recs.loading && recs.data && <span className="text-2xs text-muted">Updating…</span>}
           </div>
 
           {shortlist.error && (
-            <p role="alert" className="mb-3 text-[13px] text-fit-low">
+            <p role="alert" className="mb-3 text-xs text-fit-low">
               Could not update the shortlist: {shortlist.error}
             </p>
           )}
@@ -263,7 +263,7 @@ function RankedRow({ first, children }: { first: boolean; children: ReactNode })
   if (!first) return children;
   return (
     <>
-      <li aria-hidden="true" className="mt-3 flex items-center gap-3 text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">
+      <li aria-hidden="true" className="mt-3 flex items-center gap-3 text-2xs font-semibold tracking-[0.08em] text-muted uppercase">
         Not open to you yet
         <span className="h-px flex-1 bg-line" />
       </li>
@@ -279,7 +279,7 @@ function RulesNotice({ note }: { note: string }) {
       <Icon name="info" size={18} className="mt-0.5 shrink-0 text-fit-mid" />
       <div className="min-w-0 text-sm">
         <p className="font-semibold">We can&rsquo;t confirm eligibility for your year</p>
-        <p className="text-[13px] text-muted">{note}</p>
+        <p className="text-xs text-muted">{note}</p>
       </div>
     </div>
   );
@@ -298,7 +298,7 @@ function StarterNotice() {
       <Icon name="info" size={18} className="shrink-0 text-fit-mid" />
       <div className="min-w-0 flex-1 basis-[calc(100%-2.5rem)] text-sm sm:basis-0">
         <p className="font-semibold">We know little about you yet</p>
-        <p className="text-[13px] text-muted">
+        <p className="text-xs text-muted">
           There are no fit scores until you tell us what you enjoy. This is a starter order, not a recommendation.
         </p>
       </div>
@@ -321,7 +321,7 @@ function StarterNotice() {
         Answer {STARTER_QUESTIONS} quick questions
       </Button>
       {error && (
-        <p role="alert" className="basis-full text-[13px] text-fit-low">
+        <p role="alert" className="basis-full text-xs text-fit-low">
           {error}
         </p>
       )}
@@ -345,7 +345,7 @@ function ConfidenceNotice({ level }: { level: 'medium' | 'low' }) {
       <Icon name="info" size={18} className={cx('shrink-0', medium ? 'text-fit-mid' : 'text-fit-low')} />
       <div className="min-w-0 flex-1 basis-[calc(100%-2.5rem)] text-sm sm:basis-0">
         <p className="font-semibold">{medium ? 'These scores could be sharper' : 'I do not know enough about you yet'}</p>
-        <p className="text-[13px] text-muted">
+        <p className="text-xs text-muted">
           {medium
             ? 'Two more questions would raise confidence in the ranking.'
             : 'Scores are greyed until the profile fills in. A few more answers will fix that.'}
@@ -370,7 +370,7 @@ function ConfidenceNotice({ level }: { level: 'medium' | 'low' }) {
         {medium ? 'Answer two more' : 'Back to the interview'}
       </Button>
       {error && (
-        <p role="alert" className="basis-full text-[13px] text-fit-low">
+        <p role="alert" className="basis-full text-xs text-fit-low">
           {error}
         </p>
       )}

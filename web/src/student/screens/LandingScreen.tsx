@@ -196,7 +196,7 @@ function Hero({ cta }: { cta: { to: string; label: string } }) {
           </motion.p>
           <motion.h1
             variants={RISE}
-            className="mt-6 text-[2.75rem] leading-[1.02] font-semibold tracking-tight text-balance sm:text-[4.25rem]"
+            className="mt-6 text-display text-balance"
           >
             Choose modules{' '}
             <span className="bg-gradient-to-r from-brand via-mode-explain to-mode-plan bg-clip-text text-transparent">

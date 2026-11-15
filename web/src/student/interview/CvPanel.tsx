@@ -75,7 +75,7 @@ export function CvPanel({ onImported, onClose }: CvPanelProps) {
           <h2 id={`${inputId}-heading`} className="text-xl font-semibold tracking-tight">
             Add your CV
           </h2>
-          <p id={hintId} className="mt-1 flex items-center gap-1.5 text-[14px] text-muted">
+          <p id={hintId} className="mt-1 flex items-center gap-1.5 text-sm text-muted">
             <Icon name="lock" size={13} className="shrink-0" />
             Grades and personal details are removed before anything is stored.
           </p>
@@ -113,7 +113,7 @@ export function CvPanel({ onImported, onClose }: CvPanelProps) {
                     initial={{ opacity: 0, scale: 0.85 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={transition('correctCelebration', 0.08 * i)}
-                    className="rounded-full bg-surface px-3 py-1.5 text-[13px] font-medium shadow-soft ring-1 ring-line"
+                    className="rounded-full bg-surface px-3 py-1.5 text-xs font-medium shadow-soft ring-1 ring-line"
                   >
                     {slotLabel(slot)}
                   </motion.li>
@@ -121,7 +121,7 @@ export function CvPanel({ onImported, onClose }: CvPanelProps) {
               </ul>
             )}
             {result.redacted && (
-              <p className="flex items-center gap-2 text-[13px] text-muted">
+              <p className="flex items-center gap-2 text-xs text-muted">
                 <Icon name="shield" size={14} className="shrink-0 text-brand" />
                 Some personal details were removed and not stored.
               </p>
@@ -142,7 +142,7 @@ export function CvPanel({ onImported, onClose }: CvPanelProps) {
             onSubmit={(event) => void submit(event)}
             className="grid gap-3"
           >
-            <label htmlFor={inputId} className="text-[14px] font-medium">
+            <label htmlFor={inputId} className="text-sm font-medium">
               Paste your CV or personal statement
             </label>
             <textarea
@@ -152,10 +152,10 @@ export function CvPanel({ onImported, onClose }: CvPanelProps) {
               aria-describedby={hintId}
               onChange={(event) => setText(event.target.value)}
               placeholder="Projects, societies, placements, the things you have built or led…"
-              className="min-h-56 w-full resize-y rounded-2xl border border-line-strong bg-canvas p-4 text-[15px] leading-relaxed transition outline-none placeholder:text-muted focus:border-brand focus:ring-4 focus:ring-brand/12"
+              className="min-h-56 w-full resize-y rounded-2xl border border-line-strong bg-canvas p-4 text-sm leading-relaxed transition outline-none placeholder:text-muted focus:border-brand focus:ring-4 focus:ring-brand/12"
             />
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <span className="text-[12px] text-muted tabular-nums">
+              <span className="text-2xs text-muted tabular-nums">
                 {sending && !busy
                   ? 'Finishing the current reply…'
                   : `${text.length.toLocaleString()} / ${MAX_LENGTH.toLocaleString()}`}
@@ -169,7 +169,7 @@ export function CvPanel({ onImported, onClose }: CvPanelProps) {
                 key={error}
                 role="alert"
                 {...gentle}
-                className="flex items-start gap-2 rounded-xl bg-fit-low/8 px-3.5 py-2.5 text-[13px] text-fit-low"
+                className="flex items-start gap-2 rounded-xl bg-fit-low/8 px-3.5 py-2.5 text-xs text-fit-low"
               >
                 <Icon name="info" size={14} className="mt-0.5 shrink-0" />
                 {error}
