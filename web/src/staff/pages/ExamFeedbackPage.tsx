@@ -149,6 +149,12 @@ function ExamFormWorkspace({ moduleId, initial }: { moduleId: string; initial: E
     if (dirty && draft) unsavedDrafts.set(moduleId, draft);
     else unsavedDrafts.delete(moduleId);
   }, [dirty, draft, moduleId]);
+
+  // Once this screen holds a saved form, whether loaded, drafted here or saved from another tab, the start-screen
+  // inputs are done with. Tied to the open screen, so a late request from a screen already left clears nothing.
+  useEffect(() => {
+    if (saved) startInputs.delete(moduleId);
+  }, [saved, moduleId]);
   const issueFor = (field: string) => (showIssues ? issues.find((i) => i.field === field)?.message : undefined);
 
   if (!draft)
@@ -167,7 +173,6 @@ function ExamFormWorkspace({ moduleId, initial }: { moduleId: string; initial: E
           onDraft={async (body) => {
             try {
               const form = await api.staff.draftExamForm(moduleId, body);
-              startInputs.delete(moduleId);
               setSaved(form);
               setDraft(draftFromForm(form));
               setFocusBanner(true);
@@ -175,7 +180,6 @@ function ExamFormWorkspace({ moduleId, initial }: { moduleId: string; initial: E
               // The examiner's own save wins over a late AI draft: load what they saved instead.
               const current = isConflict(e) ? await api.staff.examForm(moduleId) : null;
               if (!current) throw e;
-              startInputs.delete(moduleId);
               setSaved(current);
               setDraft(draftFromForm(current));
               setNotice({
