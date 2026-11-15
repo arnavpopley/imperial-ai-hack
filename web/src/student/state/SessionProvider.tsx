@@ -2,7 +2,7 @@
 // local patches from the SSE stream, and polling while a member of staff owes a reply.
 import type { EscalationDraft, SessionState } from '@modulematch/shared';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { api, isSessionLost, SESSION_LOST_EVENT } from '../../api.ts';
+import { api, isSessionLost, SESSION_LOST_EVENT, type SessionLostDetail } from '../../api.ts';
 import { draftIdentity } from '../../components/exceptions.ts';
 import { errorMessage } from '../../components/StateViews.tsx';
 import { readDismissedDraft, readStoredSessionId, writeDismissedDraft, writeStoredSessionId } from './storage.ts';
@@ -71,10 +71,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, [resumeId, attempt]);
 
   // Any request that finds the session gone (404 "session not found") ends the session in one place, so no screen
-  // waits on data that will never come.
+  // waits on data that will never come. Only the current session counts: a late 404 from a session the student has
+  // already left must not end the new one.
   useEffect(() => {
-    const onLost = () => {
-      if (readStoredSessionId() !== null) setStatus('lost');
+    const onLost = (event: Event) => {
+      const { sessionId } = (event as CustomEvent<SessionLostDetail>).detail;
+      if (sessionId === readStoredSessionId()) setStatus('lost');
     };
     window.addEventListener(SESSION_LOST_EVENT, onLost);
     return () => window.removeEventListener(SESSION_LOST_EVENT, onLost);

@@ -99,6 +99,12 @@ describe('a session the server no longer knows', () => {
     });
     expect(status()).toBe('ready');
 
+    // A late 404 from a session the student has already left (another id) is ignored.
+    await act(async () => {
+      await api.results('old-session').catch(() => undefined);
+    });
+    expect(status()).toBe('ready');
+
     await act(async () => {
       await api.recommendations('gone-2').catch(() => undefined);
     });

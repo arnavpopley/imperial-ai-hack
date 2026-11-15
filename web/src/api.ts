@@ -59,10 +59,22 @@ export function isSessionLost(err: unknown): boolean {
   return err instanceof Error && err.message.startsWith('404 ') && err.message.includes('session not found');
 }
 
-/** Reads a failed response's text and announces a lost session (404 "session not found"). */
-async function failure(res: Response): Promise<Error> {
+/** The detail of a SESSION_LOST_EVENT: the session the failed request was for. */
+export interface SessionLostDetail {
+  sessionId: string;
+}
+
+/**
+ * Reads a failed response's text and announces a lost session (404 "session not found") with the session it was
+ * for, so a late failure from an old session never ends the new one.
+ */
+async function failure(res: Response, path: string): Promise<Error> {
   const err = new Error(`${res.status} ${await res.text()}`);
-  if (isSessionLost(err)) window.dispatchEvent(new Event(SESSION_LOST_EVENT));
+  const sessionId = /^\/sessions\/([^/?]+)/.exec(path)?.[1];
+  if (sessionId && isSessionLost(err)) {
+    const detail: SessionLostDetail = { sessionId: decodeURIComponent(sessionId) };
+    window.dispatchEvent(new CustomEvent(SESSION_LOST_EVENT, { detail }));
+  }
   return err;
 }
 
@@ -72,7 +84,7 @@ async function call<T>(path: string, init?: { method?: string; body?: unknown })
     headers: init?.body === undefined ? undefined : { 'content-type': 'application/json' },
     body: init?.body === undefined ? undefined : JSON.stringify(init.body),
   });
-  if (!res.ok) throw await failure(res);
+  if (!res.ok) throw await failure(res, path);
   return (await res.json()) as T;
 }
 
@@ -159,7 +171,7 @@ async function streamEvents(path: string, body: unknown, onEvent: (event: SseEve
     body: JSON.stringify(body),
     signal,
   });
-  if (!res.ok || !res.body) throw await failure(res);
+  if (!res.ok || !res.body) throw await failure(res, path);
   const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
   let buffer = '';
   for (;;) {
