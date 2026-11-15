@@ -131,7 +131,7 @@ export function ModuleDetailScreen() {
               {rec?.exception && <ExceptionChip decision={rec.exception} />}
               {rec && scored && (
                 <span className="text-[12px] font-medium text-muted">
-                  {FIT_BAND_LABELS[fitBand(rec.fit)]} · ranked #{rec.rank}
+                  {FIT_BAND_LABELS[fitBand(rec.fit)]} · {rec.rank === 1 ? 'your best match' : `ranked #${rec.rank}`}
                 </span>
               )}
             </div>
@@ -228,11 +228,13 @@ export function ModuleDetailScreen() {
             {explanation.data ? (
               <>
                 <p className="mt-3 text-[15px] leading-relaxed text-pretty">{explanation.data.explanation.summary}</p>
-                <ul className="mt-4 grid gap-2" aria-label="Reasons">
-                  {explanation.data.explanation.because.map((reason) => (
-                    <ReasonRow key={reason.text} text={reason.text} source={reasonSource(reason, evidence, module, pathwayTitle)} />
-                  ))}
-                </ul>
+                {explanation.data.explanation.because.length > 0 && (
+                  <ul className="mt-4 grid gap-2" aria-label="Reasons">
+                    {explanation.data.explanation.because.map((reason) => (
+                      <ReasonRow key={reason.text} text={reason.text} source={reasonSource(reason, evidence, module, pathwayTitle)} />
+                    ))}
+                  </ul>
+                )}
                 {explanation.data.explanation.watchOuts.length > 0 && (
                   <>
                     <h3 className="mt-5 text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">Watch out for</h3>

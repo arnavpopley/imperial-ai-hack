@@ -1,17 +1,22 @@
+import { FIT_BAND_LABELS, fitBand, type FitBand } from '@modulematch/shared';
 import { cx } from './cx.ts';
+import type { MeterTone } from './Meter.tsx';
 
-export type FitBand = 'high' | 'mid' | 'low';
+// The bands and labels are shared with the server's explanations and the staff console (issue #105).
+export { FIT_BAND_LABELS, fitBand, type FitBand };
 
-/** Fit bands. 75 matches the "convinced" line the insights engine uses (spec 9.3). */
-export function fitBand(fit: number): FitBand {
-  if (fit >= 75) return 'high';
-  if (fit >= 50) return 'mid';
-  return 'low';
-}
+/** Text colour per band. Strong and good are both greens, so a good match never reads as a warning. */
+export const FIT_BAND_TEXT: Record<FitBand, string> = {
+  strong: 'text-fit-high',
+  good: 'text-mode-recommend',
+  partial: 'text-fit-mid',
+  weak: 'text-fit-low',
+};
 
-export const FIT_BAND_LABELS: Record<FitBand, string> = { high: 'Strong fit', mid: 'Partial fit', low: 'Weak fit' };
+/** Meter tone per band, for bars beside a fit. */
+export const FIT_BAND_METER: Record<FitBand, MeterTone> = { strong: 'high', good: 'high', partial: 'mid', weak: 'low' };
 
-const strokeClass: Record<FitBand, string> = { high: 'text-fit-high', mid: 'text-fit-mid', low: 'text-fit-low' };
+const strokeClass = FIT_BAND_TEXT;
 
 interface FitScoreProps {
   value: number;
