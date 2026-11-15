@@ -2,19 +2,26 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Badge, type BadgeTone } from '../../components/Badge.tsx';
+import { Provenance } from '../../components/Provenance.tsx';
 import type { ExamStatus } from '../lib/examForm.ts';
-import { CheckIcon, PencilIcon, SendIcon, ShieldIcon, SparkIcon } from './icons.tsx';
+import { CheckIcon, PencilIcon, SendIcon, ShieldIcon } from './icons.tsx';
 import { Button } from '../../components/Button.tsx';
 
-/** The shared Badge (issue #141); violet only for the AI draft. */
-const CHIP: Record<ExamStatus, { label: string; tone: BadgeTone; Icon: typeof CheckIcon }> = {
+/** The shared Badge (issue #141). The AI draft is the app-wide AI chip (issue #138), the one violet on this page. */
+const CHIP: Record<Exclude<ExamStatus, 'ai-draft'>, { label: string; tone: BadgeTone; Icon: typeof CheckIcon }> = {
   unsaved: { label: 'Not saved yet', tone: 'neutral', Icon: PencilIcon },
   draft: { label: 'Draft', tone: 'warning', Icon: PencilIcon },
-  'ai-draft': { label: 'AI draft', tone: 'ai', Icon: SparkIcon },
   published: { label: 'Published', tone: 'success', Icon: CheckIcon },
 };
 
 export function ExamStatusChip({ status }: { status: ExamStatus }) {
+  if (status === 'ai-draft')
+    return (
+      <span className="inline-flex">
+        <span className="sr-only">Status: </span>
+        <Provenance kind="ai" label="AI draft" />
+      </span>
+    );
   const { label, tone, Icon } = CHIP[status];
   return (
     <Badge tone={tone} size="md" icon={<Icon className="size-3.5" />}>

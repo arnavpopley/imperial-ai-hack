@@ -1,5 +1,5 @@
 // Live evaluation (spec 18): runs the real models against cases with known answers, to measure prompt and data
-// changes instead of guessing. Unlike `npm run eval` it calls the API, so it costs money: about $1-2 per run.
+// changes instead of guessing. Unlike `npm run eval` it calls the API, so it costs money: about $1 per run.
 // Usage: `npm run eval:live` (needs ANTHROPIC_API_KEY). Results go to data/eval-live-latest.json.
 // `npm run eval:live -- --hard-cases` runs only the extraction hard cases (about 20 Haiku calls, a few cents) and
 // prints them without overwriting the saved run. `npm run eval:live -- --interview` likewise runs only the
