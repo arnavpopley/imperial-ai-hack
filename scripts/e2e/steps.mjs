@@ -144,9 +144,13 @@ export const STEPS = [
       await page.goto(`${ctx.web}/`);
       const theme = await page.eval(() => document.documentElement.dataset.theme);
       if (theme !== ctx.theme) fail(`Expected the ${ctx.theme} theme from the system setting, got ${theme}`);
-      await page.waitForElement({ css: 'a', text: 'Find my modules' });
+      // The landing call to action: "Get started" since the flat redesign (#173), "Find my modules" before it.
+      const startCta = { css: 'a', text: { re: '^(get started|find my modules)' } };
+      await page.waitForElement(startCta);
       await ctx.checkpoint(page, 'landing');
-      await page.click({ css: 'a', text: 'Find my modules' });
+      // Video mode: hold the landing page for the opening line about the problem.
+      if (process.env.E2E_LANDING_MS) await sleep(Number(process.env.E2E_LANDING_MS));
+      await page.click(startCta);
       await pathIs(page, '/start');
       await page.waitForElement({ css: 'button[type="submit"]', text: 'Start the interview' });
       const form = await page.text({ css: 'form[aria-labelledby="onboard-heading"]' });
@@ -791,7 +795,8 @@ export const STEPS = [
       const page = ctx.student;
       ctx.active = page;
       await page.bringToFront();
-      await page.click(MAIN_NAV({ re: 'How it works|Guide' }), { desc: 'the How it works role switch' });
+      // "How it works" moved out of the role switch into the header's Explore links (#172); accept either.
+      await page.click({ css: 'nav[aria-label="Explore"] a, nav[aria-label="Role"] a', text: { re: 'How it works|Guide' } }, { desc: 'the How it works link' });
       await pathIs(page, '/trace');
       await page.waitFor(() => document.querySelectorAll('[aria-label*="percent passed"]').length >= 3, [], {
         desc: 'the evaluation pass rates',

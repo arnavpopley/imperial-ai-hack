@@ -3,6 +3,11 @@
 import { writeFileSync } from 'node:fs';
 import { installHelpers } from './page-helpers.mjs';
 
+/** Video mode (`npm run demo:video`) slows the run so a person can follow it; both are read per call, so the runner can set them. */
+const paceMs = () => Number(process.env.E2E_PACE_MS ?? 0);
+const typeMs = () => Number(process.env.E2E_TYPE_MS ?? 0);
+const pace = (factor = 1) => (paceMs() > 0 ? sleep(paceMs() * factor) : Promise.resolve());
+
 const SEND_TIMEOUT_MS = 60_000;
 
 export const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -123,6 +128,7 @@ export class Page {
       desc: `${url} to load`,
       timeout: 30_000,
     });
+    await pace();
   }
 
   async reload() {
@@ -185,7 +191,13 @@ export class Page {
    */
   async click(spec, { desc, timeout = 15_000 } = {}) {
     const info = await this.prepare(spec, { desc, timeout });
+    if (paceMs() > 0) {
+      // Video mode: point at the control first, so a viewer sees what is about to be clicked.
+      await this.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: info.x, y: info.y });
+      await pace();
+    }
     await this.mouseClick(info.x, info.y);
+    await pace(0.5);
     return info;
   }
 
@@ -214,7 +226,17 @@ export class Page {
   /** Clicks a text field, types into it like a keyboard would, and optionally presses Enter. */
   async type(spec, text, { enter = false, desc } = {}) {
     await this.click(spec, { desc });
-    await this.send('Input.insertText', { text });
+    const perChar = typeMs();
+    if (perChar > 0) {
+      // Video mode: type at a readable speed instead of pasting the whole answer at once.
+      for (const char of text) {
+        await this.send('Input.insertText', { text: char });
+        await sleep(perChar);
+      }
+      await pace();
+    } else {
+      await this.send('Input.insertText', { text });
+    }
     if (enter) await this.press('Enter');
   }
 

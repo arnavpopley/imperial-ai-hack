@@ -5,6 +5,7 @@
 //   npm run e2e -- --live            real models, using the API key in .env (one viewport by default)
 //   npm run e2e -- --only=desktop-light,phone-dark
 //   npm run e2e -- --headed          watch it run in a visible Chrome window
+//   npm run demo:video               the demo video: a visible, slowed-down desktop run to screen-record (docs/demo-video.md)
 //   npm run e2e -- --live --until=clash --skip-optional   a cheaper live check of steps 1 to 4
 //
 // It starts its own API and web server on free ports, with a fresh database per run, and stops every
@@ -42,10 +43,21 @@ const flag = (name) => args.includes(`--${name}`);
 const option = (name) => args.find((a) => a.startsWith(`--${name}=`))?.slice(name.length + 3);
 
 const LIVE = flag('live');
-const HEADED = flag('headed');
+/**
+ * Video mode: one visible desktop window, slowed down for a screen recording, with a hold after each step for the
+ * voice-over and a timeline of when each step started (docs/demo-video.md).
+ */
+const VIDEO = flag('video');
+if (VIDEO) {
+  process.env.E2E_PACE_MS ??= option('pace') ?? '350';
+  process.env.E2E_TYPE_MS ??= option('type-speed') ?? '10';
+  process.env.E2E_LANDING_MS ??= option('landing-hold') ?? '8000';
+}
+const HOLD_MS = Number(option('hold') ?? 1600);
+const HEADED = flag('headed') || (VIDEO && !flag('headless'));
 /** Stop after the step with this id (for example clash), to keep a live check cheap. */
 const UNTIL = option('until');
-const SKIP_OPTIONAL = flag('skip-optional');
+const SKIP_OPTIONAL = flag('skip-optional') || (VIDEO && !flag('with-optional'));
 if (UNTIL && !STEPS.some((s) => s.id === UNTIL)) {
   console.error(`Unknown step "${UNTIL}". Use one of: ${STEPS.map((s) => s.id).join(', ')}`);
   process.exit(2);
@@ -58,7 +70,7 @@ const VIEWPORTS = {
 };
 const ALL_COMBOS = ['desktop-light', 'desktop-dark', 'laptop-light', 'phone-light', 'phone-dark'];
 // Live runs cost money, so they cover one combination unless asked for more.
-const combos = (option('only')?.split(',') ?? (LIVE && !flag('matrix') ? ['desktop-light'] : ALL_COMBOS)).filter(Boolean);
+const combos = (option('only')?.split(',') ?? ((LIVE || VIDEO) && !flag('matrix') ? ['desktop-light'] : ALL_COMBOS)).filter(Boolean);
 for (const c of combos) {
   if (!ALL_COMBOS.includes(c)) {
     console.error(`Unknown combination "${c}". Use one of: ${ALL_COMBOS.join(', ')}`);
@@ -326,15 +338,18 @@ async function runCombo(cdp, comboName, ports) {
     latency: (entry) => current.latencies.push(entry),
     /** Screenshot plus overflow and overlap checks for the screen the page is on. */
     async checkpoint(page, label) {
-      // Issue #46: the advisor launcher must not sit on any control's centre at any scroll position.
-      for (const hit of await page.eval(() => window.__e2e.launcherSweep())) {
-        current.overlap.push(`${label}: the advisor launcher covers ${hit}`);
+      // Video mode skips the layout checks below: they scroll through the page, which a recording would show as jumps.
+      if (!VIDEO) {
+        // Issue #46: the advisor launcher must not sit on any control's centre at any scroll position.
+        for (const hit of await page.eval(() => window.__e2e.launcherSweep())) {
+          current.overlap.push(`${label}: the advisor launcher covers ${hit}`);
+        }
+        const audit = await page.audit();
+        if (audit.overflow) {
+          current.overflow.push(`${label}: page is ${audit.overflow.scrollWidth}px wide in a ${audit.overflow.viewport}px viewport; ${audit.overflow.offenders.join('; ') || 'no single element found'}`);
+        }
+        for (const o of audit.overlaps) current.overlap.push(`${label} (${o.where}): ${o.control} is covered by ${o.coveredBy}`);
       }
-      const audit = await page.audit();
-      if (audit.overflow) {
-        current.overflow.push(`${label}: page is ${audit.overflow.scrollWidth}px wide in a ${audit.overflow.viewport}px viewport; ${audit.overflow.offenders.join('; ') || 'no single element found'}`);
-      }
-      for (const o of audit.overlaps) current.overlap.push(`${label} (${o.where}): ${o.control} is covered by ${o.coveredBy}`);
       shot += 1;
       const file = `${String(shot).padStart(2, '0')}-${label}.png`;
       await page.screenshot(join(dir, file));
@@ -344,6 +359,9 @@ async function runCombo(cdp, comboName, ports) {
 
   let blocked = null;
   const last = UNTIL ? STEPS.findIndex((s) => s.id === UNTIL) : STEPS.length - 1;
+  const videoStart = Date.now();
+  const timeline = [];
+  const clock = (ms) => `${Math.floor(ms / 60_000)}:${String(Math.floor((ms % 60_000) / 1000)).padStart(2, '0')}`;
   for (const [i, step] of STEPS.entries()) {
     const result = results[i];
     current = result;
@@ -357,9 +375,12 @@ async function runCombo(cdp, comboName, ports) {
       continue;
     }
     const started = Date.now();
+    if (VIDEO) timeline.push(`${clock(started - videoStart)}  ${LABELS[i]}. ${step.title}`);
     process.stdout.write(`  ${comboName}  ${LABELS[i]}. ${step.title} ... `);
     try {
       await step.run(ctx);
+      // Video mode: let the result sit on screen while the voice-over catches up; the last screen holds longer.
+      if (VIDEO) await sleep(i === last ? HOLD_MS * 3 : HOLD_MS);
     } catch (error) {
       result.error = String(error?.message ?? error);
       try {
@@ -391,6 +412,11 @@ async function runCombo(cdp, comboName, ports) {
     }
   }
   current = null;
+  if (VIDEO) {
+    timeline.push(`${clock(Date.now() - videoStart)}  end`);
+    writeFileSync(join(dir, 'video-timeline.txt'), `${timeline.join('\n')}\n`);
+    console.log(`\n  Video timeline (from the first step):\n${timeline.map((l) => `    ${l}`).join('\n')}`);
+  }
 
   for (const page of pages) await page.close();
   await cdp.send('Target.disposeBrowserContext', { browserContextId }).catch(() => {});
