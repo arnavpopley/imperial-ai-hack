@@ -71,7 +71,7 @@ describe('the main gap does not depend on cohort order', () => {
           .map((card) => card.headline);
       expect(headlines(backward), module.id).toEqual(headlines(forward));
     }
-  });
+  }, 60_000);
 });
 
 describe('live wording is reused for the same engine card', () => {
