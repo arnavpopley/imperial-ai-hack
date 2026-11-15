@@ -9,6 +9,7 @@ import { cx } from '../components/cx.ts';
 import { Icon, type IconName } from '../components/Icon.tsx';
 import { AgentFlowchart } from './AgentFlowchart.tsx';
 import { AgentRoster } from './AgentRoster.tsx';
+import { AGENTS, countWord } from './agents.ts';
 import { BenchmarkPanel } from './benchmark/BenchmarkPanel.tsx';
 import { nodesInTrace } from './flow.ts';
 
@@ -105,7 +106,7 @@ export function TraceApp() {
       <Intro />
 
       <section aria-labelledby="agents-heading" className="grid gap-6">
-        <SectionHeading id="agents-heading" eyebrow="The AI agents" title="Five agents, one job each">
+        <SectionHeading id="agents-heading" eyebrow="The AI agents" title={`${countWord(AGENTS.length)} agents, one job each`}>
           Each agent writes words, never numbers. Scores, rules and clashes come from plain code.
           {seen.size > 0 && ' A green outline marks the agents your session has used.'}
         </SectionHeading>
@@ -159,7 +160,7 @@ function Intro() {
       </div>
       <ul className="grid gap-px border-t border-line bg-line sm:grid-cols-3">
         <Explainer icon="sparkle" title="The agents">
-          Each agent has one job: interview, extract, explain or plan. A Supervisor picks which one replies.
+          Each agent has one job, from interviewing to searching the catalogue. A Supervisor picks which one replies.
         </Explainer>
         <Explainer icon="clock" title="A trace">
           A live log of every decision the AI made for a session, including each safety check and its verdict.
