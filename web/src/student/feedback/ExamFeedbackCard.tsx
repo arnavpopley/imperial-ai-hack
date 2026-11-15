@@ -7,6 +7,7 @@ import { useId, useState } from 'react';
 import { Link } from 'react-router';
 import { cx } from '../../components/cx.ts';
 import { Icon } from '../../components/Icon.tsx';
+import { Provenance } from '../../components/Provenance.tsx';
 import { AnimatedTick } from '../interview/InterviewTimeline.tsx';
 import { topicLabel } from '../labels.ts';
 import { paths } from '../routes.ts';
@@ -137,16 +138,9 @@ export function MarkBadge({ mark, size = 'md' }: { mark: number | null; size?: '
   );
 }
 
+/** Written by the AI from the examiner's notes, or, offline, put together by code from them (issue #138). */
 function SourceTag({ source }: { source: TailoredFeedback['source'] }) {
-  return (
-    <span
-      title={source === 'model' ? 'Written by AI from facts worked out by code' : 'Built from a template, from facts worked out by code'}
-      className="inline-flex items-center gap-1"
-    >
-      <Icon name={source === 'model' ? 'sparkle' : 'grid'} size={12} />
-      {source === 'model' ? 'AI-written from the examiner’s notes' : 'From the examiner’s notes'}
-    </span>
-  );
+  return <Provenance kind={source === 'model' ? 'ai' : 'code'} />;
 }
 
 function SectionTitle({ id, children }: { id: string; children: string }) {
@@ -181,7 +175,7 @@ function FocusPoints({ feedback }: { feedback: TailoredFeedback }) {
               </ul>
             )}
             <p className="flex gap-2 text-[14px] leading-relaxed">
-              <Icon name="tutor" size={15} className="mt-1 shrink-0 text-mode-explain" />
+              <Icon name="tutor" size={15} className="mt-1 shrink-0 text-brand" />
               <span>
                 <span className="sr-only">Examiner's advice: </span>
                 {w.advice}

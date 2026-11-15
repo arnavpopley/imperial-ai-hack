@@ -4,6 +4,7 @@ import { motion, useReducedMotion } from 'motion/react';
 import { api } from '../../api.ts';
 import { Icon } from '../../components/Icon.tsx';
 import { Button } from '../../components/Button.tsx';
+import { Provenance } from '../../components/Provenance.tsx';
 import { Skeleton } from '../../components/StateViews.tsx';
 import { ClaimCheck } from '../claimcheck/ClaimCheck.tsx';
 import { useAsync } from '../hooks/useAsync.ts';
@@ -33,11 +34,8 @@ export function AiSummaryCard({ moduleId }: { moduleId: string }) {
             </span>
             In short
           </h2>
-          {data && (
-            <span className="rounded-full bg-surface-2 px-2.5 py-1 text-[11px] font-medium text-muted">
-              {data.source === 'model' ? 'AI summary of the public description' : 'Summary from the module record'}
-            </span>
-          )}
+          {/* Written by the AI from the public description, or, offline, put together from the module record. */}
+          {data && <Provenance kind={data.source === 'model' ? 'ai' : 'record'} />}
         </div>
 
         {data ? (

@@ -3,12 +3,14 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useId, useState } from 'react';
 import { cx } from '../../components/cx.ts';
 import type { EvidencePopoverProps } from '../../components/EvidencePopover.tsx';
-import { Icon, type IconName } from '../../components/Icon.tsx';
+import { Icon } from '../../components/Icon.tsx';
+import { Provenance, type ProvenanceKind } from '../../components/Provenance.tsx';
 
-const SOURCE_META: Record<EvidencePopoverProps['variant'], { label: string; icon: IconName }> = {
-  quote: { label: 'Your words', icon: 'chat' },
-  'module-field': { label: 'Module record', icon: 'grid' },
-  missing: { label: 'Source', icon: 'info' },
+/** Each source is a Provenance chip, the same one used across the app (issue #138). */
+const SOURCE_KIND: Record<EvidencePopoverProps['variant'], ProvenanceKind | null> = {
+  quote: 'quote',
+  'module-field': 'record',
+  missing: null,
 };
 
 interface ReasonRowProps {
@@ -22,7 +24,7 @@ export function ReasonRow({ text, source, tone = 'reason' }: ReasonRowProps) {
   const [open, setOpen] = useState(false);
   const reduce = useReducedMotion();
   const id = useId();
-  const meta = source ? SOURCE_META[source.variant] : null;
+  const kind = source ? SOURCE_KIND[source.variant] : null;
   const watchOut = tone === 'watch-out';
 
   return (
@@ -44,12 +46,7 @@ export function ReasonRow({ text, source, tone = 'reason' }: ReasonRowProps) {
           <Icon name={watchOut ? 'info' : 'check'} size={14} />
         </span>
         <span className={cx('min-w-0 flex-1 text-[14px] leading-snug', !open && 'line-clamp-2 sm:line-clamp-1')}>{text}</span>
-        {meta && (
-          <span className="hidden shrink-0 items-center gap-1 rounded-full bg-surface-2 px-2 py-0.5 text-[11px] font-medium text-muted sm:inline-flex">
-            <Icon name={meta.icon} size={11} />
-            {meta.label}
-          </span>
-        )}
+        {kind && <Provenance kind={kind} className="max-sm:hidden" />}
         <Icon
           name="chevron-down"
           size={15}
