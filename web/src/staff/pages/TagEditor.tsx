@@ -150,6 +150,7 @@ function TagEditorForm({
       setDraft(draftFrom(updated));
       replaceModule(updated);
       setSave({ status: 'saved' });
+      focusStatus();
       if (inThisSave) onSuggestionSettled(inThisSave);
     } catch (e) {
       setSave({ status: 'error', message: errorMessage(e) });
@@ -159,6 +160,9 @@ function TagEditorForm({
   const reviewFlags = countReviewFlags(saved.derivedRationale);
   // The save bar appears only with something to act on, so it never sits over a clean form (issue #140).
   const showBar = changes > 0 || saving || save.status === 'error';
+  // Discarding or saving hides the bar and the button that was pressed, so focus moves to the status line.
+  const statusRef = useRef<HTMLParagraphElement>(null);
+  const focusStatus = () => window.requestAnimationFrame(() => statusRef.current?.focus());
 
   return (
     <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_22rem]">
@@ -169,7 +173,7 @@ function TagEditorForm({
           void submit();
         }}
       >
-        <p className="-mb-2 text-right text-sm" aria-live="polite">
+        <p ref={statusRef} tabIndex={-1} className="-mb-2 text-right text-sm outline-none" aria-live="polite">
           {save.status === 'saved' && changes === 0 ? (
             <span className="inline-flex items-center gap-1.5 text-fit-high">
               <CheckIcon /> Saved. Tags are now derived by staff-edit.
@@ -265,6 +269,7 @@ function TagEditorForm({
                 setDraft(baseline);
                 if (suggestionKey) onSuggestionSettled(suggestionKey);
                 setSave({ status: 'idle' });
+                focusStatus();
               }}
             >
               Discard
