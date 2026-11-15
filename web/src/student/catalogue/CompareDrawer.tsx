@@ -96,10 +96,10 @@ function CompareTable({ modules, byId, scored, lowConfidence, isShortlisted }: C
 
   return (
     <>
-      {/* The column heads: a legend on a phone, sticky column titles from sm up. */}
+      {/* The column heads: a legend on a phone (each row repeats the letters), sticky column titles from sm up. */}
       <ol
         className={cx(
-          'sticky top-0 z-10 -mx-5 grid gap-2 border-b border-line bg-surface/95 px-5 py-3 backdrop-blur sm:gap-4',
+          'z-10 -mx-5 grid gap-2 border-b border-line bg-surface/95 px-5 py-3 backdrop-blur sm:sticky sm:top-0 sm:gap-4',
           modules.length === 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2',
         )}
       >
@@ -235,8 +235,8 @@ function CompareTable({ modules, byId, scored, lowConfidence, isShortlisted }: C
             ))}
           </ul>
         ) : (
-          <p className="flex items-center gap-1 text-[13px] text-muted">
-            <Icon name="check" size={13} className="text-fit-high" /> No clashes with your shortlist or core modules
+          <p className="flex items-start gap-1 text-[13px] text-muted">
+            <Icon name="check" size={13} className="mt-0.5 shrink-0 text-fit-high" /> No clashes with your shortlist or core modules
           </p>
         ),
       )}
@@ -282,7 +282,7 @@ function Row({ label, modules, render }: { label: string; modules: CompareModule
 
 function Letter({ index }: { index: number }) {
   return (
-    <span aria-hidden="true" className={`grid size-5 shrink-0 place-items-center rounded-md text-[11px] font-bold text-on-brand ${COMPARE_DOT[index]}`}>
+    <span aria-hidden="true" className={`grid size-5 shrink-0 place-items-center rounded-md text-[11px] leading-none font-bold text-on-brand ${COMPARE_DOT[index]}`}>
       {COMPARE_LETTERS[index]}
     </span>
   );

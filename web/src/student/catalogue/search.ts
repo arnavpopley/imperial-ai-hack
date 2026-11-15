@@ -38,8 +38,11 @@ function withinEdits(a: string, b: string, limit: number): boolean {
   return previous[b.length]! <= limit;
 }
 
-/** Typos allowed in one query word: none under four letters, one up to six, two from seven. */
-const typoAllowance = (word: string) => (word.length < 4 ? 0 : word.length < 7 ? 1 : 2);
+/**
+ * Typos allowed in one query word: none under four letters, one up to six, two from seven. None in a word with
+ * a digit: module codes differ by a single digit (MECH60018, MECH60019), so a code must match as typed.
+ */
+const typoAllowance = (word: string) => (/\d/.test(word) || word.length < 4 ? 0 : word.length < 7 ? 1 : 2);
 
 /**
  * True when every word of the query is found in the module's title, code or topic labels: as the start of a

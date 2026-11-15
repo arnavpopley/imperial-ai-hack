@@ -33,11 +33,16 @@ describe('matchesQuery', () => {
     expect(matchesQuery(finance, 'economics')).toBe(true);
   });
 
-  it('forgives typos in longer words, including a mistyped code', () => {
+  it('forgives typos in longer words', () => {
     expect(matchesQuery(fluids, 'fluid mechancs')).toBe(true);
     expect(matchesQuery(fluids, 'mathmatics')).toBe(true);
-    expect(matchesQuery(fluids, 'mech6006')).toBe(true);
     expect(matchesQuery(finance, 'finan')).toBe(true);
+  });
+
+  it('matches codes exactly, since codes differ by a single digit', () => {
+    expect(matchesQuery(fluids, '60006')).toBe(true);
+    expect(matchesQuery(fluids, 'mech60007')).toBe(false);
+    expect(matchesQuery(fluids, 'mech6006')).toBe(false);
   });
 
   it('needs every word to match, and does not match unrelated words', () => {

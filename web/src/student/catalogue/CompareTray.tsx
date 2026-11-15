@@ -31,7 +31,7 @@ export function CompareTray({ selected, onRemove, onClear, onOpen }: CompareTray
             {selected.map((m, i) => (
               <li key={m.moduleId}>
                 <span className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-surface-2 pr-1 pl-2 text-[13px] font-medium">
-                  <span aria-hidden="true" className={`grid size-4 place-items-center rounded-[5px] text-[10px] font-bold text-on-brand ${COMPARE_DOT[i]}`}>
+                  <span aria-hidden="true" className={`grid size-4 place-items-center rounded-[5px] text-[10px] leading-none font-bold text-on-brand ${COMPARE_DOT[i]}`}>
                     {COMPARE_LETTERS[i]}
                   </span>
                   <span className="font-mono text-[12px]">{m.code}</span>

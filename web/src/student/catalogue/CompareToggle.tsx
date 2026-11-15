@@ -37,7 +37,7 @@ export function CompareToggle({ title, slot, full, onToggle, className }: Compar
       <span
         aria-hidden="true"
         className={cx(
-          'grid size-4 place-items-center rounded-[5px] text-[10px] font-bold text-on-brand',
+          'grid size-4 place-items-center rounded-[5px] text-[10px] leading-none font-bold text-on-brand',
           checked ? COMPARE_DOT[slot] : 'border-[1.5px] border-line-strong bg-surface',
         )}
       >
