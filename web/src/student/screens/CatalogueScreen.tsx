@@ -1,7 +1,7 @@
 // Screen 3: ranked module cards with what-if weights, confidence handling (spec 8.6),
 // eligibility (spec 8.7), filters and a shortlist toggle on each card.
 import { STARTER_QUESTIONS, type Module, type Term } from '@modulematch/shared';
-import { useState, type ReactNode } from 'react';
+import { useId, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { Button } from '../../components/Button.tsx';
 import { cx } from '../../components/cx.ts';
@@ -44,6 +44,8 @@ export function CatalogueScreen() {
   const [type, setType] = useState<TypeFilter>('all');
   const [term, setTerm] = useState<TermFilter>('all');
   const [onlyShortlisted, setOnlyShortlisted] = useState(false);
+  const [controlsOpen, setControlsOpen] = useState(false);
+  const controlsId = useId();
 
   const visible = ranked.filter(
     (r) =>
@@ -76,8 +78,25 @@ export function CatalogueScreen() {
       {recs.data && !scored && <StarterNotice />}
       {recs.data && scored && confidence !== 'high' && <ConfidenceNotice level={confidence} />}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[19rem_minmax(0,1fr)] lg:items-start">
-        <div className="grid gap-4 lg:sticky lg:top-20">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[19rem_minmax(0,1fr)] lg:items-start lg:gap-6">
+        {/* Below lg the weights and filters fold behind one button, so the first module card is in the first screen. */}
+        <button
+          type="button"
+          aria-expanded={controlsOpen}
+          aria-controls={controlsId}
+          onClick={() => setControlsOpen((open) => !open)}
+          className="flex h-11 items-center gap-2 rounded-card border border-line bg-surface px-4 text-sm font-semibold shadow-soft lg:hidden"
+        >
+          <Icon name="sliders" size={15} className="text-brand" />
+          Weights and filters
+          {filtered && (
+            <span className="rounded-full bg-brand px-1.5 text-[11px] text-on-brand tabular-nums">
+              {[type !== 'all', term !== 'all', onlyShortlisted].filter(Boolean).length}
+            </span>
+          )}
+          <Icon name="chevron-down" size={15} className={cx('ml-auto text-muted transition-transform', controlsOpen && 'rotate-180')} />
+        </button>
+        <div id={controlsId} className={cx('grid gap-4 lg:sticky lg:top-20', !controlsOpen && 'max-lg:hidden')}>
           <WeightPanel goalUsed={goalUsed} />
           <section aria-label="Filters" className="grid gap-3 rounded-card border border-line bg-surface p-4 shadow-soft">
             <SegmentedControl legend="Module type" options={TYPE_OPTIONS} value={type} onChange={setType} />
@@ -195,7 +214,7 @@ function StarterNotice() {
   return (
     <div role="status" className="animate-rise flex flex-wrap items-center gap-x-4 gap-y-3 rounded-card border border-fit-mid/35 bg-fit-mid/8 px-4 py-3">
       <Icon name="info" size={18} className="shrink-0 text-fit-mid" />
-      <div className="min-w-0 flex-1 text-sm">
+      <div className="min-w-0 flex-1 basis-[calc(100%-2.5rem)] text-sm sm:basis-0">
         <p className="font-semibold">We know little about you yet</p>
         <p className="text-[13px] text-muted">
           There are no fit scores until you tell us what you enjoy. This is a starter order, not a recommendation.
@@ -203,6 +222,7 @@ function StarterNotice() {
       </div>
       <Button
         size="sm"
+        className="max-sm:w-full"
         variant="primary"
         icon="chat"
         disabled={sending}
@@ -241,7 +261,7 @@ function ConfidenceNotice({ level }: { level: 'medium' | 'low' }) {
       )}
     >
       <Icon name="info" size={18} className={cx('shrink-0', medium ? 'text-fit-mid' : 'text-fit-low')} />
-      <div className="min-w-0 flex-1 text-sm">
+      <div className="min-w-0 flex-1 basis-[calc(100%-2.5rem)] text-sm sm:basis-0">
         <p className="font-semibold">{medium ? 'These scores could be sharper' : 'I do not know enough about you yet'}</p>
         <p className="text-[13px] text-muted">
           {medium
@@ -251,6 +271,7 @@ function ConfidenceNotice({ level }: { level: 'medium' | 'low' }) {
       </div>
       <Button
         size="sm"
+        className="max-sm:w-full"
         variant={medium ? 'secondary' : 'primary'}
         icon="chat"
         disabled={sending}

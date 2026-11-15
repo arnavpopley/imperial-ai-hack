@@ -4,10 +4,12 @@ import { LIKELY_CLASH_THRESHOLD, schemas, SWAP_FIT_TOLERANCE } from '@modulematc
 import type {
   Clash,
   ClashLabel,
+  CapacityBackup,
   ClashPriority,
   KeepFreeConflict,
   KeepFreeWindow,
   Module,
+  ModuleDemandSignal,
   ProgrammeRules,
   Recommendation,
   RuleViolation,
@@ -201,14 +203,78 @@ type ModuleKind = Module['type'];
 
 const violationKey = (violation: RuleViolation): string => JSON.stringify([violation.code, violation.moduleId]);
 
+/** Swaps that keep the student's kept-free time free come first, then best fit, then by id for a stable order. */
+const bySwapPreference = (x: SwapSuggestion, y: SwapSuggestion): number =>
+  Number(x.keepFreeConflicts > 0) - Number(y.keepFreeConflicts > 0) ||
+  y.fit - x.fit ||
+  compareIds(x.replaceModuleId, y.replaceModuleId) ||
+  compareIds(x.withModuleId, y.withModuleId);
+
 /**
- * Spec 9.2: swaps for the lower-fit module in a clash (both when their fits are equal). Core modules are
- * compulsory, so they are never replaced or offered. An alternative must be eligible, of the same kind as
- * the module it replaces (elective for elective, I-Explore for I-Explore), not already shortlisted or
- * completed, free of clashes with the rest of the shortlist and the core modules, and within
- * SWAP_FIT_TOLERANCE of the module it replaces. It must not add a rules violation that was not there before
- * the swap, or deepen a credit shortfall or overrun that was. Swaps that keep the student's kept-free time
- * free come first, then best fit, top MAX_SWAPS.
+ * Every module that could replace `target` in the shortlist, with the checks spec 9.2 swaps use: eligible, of
+ * the same kind (elective for elective, I-Explore for I-Explore), not already shortlisted or completed, free of
+ * clashes with the rest of the shortlist and the core modules, and adding no rules violation that was not there
+ * before, nor deepening a credit shortfall or overrun that was. With a `fitTolerance`, it must also fit within
+ * that many points of the target. Core modules are compulsory, so they are never replaced. Best first.
+ */
+export function swapCandidates(
+  profile: StudentProfile,
+  shortlist: readonly string[],
+  target: string,
+  ranked: readonly Recommendation[],
+  slots: readonly Slot[],
+  plan: SwapPlan,
+  fitTolerance: number | null,
+): SwapSuggestion[] {
+  const byId = new Map(plan.modules.map((module) => [module.id, module]));
+  const core = new Set(plan.rules.coreModuleIds);
+  const kindOf = (id: string): ModuleKind | null => (core.has(id) ? 'core' : (byId.get(id)?.type ?? null));
+  const targetKind = kindOf(target);
+  if (targetKind === null || targetKind === 'core') return [];
+
+  const fitOf = new Map(ranked.map((recommendation) => [recommendation.moduleId, recommendation.fit]));
+  const targetFit = fitOf.get(target) ?? 0;
+  const targetEcts = byId.get(target)?.ects ?? 0;
+  const unavailable = new Set([...shortlist, ...profile.completedModuleIds]);
+  const byModule = slotsByModule(slots);
+  const rest = shortlist.filter((id) => id !== target);
+  const fixed = unique([...rest, ...coreInPlan(plan.rules, profile)]);
+  const keepFree = plan.keepFree ?? [];
+  const before = new Set(plan.check(shortlist).violations.map(violationKey));
+  const keepsRules = (candidateId: string): boolean => {
+    const ectsChange = (byId.get(candidateId)?.ects ?? 0) - targetEcts;
+    return plan.check([...rest, candidateId]).violations.every(
+      (violation) =>
+        before.has(violationKey(violation)) &&
+        !(violation.code === 'ELECTIVE_ECTS_SHORT' && ectsChange < 0) &&
+        !(violation.code === 'ECTS_CAP_EXCEEDED' && ectsChange > 0),
+    );
+  };
+
+  return ranked
+    .filter(
+      (candidate) =>
+        candidate.eligible &&
+        !unavailable.has(candidate.moduleId) &&
+        kindOf(candidate.moduleId) === targetKind &&
+        (fitTolerance === null || candidate.fit >= targetFit - fitTolerance) &&
+        fixed.every((other) => clashesBetween(candidate.moduleId, other, byModule).length === 0) &&
+        keepsRules(candidate.moduleId),
+    )
+    .map((candidate) => ({
+      replaceModuleId: target,
+      withModuleId: candidate.moduleId,
+      fit: candidate.fit,
+      fitDelta: candidate.fit - targetFit,
+      keepFreeConflicts: keepFreeConflicts([candidate.moduleId], byModule.get(candidate.moduleId) ?? [], keepFree).length,
+    }))
+    .sort(bySwapPreference);
+}
+
+/**
+ * Spec 9.2: swaps for the lower-fit module in a clash (both when their fits are equal), from swapCandidates
+ * within SWAP_FIT_TOLERANCE of the module they replace. Swaps that keep the student's kept-free time free come
+ * first, then best fit, top MAX_SWAPS.
  */
 export function suggestSwaps(
   profile: StudentProfile,
@@ -218,69 +284,50 @@ export function suggestSwaps(
   slots: readonly Slot[],
   plan: SwapPlan,
 ): SwapSuggestion[] {
-  const byId = new Map(plan.modules.map((module) => [module.id, module]));
   const core = new Set(plan.rules.coreModuleIds);
-  const kindOf = (id: string): ModuleKind | null => (core.has(id) ? 'core' : (byId.get(id)?.type ?? null));
-  const swappable = (id: string): boolean => {
-    const kind = kindOf(id);
-    return kind !== null && kind !== 'core';
-  };
-
+  const byId = new Map(plan.modules.map((module) => [module.id, module]));
+  const swappable = (id: string): boolean => !core.has(id) && byId.has(id) && byId.get(id)?.type !== 'core';
   const fitOf = new Map(ranked.map((recommendation) => [recommendation.moduleId, recommendation.fit]));
   const [lowest] = [clash.moduleA, clash.moduleB]
     .filter(swappable)
     .map((id) => fitOf.get(id) ?? 0)
     .sort((x, y) => x - y);
   const targets = [clash.moduleA, clash.moduleB].filter((id) => swappable(id) && (fitOf.get(id) ?? 0) === lowest);
-  const completed = new Set(profile.completedModuleIds);
-  const unavailable = new Set([...shortlist, ...completed]);
-  const byModule = slotsByModule(slots);
-  const coreIds = coreInPlan(plan.rules, profile);
-  const keepFree = plan.keepFree ?? [];
-  const before = new Set(plan.check(shortlist).violations.map(violationKey));
-
   return targets
-    .flatMap((target) => {
-      const targetFit = fitOf.get(target) ?? 0;
-      const targetKind = kindOf(target);
-      const targetEcts = byId.get(target)?.ects ?? 0;
-      const rest = shortlist.filter((id) => id !== target);
-      const fixed = unique([...rest, ...coreIds]);
-      const keepsRules = (candidateId: string): boolean => {
-        const ectsChange = (byId.get(candidateId)?.ects ?? 0) - targetEcts;
-        return plan.check([...rest, candidateId]).violations.every(
-          (violation) =>
-            before.has(violationKey(violation)) &&
-            !(violation.code === 'ELECTIVE_ECTS_SHORT' && ectsChange < 0) &&
-            !(violation.code === 'ECTS_CAP_EXCEEDED' && ectsChange > 0),
-        );
-      };
-      return ranked
-        .filter(
-          (candidate) =>
-            candidate.eligible &&
-            !unavailable.has(candidate.moduleId) &&
-            kindOf(candidate.moduleId) === targetKind &&
-            candidate.fit >= targetFit - SWAP_FIT_TOLERANCE &&
-            fixed.every((other) => clashesBetween(candidate.moduleId, other, byModule).length === 0) &&
-            keepsRules(candidate.moduleId),
-        )
-        .map((candidate) => ({
-          replaceModuleId: target,
-          withModuleId: candidate.moduleId,
-          fit: candidate.fit,
-          fitDelta: candidate.fit - targetFit,
-          keepFreeConflicts: keepFreeConflicts([candidate.moduleId], byModule.get(candidate.moduleId) ?? [], keepFree).length,
-        }));
-    })
-    .sort(
-      (x, y) =>
-        Number(x.keepFreeConflicts > 0) - Number(y.keepFreeConflicts > 0) ||
-        y.fit - x.fit ||
-        compareIds(x.replaceModuleId, y.replaceModuleId) ||
-        compareIds(x.withModuleId, y.withModuleId),
-    )
+    .flatMap((target) => swapCandidates(profile, shortlist, target, ranked, slots, plan, SWAP_FIT_TOLERANCE))
+    .sort(bySwapPreference)
     .slice(0, MAX_SWAPS);
+}
+
+/**
+ * Issue #68: for each shortlisted option that the cohort's demand puts near or over capacity, the best backup.
+ * It is the best-fitting swap candidate (the same checks as swapCandidates, with no fit tolerance) that is not
+ * near capacity itself. `canAdd` says it can also sit beside the popular pick: no clash with it, no new rules
+ * violation from keeping both, and no ECTS overrun, since adding a module only ever deepens one that is already
+ * there. Informational: fit and rank are unchanged.
+ */
+export function capacityBackups(
+  profile: StudentProfile,
+  shortlist: readonly string[],
+  ranked: readonly Recommendation[],
+  slots: readonly Slot[],
+  plan: SwapPlan,
+  demand: ReadonlyMap<string, ModuleDemandSignal>,
+): CapacityBackup[] {
+  const byModule = slotsByModule(slots);
+  const before = new Set(plan.check(shortlist).violations.map(violationKey));
+  return shortlist.flatMap((target) => {
+    const signal = demand.get(target);
+    if (!signal) return [];
+    const best = swapCandidates(profile, shortlist, target, ranked, slots, plan, null).find((c) => !demand.has(c.withModuleId));
+    if (!best) return [];
+    const canAdd =
+      clashesBetween(best.withModuleId, target, byModule).length === 0 &&
+      plan
+        .check([...shortlist, best.withModuleId])
+        .violations.every((violation) => before.has(violationKey(violation)) && violation.code !== 'ECTS_CAP_EXCEEDED');
+    return [{ ...best, status: signal.status, canAdd }];
+  });
 }
 
 /**
@@ -313,6 +360,8 @@ export function planTimetable(
   ranked: readonly Recommendation[],
   slots: readonly Slot[],
   plan: SwapPlan,
+  /** Cohort demand for capped modules near or over capacity; picks among them get a backup (issue #68). */
+  demand: ReadonlyMap<string, ModuleDemandSignal> = new Map(),
 ): Omit<TimetableView, 'rules'> {
   const core = coreInPlan(plan.rules, profile);
   const keepFree = [...(plan.keepFree ?? keepFreeWindows(profile.timetablePrefs))];
@@ -330,6 +379,7 @@ export function planTimetable(
     coreModuleIds: core,
     clashes,
     swaps: [...swaps.values()],
+    backups: capacityBackups(profile, shortlist, ranked, slots, { ...plan, keepFree }, demand),
     keepFree,
     keepFreeConflicts: keepFreeConflicts(
       shortlist.filter((id) => !coreSet.has(id)),

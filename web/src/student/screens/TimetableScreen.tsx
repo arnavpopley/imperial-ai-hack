@@ -5,7 +5,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { api } from '../../api.ts';
-import { buttonClass } from '../../components/Button.tsx';
+import { Button, buttonClass } from '../../components/Button.tsx';
 import { ClashMarker } from '../../components/ClashMarker.tsx';
 import { cx } from '../../components/cx.ts';
 import { decisionsKey } from '../../components/exceptions.ts';
@@ -13,6 +13,7 @@ import { Icon } from '../../components/Icon.tsx';
 import { SampleDataLabel } from '../../components/SampleDataLabel.tsx';
 import { SegmentedControl } from '../../components/SegmentedControl.tsx';
 import { EmptyState, ErrorState, Skeleton } from '../../components/StateViews.tsx';
+import { downloadFile } from '../download.ts';
 import { useAsync } from '../hooks/useAsync.ts';
 import { useShortlist } from '../hooks/useShortlist.ts';
 import { DAY_LABELS, keepFreeLabel, TERM_LABELS } from '../labels.ts';
@@ -20,9 +21,13 @@ import { PhotoBanner } from '../catalogue/PhotoBanner.tsx';
 import { paths } from '../routes.ts';
 import { ectsLabels } from '../rulesStatus.ts';
 import { useAdvisor } from '../shell/StudentShell.tsx';
+import { useCatalogue } from '../state/CatalogueProvider.tsx';
 import { useReferenceData } from '../state/ReferenceDataProvider.tsx';
 import { useReadySession } from '../state/SessionProvider.tsx';
+import { CapacityBackupPanel } from '../timetable/CapacityBackupPanel.tsx';
 import { ClashCard } from '../timetable/ClashCard.tsx';
+import { buildIcs } from '../timetable/exportPlan.ts';
+import { PlanPrint } from '../timetable/PlanPrint.tsx';
 import { moduleColours } from '../timetable/moduleColours.ts';
 import { WeekGrid } from '../timetable/WeekGrid.tsx';
 
@@ -61,7 +66,12 @@ export function TimetableScreen() {
           Your timetable, clashes and programme rules check appear here.
         </EmptyState>
       ) : timetable.data ? (
-        <TimetableBody view={timetable.data} onChanged={timetable.reload} refreshing={timetable.loading} />
+        <TimetableBody
+          view={timetable.data}
+          onChanged={timetable.reload}
+          refreshing={timetable.loading}
+          stale={timetable.loading || Boolean(timetable.error)}
+        />
       ) : timetable.error ? (
         <ErrorState message={timetable.error} onRetry={timetable.reload} />
       ) : (
@@ -74,7 +84,15 @@ export function TimetableScreen() {
   );
 }
 
-function TimetableBody({ view, onChanged, refreshing }: { view: TimetableView; onChanged: () => void; refreshing: boolean }) {
+interface TimetableBodyProps {
+  view: TimetableView;
+  onChanged: () => void;
+  refreshing: boolean;
+  /** The view may not match the shortlist: a refresh is running or the last one failed. */
+  stale: boolean;
+}
+
+function TimetableBody({ view, onChanged, refreshing, stale }: TimetableBodyProps) {
   const { session, offerDraft } = useReadySession();
   const { moduleById } = useReferenceData();
   const { openAdvisor } = useAdvisor();
@@ -192,6 +210,8 @@ function TimetableBody({ view, onChanged, refreshing }: { view: TimetableView; o
 
         <RulesPanel view={view} />
 
+        <CapacityBackupPanel backups={view.backups} titleFor={titleFor} />
+
         <section aria-labelledby="shortlist-heading" className="rounded-card border border-line bg-surface p-4 shadow-soft">
           <div className="mb-2 flex items-baseline justify-between">
             <h2 id="shortlist-heading" className="text-sm font-semibold">
@@ -237,6 +257,7 @@ function TimetableBody({ view, onChanged, refreshing }: { view: TimetableView; o
               {shortlist.error}
             </p>
           )}
+          <ExportActions view={view} titleFor={titleFor} codeFor={codeFor} stale={stale} />
         </section>
       </div>
     </div>
@@ -244,23 +265,66 @@ function TimetableBody({ view, onChanged, refreshing }: { view: TimetableView; o
 }
 
 /** All times come from previous years, so the whole view is provisional; say so before anything else. */
+/**
+ * Issue 63: take the plan away without an account or a sharing link. "Download plan" prints a one-page copy
+ * (save it as a PDF from the print dialog) and "Add to calendar" saves an .ics; both are built in the browser.
+ */
+interface ExportActionsProps {
+  view: TimetableView;
+  titleFor: (id: string) => string;
+  codeFor: (id: string) => string;
+  /** Exports wait until the timetable matches the current shortlist, so a copy never mixes old and new. */
+  stale: boolean;
+}
+
+function ExportActions({ view, titleFor, codeFor, stale }: ExportActionsProps) {
+  const { session } = useReadySession();
+  const { byId, scored, weights, recs } = useCatalogue();
+  // The printed fit and top reason come from the recommendations, so printing waits for those to be current too.
+  const printStale = stale || recs.loading || !recs.data || Boolean(recs.error);
+  const { moduleById } = useReferenceData();
+  const slots = view.grids.flatMap((g) => g.slots);
+  const calendar = () =>
+    downloadFile('modulematch-timetable-provisional.ics', 'text/calendar', buildIcs(slots, { titleFor, codeFor }));
+  return (
+    <div className="mt-4 border-t border-line pt-3">
+      <div className="grid grid-cols-2 gap-2">
+        <Button size="sm" icon="arrow-down" onClick={() => window.print()} disabled={printStale}>
+          Download plan
+        </Button>
+        <Button size="sm" icon="calendar" onClick={calendar} disabled={stale || slots.length === 0}>
+          Add to calendar
+        </Button>
+      </div>
+      <p className="mt-1.5 text-[11px] text-muted">Provisional, based on previous years. Saved on your device only.</p>
+      {/* Left out while stale, so even the browser's own Print never mixes an old week with a new shortlist. */}
+      {!printStale && (
+        <PlanPrint
+          view={view}
+          shortlist={session.shortlist}
+          fitOf={(id) => byId.get(id)}
+          titleFor={titleFor}
+          codeFor={codeFor}
+          ectsOf={(id) => moduleById.get(id)?.ects ?? 0}
+          weights={weights}
+          scored={scored}
+        />
+      )}
+    </div>
+  );
+}
+
 function ProvisionalNotice() {
   return (
     <div
       role="note"
-      className="flex items-start gap-3 rounded-card border border-dashed border-fit-mid/50 bg-fit-mid/8 px-4 py-3.5"
+      className="flex items-center gap-2.5 rounded-card border border-dashed border-fit-mid/50 bg-fit-mid/8 px-3.5 py-2.5 text-[13px]"
     >
-      <span className="grid size-8 shrink-0 place-items-center rounded-full bg-fit-mid/15 text-fit-mid" aria-hidden="true">
-        <Icon name="clock" size={16} />
-      </span>
-      <div className="min-w-0 text-[13px] leading-relaxed">
-        <p className="font-semibold text-ink">
-          Times are based on previous years' timetables and are provisional, so they may change.
-        </p>
-        <p className="text-muted">
-          Use this to spot likely clashes early. Check the confirmed timetable once your department publishes it.
-        </p>
-      </div>
+      <Icon name="clock" size={16} className="shrink-0 text-fit-mid" />
+      <p className="min-w-0">
+        <span className="font-semibold text-ink">Provisional: times from previous years.</span>{' '}
+        <span className="text-muted">Check the confirmed timetable once it is published.</span>
+      </p>
     </div>
   );
 }

@@ -20,7 +20,7 @@ import {
 import { randomUUID } from 'node:crypto';
 import { levelCapFor, loadModuleResources, loadPathways, loadSocieties, rulesFor } from '../db/catalogue.ts';
 import * as repo from '../db/repo.ts';
-import { checkShortlist, completeness, coreInPlan, hasFitSignal, performanceView, planTimetable, profileHash, rankModules, starterOrder } from '../engines/index.ts';
+import { checkShortlist, completeness, coreInPlan, demandSignals, hasFitSignal, performanceView, planTimetable, profileHash, rankModules, starterOrder } from '../engines/index.ts';
 import type { Tracer } from '../trace/tracer.ts';
 import { explain } from './matcher.ts';
 import { canTransition, restingModeFor } from './modes.ts';
@@ -194,9 +194,11 @@ export function timetableView(session: SessionState, recs = ranked(session)): Ti
   const rules = rulesForProfile(session.profile);
   // Approved rule exceptions apply to the plan and to every swap the engine checks (spec 11.1).
   const check = (shortlist: readonly string[]) => checkShortlist(shortlist, session.profile, modules, rules, session.exceptions);
+  // The same synthetic cohort demand the catalogue chips and the staff list show (issue #68).
+  const demand = new Map(demandSignals(modules, repo.listCohort().map((s) => s.shortlist)).map((d) => [d.moduleId, d]));
   return {
-    // Core modules, clashes against them, swaps and kept-free time all come from the timetable engine (spec 9.2).
-    ...planTimetable(session.profile, session.shortlist, recs, slots, { modules, rules, check }),
+    // Core modules, clashes against them, swaps, capacity backups and kept-free time come from the timetable engine.
+    ...planTimetable(session.profile, session.shortlist, recs, slots, { modules, rules, check }, demand),
     rules: check(session.shortlist),
   };
 }

@@ -91,6 +91,7 @@ export type FeedbackSummary = z.infer<typeof S.FeedbackSummary>;
 export type FeedbackExportRow = z.infer<typeof S.FeedbackExportRow>;
 export type CohortOffer = z.infer<typeof S.CohortOffer>;
 export type ModuleDemandSignal = z.infer<typeof S.ModuleDemandSignal>;
+export type CapacityBackup = z.infer<typeof S.CapacityBackup>;
 export type ModuleResult = z.infer<typeof S.ModuleResult>;
 export type ResultsConsent = z.infer<typeof S.ResultsConsent>;
 export type StudentResults = z.infer<typeof S.StudentResults>;
