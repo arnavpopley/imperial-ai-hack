@@ -9,6 +9,12 @@ describe('trace text', () => {
     expect(labelCodes('INTERVIEW -> RECOMMEND')).toMatch(/^[A-Z][a-z].* → [A-Z][a-z]/);
   });
 
+  it('labels a raw intent with the shared map and its confidence as a percentage', () => {
+    expect(labelCodes('rule_exception_request (0.90)')).toBe('Rule exception request · 90% sure');
+    expect(labelCodes('catalogue_question (1.00)')).toBe('Catalogue question · 100% sure');
+    expect(labelCodes('check_rules (0.5)')).toBe('check_rules (0.5)');
+  });
+
   it('leaves module codes, guardrail names and unknown words alone', () => {
     expect(labelCodes('check_rules([MECH60016])')).toBe('check_rules([MECH60016])');
     expect(labelCodes('G3 injection on a CV')).toBe('G3 injection on a CV');
