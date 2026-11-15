@@ -58,8 +58,10 @@ const PATHWAY_CUES: Record<string, string[]> = {
 const DISLIKE =
   /\b(avoid|hate|hated|dislike|don'?t (like|enjoy|want)|not (into|a fan of|for me)|boring|bored|dread|struggle with|least|slog|can'?t stand|steer clear|rather not|painful|nightmare)\b/i;
 const UNSURE = /\b(not sure|no idea|don'?t know|undecided|haven'?t decided|no clue)\b/i;
-const YES = /\b(yes|yeah|yep|definitely|absolutely|love to|keen|sure|why not|open to)\b/i;
+const YES = /\b(yes|yeah|yep|definitely|absolutely|love to|keen|sure|why not|open to|up for|happy to)\b/i;
 const NO = /\b(no|nope|not really|rather not|prefer not)\b/i;
+const EXPLICIT_YES = /^\W*(yes|yeah|yep|definitely|absolutely|sure|of course)\b|\b(i'?d be up for|happy to|i'?d like|i would like|i'?d love)\b/i;
+const BREADTH_WORDS = /\b(outside|other (subjects?|departments?)|languages?|business|arts?|humanities|elective|breadth)\b/i;
 const MAYBE = /\b(maybe|possibly|a bit|a little|perhaps|might)\b/i;
 const DAYS: Record<string, StudentProfile['timetablePrefs']['avoidDays'][number]> = {
   monday: 'mon',
@@ -77,6 +79,12 @@ const mentions = (cue: string, text: string) => new RegExp(`(^|[^a-z])${escape(c
 const quoteOf = (sentence: string) => sentence.trim().slice(0, 200);
 
 /** Words that make a sentence state a preference rather than just name a module, as in "the CFD coursework". */
+/** A negator a few words before an assessment option: "no exams", "not big exams", "without coursework". */
+const NEGATOR = String.raw`\b(?:no|not|never|without|fewer|less|avoid(?:ing)?|hate|dislike|don'?t (?:like|want))\s+(?:\w+\s+){0,2}`;
+const NOT_NEGATING = /\b(not (?:averse|against|opposed) to|no (?:problem|issue)s? with|nothing against|don'?t mind|not bad)\b/g;
+const NEGATED_EXAM = new RegExp(`${NEGATOR}(?:exams?|tests?)\\b`);
+const NEGATED_COURSEWORK = new RegExp(`${NEGATOR}(?:coursework|projects?|assignments?|essays?|portfolios?)\\b`);
+
 const PREFERENCE = /\b(prefer\w*|rather|instead|over|than|like|love|enjoy|happier|better|best|fine|keen|definitely|please|more|less|hate|dislike|avoid|dread)\b/;
 
 const SOLO = /\b(alone|solo|on my own|independent(ly)?|by myself|individual(ly)?)\b/;
@@ -129,8 +137,14 @@ function styleCues(sentence: string, targetSlots: string[]): ExtractedUpdate[] {
   const ranked = s.match(/\b(exams?|coursework|projects?)\b.*\b(over|rather than|instead of|more than)\b.*\b(exams?|coursework|projects?)\b/);
   // "I'd much rather do a portfolio": the option after "rather" is the preferred one.
   const rather = s.match(/\brather (?:do|have|take|sit)?\s*(?:an? |the )?(exams?|tests?|coursework|projects?|portfolios?|essays?)\b/);
+  // "No exams please", "definitely not big exams", "exams, not coursework": a negated option is the one they do not want.
+  // "Not averse to exams" or "no problem with coursework" accepts the option, so those phrases are not negations.
+  const plain = s.replace(NOT_NEGATING, ' ok ');
+  const examNo = NEGATED_EXAM.test(plain);
+  const courseworkNo = NEGATED_COURSEWORK.test(plain);
   if (ranked?.[1]) add('style.examPreference', ranked[1].startsWith('exam') ? 0.85 : 0.2);
   else if (rather?.[1]) add('style.examPreference', /^(exam|test)/.test(rather[1]) ? 0.85 : 0.2);
+  else if (examNo !== courseworkNo) add('style.examPreference', examNo ? 0.2 : 0.8);
   else if (!statesAssessment) {
     // Naming "the CFD coursework" as a favourite topic says nothing about assessment.
   } else if (/\b(mix|both|balance|either)\b/.test(s) && /\bexams?\b/.test(s)) add('style.examPreference', 0.5);
@@ -146,8 +160,21 @@ function styleCues(sentence: string, targetSlots: string[]): ExtractedUpdate[] {
   // Dreading heavy derivations or proofs is a low comfort with maths-heavy modules.
   const struggles = DISLIKE.test(s) || /\b(hard(er)?|difficult|challenging|struggle)\b/.test(s);
   if (struggles && /\b(derivations?|proofs?|heavy maths|maths-heavy|math-heavy|calculus|quantitative)\b/.test(s)) add('style.mathsComfort', 0.3);
-  if (/\b(heavy|lots of|a lot of|hard) (work|workload)\b|\bdon'?t mind (hard )?work\b/.test(s)) add('style.workloadTolerance', 0.8);
-  else if (/\b(light|lighter|manageable|not too (much|heavy))\b/.test(s)) add('style.workloadTolerance', 0.3);
+  // Workload: heavy is fine (0.8), light or not too much (0.25), moderate or normal (0.5).
+  const namesWorkload = /\b(workloads?|work ?load)\b/.test(s);
+  const aboutWorkload = asked('style.workloadTolerance') || namesWorkload;
+  // A follow-up that asks only about workload makes a bare "Normal" or "Manageable" an answer to it.
+  const workloadOnly = asked('style.workloadTolerance') && !asked('style.groupPreference');
+  // "Heavy isn't fine for me" rejects a heavy load; "heavy is fine, not a problem" does not.
+  const rejectsHeavy = /\bheavy\s+(?:workloads?\s+|work\s+)?(?:isn'?t|is not|aren'?t|are not|wouldn'?t be|would not be|is too much)\b/.test(s);
+  if (rejectsHeavy) add('style.workloadTolerance', 0.25);
+  else if (/\b(heavy|lots of|a lot of|hard) (work|workload)\b|\bdon'?t mind (hard )?work\b|\bheavy\b.{0,20}\b(is |are )?(fine|ok|okay|good)\b|\bcan (handle|take|cope with) (a lot|lots|plenty|a heavy)\b/.test(s)) {
+    add('style.workloadTolerance', 0.8);
+  } else if (/\b(light|lighter|not too (much|heavy)|nothing too heavy)\b/.test(s)) add('style.workloadTolerance', 0.25);
+  // "Moderate" answers the workload question; vaguer words ("normal", "fine") only count when the sentence names the
+  // workload, because the team question also asks about working style ("Working alone is fine").
+  else if (/\b(moderate|medium|average)\b/.test(s) && aboutWorkload) add('style.workloadTolerance', 0.5);
+  else if ((namesWorkload || workloadOnly) && /\b(normal|standard|reasonable|manageable|fine|ok|okay|either|whatever)\b/.test(s)) add('style.workloadTolerance', 0.5);
   return out;
 }
 
@@ -196,8 +223,13 @@ export function extractByCues(text: string, targetSlots: string[], pathwayIds: s
       if (chosen.length) updates.push({ slot: 'pathways', value: chosen.slice(0, 3), quote: quoteOf(sentence), confidence: 0.75 });
       else if (UNSURE.test(sentence)) updates.push({ slot: 'pathwaysSkipped', value: true, quote: quoteOf(sentence), confidence: 0.8 });
     }
-    if (targetSlots.includes('breadthAppetite')) {
-      const value = MAYBE.test(sentence) ? 0.5 : NO.test(sentence) ? 0.15 : YES.test(sentence) ? 0.85 : null;
+    // A sentence about assessment or workload ("No exams please") says nothing about breadth.
+    const aboutAssessment = /\b(exams?|coursework|projects?|assignments?|workloads?)\b/i.test(sentence) && !BREADTH_WORDS.test(sentence);
+    if (targetSlots.includes('breadthAppetite') && !aboutAssessment) {
+      // An explicit yes stays a yes even when hedged ("Yes, maybe one module"): at least 0.7.
+      const value = EXPLICIT_YES.test(sentence)
+        ? MAYBE.test(sentence) ? 0.7 : 0.85
+        : MAYBE.test(sentence) ? 0.5 : NO.test(sentence) ? 0.15 : YES.test(sentence) ? 0.85 : null;
       if (value !== null) updates.push({ slot: 'breadthAppetite', value, quote: quoteOf(sentence), confidence: 0.7 });
     }
     updates.push(...styleCues(sentence, targetSlots));

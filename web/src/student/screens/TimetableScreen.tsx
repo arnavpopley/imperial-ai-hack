@@ -8,6 +8,7 @@ import { api } from '../../api.ts';
 import { buttonClass } from '../../components/Button.tsx';
 import { ClashMarker } from '../../components/ClashMarker.tsx';
 import { cx } from '../../components/cx.ts';
+import { decisionsKey } from '../../components/exceptions.ts';
 import { Icon } from '../../components/Icon.tsx';
 import { SampleDataLabel } from '../../components/SampleDataLabel.tsx';
 import { SegmentedControl } from '../../components/SegmentedControl.tsx';
@@ -28,8 +29,10 @@ export function TimetableScreen() {
   const { session } = useReadySession();
   const sessionId = session.id;
   const shortlistKey = session.shortlist.join(',');
-  // Kept-free time comes from the profile, so a profile edit (in the advisor or Your data) rebuilds the week too.
-  const timetable = useAsync(() => api.timetable(sessionId), [sessionId, shortlistKey, session.profile.updatedAt]);
+  // A Senior Tutor decision can change which swaps and rule violations apply, and kept-free time comes from the
+  // profile, so either one refetches the view too.
+  const decisions = decisionsKey(session);
+  const timetable = useAsync(() => api.timetable(sessionId), [sessionId, shortlistKey, decisions, session.profile.updatedAt]);
   // Core modules are in the plan from the start, so the week shows even before any elective is shortlisted.
   const nothingToShow = session.shortlist.length === 0 && timetable.data?.coreModuleIds.length === 0;
 

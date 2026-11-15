@@ -12,6 +12,7 @@ import { NudgeNote } from '../results/NudgeNote.tsx';
 import { useNudge } from '../results/ResultsProvider.tsx';
 import { paths } from '../routes.ts';
 import type { RankedModule } from '../state/CatalogueProvider.tsx';
+import { ExceptionChip } from './ExceptionChip.tsx';
 import { ScoreRing } from './ScoreRing.tsx';
 import { ShortlistButton } from './ShortlistButton.tsx';
 
@@ -72,6 +73,7 @@ export function ModuleCard({ item, lowConfidence, shortlisted, pending, onToggle
                       Not eligible yet
                     </span>
                   )}
+                  {item.exception && <ExceptionChip decision={item.exception} />}
                 </div>
                 <h3 className={cx('mt-1.5 text-[17px] leading-snug font-semibold tracking-tight', !eligible && 'text-muted')}>
                   <Link

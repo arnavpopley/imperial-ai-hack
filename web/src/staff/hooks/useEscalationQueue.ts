@@ -1,5 +1,6 @@
-import type { Escalation, StaffEscalation } from '@modulematch/shared';
+import type { Escalation, schemas, StaffEscalation } from '@modulematch/shared';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { z } from 'zod';
 import { api } from '../../api.ts';
 import { toError } from '../lib/errors.ts';
 
@@ -15,11 +16,12 @@ export interface EscalationQueue {
   /** Escalations that arrived after the first load and have not been opened yet. */
   freshIds: ReadonlySet<string>;
   markSeen: (id: string) => void;
-  respond: (id: string, response: string) => Promise<void>;
+  /** A written reply, or a Senior Tutor decision on a rule exception with an optional message. */
+  respond: (id: string, body: z.input<typeof schemas.EscalationRespondBody>) => Promise<void>;
   retry: () => void;
 }
 
-type Reply = Pick<Escalation, 'status' | 'staffResponse'>;
+type Reply = Pick<Escalation, 'status' | 'staffResponse' | 'decision'>;
 
 /**
  * A reply this console sent wins over a polled copy that has not caught up yet, so a poll that lands
@@ -80,9 +82,9 @@ export function useEscalationQueue(intervalMs: number = ESCALATION_POLL_MS): Esc
     });
   }, []);
 
-  const respond = useCallback(async (id: string, response: string) => {
-    const updated = await api.staff.respond(id, { response, resolve: true });
-    const reply: Reply = { status: updated.status, staffResponse: updated.staffResponse };
+  const respond = useCallback(async (id: string, body: z.input<typeof schemas.EscalationRespondBody>) => {
+    const updated = await api.staff.respond(id, body);
+    const reply: Reply = { status: updated.status, staffResponse: updated.staffResponse, decision: updated.decision };
     replies.current.set(id, reply);
     setItems((prev) => prev?.map((e) => (e.id === id ? { ...e, ...reply } : e)) ?? prev);
   }, []);

@@ -118,3 +118,12 @@ export function styleValueText(key: StyleKey, value: number): string {
 }
 
 export const percent = (value: number): string => `${Math.round(value * 100)}%`;
+
+/** Interests below this strength are stated dislikes (the extractor stores them at 0 to 0.1). */
+export const AVOID_BELOW = 0.3;
+
+/** Interests split into topics the student is drawn to (strongest first) and topics they would avoid. */
+export function splitInterests(interests: Record<string, number>): { liked: [string, number][]; avoided: [string, number][] } {
+  const all = Object.entries(interests).sort(([, a], [, b]) => b - a);
+  return { liked: all.filter(([, v]) => v >= AVOID_BELOW), avoided: all.filter(([, v]) => v < AVOID_BELOW) };
+}
