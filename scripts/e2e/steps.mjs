@@ -35,8 +35,16 @@ const TOPICS = [
 export const RULE_BREAK = 'Can I take Nuclear Reactor Physics anyway, even without the prerequisite?';
 const STAFF_REPLY =
   'Approved as an exception: you can take Nuclear Reactor Physics this year. Please read the Introduction to Nuclear Energy A notes before week 3.';
-/** Two modules the timetable puts at the same time in spring, whatever the profile (data/slots.json). */
-const CLASHING = ['MECH60009', 'MECH60018'];
+/** The judge's top match (Embedded C for Microcontrollers A for the robotics persona), shortlisted first. */
+const TOP_PICK = 'MECH60009';
+/**
+ * Two I-Explore modules the timetable puts at the same time in spring, whatever the profile (data/slots.json):
+ * Demystifying Machine Learning and Space Mining. Embedded C and Mechatronics 3A also clash, but since swaps
+ * must be of the same kind (#74), a robotics profile has no elective within 10 points of Mechatronics 3A.
+ */
+const CLASHING = ['IEX-ML', 'IEX-SPACE'];
+/** Finance & Financial Management: one of the two modules with a counterfactual that clears the bar (+2.1 fit). */
+const COUNTERFACTUAL_MODULE = 'BUSI60043';
 
 const CONVERSATION = { css: 'ol[aria-label="Conversation"]' };
 const MAIN_NAV = (text) => ({ css: 'nav[aria-label="Role"] a', text });
@@ -376,18 +384,15 @@ export const STEPS = [
     async run(ctx) {
       const page = ctx.student;
       ctx.active = page;
-      // A swap must come within 10 fit points of the lower-fit module in the clash, and the closest
-      // candidates are the modules ranked just below the pair. Taking the third pick from further down
-      // keeps those free to swap in (with live models the next one or two are often the only candidates).
+      // The top match plus two I-Explore modules that clash. A swap must be of the same kind and within 10 fit
+      // points (spec 9.2), and I-Explore fits sit close together, so the lower-fit one almost always has one.
       const eligible = await page.eval(() =>
         [...document.querySelectorAll('section[aria-labelledby="ranked-heading"] ol > li')]
           .filter((li) => li.querySelector('a[href^="/modules/"]') && !li.textContent.includes('Not eligible yet'))
           .map((li) => decodeURIComponent(li.querySelector('a[href^="/modules/"]').getAttribute('href').slice('/modules/'.length))),
       );
-      const others = eligible.filter((id) => !CLASHING.includes(id));
-      const third = others[3] ?? others.at(-1) ?? fail('Not enough eligible modules to shortlist three');
       if (!CLASHING.every((id) => eligible.includes(id))) fail(`${CLASHING.join(' and ')} are not both open to this student`);
-      const picks = [...CLASHING, third];
+      const picks = [TOP_PICK, ...CLASHING];
       for (const id of picks) {
         const button = { css: `section[aria-labelledby="ranked-heading"] ol > li:has(a[href="/modules/${id}"]) button[aria-pressed]` };
         await page.click(button, { desc: `Add to shortlist on ${id}` });
@@ -535,20 +540,31 @@ export const STEPS = [
       await staff.bringToFront();
       await staff.click(STAFF_TAB('Modules'));
       await pathIs(staff, { re: '^/staff/modules/[^/]+$' });
-      // The module from the demo script: Mechatronics 3A, one half of the student's clash.
-      await staff.click({ css: `a[href="/staff/modules/${CLASHING[1]}"]` }, { desc: `${CLASHING[1]} in the module picker` });
-      await pathIs(staff, `/staff/modules/${CLASHING[1]}`);
-      await staff.waitForElement({ css: 'article', text: 'Timetable clash' }, { desc: 'the timetable clash card', timeout: ctx.timeout });
-      const card = { css: 'article', text: 'Counterfactual' };
-      await staff.waitForElement({ css: 'article button', text: { exact: 'Accept' }, within: card }, { desc: 'a counterfactual card', timeout: ctx.timeout });
+      // Most modules now get one "no single change makes a big difference" summary; Finance & Financial
+      // Management keeps a real counterfactual (+2.1 fit), so the demo opens it.
+      await staff.click({ css: `a[href="/staff/modules/${COUNTERFACTUAL_MODULE}"]` }, { desc: `${COUNTERFACTUAL_MODULE} in the module picker` });
+      await pathIs(staff, `/staff/modules/${COUNTERFACTUAL_MODULE}`);
+      const index = await staff.waitFor(() => {
+        const i = [...document.querySelectorAll('article')]
+          .filter((a) => a.checkVisibility())
+          .findIndex((a) => /counterfactual/i.test(a.innerText) && !/counterfactual summary/i.test(a.innerText) && /\bAccept\b/.test(a.innerText));
+        return i >= 0 ? String(i) : false;
+      }, [], { desc: 'a counterfactual card (not the summary)', timeout: ctx.timeout });
+      const card = { css: 'article', index: Number(index) };
       const headline = await staff.text({ css: 'h3', within: card });
       await ctx.checkpoint(staff, 'dashboard');
       await staff.click({ css: 'button', text: { exact: 'Accept' }, within: card }, { desc: 'Accept on the counterfactual card' });
+      // Accepting collapses the actions into what happens next.
       const decided = (h) =>
         [...document.querySelectorAll('article')].some(
-          (a) => a.querySelector('h3')?.innerText === h && /Accepted/.test(a.innerText) && a.querySelector('button[aria-pressed="true"]')?.innerText.trim() === 'Accept',
+          (a) =>
+            a.querySelector('h3')?.innerText === h &&
+            /Accepted/.test(a.innerText) &&
+            a.innerText.includes('Logged for the module review') &&
+            a.innerText.includes('Owner: module lead') &&
+            [...a.querySelectorAll('button')].some((b) => b.innerText.trim() === 'Change decision'),
         );
-      await staff.waitFor(decided, [headline], { desc: 'the card to show Accepted' });
+      await staff.waitFor(decided, [headline], { desc: 'the card to show Accepted and "Logged for the module review"' });
       ctx.note(`accepted "${headline}"`);
       await staff.scrollIntoView({ css: 'article', text: headline });
       await ctx.checkpoint(staff, 'insight-accepted');
