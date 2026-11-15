@@ -6,6 +6,7 @@ import { type RefObject, useEffect, useId, useRef, useState } from 'react';
 import { cx } from '../../components/cx.ts';
 import { Icon } from '../../components/Icon.tsx';
 import { ModeChip } from '../../components/ModeChip.tsx';
+import { ProvenanceLegend } from '../../components/Provenance.tsx';
 import { ChatPanel } from '../chat/ChatPanel.tsx';
 import { useChat } from '../chat/ChatProvider.tsx';
 import { useReadySession } from '../state/SessionProvider.tsx';
@@ -262,9 +263,11 @@ export function AdvisorLauncher({ state, onOpen, onClose, showBubble }: AdvisorL
                   <h2 id={titleId} className="text-subheading">
                     Ask the advisor
                   </h2>
-                  <p id={subtitleId} className="text-xs text-on-brand/85">
-                    Explains scores and checks the rules. It never changes a number.
+                  {/* The chips on each reply and the legend say who did what; the dialog keeps a short description. */}
+                  <p id={subtitleId} className="sr-only">
+                    Answers in words from the AI. Scores and rules come from code, which the advisor cannot change.
                   </p>
+                  <ProvenanceLegend tone="on-brand" className="-ml-1.5" />
                 </div>
                 <button
                   type="button"

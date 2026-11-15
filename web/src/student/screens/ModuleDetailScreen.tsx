@@ -11,6 +11,7 @@ import { decisionsKey } from '../../components/exceptions.ts';
 import { FIT_BAND_LABELS, fitBand } from '../../components/FitScore.tsx';
 import { Icon } from '../../components/Icon.tsx';
 import { ModuleTypeChip } from '../../components/ModuleTypeChip.tsx';
+import { Provenance, ProvenanceLegend } from '../../components/Provenance.tsx';
 import { SampleDataLabel } from '../../components/SampleDataLabel.tsx';
 import { EmptyState, ErrorState, Skeleton } from '../../components/StateViews.tsx';
 import { SubScoreBars } from '../../components/SubScoreBars.tsx';
@@ -129,6 +130,7 @@ export function ModuleDetailScreen() {
               <ModuleTypeChip variant={module.type} />
               {rec && <ConfidenceBadge variant={rec.confidence} />}
               {rec?.exception && <ExceptionChip decision={rec.exception} />}
+              {rec && scored && <Provenance kind="code" />}
               {rec && scored && (
                 <span className="text-2xs font-medium text-muted">
                   {FIT_BAND_LABELS[fitBand(rec.fit)]} · {rec.rank === 1 ? 'your best match' : `ranked #${rec.rank}`}
@@ -198,14 +200,14 @@ export function ModuleDetailScreen() {
                 <Link
                   key={`${f.moduleId}-${f.examLabel}`}
                   to={paths.feedback}
-                  className="group flex flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl bg-mode-explain/8 px-4 py-3 text-sm ring-1 ring-mode-explain/20 transition ring-inset hover:ring-mode-explain/40"
+                  className="group flex flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl bg-brand-soft/60 px-4 py-3 text-sm ring-1 ring-brand/20 transition ring-inset hover:ring-brand/40"
                 >
-                  <Icon name="tutor" size={16} className="shrink-0 text-mode-explain" />
+                  <Icon name="tutor" size={16} className="shrink-0 text-brand" />
                   <span className="min-w-0 flex-1">
                     Your feedback on <span className="font-medium">{moduleById.get(f.moduleId)?.title ?? f.moduleId}</span> links to
                     this module.
                   </span>
-                  <span className="shrink-0 font-medium text-mode-explain group-hover:underline">See feedback</span>
+                  <span className="shrink-0 font-medium text-brand group-hover:underline">See feedback</span>
                 </Link>
               ))}
             </motion.div>
@@ -219,12 +221,19 @@ export function ModuleDetailScreen() {
             aria-labelledby="why-heading"
             className="rounded-[1.25rem] border border-line bg-surface p-5 shadow-soft sm:p-6"
           >
-            <h2 id="why-heading" className="flex items-center gap-2 text-subheading">
-              <span className="grid size-7 place-items-center rounded-full bg-fit-high/12 text-fit-high" aria-hidden="true">
-                <Icon name="heart" size={14} />
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 id="why-heading" className="flex items-center gap-2 text-subheading">
+                <span className="grid size-7 place-items-center rounded-full bg-fit-high/12 text-fit-high" aria-hidden="true">
+                  <Icon name="heart" size={14} />
+                </span>
+                Why it fits you
+              </h2>
+              {/* The words are the AI's; the score they explain is the code's, and only the code sets it. */}
+              <span className="flex flex-wrap items-center gap-1.5">
+                <Provenance kind="ai" />
+                <ProvenanceLegend />
               </span>
-              Why it fits you
-            </h2>
+            </div>
             {explanation.data ? (
               <>
                 <p className="mt-3 text-sm leading-relaxed text-pretty">{explanation.data.explanation.summary}</p>
@@ -245,12 +254,8 @@ export function ModuleDetailScreen() {
                     </ul>
                   </>
                 )}
-                <p className="mt-5 text-2xs text-muted">
-                  Scores are worked out by code from your profile. The advisor explains them but cannot change them, and the
-                  choice is yours.
-                </p>
                 <ClaimCheck
-                  className="mt-3"
+                  className="mt-5"
                   label="Check this explanation"
                   kind="fit"
                   text={explanationText(explanation.data.explanation)}
@@ -333,9 +338,12 @@ export function ModuleDetailScreen() {
           <AskModulePanel sessionId={sessionId} moduleId={module.id} moduleTitle={module.title} />
           {rec && scored && (
             <section aria-labelledby="sub-heading" className="rounded-card border border-line bg-surface p-5 shadow-soft">
-              <h2 id="sub-heading" className="mb-3 text-subheading">
-                How the score breaks down
-              </h2>
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <h2 id="sub-heading" className="text-subheading">
+                  How the score breaks down
+                </h2>
+                <Provenance kind="code" />
+              </div>
               <SubScoreBars sub={rec.sub} dimmed={dimmed} />
             </section>
           )}

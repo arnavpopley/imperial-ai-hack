@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useId, useRef, useState } from 'react';
 import type { ComponentType, SVGProps } from 'react';
 import { Link } from 'react-router';
+import { Provenance } from '../../components/Provenance.tsx';
 import type { StaffDecision } from '../hooks/useInsights.ts';
 import { focusRing, plural } from '../lib/format.ts';
 import { isSummaryCard, outcomeOf, tagEditorLink } from '../lib/insights.ts';
@@ -16,7 +17,8 @@ type IconComponent = ComponentType<Omit<SVGProps<SVGSVGElement>, 'children'>>;
 
 const INSIGHT_KINDS: Record<InsightKind, { label: string; Icon: IconComponent; tint: string; ink: string }> = {
   COUNTERFACTUAL: { label: 'Counterfactual', Icon: TrendUpIcon, tint: 'bg-brand-soft', ink: 'text-brand' },
-  OVERLOOKED: { label: 'Overlooked', Icon: EyeIcon, tint: 'bg-mode-explain/10', ink: 'text-mode-explain' },
+  // Violet is kept for AI-written content (issue #138), so an overlooked module is green: a good fit, few takers.
+  OVERLOOKED: { label: 'Overlooked', Icon: EyeIcon, tint: 'bg-fit-high/10', ink: 'text-fit-high' },
   DEMAND: { label: 'Demand', Icon: UsersIcon, tint: 'bg-mode-plan/10', ink: 'text-mode-plan' },
   CLASH: { label: 'Timetable clash', Icon: ClockAlertIcon, tint: 'bg-clash-likely/10', ink: 'text-clash-likely' },
 };
@@ -92,8 +94,12 @@ export function InsightCard({
           <kind.Icon className="size-6" />
         </span>
         <div className="min-w-0">
-          <p className={`text-xs font-semibold tracking-[0.08em] uppercase ${kind.ink}`}>
-            {isSummaryCard(insight) ? 'Counterfactual summary' : kind.label}
+          <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span className={`text-xs font-semibold tracking-[0.08em] uppercase ${kind.ink}`}>
+              {isSummaryCard(insight) ? 'Counterfactual summary' : kind.label}
+            </span>
+            {/* The words are the Insights agent's; every number in them is the engine's. */}
+            <Provenance kind="ai" />
           </p>
           <h3 id={headingId} className="mt-1 text-lg leading-snug font-semibold text-pretty">
             {insight.headline}
@@ -131,6 +137,7 @@ export function InsightCard({
               {uplift} fit
             </p>
             <p className="mt-1 text-2xs text-muted">avg. points</p>
+            <Provenance kind="code" className="mt-2" />
           </div>
         )}
       </div>

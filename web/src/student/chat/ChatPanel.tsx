@@ -9,6 +9,7 @@ import { cx } from '../../components/cx.ts';
 import { FeedbackControls } from '../../components/FeedbackControls.tsx';
 import { GuardrailNotice } from '../../components/GuardrailNotice.tsx';
 import { Icon } from '../../components/Icon.tsx';
+import { Provenance } from '../../components/Provenance.tsx';
 import { InterviewerAvatar } from '../interview/InterviewerAvatar.tsx';
 import { InterviewerStage } from '../interview/InterviewerStage.tsx';
 import { useInterviewer, type Persona } from '../interview/personas.ts';
@@ -392,6 +393,8 @@ function TurnView({
           {turn.agent && !staff && turn.agent !== 'interviewer' && (
             <span className="text-muted">{humanise(turn.agent)}</span>
           )}
+          {/* An agent's reply is AI-written; a staff reply is a person's, so it carries no chip. */}
+          {!staff && turn.content && <Provenance kind="ai" />}
         </span>
         {turn.notices.map((n, i) => (
           <GuardrailNotice

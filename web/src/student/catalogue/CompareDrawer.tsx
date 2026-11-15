@@ -12,6 +12,7 @@ import { Drawer } from '../../components/Drawer.tsx';
 import { FIT_BAND_METER, FIT_BAND_TEXT, fitBand } from '../../components/FitScore.tsx';
 import { Icon } from '../../components/Icon.tsx';
 import { Meter, type MeterTone } from '../../components/Meter.tsx';
+import { Provenance, ProvenanceLegend } from '../../components/Provenance.tsx';
 import { ErrorState, Skeleton } from '../../components/StateViews.tsx';
 import { SubScoreBars } from '../../components/SubScoreBars.tsx';
 import { useAsync } from '../hooks/useAsync.ts';
@@ -53,10 +54,16 @@ export function CompareDrawer(props: CompareDrawerProps) {
       onClose={onClose}
       size="wide"
       title="Compare modules"
-      subtitle="Fit from your ranking. Everything else from the module records and the timetable."
+      subtitle={
+        // Every figure here is computed or read from the records; none comes from a model.
+        <span className="mt-1 flex flex-wrap items-center gap-1.5">
+          <Provenance kind="code" />
+          <Provenance kind="record" />
+          <ProvenanceLegend />
+        </span>
+      }
       footer={
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-2xs text-muted">Numbers come from code, not a model.</p>
+        <div className="flex flex-wrap items-center justify-end gap-2">
           <Button
             variant="primary"
             icon="chat"
