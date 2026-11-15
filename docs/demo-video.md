@@ -5,19 +5,22 @@ The spec section 18.2 flow, cut to two minutes for the Devpost video. Record at 
 ## Automated recording (quickest)
 
 `npm run demo:video` drives the whole demo by itself in a visible Chrome window, offline, so it's the same every time. It runs:
-1. Landing (held 8 s for the problem statement).
+1. Landing (held 7 s for the problem statement).
 2. Interview.
-3. Catalogue.
-4. Weights.
-5. Shortlist and clash swap.
-6. Rule exception.
-7. Senior Tutor approval.
-8. Counterfactual card.
-9. How it works and evaluation.
+3. Results upload with a "Keep in mind" nudge, and the Exam feedback page.
+4. The examiner round trip: an AI draft from marking notes, published, and the student's Dynamics feedback.
+5. Catalogue.
+6. Weights.
+7. Shortlist and clash swap.
+8. Pathways and a side-by-side compare.
+9. Rule exception.
+10. Senior Tutor approval.
+11. Counterfactual card.
+12. How it works and evaluation, held 8 s at the end.
 
-The whole run takes about 1:50. Screen-record the Chrome window (macOS: Cmd+Shift+5, then "Record Selected Portion") and narrate over it afterwards. The run prints a timeline of when each step starts and saves it to `scripts/e2e/output/<run>/desktop-light/video-timeline.txt`, so the voice-over can follow it.
+The whole run takes about 1:55. Screen-record the Chrome window (macOS: Cmd+Shift+5, then "Record Selected Portion") and narrate over it afterwards. The run prints a timeline of when each step starts and saves it to `scripts/e2e/output/<run>/desktop-light/video-timeline.txt`.
 
-Tune it with `npm run demo:video -- --pace=350 --type-speed=10 --hold=1600 --landing-hold=8000` (milliseconds). Add `--live` to use the real models from `.env`, which is slower and costs about $0.50, or `--with-optional` to include the results upload and examiner round trip.
+Tune it with `npm run demo:video -- --pace=250 --type-speed=5 --hold=1200 --landing-hold=7000` (milliseconds). `--skip-optional` leaves out the exam feedback and the tour; `--live` uses the real models from `.env`, which is slower and costs about $0.50.
 
 ## Before recording
 

@@ -49,15 +49,15 @@ const LIVE = flag('live');
  */
 const VIDEO = flag('video');
 if (VIDEO) {
-  process.env.E2E_PACE_MS ??= option('pace') ?? '350';
-  process.env.E2E_TYPE_MS ??= option('type-speed') ?? '10';
-  process.env.E2E_LANDING_MS ??= option('landing-hold') ?? '8000';
+  process.env.E2E_PACE_MS ??= option('pace') ?? '250';
+  process.env.E2E_TYPE_MS ??= option('type-speed') ?? '5';
+  process.env.E2E_LANDING_MS ??= option('landing-hold') ?? '7000';
 }
-const HOLD_MS = Number(option('hold') ?? 1600);
+const HOLD_MS = Number(option('hold') ?? 1200);
 const HEADED = flag('headed') || (VIDEO && !flag('headless'));
 /** Stop after the step with this id (for example clash), to keep a live check cheap. */
 const UNTIL = option('until');
-const SKIP_OPTIONAL = flag('skip-optional') || (VIDEO && !flag('with-optional'));
+const SKIP_OPTIONAL = flag('skip-optional');
 if (UNTIL && !STEPS.some((s) => s.id === UNTIL)) {
   console.error(`Unknown step "${UNTIL}". Use one of: ${STEPS.map((s) => s.id).join(', ')}`);
   process.exit(2);
@@ -368,7 +368,7 @@ async function runCombo(cdp, comboName, ports) {
   for (const [i, step] of STEPS.entries()) {
     const result = results[i];
     current = result;
-    if (i > last || (SKIP_OPTIONAL && step.optional)) {
+    if (i > last || (SKIP_OPTIONAL && step.optional) || (step.videoOnly && !VIDEO)) {
       result.status = 'omitted';
       continue;
     }
@@ -383,7 +383,7 @@ async function runCombo(cdp, comboName, ports) {
     try {
       await step.run(ctx);
       // Video mode: let the result sit on screen while the voice-over catches up; the last screen holds longer.
-      if (VIDEO) await sleep(i === last ? HOLD_MS * 3 : HOLD_MS);
+      if (VIDEO) await sleep(i === last ? Math.max(HOLD_MS * 3, 8000) : HOLD_MS);
     } catch (error) {
       result.error = String(error?.message ?? error);
       try {
