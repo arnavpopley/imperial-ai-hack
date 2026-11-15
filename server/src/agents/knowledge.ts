@@ -149,7 +149,7 @@ const QUESTION_RULES: [RegExp, (f: Facts) => RuleAnswer][] = [
   // Office hours are never published, and a question about them is never answered with study time.
   [OFFICE_HOURS, (f) => ({ decline: `The public page for ${f.code} does not publish office hours. The full page is at ${f.sourceUrl}.` })],
   [
-    /^(?!.*\b(?:office hours?|drop-in)\b).*\b(hours?|contact time|time commitment|independent study|self[- ]study|private study|how much time)\b/i,
+    /^(?!.*\b(?:office hours?|drop-in)\b).*\b(hours?|contact time|time commitment|independent study|self[- ]study|private study|how much time)\b/is,
     (f) =>
       f.hours
         ? `The public page says: ${f.hours.statements.join(' ')}`
