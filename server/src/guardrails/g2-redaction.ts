@@ -63,15 +63,20 @@ export const categoriesIn = (text: string) => (Object.keys(PATTERNS) as Sensitiv
 const SENTENCE = /(?:[^.!?\n]|\.(?=\d))+[.!?]*\s*/g;
 
 /**
- * Words that make a clause kept next to a disclosure unsafe even when no pattern matches ("I have ADHD; I take
- * medication daily"). Then the whole sentence goes, as before the clause cut.
+ * Personal phrasing that makes a clause kept next to a disclosure unsafe even when no pattern matches ("I have ADHD;
+ * I take medication daily"). Then the whole sentence goes, as before the clause cut. Topic words alone are not enough:
+ * "I love medical devices" or "public health policy" is an interest and is kept.
  */
-const SENTENCE_HINT_WORDS = [
-  'medic\\w*', 'meds', 'pills?', 'therap\\w*', 'diagnos\\w*', 'condition', 'disab\\w*', 'symptoms?', 'treatment', 'doctors?',
-  'hospital', 'gp', 'counsell?\\w*', 'mental', 'health', 'flare-?ups?', 'grades?', 'marks?', 'scored', 'gpa', 'results?',
-  'loans?', 'debt', 'afford', 'money', 'bursary', 'rent', 'pray\\w*', 'religio\\w*', 'faith', 'visa', 'ethnic\\w*', 'home country',
-];
-const SENSITIVE_HINT = new RegExp(`\\b(${SENTENCE_HINT_WORDS.join('|')})\\b`, 'i');
+const SENSITIVE_HINT = new RegExp(
+  [
+    '\\b(medication|meds|pills|prescriptions?|therapist|in therapy|counsell?(ing|or)|diagnos(is|ed)|symptoms?|flare-?ups?)\\b',
+    '\\b(my|i see a|seeing a|i saw a) (doctor|gp|consultant|psychiatrist|specialist|nurse)\\b',
+    '\\bmy (health|condition|treatment|grades?|marks?|results?|gpa|average|loans?|debt|rent|bursary|faith|religion|visa)\\b',
+    '\\b(in hospital|in debt|afford|no money|money is)\\b',
+    '\\b(i pray|praying|back home|home country)\\b',
+  ].join('|'),
+  'i',
+);
 
 /** Clause boundaries a disclosure can be cut at: ", but", " but " and "; ". "And" and "so" are not, as they tie clauses together. */
 const CLAUSE_BREAK = /(,\s*but\s+|;\s*|\s+but\s+)/i;

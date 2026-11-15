@@ -111,8 +111,9 @@ G2 redaction (`server/src/guardrails/g2-redaction.ts`):
 - **Clause-level cut.** A matching sentence now loses only its sensitive clauses when it splits cleanly at ", but",
   " but " or "; ". So "I have ADHD … but I enjoy electronics" keeps "I enjoy electronics." A clause that points back to
   the disclosure ("it", "that", "so", "which" …) goes with it. The whole sentence still goes if the match spans a clause
-  break, if the kept text still matches a pattern, or if the kept text has a sensitive word (medication, doctor, therapy,
-  grades, money, visa and so on). So "I have ADHD; I take medication daily" is removed entirely.
+  break, if the kept text still matches a pattern, or if the kept text uses personal sensitive phrasing ("medication",
+  "my doctor", "my grades", "afford", "my visa" and so on). So "I have ADHD; I take medication daily" is removed
+  entirely, while topic words alone are kept: "I have ADHD; I love medical devices" keeps "I love medical devices."
 - **New patterns** for disclosures found in the Adaption rows: "due to health reasons", "my anxiety", "a source of
   anxiety", "extended time on exams" or "reasonable adjustments", and a GPA ("aiming for a 3.8"). The sentence splitter
   no longer breaks at a decimal point.

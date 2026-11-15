@@ -49,6 +49,8 @@ describe('G2 redaction', () => {
     ["I'm an international student; I love robotics.", 'I love robotics.', 'protected'],
     ["I can't afford the field trip, but I really like the design modules.", 'I really like the design modules.', 'finances'],
     ['I have dyslexia so I prefer coursework, but I enjoy writing.', 'I enjoy writing.', 'health'],
+    ['I have ADHD; I love medical devices.', 'I love medical devices.', 'health'],
+    ['I have ADHD; I enjoy public health policy and gene therapy.', 'I enjoy public health policy and gene therapy.', 'health'],
   ])('removes only the sensitive clause of "%s"', (input, kept, category) => {
     const result = redactByPattern(input);
     expect(result.categories).toContain(category);
