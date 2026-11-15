@@ -144,8 +144,10 @@ const QUESTION_RULES: [RegExp, (f: Facts) => RuleAnswer][] = [
             decline: `The public page for ${f.code} does not name a lecturer or module leader, and its description and record do not cover that. The full page is at ${f.sourceUrl}.`,
           },
   ],
+  // Office hours are never published; checked before study hours, so "office hours" is not answered with study time.
+  [/\boffice hours?\b|\bdrop-in\b/i, (f) => ({ decline: `The public page for ${f.code} does not publish office hours. The full page is at ${f.sourceUrl}.` })],
   [
-    /\b(hours?|contact time|time commitment|independent study|self[- ]study|private study|how much time)\b/i,
+    /\b((?<!office )hours?|contact time|time commitment|independent study|self[- ]study|private study|how much time)\b/i,
     (f) =>
       f.hours
         ? `The public page says: ${f.hours.statements.join(' ')}`
@@ -168,7 +170,8 @@ const QUESTION_RULES: [RegExp, (f: Facts) => RuleAnswer][] = [
   [
     /\b(deadlines?|due|exam (date|week)|when is the exam)\b/i,
     (f) => {
-      const dated = (f.assessmentDetails?.notes ?? []).filter((n) => /\b(due|week|deadline|term|within)\b/i.test(n.text)).map((n) => n.text);
+      // Only notes that say when something is due or examined; "the 20-week module" is not a date.
+      const dated = (f.assessmentDetails?.notes ?? []).filter((n) => /\b(due|deadline|exam week|delivered at)\b/i.test(n.text)).map((n) => n.text);
       return dated.length
         ? `The public page says: ${dated.slice(0, 3).join(' ')}`
         : { decline: `The public page for ${f.code} does not publish assessment deadlines or exam dates. The full page is at ${f.sourceUrl}.` };
