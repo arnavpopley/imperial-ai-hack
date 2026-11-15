@@ -1,5 +1,5 @@
 // Grouping, filtering and honest labels for the staff module list (issue #69).
-import { MIN_COHORT } from '@modulematch/shared';
+import { FIT_BAND_FLOORS, MIN_COHORT } from '@modulematch/shared';
 import type { CohortOffer, StaffModuleSummary } from '@modulematch/shared';
 
 export const OFFER_GROUPS: readonly { offer: CohortOffer; label: string }[] = [
@@ -26,16 +26,16 @@ export const inView = (row: StaffModuleSummary, view: ListView) =>
 /** Students choose options, so only options show a shortlist count that means anything. */
 export const isOption = (row: StaffModuleSummary) => row.offer === undefined || row.offer === 'elective' || row.offer === 'i-explore';
 
-/** A fit at or above this counts as strong: the 60 to 100 buckets of the fit histogram. */
-export const STRONG_FIT = 60;
+/** A good fit or better, on the shared scale (issue #105): the 50 to 100 buckets of the fit histogram. */
+export const GOOD_FIT = FIT_BAND_FLOORS.good;
 const BUCKET_WIDTH = 10;
 
-/** Share of the cohort whose fit is strong. It separates modules far better than the mean, which sits at 25 to 42. */
-export function strongFitShare(row: StaffModuleSummary): number {
+/** Share of the cohort with a good fit or better. It separates modules far better than the mean, which sits at 25 to 42. */
+export function goodFitShare(row: StaffModuleSummary): number {
   const total = row.fitHistogram.reduce((sum, n) => sum + n, 0);
   if (total === 0) return 0;
-  const strong = row.fitHistogram.slice(STRONG_FIT / BUCKET_WIDTH).reduce((sum, n) => sum + n, 0);
-  return strong / total;
+  const good = row.fitHistogram.slice(GOOD_FIT / BUCKET_WIDTH).reduce((sum, n) => sum + n, 0);
+  return good / total;
 }
 
 /**

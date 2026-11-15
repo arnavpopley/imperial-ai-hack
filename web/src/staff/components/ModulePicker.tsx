@@ -6,7 +6,7 @@ import { useId, useMemo, useState } from 'react';
 import { NavLink, useMatch } from 'react-router';
 import { capacityStatus, focusRing, percent } from '../lib/format.ts';
 import {
-  STRONG_FIT,
+  GOOD_FIT,
   VIEWS,
   groupRows,
   hasOffers,
@@ -14,7 +14,7 @@ import {
   isOption,
   shortlistFigure,
   shortlistLabel,
-  strongFitShare,
+  goodFitShare,
 } from '../lib/moduleList.ts';
 import type { ListView } from '../lib/moduleList.ts';
 import { byCohortFigure, isCohortVisible } from '../lib/privacy.ts';
@@ -23,7 +23,7 @@ import { SearchIcon, ShieldIcon } from './icons.tsx';
 import { Segmented } from './ui.tsx';
 
 const SORTS = {
-  strong: { label: `Strong fit (${STRONG_FIT}+)`, compare: byCohortFigure(strongFitShare) },
+  strong: { label: `Good fit or better (${GOOD_FIT}+)`, compare: byCohortFigure(goodFitShare) },
   fit: { label: 'Average fit', compare: byCohortFigure((m) => m.averageFit) },
   shortlisted: { label: 'Shortlisted', compare: byCohortFigure(shortlistFigure) },
   pressure: { label: 'Demand against capacity', compare: byCohortFigure(load) },
@@ -111,7 +111,7 @@ export function ModulePicker({ modules }: { modules: StaffModuleSummary[] }) {
           </select>
         </div>
         <p className="text-xs text-muted">
-          % = share of the cohort with fit {STRONG_FIT}+ · bars = fit spread, 0 to 100
+          % = share of the cohort with a good fit or better ({GOOD_FIT}+) · bars = fit spread, 0 to 100
         </p>
       </div>
       <p className="sr-only" aria-live="polite">
@@ -162,7 +162,7 @@ export function ModulePicker({ modules }: { modules: StaffModuleSummary[] }) {
   );
 }
 
-/** The cohort's fit spread in ten buckets; strong-fit buckets are tinted. Decorative beside the figures. */
+/** The cohort's fit spread in ten buckets; good-fit buckets are tinted. Decorative beside the figures. */
 function FitSpark({ histogram }: { histogram: readonly number[] }) {
   const max = Math.max(1, ...histogram);
   return (
@@ -170,7 +170,7 @@ function FitSpark({ histogram }: { histogram: readonly number[] }) {
       {histogram.map((n, i) => (
         <span
           key={i}
-          className={`flex-1 rounded-t-[2px] ${i * 10 >= STRONG_FIT ? 'bg-fit-high' : 'bg-line-strong'}`}
+          className={`flex-1 rounded-t-[2px] ${i * 10 >= GOOD_FIT ? 'bg-fit-high' : 'bg-line-strong'}`}
           style={{ height: `${Math.max(n > 0 ? 12 : 4, (n / max) * 100)}%` }}
         />
       ))}
@@ -180,7 +180,7 @@ function FitSpark({ histogram }: { histogram: readonly number[] }) {
 
 function ModuleFigures({ module: m }: { module: StaffModuleSummary }) {
   const status = capacityStatus(m.shortlisted, m.capacity);
-  const share = strongFitShare(m);
+  const share = goodFitShare(m);
   const counted = isOption(m) && m.shortlisted >= MIN_COHORT;
   return (
     <>
@@ -191,7 +191,7 @@ function ModuleFigures({ module: m }: { module: StaffModuleSummary }) {
           className={`grid h-7 min-w-11 shrink-0 place-items-center rounded-full px-2 text-xs font-semibold tabular-nums ring-1 ${
             share > 0 ? 'bg-fit-high/10 text-fit-high ring-fit-high/30' : 'bg-surface text-muted ring-line'
           }`}
-          title={`Share of the cohort with a fit of ${STRONG_FIT} or more`}
+          title={`Share of the cohort with a fit of ${GOOD_FIT} or more`}
         >
           {percent(share)}
         </span>
@@ -209,7 +209,7 @@ function ModuleFigures({ module: m }: { module: StaffModuleSummary }) {
       </span>
       {counted && <DemandMiniBar shortlisted={m.shortlisted} capacity={m.capacity} />}
       <span className="sr-only">
-        {percent(share)} of the cohort with a fit of {STRONG_FIT} or more; average fit {Math.round(m.averageFit)}.
+        {percent(share)} of the cohort with a fit of {GOOD_FIT} or more; average fit {Math.round(m.averageFit)}.
       </span>
     </>
   );

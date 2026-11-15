@@ -14,7 +14,7 @@ component below has a matching Figma component with the same variant names (spec
 | `GuardrailNotice` | `redacted`, `blocked`, `out-of-scope`, `wellbeing` | An inline notice when a guardrail stage acts (spec 11), with the stage name. `wellbeing` adds support contacts and is announced as an alert. |
 | `EscalationCard` | `draft`, `sent`, `answered` | `draft`: the agent's summary, editable, sent only on approval. `sent`: waiting or claimed by staff (`status` prop). `answered`: the staff reply. |
 | `ClashMarker` | `certain`, `likely`, `possible` | A timetable clash label with probability (spec 9.2). `compact` renders the icon-only pin used inside the weekly grid. |
-| `FitScore` | `ring`, `compact` | The 0 to 100 fit, coloured by band (strong 75+, partial 50+, weak). `size` is `md` or `lg`; `dimmed` greys it for low confidence or ineligible modules. |
+| `FitScore` | `ring`, `compact` | The 0 to 100 fit, coloured by the shared band from `@modulematch/shared` (strong 70+ and good 50+ in greens, partial 35+ in amber, weak in red). `size` is `md` or `lg`; `dimmed` greys it for low confidence or ineligible modules. |
 | `SubScoreBars` | `stacked`, `compact` | Interest, career goal, learning style and breadth sub-scores. A null goal (no pathway chosen) shows a hatched "n/a" bar. |
 
 ## Supporting components
