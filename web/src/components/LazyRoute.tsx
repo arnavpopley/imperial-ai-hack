@@ -2,8 +2,9 @@
 // downloads only the landing page and what it needs. Rarely used, heavy screens (the staff console, "How it works",
 // the exam form editor) never reach a student's browser unless opened.
 import { motion } from 'motion/react';
-import { lazy, Suspense, type ComponentType, type ReactNode } from 'react';
-import { LoadingState } from './StateViews.tsx';
+import { Component, lazy, Suspense, type ComponentType, type ErrorInfo, type ReactNode } from 'react';
+import { useLocation } from 'react-router';
+import { ErrorState, LoadingState } from './StateViews.tsx';
 
 /** Shown while a screen's code loads. It fades in after a short pause, so a fast load shows nothing at all. */
 export function PageLoading({ label = 'Loading' }: { label?: string }) {
@@ -14,9 +15,55 @@ export function PageLoading({ label = 'Loading' }: { label?: string }) {
   );
 }
 
-/** A lazily loaded screen in a route element: the surrounding layout (header, tabs, shell) stays put. */
+interface BoundaryProps {
+  /** Changing it (the route) clears the error, so navigating elsewhere shows that screen. */
+  resetKey: string;
+  children: ReactNode;
+}
+
+/**
+ * Catches a screen whose code failed to download (offline, or a new deployment replaced the file) so only that
+ * screen shows the error, never the whole app. React.lazy keeps a failed import, so "Try again" reloads the page,
+ * which fetches the current files.
+ */
+export class ScreenErrorBoundary extends Component<BoundaryProps, { failed: boolean; resetKey: string }> {
+  state = { failed: false, resetKey: this.props.resetKey };
+
+  static getDerivedStateFromError(): Partial<{ failed: boolean }> {
+    return { failed: true };
+  }
+
+  static getDerivedStateFromProps(props: BoundaryProps, state: { failed: boolean; resetKey: string }) {
+    return props.resetKey === state.resetKey ? null : { failed: false, resetKey: props.resetKey };
+  }
+
+  componentDidCatch(error: unknown, info: ErrorInfo): void {
+    console.error('A screen failed to load:', error, info.componentStack);
+  }
+
+  render() {
+    if (!this.state.failed) return this.props.children;
+    return (
+      <ErrorState
+        title="This page did not load"
+        message="Check your connection and try again. Everything you have saved is kept."
+        onRetry={() => window.location.reload()}
+      />
+    );
+  }
+}
+
+/**
+ * A lazily loaded screen in a route element: the surrounding layout (header, tabs, shell) stays put while it
+ * loads, and a failed download shows a recoverable error in its place.
+ */
 export function Lazy({ children }: { children: ReactNode }) {
-  return <Suspense fallback={<PageLoading />}>{children}</Suspense>;
+  const { pathname } = useLocation();
+  return (
+    <ScreenErrorBoundary resetKey={pathname}>
+      <Suspense fallback={<PageLoading />}>{children}</Suspense>
+    </ScreenErrorBoundary>
+  );
 }
 
 /**

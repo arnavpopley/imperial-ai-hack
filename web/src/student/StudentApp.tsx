@@ -9,11 +9,11 @@
 //   /pathways            pathways, progress and societies
 //   /feedback            tailored exam feedback from the examiner's notes and the student's own marks (spec 23)
 //   /your-data           what we hold, the quotes behind it, edit and delete (spec 20.3)
-import { Suspense, useEffect, type ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { Navigate, Route, Routes } from 'react-router';
 import { Button } from '../components/Button.tsx';
 import { ErrorState, LoadingState } from '../components/StateViews.tsx';
-import { Lazy, lazyNamed, PageLoading, whenIdle } from '../components/LazyRoute.tsx';
+import { Lazy, lazyNamed, whenIdle } from '../components/LazyRoute.tsx';
 import { ChatProvider } from './chat/ChatProvider.tsx';
 import { ResultsProvider } from './results/ResultsProvider.tsx';
 import { paths, routeForMode } from './routes.ts';
@@ -91,9 +91,9 @@ function SessionGate() {
     <ChatProvider key={session.id}>
       <CatalogueProvider key={session.id}>
         <ResultsProvider key={session.id}>
-          <Suspense fallback={<PageLoading />}>
+          <Lazy>
             <StudentShell />
-          </Suspense>
+          </Lazy>
         </ResultsProvider>
       </CatalogueProvider>
     </ChatProvider>
