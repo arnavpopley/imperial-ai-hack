@@ -163,8 +163,10 @@ function styleCues(sentence: string, targetSlots: string[]): ExtractedUpdate[] {
   // Workload: heavy is fine (0.8), light or not too much (0.25), moderate or normal (0.5).
   const namesWorkload = /\b(workloads?|work ?load)\b/.test(s);
   const aboutWorkload = asked('style.workloadTolerance') || namesWorkload;
-  // "Heavy isn't fine for me" rejects a heavy load.
-  const rejectsHeavy = /\bheavy\b.{0,25}\b(isn'?t|is not|not|aren'?t|never|too much)\b/.test(s);
+  // A follow-up that asks only about workload makes a bare "Normal" or "Manageable" an answer to it.
+  const workloadOnly = asked('style.workloadTolerance') && !asked('style.groupPreference');
+  // "Heavy isn't fine for me" rejects a heavy load; "heavy is fine, not a problem" does not.
+  const rejectsHeavy = /\bheavy\s+(?:workloads?\s+|work\s+)?(?:isn'?t|is not|aren'?t|are not|wouldn'?t be|would not be|is too much)\b/.test(s);
   if (rejectsHeavy) add('style.workloadTolerance', 0.25);
   else if (/\b(heavy|lots of|a lot of|hard) (work|workload)\b|\bdon'?t mind (hard )?work\b|\bheavy\b.{0,20}\b(is |are )?(fine|ok|okay|good)\b|\bcan (handle|take|cope with) (a lot|lots|plenty|a heavy)\b/.test(s)) {
     add('style.workloadTolerance', 0.8);
@@ -172,7 +174,7 @@ function styleCues(sentence: string, targetSlots: string[]): ExtractedUpdate[] {
   // "Moderate" answers the workload question; vaguer words ("normal", "fine") only count when the sentence names the
   // workload, because the team question also asks about working style ("Working alone is fine").
   else if (/\b(moderate|medium|average)\b/.test(s) && aboutWorkload) add('style.workloadTolerance', 0.5);
-  else if (namesWorkload && /\b(normal|standard|reasonable|manageable|fine|ok|okay|either|whatever)\b/.test(s)) add('style.workloadTolerance', 0.5);
+  else if ((namesWorkload || workloadOnly) && /\b(normal|standard|reasonable|manageable|fine|ok|okay|either|whatever)\b/.test(s)) add('style.workloadTolerance', 0.5);
   return out;
 }
 

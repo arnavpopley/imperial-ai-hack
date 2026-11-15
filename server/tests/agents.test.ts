@@ -88,6 +88,9 @@ describe('extractor', () => {
     expect(value("Heavy isn't fine for me.", 'style.workloadTolerance', team)).toBe(0.25);
     expect(value('Working alone is fine.', 'style.workloadTolerance', team)).toBeUndefined();
     expect(value('Moderate.', 'style.workloadTolerance', team)).toBe(0.5);
+    expect(value('Heavy is fine, not a problem.', 'style.workloadTolerance', team)).toBe(0.8);
+    expect(value('Normal.', 'style.workloadTolerance', ['style.workloadTolerance'])).toBe(0.5);
+    expect(value('Manageable.', 'style.workloadTolerance', ['style.workloadTolerance'])).toBe(0.5);
     // A sentence about assessment is never read as breadth, even when breadth is a target.
     expect(value('No exams please.', 'breadthAppetite', ['breadthAppetite'])).toBeUndefined();
   });
