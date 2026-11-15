@@ -1,7 +1,7 @@
 // Screen 3: ranked module cards with what-if weights, confidence handling (spec 8.6),
 // eligibility (spec 8.7), filters and a shortlist toggle on each card.
 import { STARTER_QUESTIONS, type Module, type Term } from '@modulematch/shared';
-import { useId, useState, type ReactNode } from 'react';
+import { useId, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { Button } from '../../components/Button.tsx';
 import { cx } from '../../components/cx.ts';
@@ -10,17 +10,24 @@ import { MODULE_TYPE_LABELS } from '../../components/ModuleTypeChip.tsx';
 import { SampleDataLabel } from '../../components/SampleDataLabel.tsx';
 import { SegmentedControl } from '../../components/SegmentedControl.tsx';
 import { EmptyState, ErrorState, errorMessage, Skeleton } from '../../components/StateViews.tsx';
+import { CatalogueSearch } from '../catalogue/CatalogueSearch.tsx';
+import { MAX_COMPARE, MIN_COMPARE, toggleCompare } from '../catalogue/compare.ts';
+import { CompareDrawer } from '../catalogue/CompareDrawer.tsx';
+import { CompareToggle } from '../catalogue/CompareToggle.tsx';
+import { CompareTray } from '../catalogue/CompareTray.tsx';
 import { ModuleCard } from '../catalogue/ModuleCard.tsx';
 import { PhotoBanner } from '../catalogue/PhotoBanner.tsx';
+import { matchesQuery } from '../catalogue/search.ts';
 import { WeightPanel } from '../catalogue/WeightPanel.tsx';
 import { useChat } from '../chat/ChatProvider.tsx';
 import { useFlip } from '../hooks/useFlip.ts';
 import { useShortlist } from '../hooks/useShortlist.ts';
-import { TERM_LABELS, TERMS } from '../labels.ts';
+import { TERM_LABELS, TERMS, topicLabel } from '../labels.ts';
 import { paths } from '../routes.ts';
 import { catalogueCount } from '../rulesStatus.ts';
 import { useAdvisor } from '../shell/StudentShell.tsx';
 import { useCatalogue } from '../state/CatalogueProvider.tsx';
+import { useReadySession } from '../state/SessionProvider.tsx';
 
 type TypeFilter = 'all' | Module['type'];
 type TermFilter = 'all' | Term;
@@ -38,26 +45,57 @@ const TERM_OPTIONS: readonly { value: TermFilter; label: string }[] = [
 ];
 
 export function CatalogueScreen() {
-  const { recs, ranked, scored } = useCatalogue();
+  const { recs, ranked, byId, scored } = useCatalogue();
+  const { session } = useReadySession();
   const { openAdvisor } = useAdvisor();
   const shortlist = useShortlist();
   const [type, setType] = useState<TypeFilter>('all');
   const [term, setTerm] = useState<TermFilter>('all');
   const [onlyShortlisted, setOnlyShortlisted] = useState(false);
+  const [query, setQuery] = useState('');
+  const [compareIds, setCompareIds] = useState<string[]>([]);
+  const [comparing, setComparing] = useState(false);
+  const listId = useId();
   const [controlsOpen, setControlsOpen] = useState(false);
   const controlsId = useId();
 
+  // Title, code and the topics the module covers (the same floor as the Catalogue agent's search).
+  const searchFields = useMemo(
+    () =>
+      new Map(
+        ranked.map((r) => [
+          r.moduleId,
+          {
+            title: r.module?.title ?? r.moduleId,
+            code: r.module?.code ?? r.moduleId,
+            topics: Object.entries(r.module?.topics ?? {})
+              .filter(([, weight]) => weight >= SEARCH_TOPIC_FLOOR)
+              .map(([topic]) => topicLabel(topic)),
+          },
+        ]),
+      ),
+    [ranked],
+  );
+
+  // Search and filters only hide modules, so the list keeps its fit order.
   const visible = ranked.filter(
     (r) =>
       (type === 'all' || r.module?.type === type) &&
       (term === 'all' || r.module?.terms.includes(term)) &&
-      (!onlyShortlisted || shortlist.isShortlisted(r.moduleId)),
+      (!onlyShortlisted || shortlist.isShortlisted(r.moduleId)) &&
+      matchesQuery(searchFields.get(r.moduleId)!, query),
   );
   const flipRef = useFlip(visible.map((r) => r.moduleId));
   const eligibleCount = visible.filter((r) => r.eligible).length;
   const confidence = recs.data?.confidence ?? 'high';
   const goalUsed = ranked.some((r) => r.sub.goal !== null);
+  const searching = query.trim() !== '';
   const filtered = type !== 'all' || term !== 'all' || onlyShortlisted;
+  const toCompare = compareIds.flatMap((id) => {
+    const item = byId.get(id);
+    return item ? [{ moduleId: id, code: item.module?.code ?? id, title: item.module?.title ?? id }] : [];
+  });
+  const toggleCompareFor = (moduleId: string) => setCompareIds((ids) => toggleCompare(ids, moduleId));
 
   return (
     <div className="grid grid-cols-1 gap-6">
@@ -114,6 +152,7 @@ export function CatalogueScreen() {
         </div>
 
         <section aria-labelledby="ranked-heading" className="min-w-0">
+          {recs.data && <CatalogueSearch value={query} onChange={setQuery} controls={listId} className="mb-3" />}
           <div className="mb-4 flex items-center justify-between gap-3">
             <h2 id="ranked-heading" className="text-[13px] font-medium text-muted" aria-live="polite">
               {recs.data ? catalogueCount(visible.length, eligibleCount, recs.data.rules) : 'Loading your ranking'}
@@ -131,28 +170,39 @@ export function CatalogueScreen() {
           {!recs.data && recs.error && <ErrorState message={recs.error} onRetry={recs.reload} />}
           {recs.data && visible.length === 0 && (
             <EmptyState
-              icon="grid"
-              title={filtered ? 'No modules match these filters' : 'No modules to rank yet'}
+              icon={searching ? 'search' : 'grid'}
+              title={
+                searching
+                  ? `No modules match "${query.trim()}"`
+                  : filtered
+                    ? 'No modules match these filters'
+                    : 'No modules to rank yet'
+              }
               action={
-                filtered && (
+                (searching || filtered) && (
                   <Button
                     size="sm"
                     onClick={() => {
+                      setQuery('');
                       setType('all');
                       setTerm('all');
                       setOnlyShortlisted(false);
                     }}
                   >
-                    Clear filters
+                    {searching ? 'Clear search and filters' : 'Clear filters'}
                   </Button>
                 )
               }
             >
-              {filtered ? 'Try another term or type.' : 'Your recommendations appear here once the interview has enough to go on.'}
+              {searching
+                ? 'Try a module code, part of the title or a topic such as "robotics".'
+                : filtered
+                  ? 'Try another term or type.'
+                  : 'Your recommendations appear here once the interview has enough to go on.'}
             </EmptyState>
           )}
           {visible.length > 0 && (
-            <ol className="relative grid gap-4">
+            <ol id={listId} className="relative grid gap-4">
               {visible.map((item, index) => (
                 <RankedRow key={item.moduleId} first={index === eligibleCount && !item.eligible}>
                   <ModuleCard
@@ -165,6 +215,14 @@ export function CatalogueScreen() {
                     onAsk={openAdvisor}
                     listRef={flipRef(item.moduleId)}
                     index={index}
+                    compareControl={
+                      <CompareToggle
+                        title={item.module?.title ?? item.moduleId}
+                        slot={compareIds.indexOf(item.moduleId)}
+                        full={compareIds.length >= MAX_COMPARE}
+                        onToggle={() => toggleCompareFor(item.moduleId)}
+                      />
+                    }
                   />
                 </RankedRow>
               ))}
@@ -172,9 +230,33 @@ export function CatalogueScreen() {
           )}
         </section>
       </div>
+
+      {/* Room at the end of the list, so the compare bar never covers the last card. */}
+      {toCompare.length > 0 && <div aria-hidden="true" className="h-20" />}
+      <CompareTray
+        selected={toCompare}
+        onRemove={toggleCompareFor}
+        onClear={() => setCompareIds([])}
+        onOpen={() => setComparing(true)}
+      />
+      <CompareDrawer
+        open={comparing && toCompare.length >= MIN_COMPARE}
+        onClose={() => setComparing(false)}
+        sessionId={session.id}
+        moduleIds={toCompare.map((m) => m.moduleId)}
+        byId={byId}
+        scored={scored}
+        lowConfidence={confidence === 'low'}
+        isShortlisted={shortlist.isShortlisted}
+        shortlistKey={session.shortlist.join(',')}
+        onAsk={openAdvisor}
+      />
     </div>
   );
 }
+
+/** A module is found by a topic it covers at least this much (the Catalogue agent's search uses the same floor). */
+const SEARCH_TOPIC_FLOOR = 0.3;
 
 /** Puts a divider above the first ineligible module, so the gate reads as a separate group. */
 function RankedRow({ first, children }: { first: boolean; children: ReactNode }) {

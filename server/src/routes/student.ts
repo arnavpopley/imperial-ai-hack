@@ -3,6 +3,7 @@ import { schemas, type Evidence, type ExceptionRequest, type Feedback, type Feed
 import { Hono, type Context } from 'hono';
 import { streamSSE } from 'hono/streaming';
 import { randomUUID } from 'node:crypto';
+import { compareView } from '../agents/compare.ts';
 import { draftWellbeing, exceptionRequest } from '../agents/escalation.ts';
 import { extract, mergeUpdates } from '../agents/extractor.ts';
 import { QUICK_PLAN } from '../agents/interviewer.ts';
@@ -174,6 +175,17 @@ export const studentRoutes = new Hono()
     // The returned session carries the new mode, so the mode chip follows the shortlist without a reload.
     applyShortlistEdit(session, moduleId, action, tracer);
     return c.json(fresh(session.id));
+  })
+  .get('/:id/compare', (c) => {
+    // Issue 62: two or three modules side by side, from the records and the engines (no model call).
+    const session = load(c);
+    if (session instanceof Response) return session;
+    // Counted as sent: a repeated module is refused below, never silently dropped.
+    const ids = (c.req.query('ids') ?? '').split(',').map((id) => id.trim()).filter(Boolean);
+    if (ids.length < 2 || ids.length > 3) return c.json({ error: 'compare two or three different modules' }, 400);
+    const view = compareView(session, ids);
+    if (!('error' in view)) return c.json(view);
+    return c.json({ error: view.error }, view.reason === 'duplicate' ? 400 : 404);
   })
   .get('/:id/timetable', (c) => {
     // Read-only: the mode follows the shortlist POST, never this GET.

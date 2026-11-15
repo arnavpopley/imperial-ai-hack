@@ -418,6 +418,40 @@ export const TimetableView = z.object({
   rules: RulesResult,
 });
 
+/** Whole percentages, 0 to 100. */
+const Percent = z.number().int().min(0).max(100);
+
+/**
+ * One module in the catalogue's compare view (issue 62): facts from the module record and its published
+ * page, and the timetable engine's clashes against the student's shortlist and core modules. Fit and
+ * sub-scores are not repeated here: the client shows its live ranking, so the numbers match the cards.
+ */
+export const CompareModule = z.object({
+  moduleId: z.string(),
+  code: z.string(),
+  title: z.string(),
+  ects: z.number().positive(),
+  terms: z.array(Term).min(1),
+  /**
+   * Assessment split in whole percentages that add up to 100. `published` when it comes from the module page's
+   * weighted components; `estimated` when the page lists none and the split comes from the record's exam share.
+   */
+  assessment: z.object({ exam: Percent, coursework: Percent, practical: Percent, source: z.enum(['published', 'estimated']) }),
+  mathsPercent: Percent,
+  codingPercent: Percent,
+  workloadPercent: Percent,
+  /** Up to three topic labels, heaviest first. */
+  topics: z.array(z.string()).max(3),
+  prerequisites: z.array(z.object({ moduleId: z.string(), title: z.string() })),
+  slots: z.array(Slot),
+  /** Clashes with the shortlist (other than this module) and the core modules, most probable first. */
+  clashes: z.array(
+    z.object({ withModuleId: z.string(), withTitle: z.string(), core: z.boolean(), term: Term, label: ClashLabel, probability: Fraction }),
+  ),
+});
+
+export const CompareView = z.object({ modules: z.array(CompareModule).min(2).max(3) });
+
 export const ClashPriority = z.object({
   moduleA: z.string(),
   moduleB: z.string(),
