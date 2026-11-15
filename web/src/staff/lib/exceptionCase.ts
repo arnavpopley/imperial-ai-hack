@@ -14,6 +14,8 @@ export const RULE_LABELS: Record<RuleViolation['code'], string> = {
   ELECTIVE_ECTS_SHORT: 'Elective credits short',
   I_EXPLORE_MISSING: 'No I-Explore module',
   UNKNOWN_MODULE: 'Not in the catalogue',
+  ABOVE_YEAR_LEVEL: 'Taught in a later year',
+  RULES_NOT_LOADED: "Year's rules not loaded",
 };
 
 export interface RuleRow {
@@ -55,7 +57,12 @@ export function approvalOpensModule(request: ExceptionRequest | null): boolean {
   return Boolean(
     moduleId &&
       request.violations.some(
-        (v) => v.moduleId === moduleId && (v.code === 'NOT_ALLOWED' || (v.code === 'PREREQUISITE_MISSING' && v.prerequisiteId)),
+        (v) =>
+          v.moduleId === moduleId &&
+          (v.code === 'NOT_ALLOWED' ||
+            v.code === 'ABOVE_YEAR_LEVEL' ||
+            v.code === 'RULES_NOT_LOADED' ||
+            (v.code === 'PREREQUISITE_MISSING' && v.prerequisiteId)),
       ),
   );
 }

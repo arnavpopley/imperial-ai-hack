@@ -39,3 +39,32 @@ export function writeDismissedDraft(sessionId: string, draft: string | null): vo
     // Without storage a dismissed draft only stays dismissed until the page reloads.
   }
 }
+
+const ESCALATION_TRAY_KEY = 'modulematch.escalationTray';
+
+/** Which tutor replies the student has read (folded to a chip) or dismissed, for this session only. */
+export interface EscalationTrayMemory {
+  seen: string[];
+  dismissed: string[];
+}
+
+export function readEscalationTray(sessionId: string): EscalationTrayMemory {
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(ESCALATION_TRAY_KEY) ?? 'null') as
+      | ({ sessionId?: unknown } & Partial<EscalationTrayMemory>)
+      | null;
+    if (stored?.sessionId !== sessionId) return { seen: [], dismissed: [] };
+    const ids = (value: unknown) => (Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : []);
+    return { seen: ids(stored.seen), dismissed: ids(stored.dismissed) };
+  } catch {
+    return { seen: [], dismissed: [] };
+  }
+}
+
+export function writeEscalationTray(sessionId: string, memory: EscalationTrayMemory): void {
+  try {
+    window.localStorage.setItem(ESCALATION_TRAY_KEY, JSON.stringify({ sessionId, ...memory }));
+  } catch {
+    // Without storage, a folded or dismissed reply comes back after a reload; nothing else is lost.
+  }
+}

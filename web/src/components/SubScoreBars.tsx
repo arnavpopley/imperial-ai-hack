@@ -41,12 +41,17 @@ export function SubScoreBars({ sub, variant = 'stacked', dimmed = false, classNa
             </dt>
             <dd className={variant === 'compact' ? undefined : 'contents'}>
               <div
-                role="meter"
-                aria-label={SUB_SCORE_LABELS[key]}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-valuenow={pct ?? undefined}
-                aria-valuetext={pct === null ? 'Not applicable: no pathway chosen' : `${pct} out of 100`}
+                // role=meter needs a value, so a sub-score that does not apply is an image that says so.
+                {...(pct === null
+                  ? { role: 'img', 'aria-label': `${SUB_SCORE_LABELS[key]}: not applicable, no pathway chosen` }
+                  : {
+                      role: 'meter',
+                      'aria-label': SUB_SCORE_LABELS[key],
+                      'aria-valuemin': 0,
+                      'aria-valuemax': 100,
+                      'aria-valuenow': pct,
+                      'aria-valuetext': `${pct} out of 100`,
+                    })}
                 className={cx(
                   'relative h-1.5 overflow-hidden rounded-full bg-surface-2',
                   variant === 'compact' && 'mt-1',

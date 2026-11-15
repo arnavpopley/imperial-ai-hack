@@ -18,13 +18,41 @@ const sumEcts = (modules: readonly Module[]): number => modules.reduce((sum, mod
 
 const formatEcts = (ects: number): string => String(roundTo(ects, 1));
 
-/** Core modules, approved electives and every I-Explore module are open to the programme (spec 9.1). */
-function isAllowed(module: Module, rules: ProgrammeRules): boolean {
-  return (
-    module.type === 'i-explore' ||
-    rules.coreModuleIds.includes(module.id) ||
-    rules.allowedElectiveIds.includes(module.id)
-  );
+/**
+ * Spec 9.1 and issue 51: whether the student's programme rules allow a module, before prerequisites. A module the
+ * rules list (core or approved elective) is allowed. Otherwise, with rules loaded, every I-Explore module up to the
+ * year's level cap is allowed and anything else is not. Without rules for the year, a module above the level cap is
+ * refused and any other cannot be confirmed: nothing is allowed by default. The staff module list uses this same
+ * check, so it agrees with the students' recommendations.
+ */
+export function checkProgrammeRules(module: Module, rules: ProgrammeRules): RuleViolation[] {
+  if (rules.coreModuleIds.includes(module.id) || rules.allowedElectiveIds.includes(module.id)) return [];
+  const aboveLevel = rules.maxModuleLevel !== null && module.level > rules.maxModuleLevel;
+  const above: RuleViolation = {
+    code: 'ABOVE_YEAR_LEVEL',
+    moduleId: module.id,
+    message: `${moduleName(module)} is taught in Year ${module.level}, and ${rules.programme} year ${rules.year} students take modules up to Year ${rules.maxModuleLevel}.`,
+  };
+  if (rules.loaded) {
+    if (module.type !== 'i-explore') {
+      return [
+        {
+          code: 'NOT_ALLOWED',
+          moduleId: module.id,
+          message: `${moduleName(module)} is not open to ${rules.programme} year ${rules.year} students. You can choose the programme's core modules, its approved electives and I-Explore modules.`,
+        },
+      ];
+    }
+    return aboveLevel ? [above] : [];
+  }
+  if (aboveLevel) return [above];
+  return [
+    {
+      code: 'RULES_NOT_LOADED',
+      moduleId: module.id,
+      message: `ModuleMatch does not have the ${rules.programme} rules for year ${rules.year}, so it cannot confirm that ${moduleName(module)} is open to you. Check with your department, or ask the Senior Tutor.`,
+    },
+  ];
 }
 
 function unknownModule(moduleId: string): RuleViolation {
@@ -56,14 +84,7 @@ export function checkModuleEligibility(
   const isWaived = (violation: RuleViolation) =>
     waived.some((w) => w.code === violation.code && (w.prerequisiteId ?? null) === (violation.prerequisiteId ?? null));
 
-  const violations: RuleViolation[] = [];
-  if (!isAllowed(module, rules)) {
-    violations.push({
-      code: 'NOT_ALLOWED',
-      moduleId,
-      message: `${moduleName(module)} is not open to ${rules.programme} year ${rules.year} students. You can choose the programme's core modules, its approved electives and I-Explore modules.`,
-    });
-  }
+  const violations: RuleViolation[] = checkProgrammeRules(module, rules);
 
   const completed = new Set(profile.completedModuleIds);
   for (const prerequisiteId of module.prerequisites.filter((id) => !completed.has(id))) {
@@ -120,6 +141,14 @@ export function checkShortlist(
   const violations = chosenIds.flatMap((id) => checkModuleEligibility(id, profile, modules, rules, exceptions));
 
   const plan = unique([...rules.coreModuleIds, ...chosenIds]).flatMap((id) => byId.get(id) ?? []);
+  if (!rules.loaded) {
+    // Without the year's rules there is no credit cap or requirement to check against, so none is made up.
+    const warning: RuleWarning = {
+      code: 'RULES_NOT_LOADED',
+      message: `The ${rules.programme} rules for year ${rules.year} are not loaded, so ModuleMatch cannot check your plan's credit totals or requirements.`,
+    };
+    return { ok: violations.length === 0, violations, warnings: [warning, ...termImbalance(plan)] };
+  }
   const totalEcts = sumEcts(plan);
   if (totalEcts > rules.maxEcts) {
     violations.push({

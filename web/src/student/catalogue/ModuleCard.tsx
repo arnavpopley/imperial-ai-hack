@@ -83,8 +83,8 @@ export function ModuleCard({ item, lowConfidence, scored, shortlisted, pending, 
                   <ConfidenceBadge variant={item.confidence} />
                   {!eligible && (
                     <span className="inline-flex items-center gap-1 rounded-md bg-ink/6 px-1.5 py-0.5 text-[11px] font-semibold text-muted">
-                      <Icon name="lock" size={11} />
-                      Not eligible yet
+                      <Icon name={item.unconfirmed ? 'info' : 'lock'} size={11} />
+                      {item.unconfirmed ? "Can't confirm yet" : 'Not eligible yet'}
                     </span>
                   )}
                   {item.exception && <ExceptionChip decision={item.exception} />}
