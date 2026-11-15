@@ -2,6 +2,7 @@
 //   /                    the landing page, or a redirect to the screen for the stored session's mode
 //   /welcome             the landing page, always (with a resume button for a returning student)
 //   /start               onboarding, or that same redirect
+//   /demo                ModuleMatch filled in for an example student (no session needed)
 //   /interview           interview chat and live profile
 //   /catalogue           ranked modules with what-if weights
 //   /modules/:moduleId   explanation with evidence
@@ -26,6 +27,7 @@ import { yourDataPath } from './yourdata/paths.ts';
 // The landing page is the only screen in the first download. Every other screen, and the shell around the
 // session screens (which carries the advisor chat and its avatars), loads when first opened.
 const OnboardScreen = lazyNamed(() => import('./screens/OnboardScreen.tsx'), 'OnboardScreen');
+const DemoScreen = lazyNamed(() => import('./demo/DemoScreen.tsx'), 'DemoScreen');
 const StudentShell = lazyNamed(() => import('./shell/StudentShell.tsx'), 'StudentShell');
 const InterviewScreen = lazyNamed(() => import('./screens/InterviewScreen.tsx'), 'InterviewScreen');
 const CatalogueScreen = lazyNamed(() => import('./screens/CatalogueScreen.tsx'), 'CatalogueScreen');
@@ -51,6 +53,7 @@ export function StudentApp() {
         <Routes>
           <Route index element={<EntryRoute page={<LandingScreen />} />} />
           <Route path={paths.welcome.slice(1)} element={<WelcomeRoute />} />
+          <Route path={paths.demo.slice(1)} element={<Lazy><DemoScreen /></Lazy>} />
           <Route path={paths.start.slice(1)} element={<EntryRoute page={<Lazy><OnboardScreen /></Lazy>} />} />
           <Route element={<SessionGate />}>
             <Route path="interview" element={<Lazy><InterviewScreen /></Lazy>} />

@@ -5,12 +5,10 @@ import { DemandGauge } from '../components/DemandGauge.tsx';
 import { FitHistogram } from '../components/FitHistogram.tsx';
 import { InsightCard } from '../components/InsightCard.tsx';
 import { PrivacyHidden } from '../components/PrivacyNote.tsx';
-import { Panel, StatTile } from '../components/ui.tsx';
+import { Panel } from '../components/ui.tsx';
 import { EmptyState, ErrorState, LoadingState } from '../../components/StateViews.tsx';
-import { GaugeIcon, TrendUpIcon, UsersIcon } from '../components/icons.tsx';
-import { CountUp } from '../../components/CountUp.tsx';
 import { useInsights } from '../hooks/useInsights.ts';
-import { CAPACITY_LABEL, capacityStatus, plural } from '../lib/format.ts';
+import { plural } from '../lib/format.ts';
 import { NO_INSIGHTS } from '../lib/insights.ts';
 import { useModuleOutlet } from './ModulesPage.tsx';
 
@@ -27,38 +25,9 @@ export function ModuleDashboard() {
 
   // The server withholds a count of one to four students (null, spec 20.4): shown as a band, never a number or share.
   const { shortlisted } = summary;
-  const status = capacityStatus(shortlisted ?? 0, summary.capacity);
   return (
     <div className="grid grid-cols-1 gap-6">
-      <dl className="grid gap-4 sm:grid-cols-3">
-        <StatTile
-          label="Shortlisted"
-          icon={<UsersIcon className="size-5" />}
-          tone="bg-brand-soft text-brand"
-          value={shortlisted === null ? `<${MIN_COHORT}` : <CountUp value={shortlisted} />}
-          hint={summary.capacity === null ? 'No capacity limit' : `of ${summary.capacity} places`}
-        />
-        <StatTile
-          label="Average fit"
-          icon={<TrendUpIcon className="size-5" />}
-          tone="bg-fit-high/10 text-fit-high"
-          value={<CountUp value={Math.round(summary.averageFit)} />}
-          hint="out of 100, across the cohort"
-        />
-        <StatTile
-          label="Capacity used"
-          icon={<GaugeIcon className="size-5" />}
-          tone={status === 'over' ? 'bg-fit-low/10 text-fit-low' : status === 'near' ? 'bg-fit-mid/15 text-fit-mid' : 'bg-mode-plan/10 text-mode-plan'}
-          value={
-            summary.capacity === null || shortlisted === null ? (
-              '—'
-            ) : (
-              <CountUp value={Math.round((shortlisted / summary.capacity) * 100)} suffix="%" />
-            )
-          }
-          hint={shortlisted === null ? `Fewer than ${MIN_COHORT} students` : CAPACITY_LABEL[status]}
-        />
-      </dl>
+      {/* Shortlisted and capacity live in the demand panel, and the average fit on the histogram, so no stat row repeats them. */}
 
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
         <Panel title="Demand against capacity" description="Students who shortlisted this module.">

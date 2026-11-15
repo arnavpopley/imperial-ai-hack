@@ -32,7 +32,7 @@ export function LiveEvalPanel() {
     <section aria-labelledby="live-eval-heading" className="grid gap-5 rounded-panel bg-surface p-card shadow-soft ring-1 ring-line sm:p-card-lg">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-center gap-3">
-          <span aria-hidden="true" className="grid size-11 place-items-center rounded-2xl bg-gradient-to-br from-brand to-mode-explain text-on-brand shadow-soft">
+          <span aria-hidden="true" className="grid size-11 place-items-center rounded-2xl bg-brand text-on-brand shadow-soft">
             <Icon name="sparkle" size={20} />
           </span>
           <div>

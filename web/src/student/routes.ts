@@ -7,6 +7,8 @@ export const paths = {
   welcome: '/welcome',
   /** Programme, year and completed modules: the form that creates a session. */
   start: '/start',
+  /** ModuleMatch filled in for an example student, with no session needed. */
+  demo: '/demo',
   interview: '/interview',
   catalogue: '/catalogue',
   timetable: '/timetable',

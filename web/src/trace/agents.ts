@@ -21,8 +21,8 @@ export interface Agent {
   does: string;
   /** Finishes the sentence "Never ...". */
   never: string;
-  /** Gradient for the card's badge, from the theme's colour tokens. */
-  gradient: string;
+  /** Solid fill for the agent's badge, from the theme's mode and art colours. */
+  fill: string;
   /** Text colour for the "never" line. */
   tone: string;
   /** The badge when the models are off, if not "Template (offline)": an agent with no template says so. */
@@ -39,7 +39,7 @@ export const AGENTS: readonly Agent[] = [
     tools: ['Mode machine', 'Escalation drafts'],
     does: 'Reads each message and picks who replies.',
     never: 'sends an escalation without your OK.',
-    gradient: 'from-brand to-mode-explain',
+    fill: 'bg-brand',
     tone: 'text-brand',
   },
   {
@@ -51,7 +51,7 @@ export const AGENTS: readonly Agent[] = [
     tools: [],
     does: 'Asks the next most useful question.',
     never: 'asks about grades or health.',
-    gradient: 'from-mode-interview to-mode-plan',
+    fill: 'bg-mode-interview',
     tone: 'text-mode-interview',
   },
   {
@@ -63,7 +63,7 @@ export const AGENTS: readonly Agent[] = [
     tools: [],
     does: 'Turns answers into a profile.',
     never: 'stores a value without your quote.',
-    gradient: 'from-mode-explain to-mode-escalated',
+    fill: 'bg-mode-explain',
     tone: 'text-mode-explain',
   },
   {
@@ -75,7 +75,7 @@ export const AGENTS: readonly Agent[] = [
     tools: ['score_modules', 'check_rules'],
     does: 'Explains each ranking with evidence.',
     never: 'changes a fit score.',
-    gradient: 'from-mode-recommend to-mode-plan',
+    fill: 'bg-mode-recommend',
     tone: 'text-mode-recommend',
   },
   {
@@ -87,7 +87,7 @@ export const AGENTS: readonly Agent[] = [
     tools: ['find_clashes'],
     does: 'Explains clashes and the cheapest swaps.',
     never: 'makes a swap you have not confirmed.',
-    gradient: 'from-mode-plan to-mode-interview',
+    fill: 'bg-mode-plan',
     tone: 'text-mode-plan',
   },
   {
@@ -99,7 +99,7 @@ export const AGENTS: readonly Agent[] = [
     tools: ['search_modules', 'get_module', 'compare_modules'],
     does: 'Searches the whole catalogue in a tool loop.',
     never: 'names a module code that is not in the catalogue.',
-    gradient: 'from-art-2 to-mode-plan',
+    fill: 'bg-art-2',
     tone: 'text-art-2',
   },
   {
@@ -111,7 +111,7 @@ export const AGENTS: readonly Agent[] = [
     tools: [],
     does: 'Summarises a module and answers questions on it.',
     never: "goes beyond the module's own page.",
-    gradient: 'from-art-5 to-art-3',
+    fill: 'bg-art-5',
     tone: 'text-art-3',
   },
   {
@@ -123,7 +123,7 @@ export const AGENTS: readonly Agent[] = [
     tools: [],
     does: 'Reads an uploaded transcript or mark sheet.',
     never: 'reads your marks without your consent.',
-    gradient: 'from-art-8 to-mode-recommend',
+    fill: 'bg-art-8',
     tone: 'text-art-8',
     // Reading a PDF or photo needs the model; offline, students paste the text and a parser reads it.
     offlineLabel: 'Off (offline)',
@@ -137,7 +137,7 @@ export const AGENTS: readonly Agent[] = [
     tools: [],
     does: 'Turns your marks into tailored revision advice.',
     never: 'states a number the exam facts do not contain.',
-    gradient: 'from-art-4 to-art-6',
+    fill: 'bg-art-4',
     tone: 'text-art-4',
   },
   {
@@ -149,7 +149,7 @@ export const AGENTS: readonly Agent[] = [
     tools: [],
     does: 'Words cohort insight cards for module leads.',
     never: 'changes a number from the engine.',
-    gradient: 'from-art-6 to-mode-explain',
+    fill: 'bg-art-6',
     tone: 'text-art-6',
   },
   {
@@ -161,7 +161,7 @@ export const AGENTS: readonly Agent[] = [
     tools: [],
     does: 'Drafts a feedback form from marking notes.',
     never: 'reaches students before an examiner publishes it.',
-    gradient: 'from-art-1 to-art-4',
+    fill: 'bg-art-1',
     tone: 'text-art-1',
   },
   {
@@ -173,7 +173,7 @@ export const AGENTS: readonly Agent[] = [
     tools: ['record_module_analysis'],
     does: 'Tags each module with topics, skills and demand.',
     never: 'weights a topic highly without a quote.',
-    gradient: 'from-art-7 to-mode-onboard',
+    fill: 'bg-art-7',
     tone: 'text-art-7',
   },
 ];

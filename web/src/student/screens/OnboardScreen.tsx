@@ -205,10 +205,10 @@ export function OnboardScreen() {
                 transition={{ duration: 0.3, ease: EASE }}
                 className="overflow-hidden"
               >
-                <div className="flex gap-4 rounded-2xl bg-gradient-to-br from-brand-soft to-surface-2 p-4 ring-1 ring-brand/20">
+                <div className="flex gap-4 rounded-2xl bg-brand-soft p-4 ring-1 ring-brand/20">
                   <span
                     aria-hidden="true"
-                    className="grid size-12 shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand to-mode-explain text-lg font-semibold text-on-brand"
+                    className="grid size-12 shrink-0 place-items-center rounded-full bg-brand text-lg font-semibold text-on-brand"
                   >
                     {EXAMPLE_STUDENT.name[0]}
                   </span>

@@ -159,6 +159,8 @@ const paths = {
       <circle cx="15" cy="7" r="1" />
     </>
   ),
+  pause: <path d="M8.5 5v14M15.5 5v14" />,
+  play: <path d="M7 4.5v15l12-7.5z" />,
   plus: <path d="M12 5v14M5 12h14" />,
   reset: <path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1L3.5 8.5M3.5 3.5v5h5" />,
   search: (

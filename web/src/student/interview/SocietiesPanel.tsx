@@ -42,7 +42,7 @@ export function SocietiesPanel({ onSeen, onClose }: SocietiesPanelProps) {
     <section aria-labelledby={headingId} className="grid gap-5">
       {/* The pathways page has the societies photo; this panel shows the student's top matches' own artwork, so no
           photo appears twice (issue #135). */}
-      <div className="relative h-36 overflow-hidden rounded-2xl bg-gradient-to-br from-art-1 via-art-4 to-art-6 sm:h-44">
+      <div className="relative h-36 overflow-hidden rounded-2xl bg-art-1 sm:h-44">
         <MatchArt societies={top.map((m) => byId.get(m.societyId))} />
         <button
           type="button"
@@ -110,7 +110,7 @@ export function SocietiesPanel({ onSeen, onClose }: SocietiesPanelProps) {
 const SCENE = ['creative-arts-design', 'control-robotics', 'global-development', 'thermodynamics-energy'] as const;
 
 /**
- * Three different icons on their own gradients (SocietyArt): the top matches' first, then a varied scene, so the
+ * Three different icons on their own colours (SocietyArt): the top matches' first, then a varied scene, so the
  * banner never shows the same icon twice. Over a soft dot pattern, like the society banners.
  */
 function MatchArt({ societies }: { societies: readonly (Society | undefined)[] }) {
@@ -126,8 +126,8 @@ function MatchArt({ societies }: { societies: readonly (Society | undefined)[] }
           <span
             key={art.icon}
             className={cx(
-              'grid place-items-center rounded-2xl bg-gradient-to-br text-white shadow-soft ring-1 ring-white/40',
-              art.gradient,
+              'grid place-items-center rounded-2xl text-white shadow-soft ring-1 ring-white/40',
+              art.fill,
               i === 1 ? 'size-16' : 'size-14',
             )}
           >
