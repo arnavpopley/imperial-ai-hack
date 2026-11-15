@@ -187,6 +187,11 @@ export const Recommendation = z.object({
   confidence: Confidence,
   /** Set when the Senior Tutor decided a rule-exception request for this module (spec 11.1). */
   exception: ExceptionDecision.optional(),
+  /**
+   * True when the only thing in the way is that the rules for the student's year are not loaded: the module is
+   * not refused, its eligibility just cannot be confirmed (issue 51).
+   */
+  unconfirmed: z.literal(true).optional(),
 });
 
 export const ExplanationReason = z.object({
@@ -213,6 +218,10 @@ export const RuleViolation = z.object({
     'ELECTIVE_ECTS_SHORT',
     'I_EXPLORE_MISSING',
     'UNKNOWN_MODULE',
+    /** Taught in a later year than the student's, and no rule for their year lists it (issue 51). */
+    'ABOVE_YEAR_LEVEL',
+    /** No rules are loaded for the student's programme and year, so eligibility cannot be confirmed. */
+    'RULES_NOT_LOADED',
   ]),
   moduleId: z.string().nullable(),
   /** The missing module, for PREREQUISITE_MISSING, so staff can see the rule as data rather than prose. */
@@ -221,11 +230,14 @@ export const RuleViolation = z.object({
 });
 
 /**
- * One broken rule a Senior Tutor waived for one module: the programme check (NOT_ALLOWED) or one missing
- * prerequisite. Shortlist rules such as the credit cap are never waived; the module's ECTS always count.
+ * One broken rule a Senior Tutor waived for one module: the programme check (NOT_ALLOWED), the year-level check,
+ * an unconfirmable module in a year with no rules loaded, or one missing prerequisite. Shortlist rules such as
+ * the credit cap are never waived; the module's ECTS always count.
  */
+export const WAIVABLE_CODES = ['PREREQUISITE_MISSING', 'NOT_ALLOWED', 'ABOVE_YEAR_LEVEL', 'RULES_NOT_LOADED'] as const;
+
 export const RuleWaiver = z.object({
-  code: RuleViolation.shape.code.extract(['PREREQUISITE_MISSING', 'NOT_ALLOWED']),
+  code: RuleViolation.shape.code.extract(WAIVABLE_CODES),
   prerequisiteId: z.string().optional(),
 });
 
@@ -311,10 +323,33 @@ export const ProgrammeRules = z.object({
   iExploreRequired: z.boolean(),
   /** h_{s,j} in spec 8.4: topic coverage of the home programme, used by the breadth score. */
   homeTopics: weightMap(TopicId),
+  /**
+   * False for the stand-in used when data/programme-rules.json has no entry for the programme and year: eligibility
+   * then cannot be confirmed, rather than everything being allowed (issue 51).
+   */
+  loaded: z.boolean().default(true),
+  /** The highest module level (the year it is taught in) open to the year, from levelCaps; null when not set. */
+  maxModuleLevel: z.number().int().min(1).nullable().default(null),
+});
+
+/** Whether the student's programme rules are loaded, shown on the catalogue (issue 51). */
+export const RulesStatus = z.object({
+  programme: z.string(),
+  year: z.number().int(),
+  loaded: z.boolean(),
+  maxModuleLevel: z.number().int().nullable(),
+  /** One sentence for the student, for example that the rules for their year are not loaded. */
+  note: z.string(),
+});
+
+/** A programme in the rules data and, for each year of study, whether rules are loaded (GET /programmes). */
+export const ProgrammeInfo = z.object({
+  programme: z.string(),
+  years: z.array(z.object({ year: YearOfStudy, rulesLoaded: z.boolean() })),
 });
 
 export const RuleWarning = z.object({
-  code: z.enum(['TERM_IMBALANCE']),
+  code: z.enum(['TERM_IMBALANCE', 'RULES_NOT_LOADED']),
   message: z.string(),
 });
 
@@ -378,7 +413,8 @@ export const TimetableView = z.object({
   keepFree: z.array(KeepFreeWindow),
   keepFreeConflicts: z.array(KeepFreeConflict),
   /** ECTS in the plan: core modules, chosen electives and I-Explore, against the programme cap. */
-  ects: z.object({ core: z.number().min(0), elective: z.number().min(0), iExplore: z.number().min(0), max: z.number().min(0) }),
+  /** `max` is the programme's credit cap, or null when the rules for the student's year are not loaded (issue 51). */
+  ects: z.object({ core: z.number().min(0), elective: z.number().min(0), iExplore: z.number().min(0), max: z.number().min(0).nullable() }),
   rules: RulesResult,
 });
 
@@ -600,6 +636,7 @@ export const RecommendationsResponse = z.object({
    */
   ranking: z.enum(['fit', 'starter']),
   recommendations: z.array(Recommendation),
+  rules: RulesStatus,
   /** This year's compulsory core modules, already in the student's plan (spec 9.2), so never offered as additions. */
   coreModuleIds: z.array(z.string()),
 });
@@ -622,7 +659,10 @@ export const StaffModuleSummary = z.object({
   averageFit: z.number().min(0).max(100),
   fitHistogram: z.array(z.number().int().min(0)).length(10),
   cohortSize: z.number().int().min(0),
-  /** Absent only when the cohort's programme and year have no programme rules to read the offer from. */
+  /**
+   * From the same programme check the students' recommendations use (before prerequisites). Absent when the cohort's
+   * programme and year have no programme rules loaded to read the offer from (issue 51).
+   */
   offer: CohortOffer.optional(),
 });
 

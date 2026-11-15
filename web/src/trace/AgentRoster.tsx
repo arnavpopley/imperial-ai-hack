@@ -99,7 +99,7 @@ function AgentCard({ agent, index, used }: { agent: Agent; index: number; used: 
         <p className="mt-auto flex items-start gap-1.5 text-xs font-medium">
           <Icon name="ban" size={13} className={cx('mt-0.5 shrink-0', agent.tone)} />
           <span>
-            <span className={agent.tone}>Never</span> {agent.never}
+            <span className="font-semibold">Never</span> {agent.never}
           </span>
         </p>
       </div>

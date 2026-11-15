@@ -18,6 +18,7 @@ import { useShortlist } from '../hooks/useShortlist.ts';
 import { DAY_LABELS, keepFreeLabel, TERM_LABELS } from '../labels.ts';
 import { PhotoBanner } from '../catalogue/PhotoBanner.tsx';
 import { paths } from '../routes.ts';
+import { ectsLabels } from '../rulesStatus.ts';
 import { useAdvisor } from '../shell/StudentShell.tsx';
 import { useReferenceData } from '../state/ReferenceDataProvider.tsx';
 import { useReadySession } from '../state/SessionProvider.tsx';
@@ -270,7 +271,8 @@ function ProvisionalNotice() {
 /** The plan's ECTS against the programme cap, as one stacked bar: core, electives, I-Explore. */
 function EctsBar({ ects }: { ects: TimetableView['ects'] }) {
   const total = ects.core + ects.elective + ects.iExplore;
-  const scale = Math.max(ects.max, total) || 1;
+  const scale = Math.max(ects.max ?? 0, total) || 1;
+  const labels = ectsLabels(total, ects.max);
   const parts = [
     { key: 'core', label: 'core', value: ects.core, className: 'bg-ink/45' },
     { key: 'elective', label: 'electives', value: ects.elective, className: 'bg-brand' },
@@ -280,16 +282,14 @@ function EctsBar({ ects }: { ects: TimetableView['ects'] }) {
     <div>
       <p className="flex items-baseline justify-between text-[12px]">
         <span className="font-semibold tabular-nums">
-          {total} <span className="font-normal text-muted">of {ects.max} ECTS</span>
+          {total} <span className="font-normal text-muted">{labels.of}</span>
         </span>
-        <span className={cx('tabular-nums', total > ects.max ? 'text-fit-low' : 'text-muted')}>
-          {total > ects.max ? `${total - ects.max} over` : total === ects.max ? 'Full' : `${ects.max - total} to go`}
-        </span>
+        <span className={cx('tabular-nums', labels.over ? 'text-fit-low' : 'text-muted')}>{labels.remaining}</span>
       </p>
       <div
         className="mt-1.5 flex h-2 overflow-hidden rounded-full bg-surface-2"
         role="img"
-        aria-label={`${total} of ${ects.max} ECTS: ${parts.map((p) => `${p.value} ${p.label}`).join(', ')}`}
+        aria-label={`${total} ${labels.of}: ${parts.map((p) => `${p.value} ${p.label}`).join(', ')}`}
       >
         {parts.map((p) => (
           <span key={p.key} className={p.className} style={{ width: `${(p.value / scale) * 100}%` }} />

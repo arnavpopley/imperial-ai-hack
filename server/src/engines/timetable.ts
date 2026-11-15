@@ -331,13 +331,15 @@ export function capacityBackups(
 }
 
 /**
- * ECTS in the plan by kind (core, chosen electives, I-Explore) against the programme cap. It counts every core
+ * ECTS in the plan by kind (core, chosen electives, I-Explore) against the programme cap (null when the rules for
+ * the student's year are not loaded). It counts every core
  * module, as the spec 9.1 rules check does, so the bar and the rules always agree on how much room is left.
  */
 export function planEcts(shortlist: readonly string[], modules: readonly Module[], rules: ProgrammeRules): TimetableView['ects'] {
   const byId = new Map(modules.map((module) => [module.id, module]));
   const coreIds = new Set(rules.coreModuleIds);
-  const ects = { core: 0, elective: 0, iExplore: 0, max: rules.maxEcts };
+  // Without the year's rules there is no cap to plan towards, so none is invented (issue 51).
+  const ects = { core: 0, elective: 0, iExplore: 0, max: rules.loaded ? rules.maxEcts : null };
   for (const module of unique([...rules.coreModuleIds, ...shortlist]).flatMap((id) => byId.get(id) ?? [])) {
     if (coreIds.has(module.id) || module.type === 'core') ects.core += module.ects;
     else if (module.type === 'i-explore') ects.iExplore += module.ects;

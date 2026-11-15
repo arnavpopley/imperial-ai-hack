@@ -62,6 +62,8 @@ export function makeRules(overrides: Partial<ProgrammeRules> = {}): ProgrammeRul
     maxEcts: 60,
     iExploreRequired: false,
     homeTopics: {},
+    loaded: true,
+    maxModuleLevel: null,
     ...overrides,
   };
 }

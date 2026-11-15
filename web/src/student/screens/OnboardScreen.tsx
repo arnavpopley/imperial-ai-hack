@@ -4,6 +4,7 @@ import type { YearOfStudy } from '@modulematch/shared';
 import { AnimatePresence, motion, MotionConfig, type Variants } from 'motion/react';
 import { useState, type FormEvent } from 'react';
 import { useLocation } from 'react-router';
+import { api } from '../../api.ts';
 import { Button } from '../../components/Button.tsx';
 import { cx } from '../../components/cx.ts';
 import { Icon, type IconName } from '../../components/Icon.tsx';
@@ -14,7 +15,9 @@ import { SegmentedControl } from '../../components/SegmentedControl.tsx';
 import { errorMessage } from '../../components/StateViews.tsx';
 import { Dropdown, type DropdownOption } from '../interview/Dropdown.tsx';
 import { clearExamplePrefill, EXAMPLE_STUDENT, markExampleStart } from '../example.ts';
+import { useAsync } from '../hooks/useAsync.ts';
 import '../interview/interview.css';
+import { NO_RULES_DETAIL, noRulesHint, yearsWithoutRules } from '../rulesStatus.ts';
 import { wasProfileDeleted } from '../shell/YourDataDrawer.tsx';
 import { useReferenceData } from '../state/ReferenceDataProvider.tsx';
 import { useSession } from '../state/SessionProvider.tsx';
@@ -76,6 +79,10 @@ export function OnboardScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const options = (modules.data ?? []).map((m) => ({ value: m.id, label: m.title, detail: m.code }));
+  // Issue 51: years without rules are still offered, but say so here and on the catalogue.
+  const programmes = useAsync(() => api.programmes(), []);
+  const noRules = yearsWithoutRules(programmes.data, programme);
+  const yearOptions = YEARS.map((o) => (noRules.has(YEAR_OF[o.value]) ? { ...o, detail: NO_RULES_DETAIL } : o));
 
   // The example fills the form with a synthetic student; switching back clears it for the student's own details.
   const chooseStartMode = (mode: StartMode) => {
@@ -227,7 +234,15 @@ export function OnboardScreen() {
 
           <div className="grid gap-5">
             <Dropdown label="Programme" options={PROGRAMMES} value={programme} onChange={setProgramme} />
-            <Dropdown label="Year of study" options={YEARS} value={year} onChange={setYear} />
+            <div className="grid gap-1.5">
+              <Dropdown label="Year of study" options={yearOptions} value={year} onChange={setYear} />
+              {noRules.has(YEAR_OF[year]) && (
+                <p role="status" className="flex items-start gap-1.5 text-[13px] text-muted">
+                  <Icon name="info" size={14} className="mt-0.5 shrink-0" />
+                  {noRulesHint(year)}
+                </p>
+              )}
+            </div>
           </div>
 
           <div>
