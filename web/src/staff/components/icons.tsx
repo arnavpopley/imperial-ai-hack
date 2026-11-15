@@ -176,3 +176,49 @@ export const CalendarIcon = (p: IconProps) => (
     <path d="M13 2.5v3M7 2.5v3M3 8.5h14" />
   </Icon>
 );
+
+export const ArrowUpIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M10 16V4M5 9l5-5 5 5" />
+  </Icon>
+);
+
+export const ArrowDownIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M10 4v12M5 11l5 5 5-5" />
+  </Icon>
+);
+
+export const TrashIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M3.5 5.5h13M8 5.5V3.5h4v2M5.5 5.5l.75 11h7.5l.75-11M8.5 8.5v5.5M11.5 8.5v5.5" />
+  </Icon>
+);
+
+export const SendIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M17 3L8.5 11.5M17 3l-5 14-3.5-5.5L3 8z" />
+  </Icon>
+);
+
+export const UndoIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M7 4.5L3.5 8 7 11.5" />
+    <path d="M3.5 8h8.25a4.75 4.75 0 010 9.5H9" />
+  </Icon>
+);
+
+export const PencilIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M12.5 4l3.5 3.5-8.75 8.75H3.75V12.75z" />
+    <path d="M10.75 5.75l3.5 3.5" />
+  </Icon>
+);
+
+export const ExamIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="4" y="2.5" width="12" height="15" rx="2" />
+    <path d="M7 6.5h6M7 9.5h6M7 12.5h3" />
+    <path d="M11.5 13.5l1.25 1.25 2.25-2.5" />
+  </Icon>
+);
