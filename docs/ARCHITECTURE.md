@@ -57,7 +57,7 @@ stateDiagram-v2
   EXPLAIN --> RECOMMEND: done
   RECOMMEND --> INTERVIEW: low confidence and student agrees
   RECOMMEND --> PLAN: shortlist has two or more modules
-  PLAN --> RECOMMEND: shortlist drops below two, or a chat turn ends
+  PLAN --> RECOMMEND: shortlist drops below two, or an explanation or what-if ends
   INTERVIEW --> ESCALATED: guardrail trigger
   RECOMMEND --> ESCALATED: rule exception or low confidence
   PLAN --> ESCALATED: clash with no valid swap
