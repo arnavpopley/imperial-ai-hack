@@ -197,7 +197,7 @@ function TagEditorForm({
         )}
         <fieldset disabled={saving} className="grid min-w-0 grid-cols-1 gap-5 transition-opacity disabled:opacity-60">
           <legend className="sr-only">Derived fields</legend>
-          <Panel title="Topics" description="What the module covers. Only taxonomy topics can be added.">
+          <Panel title="Topics" info="What the module covers. Only taxonomy topics can be added.">
             <WeightMapEditor
               value={draft.topics}
               original={baseline.topics}
@@ -207,7 +207,7 @@ function TagEditorForm({
               onChange={editWeights('topics')}
             />
           </Panel>
-          <Panel title="Skills" description="Skills the module builds, which feed pathway progress.">
+          <Panel title="Skills" info="Skills the module builds, which feed pathway progress.">
             <WeightMapEditor
               value={draft.skills}
               original={baseline.skills}
@@ -217,7 +217,7 @@ function TagEditorForm({
               onChange={editWeights('skills')}
             />
           </Panel>
-          <Panel title="Pathway relevance" description="How directly the module serves each career pathway.">
+          <Panel title="Pathway relevance" info="How directly the module serves each career pathway.">
             <WeightMapEditor
               value={draft.pathwayRelevance}
               original={baseline.pathwayRelevance}
@@ -227,7 +227,7 @@ function TagEditorForm({
               onChange={editWeights('pathwayRelevance')}
             />
           </Panel>
-          <Panel title="Demand profile" description="Assessment and intensity, used for learning-style fit.">
+          <Panel title="Demand profile" info="Assessment and intensity, used for learning-style fit.">
             <div className="grid gap-3">
               {DEMAND_FIELDS.map((f) => (
                 <WeightSlider

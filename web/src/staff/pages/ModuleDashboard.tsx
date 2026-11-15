@@ -30,10 +30,10 @@ export function ModuleDashboard() {
       {/* Shortlisted and capacity live in the demand panel, and the average fit on the histogram, so no stat row repeats them. */}
 
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
-        <Panel title="Demand against capacity" description="Students who shortlisted this module.">
+        <Panel title="Demand against capacity" info="Students who shortlisted this module, against the places it has.">
           <DemandGauge shortlisted={shortlisted} capacity={summary.capacity} />
         </Panel>
-        <Panel title="Fit distribution" description="How well the module fits each student in the cohort.">
+        <Panel title="Fit distribution" info="How well the module fits each student in the cohort, in bands of 10 fit points.">
           <FitHistogram
             bands={summary.fitBands}
             averageFit={summary.averageFit}

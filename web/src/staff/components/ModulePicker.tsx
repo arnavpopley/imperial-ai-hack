@@ -24,6 +24,7 @@ import { DemandMiniBar } from './DemandGauge.tsx';
 import { SearchIcon, ShieldIcon } from './icons.tsx';
 import { Segmented } from './ui.tsx';
 import { Select } from '../../components/Select.tsx';
+import { InfoTip } from '../../components/InfoTip.tsx';
 
 const SORTS = {
   strong: { label: `Good fit or better (${GOOD_FIT}+)`, compare: byCohortFigure(goodFitShare) },
@@ -113,8 +114,11 @@ export function ModulePicker({ modules }: { modules: StaffModuleSummary[] }) {
             ))}
           </Select>
         </div>
-        <p className="text-xs text-muted">
-          % = share of the cohort with a good fit or better ({GOOD_FIT}+)
+        <p className="flex items-center gap-1 text-xs text-muted">
+          What the percentages mean
+          <InfoTip label="What the percentages mean">
+            Each module&rsquo;s % is the share of the cohort with a good fit or better ({GOOD_FIT}+).
+          </InfoTip>
         </p>
       </div>
       <p className="sr-only" aria-live="polite">

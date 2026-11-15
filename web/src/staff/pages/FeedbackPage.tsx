@@ -81,7 +81,7 @@ function FeedbackView({ summary }: { summary: FeedbackSummary }) {
         />
       </dl>
 
-      <Panel title="By answer type" description="Thumbs up and down for each place the AI answers.">
+      <Panel title="By answer type" info="Thumbs up and down for each place the AI answers.">
         <table className="w-full text-left text-sm">
           <caption className="sr-only">Ratings by answer type</caption>
           <thead className="text-xs text-muted">

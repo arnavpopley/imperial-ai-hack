@@ -355,7 +355,7 @@ function ExamFormWorkspace({ moduleId, initial }: { moduleId: string; initial: E
 
           <fieldset disabled={locked} className="grid min-w-0 grid-cols-1 gap-6 transition-opacity disabled:opacity-60">
             <legend className="sr-only">Exam feedback form</legend>
-            <Panel title="Exam details" description="Shown at the top of every student's feedback.">
+            <Panel title="Exam details" info="Shown at the top of every student's feedback.">
               <div className="grid gap-5">
                 <Field id={EXAM_LABEL_FIELD} label="Exam" error={issueFor(EXAM_LABEL_FIELD)}>
                   {(describedBy) => (

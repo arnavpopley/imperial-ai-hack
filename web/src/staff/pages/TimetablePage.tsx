@@ -84,7 +84,7 @@ function ClashPriorities({ rows }: { rows: ClashPriority[] }) {
         )}
       </dl>
 
-      <Panel title="Clash priority" description="Priority = students who shortlisted both modules × chance they clash.">
+      <Panel title="Clash priority" info="Priority = students who shortlisted both modules × the chance they clash.">
         {/* Phones get a card per pair; the table needs more width than a phone has. */}
         <ol className="grid gap-3 md:hidden">
           {ranked.map((r, i) => (

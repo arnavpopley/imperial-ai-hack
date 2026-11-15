@@ -16,6 +16,7 @@ import { LiveEvalPanel } from './LiveEvalPanel.tsx';
 import { BenchmarkPanel } from './benchmark/BenchmarkPanel.tsx';
 import { nodesInTrace } from './flow.ts';
 import { labelCodes, noun } from './traceText.ts';
+import { InfoTip } from '../components/InfoTip.tsx';
 
 const SESSION_KEY = 'modulematch.sessionId';
 
@@ -201,10 +202,10 @@ function SectionHeading({ id, eyebrow, title, children }: { id: string; eyebrow:
   return (
     <div className="grid gap-1.5">
       <p className="text-xs font-semibold tracking-[0.12em] text-brand uppercase">{eyebrow}</p>
-      <h2 id={id} className="text-heading">
+      <h2 id={id} className="flex items-center gap-1.5 text-heading">
         {title}
+        <InfoTip label={`About ${title.toLowerCase()}`}>{children}</InfoTip>
       </h2>
-      <p className="max-w-2xl text-sm text-muted">{children}</p>
     </div>
   );
 }
