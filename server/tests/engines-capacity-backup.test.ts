@@ -51,7 +51,13 @@ const signal = (moduleId: string, status: ModuleDemandSignal['status'] = 'over')
   { moduleId, status, shortlisted: 60, capacity: 48 },
 ];
 const planFor = (profile: StudentProfile, rules: Partial<ProgrammeRules> = {}): SwapPlan => {
-  const programme = makeRules({ allowedElectiveIds: modules.map((m) => m.id), coreModuleIds: ['core-module'], ...rules });
+  // Two electives (10 ECTS) are required, so the default shortlist of two has no spare elective to fall back on.
+  const programme = makeRules({
+    allowedElectiveIds: modules.map((m) => m.id),
+    coreModuleIds: ['core-module'],
+    electiveEctsRequired: 10,
+    ...rules,
+  });
   return { modules, rules: programme, check: (list) => checkShortlist(list, profile, modules, programme) };
 };
 
@@ -84,8 +90,17 @@ describe('capacityBackups', () => {
   it('never offers to add when the plan is already over the ECTS cap', () => {
     const demand = new Map([signal('popular'), signal('also-popular'), signal('clashes-with-popular')]);
     const over = ['popular', 'other', 'iexplore'];
-    const [backup] = capacityBackups(profile, over, ranked, slots, planFor(profile, { maxEcts: 10 }), demand);
+    const [backup] = capacityBackups(profile, over, ranked, slots, planFor(profile, { maxEcts: 10, electiveEctsRequired: 15 }), demand);
     expect(backup?.canAdd).toBe(false);
+  });
+
+  it('stops suggesting once a backup is on the shortlist: the plan still meets the rules without the pick', () => {
+    const demand = new Map([signal('popular'), signal('also-popular')]);
+    // A third elective covers the two required: losing the popular pick would leave the plan whole.
+    expect(capacityBackups(profile, ['popular', 'other', 'steady'], ranked, slots, planFor(profile), demand)).toEqual([]);
+    // With three required, the same shortlist has no spare, so the suggestion stays.
+    const short = capacityBackups(profile, ['popular', 'other', 'steady'], ranked, slots, planFor(profile, { electiveEctsRequired: 15 }), demand);
+    expect(short.map((b) => b.replaceModuleId)).toEqual(['popular']);
   });
 
   it('suggests nothing for picks with calm demand, for core modules, or when no candidate passes', () => {
