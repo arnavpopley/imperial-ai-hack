@@ -105,6 +105,8 @@ describe('a session the server no longer knows', () => {
     });
     expect(status()).toBe('ready');
 
+    // Another tab starting again rewrites the shared storage; this tab's session can still be lost.
+    writeStoredSessionId('other-tab');
     await act(async () => {
       await api.recommendations('gone-2').catch(() => undefined);
     });
