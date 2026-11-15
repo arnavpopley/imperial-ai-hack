@@ -237,15 +237,22 @@ export const STEPS = [
       await page.scrollIntoView(nudge);
       await ctx.checkpoint(page, 'nudge');
 
-      // The Exam feedback tab appears once there is feedback; the page must render either way.
-      const tab = await page.eval(() => [...document.querySelectorAll('nav[aria-label="Student sections"] a')].some((a) => /Exam feedback/.test(a.textContent)));
-      if (tab) await page.click(STUDENT_TAB('Exam feedback'));
-      else await page.goto(`${ctx.web}/feedback`);
+      // The transcript has per-question marks for Stress Analysis 2, so the Exam feedback tab must appear, and its
+      // page must show that module's revision plan (not just the heading, which also shows while loading or empty).
+      await page.click(STUDENT_TAB('Exam feedback'), { desc: 'the Exam feedback tab', timeout: ctx.timeout });
       await pathIs(page, '/feedback');
-      await page.waitForElement({ css: 'h1, h2', text: { re: 'exam feedback|feedback' } }, { desc: 'the exam feedback page' });
+      await page.waitFor(
+        () => {
+          const text = document.querySelector('main')?.innerText ?? '';
+          return text.includes('Stress Analysis 2') && /your revision plan/i.test(text);
+        },
+        [],
+        { desc: 'the Stress Analysis 2 feedback with its revision plan', timeout: ctx.timeout },
+      );
       const failed = await page.eval(() => document.body.textContent.includes('Your feedback did not load'));
       if (failed) fail('The exam feedback page shows "Your feedback did not load"');
-      ctx.note(`feedback page: ${tab ? 'reached from its tab' : 'opened by URL (no tab yet)'}`);
+      ctx.note('feedback page: Stress Analysis 2 revision plan shown');
+      await page.scrollIntoView({ css: 'h2, h3', text: 'Stress Analysis 2' });
       await ctx.checkpoint(page, 'feedback');
 
       await page.click(STUDENT_TAB('Your data'));
