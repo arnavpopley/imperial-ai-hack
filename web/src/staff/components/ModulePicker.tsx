@@ -114,7 +114,7 @@ export function ModulePicker({ modules }: { modules: StaffModuleSummary[] }) {
           </Select>
         </div>
         <p className="text-xs text-muted">
-          % = share of the cohort with a good fit or better ({GOOD_FIT}+) · bars = fit spread, 0 to 100
+          % = share of the cohort with a good fit or better ({GOOD_FIT}+)
         </p>
       </div>
       <p className="sr-only" aria-live="polite">
@@ -165,27 +165,6 @@ export function ModulePicker({ modules }: { modules: StaffModuleSummary[] }) {
   );
 }
 
-/**
- * The cohort's fit spread; good-fit bands are tinted. Decorative beside the figures. Bands the server merged (one
- * to four students, spec 20.4) are drawn as wide as they are, at their students per 10 points.
- */
-function FitSpark({ bands }: { bands: StaffModuleSummary['fitBands'] }) {
-  const span = (b: (typeof bands)[number]) => Math.max(10, b.to - b.from + (b.to === 100 ? 0 : 1));
-  const perTen = (b: (typeof bands)[number]) => (b.students * 10) / span(b);
-  const max = Math.max(1, ...bands.map(perTen));
-  return (
-    <span aria-hidden="true" className="flex h-5 w-20 shrink-0 items-end gap-px" title="Fit spread, 0 to 100">
-      {bands.map((b) => (
-        <span
-          key={b.from}
-          className={`rounded-t-[2px] ${b.from >= GOOD_FIT ? 'bg-fit-high' : 'bg-line-strong'}`}
-          style={{ flexGrow: span(b), flexBasis: 0, height: `${Math.max(b.students > 0 ? 12 : 4, (perTen(b) / max) * 100)}%` }}
-        />
-      ))}
-    </span>
-  );
-}
-
 function ModuleFigures({ module: m }: { module: StaffModuleSummary }) {
   const status = capacityStatus(knownShortlisted(m), m.capacity);
   const share = goodFitShare(m);
@@ -211,10 +190,7 @@ function ModuleFigures({ module: m }: { module: StaffModuleSummary }) {
         </span>
       </span>
       <span className="flex flex-wrap items-end justify-between gap-x-3 gap-y-1 text-xs text-muted">
-        <span className="flex items-end gap-2.5">
-          <span className="font-mono">{m.code}</span>
-          <FitSpark bands={m.fitBands} />
-        </span>
+        <span className="font-mono">{m.code}</span>
         <span className="tabular-nums">
           {shortlistLabel(m)}
           {/* The student chip's words; the separator keeps them apart from the count for screen readers too. */}
