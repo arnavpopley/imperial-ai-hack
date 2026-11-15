@@ -62,6 +62,19 @@ const DISLIKE =
 const HARD_TOPIC =
   /\b(hardest|toughest|most difficult|struggled|struggle|too (hard|difficult|tough)|(found|find) [^.,;]{0,40}\b(hard|difficult|tough)|(was|is|were|are) (really |very |quite |so |pretty |super )?(hard|difficult|tough))\b/i;
 const STILL_ENJOYED = /\b(lov\w*|enjoy\w*|liked|like it|fun|interesting|fascinat\w*)\b/i;
+const NOT_HARD = /\b(not|never|n't|wasn'?t|isn'?t|aren'?t|weren'?t|didn'?t|don'?t)\b[^.,;]{0,25}\b(hard|hardest|difficult|tough|struggle\w*)\b/i;
+/** A contrast word starts a new clause, so "Thermodynamics was hard, but I prefer fluids" only marks thermodynamics. */
+const CONTRAST = /;|\b(?:but|whereas|while|though|although|however)\b/i;
+/**
+ * Whether a clause says its topic is one to avoid: a dislike, or a difficulty that is not negated and not enjoyed. A
+ * clause that enjoys "it" without naming a topic of its own counts as enjoying this one ("Fluids was hard but I loved it").
+ */
+const avoidsTopic = (clause: string, otherClauses: string[], namesATopic: (text: string) => boolean) =>
+  DISLIKE.test(clause) ||
+  (HARD_TOPIC.test(clause) &&
+    !NOT_HARD.test(clause) &&
+    !STILL_ENJOYED.test(clause) &&
+    !otherClauses.some((c) => STILL_ENJOYED.test(c) && !namesATopic(c)));
 const UNSURE = /\b(not sure|no idea|don'?t know|undecided|haven'?t decided|no clue)\b/i;
 const YES = /\b(yes|yeah|yep|definitely|absolutely|love to|keen|sure|why not|open to|up for|happy to)\b/i;
 const NO = /\b(no|nope|not really|rather not|prefer not)\b/i;
@@ -173,7 +186,7 @@ function styleCues(sentence: string, targetSlots: string[]): ExtractedUpdate[] {
   // A follow-up that asks only about workload makes a bare "Normal" or "Manageable" an answer to it.
   const workloadOnly = asked('style.workloadTolerance') && !asked('style.groupPreference');
   // "Heavy isn't fine for me" rejects a heavy load; "heavy is fine, not a problem" does not.
-  const rejectsHeavy = /\bheavy\s+(?:workloads?\s+|work\s+)?(?:isn'?t|is not|aren'?t|are not|wouldn'?t be|would not be|is too much)\b/.test(s);
+  const rejectsHeavy = /\bnot\s+(?:too\s+|very\s+|that\s+|a\s+)?(?:heavy|heavier|demanding)\b|\bheavy\s+(?:workloads?\s+|work\s+)?(?:isn'?t|is not|aren'?t|are not|wouldn'?t be|would not be|is too much)\b/.test(s);
   if (rejectsHeavy) add('style.workloadTolerance', 0.25);
   else if (/\b(heavy|lots of|a lot of|hard) (work|workload)\b|\bdon'?t mind (hard )?work\b|\bheavy\b.{0,20}\b(is |are )?(fine|ok|okay|good)\b|\bcan (handle|take|cope with) (a lot|lots|plenty|a heavy)\b/.test(s)) {
     add('style.workloadTolerance', 0.8);
@@ -220,6 +233,12 @@ function timetableCues(sentence: string): ExtractedUpdate[] {
   return out;
 }
 
+/** Whether `text` names `topic` by one of its cues or its taxonomy label. */
+function topicNamedIn(topic: string, text: string): boolean {
+  const label = taxonomy.topics[topic as keyof typeof taxonomy.topics]?.label;
+  return [...(TOPIC_CUES[topic] ?? []), ...(label ? [label] : [])].some((cue) => mentions(cue, text));
+}
+
 /**
  * Offline extractor. `targetSlots` are the slots the last question asked about, which lets short answers
  * such as "yes" or "not sure" fill the right slot.
@@ -227,11 +246,15 @@ function timetableCues(sentence: string): ExtractedUpdate[] {
 export function extractByCues(text: string, targetSlots: string[], pathwayIds: string[]): ExtractedUpdate[] {
   const updates: ExtractedUpdate[] = [];
   for (const sentence of sentences(text.replace(SLIDER_PHRASE, ' '))) {
-    const dislike = DISLIKE.test(sentence) || (HARD_TOPIC.test(sentence) && !STILL_ENJOYED.test(sentence));
-    for (const [topic, cues] of Object.entries(TOPIC_CUES)) {
-      const label = taxonomy.topics[topic as keyof typeof taxonomy.topics]?.label;
-      const hit = [...cues, ...(label ? [label] : [])].some((cue) => mentions(cue, sentence));
-      if (hit) updates.push({ slot: `interest:${topic}`, value: dislike ? 0.1 : 0.85, quote: quoteOf(sentence), confidence: 0.7, dislike });
+    const clauses = sentence.split(CONTRAST);
+    const namesATopic = (text: string) => Object.keys(TOPIC_CUES).some((t) => topicNamedIn(t, text));
+    for (const topic of Object.keys(TOPIC_CUES)) {
+      const names = (text: string) => topicNamedIn(topic, text);
+      if (!names(sentence)) continue;
+      // Judge the topic by the clause that names it; a sentence with no contrast is one clause.
+      const clause = clauses.find(names) ?? sentence;
+      const dislike = avoidsTopic(clause, clauses.filter((c) => c !== clause), namesATopic);
+      updates.push({ slot: `interest:${topic}`, value: dislike ? 0.1 : 0.85, quote: quoteOf(sentence), confidence: 0.7, dislike });
     }
     if (targetSlots.includes('pathways')) {
       const chosen = pathwayIds.filter((id) => (PATHWAY_CUES[id] ?? []).some((cue) => mentions(cue, sentence)));
