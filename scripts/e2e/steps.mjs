@@ -466,7 +466,18 @@ export const STEPS = [
         page.type({ css: 'dialog[open] textarea' }, RULE_BREAK, { enter: true, desc: 'the advisor message box' }),
       );
       if (!/can.?t|cannot|not able|unable|isn.?t open|not open|won.?t/i.test(reply)) fail(`The advisor did not hold its position: "${reply.slice(0, 200)}"`);
-      if (!/similar|instead|alternative|you could|consider|you can take|options/i.test(reply)) fail(`The advisor offered no alternatives: "${reply.slice(0, 200)}"`);
+      // Issue 112: alternatives that cover the same ground, or a plain "nothing else" (live wording varies).
+      if (!/similar|instead|alternative|you could|consider|you can take|options|already on your shortlist|nothing else/i.test(reply)) {
+        fail(`The advisor said nothing about alternatives: "${reply.slice(0, 200)}"`);
+      }
+      if (/can.?t make (an )?exception/i.test(reply) && /drafted/i.test(reply)) fail(`The advisor contradicts itself about exceptions: "${reply.slice(0, 200)}"`);
+      if (!ctx.live) {
+        // The offline reply: the prerequisite comes first, no padding, and about 50 words.
+        if (!/Introduction to Nuclear Energy A \(its prerequisite\)/.test(reply)) fail(`The open prerequisite is not suggested: "${reply.slice(0, 200)}"`);
+        if (/Mathematics A/.test(reply)) fail(`An unrelated module is suggested: "${reply.slice(0, 200)}"`);
+        const count = reply.trim().split(/\s+/).length;
+        if (count > 60) fail(`The refusal runs to ${count} words`);
+      }
       ctx.note(`advisor: "${reply.slice(0, 120)}…"`);
       const send = { css: 'dialog[open] section[aria-label^="Escalation to the"] button[type="submit"]', text: 'Send to the' };
       await page.waitForElement(send, { desc: 'the drafted escalation', timeout: ctx.timeout });
