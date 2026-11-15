@@ -603,6 +603,14 @@ export const STEPS = [
       await page.click(tick(1), { desc: 'the second Compare tick' });
       await page.click({ css: 'button', text: { re: '^Compare [0-9]' } }, { desc: 'the Compare button' });
       await page.waitForElement({ css: 'dialog[open]' }, { desc: 'the compare drawer' });
+      // The drawer fetches the comparison after it opens: hold only once both modules' assessment bars are drawn.
+      await page.waitFor(
+        () =>
+          !document.querySelector('dialog[open] [aria-label="Loading the comparison"]') &&
+          document.querySelectorAll('dialog[open] [role="img"][aria-label^="Assessment for "]').length >= 2,
+        [],
+        { desc: 'the comparison to load', timeout: ctx.timeout },
+      );
       await sleep(3000);
       await page.click({ css: 'dialog[open] button:has([aria-label="Close"])' }, { desc: 'the compare drawer close button' });
     },
