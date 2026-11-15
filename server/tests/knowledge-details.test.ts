@@ -125,6 +125,18 @@ describe('knowledge agent on the published details (offline)', () => {
     expect(ask('MECH60007', 'How is it assessed?')).toContain('The published pass mark is 40%.');
   });
 
+  it('declines office hours instead of answering with study hours', () => {
+    const answer = ask('IEX-SCIPOLICY', 'What are the office hours?');
+    expect(answer).toContain('does not publish office hours');
+    expect(answer).not.toContain('85 hours');
+  });
+
+  it('treats only notes that say when something is due as deadlines', () => {
+    const answer = ask('IEX-SCIPOLICY', 'When are the deadlines?');
+    expect(answer).toContain('does not publish assessment deadlines');
+    expect(answer).not.toContain('20-week module');
+  });
+
   it('leads with the exam-date decline before the broader assessment answer', () => {
     expect(ask('MECH60007', 'When is the exam?')).toMatch(/^The public page for MECH60007 does not publish assessment deadlines or exam dates\./);
   });
