@@ -89,11 +89,17 @@ export function HeroDemo({ className }: { className?: string }) {
           <span className="ml-2 text-2xs font-medium text-muted">ModuleMatch · example</span>
         </div>
 
-        <div className="grid gap-3 p-4 sm:p-5">
+        {/* min-w-0 on every row, so a long word or chip never widens the card past its column. */}
+        <div className="grid gap-3 p-4 sm:p-5 [&>*]:min-w-0">
           {/* 1. The student's words, typed out as in the chat. */}
-          <p className="ml-auto max-w-[88%] rounded-[1.25rem] rounded-br-md bg-brand px-4 py-2.5 text-sm leading-relaxed text-on-brand shadow-soft">
-            “{typed}
-            {typing && <span className="animate-caret">|</span>}”
+          <p className="relative ml-auto max-w-[88%] rounded-[1.25rem] rounded-br-md bg-brand px-4 py-2.5 text-sm leading-relaxed text-on-brand shadow-soft">
+            {/* The whole quote sets the bubble's size; the typed part is drawn over it. */}
+            <span className="invisible">“{QUOTE}”</span>
+            <span className="absolute inset-0 px-4 py-2.5">
+              “{typed}
+              {typing && <span className="animate-caret">|</span>}
+              {!typing && '”'}
+            </span>
           </p>
 
           {/* 2. The words become a profile interest. */}
@@ -105,7 +111,7 @@ export function HeroDemo({ className }: { className?: string }) {
           </motion.div>
 
           {/* 3. A module card whose fit ring counts up, with the reason that cites the student's words. */}
-          <motion.div {...beat(show('card'))} className="grid gap-3 rounded-2xl border border-line p-3">
+          <motion.div {...beat(show('card'))} className="grid gap-3 rounded-2xl border border-line p-3 [&>*]:min-w-0">
             <div className="flex items-center gap-4">
               <FitScore value={fit} size="lg" />
               <div className="min-w-0">
@@ -114,12 +120,20 @@ export function HeroDemo({ className }: { className?: string }) {
                 <p className="text-xs text-muted">{FIT_BAND_LABELS[fitBand(HERO_FIT)]} · 5 ECTS · Spring</p>
               </div>
             </div>
-            <motion.ul {...beat(show('reason'))}>
-              <ReasonRow
-                text="Covers control and robotics, which you said you enjoy."
-                source={{ variant: 'quote', quote: QUOTE, slotLabel: 'Interest: Control and robotics', confidence: 0.9 }}
-              />
-            </motion.ul>
+            <motion.div {...beat(show('reason'))} className="grid min-w-0 gap-2">
+              <ul>
+                <ReasonRow
+                  text="Covers control and robotics, which you said you enjoy."
+                  source={{ variant: 'quote', quote: QUOTE, slotLabel: 'Interest: Control and robotics', confidence: 0.9 }}
+                />
+              </ul>
+              {/* ReasonRow shows its "Your words" chip from sm up (phones open the row instead, which this picture
+                  cannot do), so phones get the link to the student's words on its own line. */}
+              <span className="inline-flex max-w-full min-w-0 items-center gap-1 justify-self-start rounded-full bg-surface-2 px-2 py-0.5 text-[11px] font-medium text-muted sm:hidden">
+                <Icon name="chat" size={11} className="shrink-0" />
+                <span className="truncate">Your words: “{QUOTE}”</span>
+              </span>
+            </motion.div>
           </motion.div>
 
           {/* 4. A clash in a mini week, cleared by a swap. */}

@@ -38,43 +38,44 @@ export function MiniFlow({ className }: { className?: string }) {
   const at = (i: number) => (reduce ? { duration: 0 } : { duration: 0.35, delay: START + i * STEP, ease: EASE });
 
   return (
-    <figure className={cx('grid content-center gap-4 lg:gap-6', className)}>
-      <p aria-hidden="true" className="text-center text-2xs font-semibold tracking-[0.1em] text-muted uppercase">
+    <figure className={cx('grid content-center gap-4 xl:gap-6', className)}>
+      <p aria-hidden="true" className="text-2xs font-semibold tracking-[0.1em] text-muted uppercase sm:text-center">
         One message, start to finish
       </p>
       <figcaption className="sr-only">
         A student message passes four input checks, the Supervisor hands it to one agent such as the Interviewer, the
         Matcher or the Timetabler, four output checks run, and the reply goes back to the student.
       </figcaption>
-      <ol aria-hidden="true" className="flex items-start">
+      {/* A column on phones, where six stops in a row would crowd their labels; a row from sm up. */}
+      <ol aria-hidden="true" className="flex flex-col items-start sm:flex-row">
         {STOPS.map((stop, i) => (
           <Fragment key={stop.key}>
             {i > 0 && (
-              // The connector fills in as the message reaches the next stop.
-              <li className="relative mt-[1.1rem] h-0.5 min-w-2 flex-1 overflow-hidden rounded-full bg-line sm:mt-[1.35rem] lg:mt-[1.7rem]">
+              // The connector fills in as the message reaches the next stop: downwards on phones, rightwards above.
+              <li className="relative ml-[1.0625rem] h-3 w-0.5 shrink-0 overflow-hidden rounded-full bg-line sm:mt-[1.35rem] sm:ml-0 sm:h-0.5 sm:w-auto sm:min-w-1.5 sm:flex-1 xl:mt-6">
                 <motion.span
-                  className="absolute inset-0 origin-left rounded-full bg-brand"
-                  initial={reduce ? false : { scaleX: 0 }}
-                  animate={{ scaleX: 1 }}
+                  className="absolute inset-0 origin-top-left rounded-full bg-brand"
+                  initial={reduce ? false : { scale: 0 }}
+                  animate={{ scale: 1 }}
                   transition={at(i - 0.5)}
                 />
               </li>
             )}
             <motion.li
-              className="flex w-11 shrink-0 flex-col items-center gap-1.5 text-center sm:w-[4.5rem] lg:w-20"
+              className="flex shrink-0 items-center gap-3 sm:w-16 sm:flex-col sm:gap-1.5 sm:text-center xl:w-[4.5rem]"
               initial={reduce ? false : { opacity: 0.35, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={at(i)}
             >
               {stop.key === 'agent' ? <AgentTrio /> : <Badge icon={stop.icon} tone={stop.tone} />}
-              <span className="text-[10px] leading-tight font-medium text-muted sm:text-2xs lg:text-xs">{stop.label}</span>
+              <span className="text-sm font-medium text-muted sm:text-2xs sm:leading-tight xl:text-xs">{stop.label}</span>
             </motion.li>
           </Fragment>
         ))}
       </ol>
       <motion.p
         aria-hidden="true"
-        className="mx-auto flex items-center gap-1.5 rounded-full bg-surface px-3 py-1 text-2xs font-medium text-muted ring-1 ring-line"
+        className="flex items-center gap-1.5 justify-self-start rounded-full bg-surface px-3 py-1 text-2xs font-medium text-muted ring-1 ring-line sm:justify-self-center"
         initial={reduce ? false : { opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
         transition={at(STOPS.length)}
@@ -88,7 +89,7 @@ export function MiniFlow({ className }: { className?: string }) {
 
 function Badge({ icon, tone }: { icon: IconName; tone: string }) {
   return (
-    <span className={cx('grid size-9 place-items-center rounded-xl shadow-soft sm:size-11 sm:rounded-2xl lg:size-14', tone)}>
+    <span className={cx('grid size-9 place-items-center rounded-xl shadow-soft sm:size-11 sm:rounded-2xl xl:size-12', tone)}>
       <Icon name={icon} size={18} />
     </span>
   );
@@ -97,12 +98,12 @@ function Badge({ icon, tone }: { icon: IconName; tone: string }) {
 /** The agent stop: three of the student-facing agents, stacked, since the Supervisor picks one of them. */
 function AgentTrio() {
   return (
-    <span className="relative grid size-9 place-items-center sm:size-11 lg:size-14">
+    <span className="relative grid size-9 place-items-center sm:size-11 xl:size-12">
       {HELPERS.map((a, i) => (
         <span
           key={a.id}
           className={cx(
-            'absolute grid size-6 place-items-center rounded-lg bg-gradient-to-br text-on-brand shadow-soft ring-2 ring-surface sm:size-7 lg:size-8',
+            'absolute grid size-6 place-items-center rounded-lg bg-gradient-to-br text-on-brand shadow-soft ring-2 ring-surface sm:size-7',
             a.gradient,
           )}
           style={{ transform: `translate(${(i - 1) * 9}px, ${(i % 2) * 5 - 2}px)` }}

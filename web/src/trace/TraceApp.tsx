@@ -154,7 +154,7 @@ export function TraceApp() {
 function Intro() {
   return (
     <motion.header {...rise} className="overflow-hidden rounded-panel bg-surface shadow-soft ring-1 ring-line">
-      <div className="grid md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+      <div className="grid xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
         <div className="grid content-center gap-4 p-card-lg sm:p-10">
           <p className="text-xs font-semibold tracking-[0.12em] text-brand uppercase">How it works</p>
           <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">A team of small AI helpers, checked at every step</h1>
@@ -164,7 +164,7 @@ function Intro() {
           </p>
         </div>
         {/* A message's path through the system, not a photo: the landing page has its own hero (issue #135). */}
-        <MiniFlow className="border-t border-line bg-surface-2/50 px-4 py-6 sm:px-8 md:border-t-0 md:border-l" />
+        <MiniFlow className="border-t border-line bg-surface-2/50 px-4 py-6 sm:px-8 xl:border-t-0 xl:border-l" />
       </div>
       <ul className="grid gap-px border-t border-line bg-line sm:grid-cols-3">
         <Explainer icon="sparkle" title="The agents">
