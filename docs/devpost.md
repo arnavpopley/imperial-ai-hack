@@ -111,7 +111,7 @@ Model IDs are configuration (`.env.example`), never hard-coded in the agents. Sc
 | Photos (`web/public/images`) | Pexels, under the Pexels licence (`web/public/images/CREDITS.md`) | Stock photos, not Imperial students |
 | Interviewer faces | DiceBear "Lorelei" avatars, CC0 1.0 | Generated |
 
-No real student data is used anywhere. No grades, results or protected characteristics are requested, stored or inferred.
+No real student data is used anywhere. Grades typed in the chat are redacted and never stored; marks are kept only if a student uploads them with explicit consent, are visible only to them and can be deleted at any time. Health and protected characteristics are never requested, stored or inferred.
 
 ## Links
 

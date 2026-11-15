@@ -43,7 +43,7 @@ const PATTERNS: Record<SensitiveCategory, RegExp[]> = {
 
 export const REDACTION_NOTICE =
   'I removed something personal from that message (such as grades, health, background or finances). ' +
-  'It was not stored and will not be used for matching.';
+  'It was not stored and will not be used for matching. Marks are only kept if you choose to upload them, with consent.';
 
 const Spans = z.object({
   spans: z.array(z.object({ text: z.string(), category: z.enum(['grades', 'health', 'protected', 'finances']) })),

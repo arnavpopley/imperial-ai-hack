@@ -32,7 +32,7 @@ The Reply case study (code 5532) has not yet been pasted into spec section 21. U
 | Numbers come from code, words from models | Scoring, rules, timetable, insights and pathways are pure functions in `server/src/engines`, unit-tested in `server/tests/engines-*.test.ts`. The determinism eval scores the same profile twice with the input order reversed (2/2) |
 | Guardrails work on adversarial input | Offline: 15/15 adversarial inputs (`data/eval-latest.json`). Live: 7/7 subtle cases without trigger keywords (`data/eval-live-latest.json`) |
 | Answers are grounded | G6 drops any reason whose evidence ID or module field does not exist. Live: the judge passed 4 of 5 persona explanations against everything the Matcher saw. Module Q&A quoted exact assessment weightings and prerequisite codes in 12 of 12 questions, and declined 4 of 4 it could not answer |
-| Privacy | No grades or protected characteristics are stored (G2, spec 20); staff views need a cohort of five or more (privacy eval: blocked); feedback is redacted before storage; "Your data" lets a student see, edit and delete everything |
+| Privacy | Grades typed in chat are redacted and never stored (G2, spec 20); marks are stored only through the consented upload and can be withdrawn at any time (spec 23); protected characteristics are never stored; staff views need a cohort of five or more (privacy eval: blocked); feedback is redacted before storage; "Your data" lets a student see, edit and delete everything |
 
 ## Figma "Best-Designed AI Product" prize
 
