@@ -86,6 +86,11 @@ describe('nodesInTrace', () => {
     expect(nodesInTrace([event('knowledge', 'agent', 'question about MECH60006')]).has('knowledge')).toBe(true);
   });
 
+  it('lights the results reader and exam feedback agents from their trace actors', () => {
+    const seen = nodesInTrace([event('results reader', 'agent', 'application/pdf upload (40 KB)'), event('exam feedback', 'agent', 'feedback on MECH60006')]);
+    expect([...seen]).toEqual(expect.arrayContaining(['resultsReader', 'examFeedback']));
+  });
+
   it('maps guardrails, engine calls and escalations to their steps', () => {
     const seen = nodesInTrace([
       event('G3 injection', 'guardrail', 'turn'),

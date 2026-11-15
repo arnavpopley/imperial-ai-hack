@@ -51,7 +51,7 @@ The Imperial track text asks for a working prototype with session state, guardra
 | Session state | Persisted session: profile, evidence, shortlist, timetable, mode, open escalations. A student can leave and resume (section 12). |
 | Guardrail pipeline | Eight named stages on input and output, every verdict logged (section 11). |
 | Real-time interaction | Streamed interview, profile panel that fills in live, instant re-ranking when weights change. |
-| Specialised agent roles | Supervisor, Interviewer, Profile Extractor, Module Analyst, Matcher, Timetabler, Catalogue, module knowledge, Insights (section 10). |
+| Specialised agent roles | Supervisor, Interviewer, Profile Extractor, Module Analyst, Matcher, Timetabler, Catalogue, module knowledge, Insights (section 10), and the results reader, exam form drafter and exam feedback agents (section 23). |
 | Dynamic mode-switching | Mode machine: ONBOARD, INTERVIEW, RECOMMEND, EXPLAIN, PLAN, ESCALATED (section 12). |
 | Human-in-the-loop escalation | Rule exceptions and low-confidence cases go to a tutor queue. Module leads accept or dismiss every insight. Staff can correct module tags (sections 9 and 11). |
 

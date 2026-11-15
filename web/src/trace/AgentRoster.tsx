@@ -15,26 +15,30 @@ export function AgentRoster({ seen }: { seen: ReadonlySet<string> }) {
       {AUDIENCES.filter((a) => a.id === 'student').map((a) => (
         <Group key={a.id} label={a.label} agents={byAudience(a.id)} seen={seen} />
       ))}
-      {/* Staff-facing and offline agents share a row with the tier legend. */}
-      <div className="grid gap-x-4 gap-y-6 sm:grid-cols-2 lg:grid-cols-4">
-        {AUDIENCES.filter((a) => a.id !== 'student').map((a) => (
-          <Group key={a.id} label={a.label} agents={byAudience(a.id)} seen={seen} />
-        ))}
-        <TierLegend />
+      {/* Staff-facing and offline agents share a row, three cards wide like the student grid. */}
+      <div className="grid gap-x-4 gap-y-6 lg:grid-cols-3">
+        {AUDIENCES.filter((a) => a.id !== 'student').map((a) => {
+          const agents = byAudience(a.id);
+          return (
+            <div key={a.id} className={cx(agents.length > 1 && 'lg:col-span-2')}>
+              <Group label={a.label} agents={agents} seen={seen} />
+            </div>
+          );
+        })}
       </div>
+      <TierLegend />
     </div>
   );
 }
 
 function Group({ label, agents, seen }: { label: string; agents: readonly Agent[]; seen: ReadonlySet<string> }) {
-  const single = agents.length === 1;
   return (
     <section aria-label={`${label} agents`} className="grid content-start gap-3">
       <h3 className="flex items-center gap-2 text-xs font-semibold tracking-[0.1em] text-muted uppercase">
         {label}
         <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[11px] tracking-normal text-ink ring-1 ring-line">{agents.length}</span>
       </h3>
-      <ul className={cx('grid gap-4', !single && 'sm:grid-cols-2 lg:grid-cols-4')}>
+      <ul className={cx('grid gap-4', agents.length > 2 ? 'sm:grid-cols-2 lg:grid-cols-3' : agents.length === 2 && 'sm:grid-cols-2')}>
         {agents.map((agent, i) => (
           <AgentCard key={agent.id} agent={agent} index={i} used={seen.has(agent.id)} />
         ))}
@@ -121,7 +125,7 @@ function Badge({ agent, size }: { agent: Agent; size: 'sm' | 'md' }) {
 /** Which model each agent runs on, as rows of agent badges per tier. */
 function TierLegend() {
   return (
-    <section aria-label="Model tiers" className="grid content-start gap-3 sm:col-span-2">
+    <section aria-label="Model tiers" className="grid content-start gap-3">
       <h3 className="text-xs font-semibold tracking-[0.1em] text-muted uppercase">Model tiers</h3>
       <ul className="grid gap-3 rounded-panel bg-surface p-card shadow-soft ring-1 ring-line">
         {(Object.keys(TIERS) as Tier[]).map((id) => {

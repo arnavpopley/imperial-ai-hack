@@ -102,14 +102,14 @@ export function LandingScreen({ resumeTo }: LandingScreenProps) {
       </Section>
 
       <Section eyebrow="Under the hood" title={`${countWord(AGENTS.length)} AI agents, kept in check by plain code`}>
-        <motion.ul {...IN_VIEW} variants={STAGGER} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <motion.ul {...IN_VIEW} variants={STAGGER} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {FRONT.map((agent) => (
             <motion.li
               key={agent.id}
               variants={RISE}
               whileHover={{ y: -6 }}
               transition={{ type: 'spring', stiffness: 380, damping: 26 }}
-              className="flex items-center gap-4 rounded-panel bg-surface p-card shadow-soft ring-1 ring-line"
+              className="flex items-center gap-4 rounded-panel bg-surface p-card shadow-soft ring-1 ring-line lg:flex-col lg:items-start lg:gap-3"
             >
               <AgentBadge gradient={agent.gradient} icon={agent.icon} />
               <div className="min-w-0">
