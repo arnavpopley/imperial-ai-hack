@@ -13,6 +13,8 @@ export const sessions = sqliteTable('sessions', {
   weights: text('weights', { mode: 'json' }).notNull(),
   interview: text('interview', { mode: 'json' }).notNull(),
   escalationDraft: text('escalation_draft', { mode: 'json' }),
+  /** Module ids with a Senior Tutor-approved rule exception (spec 11.1). */
+  exceptions: text('exceptions', { mode: 'json' }).notNull(),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
 });
@@ -94,6 +96,9 @@ export const escalations = sqliteTable('escalations', {
   status: text('status').notNull(),
   staffResponse: text('staff_response'),
   createdAt: text('created_at').notNull(),
+  /** Rule exceptions: what the escalation shares with the Senior Tutor, and their decision. */
+  request: text('request', { mode: 'json' }),
+  decision: text('decision'),
 });
 
 export const insights = sqliteTable('insights', {

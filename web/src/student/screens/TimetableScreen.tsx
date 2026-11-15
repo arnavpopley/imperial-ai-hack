@@ -8,6 +8,7 @@ import { api } from '../../api.ts';
 import { buttonClass } from '../../components/Button.tsx';
 import { ClashMarker } from '../../components/ClashMarker.tsx';
 import { cx } from '../../components/cx.ts';
+import { decisionsKey } from '../../components/exceptions.ts';
 import { Icon } from '../../components/Icon.tsx';
 import { SampleDataLabel } from '../../components/SampleDataLabel.tsx';
 import { SegmentedControl } from '../../components/SegmentedControl.tsx';
@@ -28,7 +29,9 @@ export function TimetableScreen() {
   const { session } = useReadySession();
   const sessionId = session.id;
   const shortlistKey = session.shortlist.join(',');
-  const timetable = useAsync(() => api.timetable(sessionId), [sessionId, shortlistKey]);
+  // A Senior Tutor decision can change which swaps and rule violations apply, so it refetches the view too.
+  const decisions = decisionsKey(session);
+  const timetable = useAsync(() => api.timetable(sessionId), [sessionId, shortlistKey, decisions]);
 
   return (
     <div className="grid grid-cols-1 gap-6">

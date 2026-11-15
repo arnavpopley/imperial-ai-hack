@@ -12,19 +12,24 @@ type PlanStepId = 'love' | 'avoid' | 'career' | 'assessment' | 'comfort' | 'team
 interface PlanStepMeta {
   id: PlanStepId;
   label: string;
-  /** True when the profile already holds this step's answer, for example from a CV. */
+  /** True when the profile holds an answer for this step (from the interview or a CV). Only then is it ticked. */
   filled: (session: SessionState) => boolean;
 }
 
 const hasEvidence = (session: SessionState, test: (slot: string) => boolean) =>
   session.evidence.some((e) => test(e.slot));
+/** At least one of the step's style slots holds an answer. */
 const styleKnown = (session: SessionState, ...keys: (keyof SessionState['profile']['style'])[]) =>
-  keys.every((key) => session.profile.style[key] !== null);
+  keys.some((key) => session.profile.style[key] !== null);
 
 const PLAN: readonly PlanStepMeta[] = [
   { id: 'love', label: 'Interests', filled: (s) => Object.keys(s.profile.interests).length > 0 },
-  // Dislikes leave no profile slot of their own, so only asking the question completes this step.
-  { id: 'avoid', label: 'What to avoid', filled: () => false },
+  // A dislike is a low interest; "nothing really" is a fine answer too, so an asked avoid question also counts.
+  {
+    id: 'avoid',
+    label: 'What to avoid',
+    filled: (s) => Object.values(s.profile.interests).some((v) => v < 0.3) || s.interview.askedSteps.includes('avoid'),
+  },
   {
     id: 'career',
     label: 'Career goals',
@@ -75,16 +80,15 @@ const ICONS: Record<PlanStepId, IconName> = {
 };
 
 /**
- * A step is done once it has been asked and answered (it is not the question on screen now),
- * once the interview has finished, or once the profile already holds its answer.
+ * A step is ticked only when the profile holds its answer and it is not the question on screen now. Asking a question
+ * is not enough: an answer the extractor could not read leaves the step unticked, even after the interview ends.
  */
 export function planStatuses(session: SessionState): Map<PlanStepId, StepStatus> {
   const { askedSteps, finished } = session.interview;
   const awaiting = finished ? undefined : sectionOf(askedSteps.at(-1));
   const statuses = new Map<PlanStepId, StepStatus>();
   for (const step of PLAN) {
-    const asked = askedSteps.includes(step.id);
-    const done = finished || (asked && step.id !== awaiting) || (step.id !== awaiting && step.filled(session));
+    const done = step.id !== awaiting && step.filled(session);
     statuses.set(step.id, done ? 'done' : 'upcoming');
   }
   // A follow-up question reopens the section it belongs to, even if that section was done before.

@@ -1,5 +1,6 @@
 // Screen 7: the drafted escalation to approve, then each escalation's status and the staff reply.
 import { EscalationCard } from '../../components/EscalationCard.tsx';
+import { draftIdentity } from '../../components/exceptions.ts';
 import { cx } from '../../components/cx.ts';
 import { useEscalationDraft } from '../hooks/useEscalationDraft.ts';
 import { useReadySession } from '../state/SessionProvider.tsx';
@@ -21,11 +22,12 @@ export function EscalationTray({ scope = 'all', className }: EscalationTrayProps
     <div className={cx('grid gap-3', className)}>
       {draft && (
         <EscalationCard
-          key={draft.summary}
+          key={draftIdentity(draft)}
           variant="draft"
           escalationType={draft.type}
           summary={draft.summary}
-          onSend={(summary) => void approve(summary)}
+          reason={draft.reason}
+          onSend={(summary, reason) => void approve(summary, reason)}
           onDiscard={discard}
           sending={sending}
           error={error}
@@ -40,6 +42,7 @@ export function EscalationTray({ scope = 'all', className }: EscalationTrayProps
             summary={e.summary}
             staffResponse={e.staffResponse ?? 'This was resolved without a written reply.'}
             createdAt={e.createdAt}
+            decision={e.decision}
           />
         ) : (
           <EscalationCard

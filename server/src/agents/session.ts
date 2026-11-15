@@ -5,6 +5,7 @@ import {
   DEFAULT_WEIGHTS,
   INTERVIEW_BUDGET,
   type CreateSessionBody,
+  type ExceptionDecision,
   type Explanation,
   type Mode,
   type PerformanceView,
@@ -22,7 +23,7 @@ import * as repo from '../db/repo.ts';
 import { buildTimetable, checkShortlist, completeness, findClashes, performanceView, profileHash, rankModules, suggestSwaps } from '../engines/index.ts';
 import type { Tracer } from '../trace/tracer.ts';
 import { explain } from './matcher.ts';
-import { canTransition } from './modes.ts';
+import { canTransition, restingModeFor } from './modes.ts';
 
 export const catalogue = {
   /** Modules with their staff-provided resources (past papers, reading) merged in from data/module-resources.json. */
@@ -105,6 +106,7 @@ export function newSessionState(input: CreateSessionBody): SessionState {
     },
     escalations: [],
     escalationDraft: null,
+    exceptions: [],
     createdAt: now,
     updatedAt: now,
   };
@@ -118,15 +120,32 @@ export function saveProfile(session: SessionState, profile: StudentProfile): Stu
 }
 
 /**
+ * The Senior Tutor's latest decision per module (spec 11.1). An approval stored in the session's exceptions always
+ * wins, so a later decline on a duplicate request never hides a module that was already approved.
+ */
+export function exceptionDecisions(session: SessionState): Map<string, ExceptionDecision> {
+  const decisions = new Map<string, ExceptionDecision>();
+  for (const e of session.escalations) {
+    if (e.decision && e.request?.moduleId) decisions.set(e.request.moduleId, e.decision);
+  }
+  for (const { moduleId } of session.exceptions) decisions.set(moduleId, 'approved');
+  return decisions;
+}
+
+/**
  * The catalogue as the student sees it: completed modules are left out, and eligible modules are listed
  * before ineligible ones, which stay visible with their reasons (spec 8.7). Order within each group is the
- * engine's ranking.
+ * engine's ranking. Modules with a Senior Tutor decision carry it, and approved ones are eligible.
  */
 export function ranked(session: SessionState): Recommendation[] {
   const completed = new Set(session.profile.completedModuleIds);
-  const all = rankModules(session.profile, catalogue.modules(), session.weights, rulesForProfile(session.profile)).filter(
-    (r) => !completed.has(r.moduleId),
-  );
+  const decisions = exceptionDecisions(session);
+  const all = rankModules(session.profile, catalogue.modules(), session.weights, rulesForProfile(session.profile), session.exceptions)
+    .filter((r) => !completed.has(r.moduleId))
+    .map((r) => {
+      const exception = decisions.get(r.moduleId);
+      return exception ? { ...r, exception } : r;
+    });
   return [...all.filter((r) => r.eligible), ...all.filter((r) => !r.eligible)];
 }
 
@@ -143,7 +162,8 @@ export function timetableView(session: SessionState, recs = ranked(session)): Ti
   const slots = catalogue.slots();
   const modules = catalogue.modules();
   const rules = rulesForProfile(session.profile);
-  const check = (shortlist: readonly string[]) => checkShortlist(shortlist, session.profile, modules, rules);
+  // Approved rule exceptions apply to the plan and to every swap the engine checks (spec 11.1).
+  const check = (shortlist: readonly string[]) => checkShortlist(shortlist, session.profile, modules, rules, session.exceptions);
   const clashes = findClashes(session.shortlist, slots);
   const seen = new Set<string>();
   const swaps: SwapSuggestion[] = [];
@@ -185,10 +205,36 @@ export function setMode(session: SessionState, to: Mode, tracer: Tracer, reason:
  * trace records each change of mode once instead of PLAN -> RECOMMEND -> PLAN on every edit.
  */
 export function syncPlanMode(session: SessionState, tracer: Tracer): Mode | null {
-  const planning = session.shortlist.length >= 2;
-  if (session.mode === 'RECOMMEND' && planning) return setMode(session, 'PLAN', tracer, 'shortlist has two or more modules');
-  if (session.mode === 'PLAN' && !planning) return setMode(session, 'RECOMMEND', tracer, 'shortlist edited');
-  return null;
+  if (session.mode !== 'RECOMMEND' && session.mode !== 'PLAN') return null;
+  const to = restingModeFor(session.shortlist);
+  return setMode(session, to, tracer, to === 'PLAN' ? 'shortlist has two or more modules' : 'shortlist edited');
+}
+
+/**
+ * A chat turn's copy of the session can be stale: it awaits guardrails and intent first, and the student may
+ * edit the shortlist or send an escalation in another tab meanwhile. Read the saved mode and shortlist back
+ * just before a transition; the read and the mode write then run synchronously, so nothing slips in between.
+ */
+function reloadModeAndShortlist(session: SessionState): void {
+  const saved = repo.getSession(session.id);
+  if (!saved) return;
+  session.mode = saved.mode;
+  session.shortlist = saved.shortlist;
+}
+
+/** Spec 12: RECOMMEND or PLAN -> EXPLAIN when the student asks why or what-if. Returns the mode it left. */
+export function enterExplain(session: SessionState, tracer: Tracer, reason: string): Mode | null {
+  reloadModeAndShortlist(session);
+  return setMode(session, 'EXPLAIN', tracer, reason);
+}
+
+/**
+ * Spec 12: EXPLAIN returns to the mode the shortlist implies (restingModeFor), PLAN at two or more modules.
+ * A session that left EXPLAIN meanwhile, for example to ESCALATED, is left where it is.
+ */
+export function leaveExplain(session: SessionState, tracer: Tracer, reason: string): Mode | null {
+  reloadModeAndShortlist(session);
+  return session.mode === 'EXPLAIN' ? setMode(session, restingModeFor(session.shortlist), tracer, reason) : null;
 }
 
 /**
@@ -196,12 +242,10 @@ export function syncPlanMode(session: SessionState, tracer: Tracer): Mode | null
  * trace: saves it, records it, and applies the spec 12 shortlist-size transitions. Eligibility is the
  * caller's gate. Returns the mode the session left, or null when the mode did not change.
  *
- * The caller's copy of the session can be stale (a chat turn awaits guardrails and intent first, and the
- * student may approve an escalation in another tab meanwhile), so the saved mode is read back before the
- * transition. The read, the edit and the mode write run synchronously, so nothing can slip in between.
+ * The saved mode is read back first (reloadModeAndShortlist), so a stale chat copy cannot overwrite it.
  */
 export function applyShortlistEdit(session: SessionState, moduleId: string, action: 'add' | 'remove', tracer: Tracer): Mode | null {
-  session.mode = repo.getSession(session.id)?.mode ?? session.mode;
+  reloadModeAndShortlist(session);
   if (action === 'add') repo.addToShortlist(session.id, moduleId);
   else repo.removeFromShortlist(session.id, moduleId);
   session.shortlist = repo.listShortlist(session.id);
@@ -241,7 +285,10 @@ export async function explanationFor(
   const module = catalogue.modules().find((m) => m.id === moduleId);
   const rec = recs.find((r) => r.moduleId === moduleId);
   if (!module || !rec) return null;
-  const key = `${profileHash(session.profile, session.weights)}:${moduleId}`;
+  // The rules waived for this module are in the key, so an explanation written before an approval never fills the
+  // entry used after it.
+  const waived = session.exceptions.find((e) => e.moduleId === moduleId)?.waived;
+  const key = `${profileHash(session.profile, session.weights)}:${moduleId}${waived ? `:waived:${JSON.stringify(waived)}` : ''}`;
   const cached = explanationCache.get(key);
   if (cached) return cached;
   const explanation = await tracer.timed(

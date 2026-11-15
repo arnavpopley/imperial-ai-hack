@@ -12,12 +12,12 @@ import { answerCatalogueQuestion } from './catalogue.ts';
 import { draftComplaint, draftLowConfidence, draftRuleException, draftWellbeing } from './escalation.ts';
 import { extract, mergeUpdates } from './extractor.ts';
 import { classifyIntent, needsClarification } from './intent.ts';
-import { askNext, nextQuestion, reflect, studentTurn, unfilledSlots, whatIHeard, type Widget } from './interviewer.ts';
+import { askNext, followUp, nextQuestion, reflect, studentTurn, unfilledSlots, whatIHeard, type Widget } from './interviewer.ts';
 import { emitWords, type ChatMessage } from './llm.ts';
 import { alternativesTo, holdPosition } from './matcher.ts';
-import { RESTING_MODE } from './modes.ts';
-import { checkShortlist } from '../engines/index.ts';
-import { applyShortlistEdit, catalogue, explanationFor, moduleTitle, precomputeTopExplanations, ranked, rulesForProfile, saveProfile, setMode, syncPlanMode, timetableView, tracerSink } from './session.ts';
+import { matchModules, MAX_SUGGESTIONS } from './module-match.ts';
+import { checkModuleEligibility, checkShortlist } from '../engines/index.ts';
+import { applyShortlistEdit, catalogue, enterExplain, explanationFor, leaveExplain, moduleTitle, precomputeTopExplanations, ranked, rulesForProfile, saveProfile, setMode, syncPlanMode, timetableView, tracerSink } from './session.ts';
 import { describeTimetable, explainTimetable } from './timetabler.ts';
 
 export type Emit = (event: SseEvent) => Promise<void>;
@@ -148,13 +148,13 @@ async function ruleExceptionTurn(turn: Turn, moduleIds: string[]) {
   if (!target) {
     // The named modules are each allowed, but the whole proposed shortlist may still break a rule (the credit cap).
     const proposed = [...new Set([...session.shortlist, ...moduleIds])];
-    const result = checkShortlist(proposed, session.profile, modules, rulesForProfile(session.profile));
+    const result = checkShortlist(proposed, session.profile, modules, rulesForProfile(session.profile), session.exceptions);
     const broken = result.violations.filter((v) => EXCEPTION_CODES.has(v.code));
     tracer.record({ actor: 'matcher', kind: 'tool', input: `check_rules(${proposed.length} modules)`, output: broken.length ? `violation: ${broken.map((v) => v.code).join(', ')}` : 'no violation', verdict: broken.length ? 'block' : 'pass' });
     if (broken.length) {
       const reasons = broken.map((v) => v.message);
       await say(turn, 'matcher', `I can't approve that: ${reasons.join(' ')} The rule is set by your programme, so I can't make an exception. I have drafted a request to the Senior Tutor below, and it is only sent if you approve it.`);
-      return offerDraft(turn, draftRuleException(session.profile, reasons, turn.text, modules.find((m) => moduleIds.includes(m.id))));
+      return offerDraft(turn, draftRuleException(session.profile, broken, turn.text, modules.find((m) => moduleIds.includes(m.id))));
     }
     const named = modules.find((m) => moduleIds.includes(m.id));
     const text = named
@@ -179,7 +179,8 @@ async function ruleExceptionTurn(turn: Turn, moduleIds: string[]) {
       ),
     () => ({ output: 'held position, offered alternatives and escalation', verdict: 'block' }),
   );
-  await offerDraft(turn, draftRuleException(session.profile, reasons, turn.text, target));
+  const violations = checkModuleEligibility(target.id, session.profile, modules, rulesForProfile(session.profile), session.exceptions);
+  await offerDraft(turn, draftRuleException(session.profile, violations, turn.text, target));
 }
 
 async function explainTurn(turn: Turn, moduleIds: string[]) {
@@ -193,7 +194,7 @@ async function explainTurn(turn: Turn, moduleIds: string[]) {
     const completed = session.profile.completedModuleIds.includes(moduleId);
     return say(turn, 'matcher', completed ? `You have already completed ${moduleTitle(moduleId)}, so it is not scored.` : `${moduleTitle(moduleId)} is not in your catalogue.`);
   }
-  await changeMode(turn, 'EXPLAIN', 'student asked why');
+  await emitModeChange(turn, enterExplain(session, turn.tracer, 'student asked why'));
   try {
     const explanation = await explanationFor(session, moduleId, turn.tracer, recs);
     const text = explanation
@@ -201,7 +202,7 @@ async function explainTurn(turn: Turn, moduleIds: string[]) {
       : `${moduleTitle(moduleId)} scores ${rec.fit}.`;
     await say(turn, 'matcher', text);
   } finally {
-    await changeMode(turn, RESTING_MODE, 'explanation given');
+    await emitModeChange(turn, leaveExplain(session, turn.tracer, 'explanation given'));
   }
 }
 
@@ -235,7 +236,7 @@ async function whatIfTurn(turn: Turn) {
   const { session } = turn;
   const dimension = WEIGHT_CUES.find(([, re]) => re.test(turn.text))?.[0];
   if (!dimension) return say(turn, 'matcher', 'Tell me what you would like to care more or less about: interests, career, learning style or breadth. You can also move the sliders on the catalogue.');
-  await changeMode(turn, 'EXPLAIN', 'what-if');
+  await emitModeChange(turn, enterExplain(session, turn.tracer, 'what-if'));
   const less = /\b(less|lower|not care|ignore)\b/i.test(turn.text);
   const before = ranked(session).slice(0, 3);
   const weights: Weights = { ...session.weights, [dimension]: Math.max(0, session.weights[dimension] + (less ? -0.15 : 0.15)) };
@@ -250,28 +251,64 @@ async function whatIfTurn(turn: Turn) {
     `I gave ${dimension === 'goal' ? 'career' : dimension} ${less ? 'less' : 'more'} weight. Top three before: ${before.map(line).join(', ')}. Now: ${after.map(line).join(', ')}. The sliders on the catalogue show the new weights, and you can reset them any time.`,
   );
   await turn.emit({ type: 'recommendations_ready', count: after.length });
-  await changeMode(turn, RESTING_MODE, 'what-if applied');
+  await emitModeChange(turn, leaveExplain(session, turn.tracer, 'what-if applied'));
 }
 
-async function shortlistTurn(turn: Turn, moduleIds: string[]) {
+/** "A", "A or B", "A, B or C"; andList is the same with "and". */
+const joinWith = (word: string) => (items: readonly string[]): string =>
+  items.length <= 1 ? (items[0] ?? '') : `${items.slice(0, -1).join(', ')} ${word} ${items.at(-1)}`;
+const orList = joinWith('or');
+const andList = joinWith('and');
+
+/**
+ * Adds or removes the modules the student named (issue #57). matchModules settles which modules are meant,
+ * asking "Did you mean …?" for a weak or tied match, and the reply names only modules whose membership
+ * actually changed. Modules the live model named are only ever suggested, never acted on.
+ */
+async function shortlistTurn(turn: Turn, mentioned: string[]) {
   const { session } = turn;
-  const remove = /\b(remove|drop|take .* off|delete)\b/i.test(turn.text);
-  if (moduleIds.length === 0) return say(turn, 'supervisor', 'Which module should I add or remove? Use its code or title.');
+  const action = /\b(remove|drop|take .* off|delete)\b/i.test(turn.text) ? 'remove' : 'add';
+  session.shortlist = repo.listShortlist(session.id);
+  // A Senior Tutor may approve an exception while this turn awaits guardrails, so the gate reads the saved exceptions.
+  session.exceptions = repo.getSession(session.id)?.exceptions ?? session.exceptions;
   const recs = ranked(session);
-  const added: string[] = [];
+  const eligible = new Set(recs.filter((r) => r.eligible).map((r) => r.moduleId));
+  const pool = action === 'remove' ? session.shortlist : [...eligible].filter((id) => !session.shortlist.includes(id));
+  const match = matchModules(turn.text, catalogue.modules(), pool);
+  const suggestions = match.suggestions.length
+    ? match.suggestions
+    : mentioned.filter((id) => pool.includes(id) && !match.matched.includes(id)).slice(0, MAX_SUGGESTIONS);
+  const didYouMean = suggestions.length ? `Did you mean ${orList(suggestions.map(moduleTitle))}?` : '';
+  if (match.matched.length === 0) {
+    return say(turn, 'supervisor', didYouMean ? `${didYouMean} Nothing on your shortlist has changed.` : 'Which module should I add or remove? Use its code or title.');
+  }
+
+  const changed: string[] = [];
+  const unchanged: string[] = [];
   const blocked: string[] = [];
   // Each edit goes through the same helper as the shortlist POST, so the mode and trace match the button path.
-  for (const id of moduleIds) {
-    if (remove) await emitModeChange(turn, applyShortlistEdit(session, id, 'remove', turn.tracer));
-    else if (recs.find((r) => r.moduleId === id)?.eligible) {
-      await emitModeChange(turn, applyShortlistEdit(session, id, 'add', turn.tracer));
-      added.push(id);
-    } else blocked.push(id);
+  for (const id of match.matched) {
+    const before = repo.listShortlist(session.id).includes(id);
+    if (action === 'add' && !before && !eligible.has(id)) {
+      blocked.push(id);
+      continue;
+    }
+    if (before === (action === 'add')) {
+      unchanged.push(id);
+      continue;
+    }
+    await emitModeChange(turn, applyShortlistEdit(session, id, action, turn.tracer));
+    (session.shortlist.includes(id) === before ? unchanged : changed).push(id);
   }
+  const names = (ids: readonly string[]) => andList(ids.map(moduleTitle));
+  const is = (ids: readonly string[]) => (ids.length > 1 ? 'are' : 'is');
   const parts = [
-    remove ? `Removed ${moduleIds.map(moduleTitle).join(', ')}.` : added.length ? `Added ${added.map(moduleTitle).join(', ')}.` : '',
-    blocked.length ? `${blocked.map(moduleTitle).join(', ')} is not open to you. ${RULES_NOTICE}` : '',
-    session.shortlist.length >= 2 ? 'Open the timetable to check for clashes.' : '',
+    changed.length ? `${action === 'remove' ? 'Removed' : 'Added'} ${names(changed)}.` : '',
+    unchanged.length ? `${names(unchanged)} ${is(unchanged)} ${action === 'remove' ? 'not' : 'already'} on your shortlist.` : '',
+    blocked.length ? `${names(blocked)} ${is(blocked)} not open to you. ${RULES_NOTICE}` : '',
+    unchanged.length || blocked.length ? didYouMean : '',
+    changed.length === 0 ? 'Nothing on your shortlist has changed.' : '',
+    changed.length && session.shortlist.length >= 2 ? 'Open the timetable to check for clashes.' : '',
   ];
   await say(turn, 'supervisor', parts.filter(Boolean).join(' '));
 }
@@ -440,10 +477,37 @@ export function confirmProfile(session: SessionState): { tracer: Tracer; lowConf
   return { tracer, lowConfidence };
 }
 
-/** Student agrees to return to the interview from RECOMMEND (spec 12). */
+/** Questions a resumed interview may ask (spec 8.6: medium confidence "offers two more questions"). */
+export const RESUME_BUDGET = 2;
+
+/**
+ * Student agrees to answer two more questions (spec 8.6 and 12: "low confidence and student agrees"). From PLAN or
+ * ESCALATED the session first returns to RECOMMEND, since only RECOMMEND may enter the interview. The interviewer asks
+ * the first of the two highest-priority unfilled slots straight away, and the second after the student answers; then
+ * the "Here is what I heard" card returns, and confirming it goes back to RECOMMEND with a re-ranked catalogue.
+ */
 export function resumeInterview(session: SessionState): void {
   const tracer = createTracer(session.id, tracerSink);
-  session.interview = { ...session.interview, finished: false, confirmed: false, budget: session.interview.questionsAsked + 2 };
+  if (session.mode === 'PLAN' || session.mode === 'ESCALATED') setMode(session, 'RECOMMEND', tracer, 'returning to the interview for two more questions');
+  if (!setMode(session, 'INTERVIEW', tracer, 'low confidence and student agrees') && session.mode !== 'INTERVIEW') return;
+  session.interview = { ...session.interview, finished: false, confirmed: false, budget: session.interview.questionsAsked + RESUME_BUDGET };
+  const found = nextQuestion(session, session.interview.askedSteps);
+  // The question goes in as a stored message, which cannot carry a widget, so a slider step is asked as its text follow-up.
+  const gaps = unfilledSlots(session.profile, session.evidence);
+  const next = found?.step.widget ? followUp(found.targetSlots.find((slot) => gaps.includes(slot)) ?? found.targetSlots[0]!) : found;
+  if (!next) {
+    // Nothing left to ask: close the interview again so the card shows.
+    session.interview = { ...session.interview, finished: true, targetSlots: [] };
+    repo.updateSession(session.id, { interview: session.interview });
+    return;
+  }
+  tracer.record({ actor: 'interviewer', kind: 'agent', input: `gaps: ${gaps.join(', ') || 'none'}; budget ${RESUME_BUDGET}`, output: `asked ${next.step.id}`, verdict: null });
+  repo.addMessage(message(session.id, 'assistant', next.step.question, 'interviewer'));
+  session.interview = {
+    ...session.interview,
+    questionsAsked: session.interview.questionsAsked + 1,
+    askedSteps: [...session.interview.askedSteps, next.step.id],
+    targetSlots: next.targetSlots,
+  };
   repo.updateSession(session.id, { interview: session.interview });
-  setMode(session, 'INTERVIEW', tracer, 'low confidence and student agrees');
 }

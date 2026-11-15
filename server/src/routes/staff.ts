@@ -1,6 +1,19 @@
 // Staff routes (spec 13). Aggregate views only, with a minimum cohort of five (spec 20.4).
-import { DEFAULT_WEIGHTS, MIN_COHORT, schemas, type ExamFeedbackForm, type Insight, type StaffEscalation, type StaffModuleSummary } from '@modulematch/shared';
+import {
+  DEFAULT_WEIGHTS,
+  MIN_COHORT,
+  schemas,
+  type Escalation,
+  type ExamFeedbackForm,
+  type Insight,
+  type Module,
+  type ProgrammeRules,
+  type SessionState,
+  type StaffEscalation,
+  type StaffModuleSummary,
+} from '@modulematch/shared';
 import { Hono } from 'hono';
+import { decisionReply, exceptionFor } from '../agents/escalation.ts';
 import { draftExamForm } from '../agents/exam-feedback.ts';
 import { wordInsight } from '../agents/insights.ts';
 import { clearSummaryCache } from '../agents/knowledge.ts';
@@ -8,7 +21,7 @@ import { catalogue, clearExplanationCache, rulesForProfile, setMode, tracerSink 
 import { rulesFor } from '../db/catalogue.ts';
 import * as repo from '../db/repo.ts';
 import { buildInsights, clashPriorities, cohortStats, feedbackJsonl, summariseFeedback, type InsightContext } from '../engines/index.ts';
-import { createTracer } from '../trace/tracer.ts';
+import { createTracer, type Tracer } from '../trace/tracer.ts';
 import { body } from './validate.ts';
 
 /** The synthetic cohort plus its programme's home topics, shared by every staff view. */
@@ -28,6 +41,19 @@ function insightContext(): InsightContext {
   };
 }
 
+/**
+ * How the cohort's programme year offers a module: compulsory, one of its options, or not offered at all. The staff
+ * module list leads with the options, since a core or other-year module shows "0 shortlisted" whatever its fit.
+ * Sent beside StaffModuleSummary as an optional extra field; the shared schema does not list it yet.
+ */
+type CohortOffer = 'core' | 'elective' | 'i-explore' | 'not-offered';
+
+function offerFor(module: Module, rules: ProgrammeRules): CohortOffer {
+  if (rules.coreModuleIds.includes(module.id)) return 'core';
+  if (!rules.allowedElectiveIds.includes(module.id)) return 'not-offered';
+  return module.type === 'i-explore' ? 'i-explore' : 'elective';
+}
+
 /** The one exam feedback form a module holds (spec 23). Staff trace events use the 'staff' session id. */
 const examFormId = (moduleId: string) => `exam-${moduleId}`;
 const staffTracer = () => createTracer('staff', tracerSink);
@@ -35,11 +61,14 @@ const staffTracer = () => createTracer('staff', tracerSink);
 export const staffRoutes = new Hono()
   .get('/modules', (c) => {
     const ctx = insightContext();
-    const rows: StaffModuleSummary[] = ctx.modules.flatMap((m) => {
+    const first = ctx.cohort[0];
+    // The synthetic cohort shares one programme and year, so its first student's rules are everyone's.
+    const rules = first ? rulesFor(first.programme, first.yearOfStudy) : null;
+    const rows: (StaffModuleSummary & { offer?: CohortOffer })[] = ctx.modules.flatMap((m) => {
       const stats = cohortStats(m, ctx.cohort, ctx.shortlists, ctx.weights, ctx.homeTopics);
       // Below the minimum cohort nothing is shown for the module (spec 20.4).
       if (!stats) return [];
-      return [{ moduleId: m.id, code: m.code, title: m.title, type: m.type, capacity: m.capacity, ...stats }];
+      return [{ moduleId: m.id, code: m.code, title: m.title, type: m.type, capacity: m.capacity, ...stats, ...(rules && { offer: offerFor(m, rules) }) }];
     });
     return c.json(rows);
   })
@@ -133,16 +162,63 @@ export const staffRoutes = new Hono()
     return c.body(feedbackJsonl(repo.listFeedback()));
   })
   .post('/escalations/:id/respond', body(schemas.EscalationRespondBody), (c) => {
-    const { response, resolve } = c.req.valid('json');
-    const escalation = repo.updateEscalation(c.req.param('id'), { staffResponse: response, status: resolve ? 'resolved' : 'claimed' });
+    const { response, decision, resolve: resolveAsked } = c.req.valid('json');
+    const current = repo.getEscalation(c.req.param('id'));
+    if (!current) return c.json({ error: 'escalation not found' }, 404);
+    if (decision && current.type !== 'RULE_EXCEPTION') return c.json({ error: 'only rule exceptions can be approved or declined' }, 400);
+    if (decision && current.decision) return c.json({ error: `this exception was already ${current.decision}` }, 409);
+    // A decision always resolves the case; the tutor's message is optional and follows the decision.
+    const resolve = decision ? true : resolveAsked;
+    const module = current.request?.moduleId ? catalogue.modules().find((m) => m.id === current.request?.moduleId) : undefined;
+    // Only rules the module itself broke can be waived, so the reply says what the approval actually changes.
+    const exception = decision === 'approve' ? exceptionFor(current.request) : null;
+    const reply = decision ? decisionReply(decision, module, exception, response) : response;
+    const escalation = repo.updateEscalation(current.id, {
+      staffResponse: reply,
+      status: resolve ? 'resolved' : 'claimed',
+      ...(decision && { decision: decision === 'approve' ? ('approved' as const) : ('declined' as const) }),
+    });
     if (!escalation) return c.json({ error: 'escalation not found' }, 404);
     const session = repo.getSession(escalation.sessionId);
     if (session) {
       const tracer = createTracer(session.id, tracerSink);
+      if (decision) recordDecision(session, escalation, tracer);
       tracer.record({ actor: 'staff', kind: 'escalation', input: escalation.type, output: resolve ? 'staff responded and resolved' : 'staff claimed', verdict: null });
       // The reply returns to the student's session (spec 11.1), and the session leaves ESCALATED.
-      repo.addMessage({ id: crypto.randomUUID(), sessionId: session.id, role: 'assistant', agent: 'staff', content: `Reply from staff: ${response}`, at: new Date().toISOString() });
+      repo.addMessage({ id: crypto.randomUUID(), sessionId: session.id, role: 'assistant', agent: 'staff', content: `Reply from staff: ${reply}`, at: new Date().toISOString() });
       if (resolve) setMode(session, 'RECOMMEND', tracer, 'staff responded');
     }
     return c.json(escalation);
   });
+
+/**
+ * Applies a Senior Tutor decision to the student's session and traces it (spec 11.1). An approval stores an exception
+ * that waives exactly the rules the request showed as broken for its module, so the module becomes eligible and
+ * shortlistable. Its ECTS still count towards the credit cap, which is never waived.
+ */
+function recordDecision(session: SessionState, escalation: Escalation, tracer: Tracer): void {
+  const moduleId = escalation.request?.moduleId ?? null;
+  const approved = escalation.decision === 'approved';
+  const exception = approved ? exceptionFor(escalation.request) : null;
+  if (exception) {
+    // A second approval for the same module adds the rules it names to the ones already waived.
+    const previous = session.exceptions.find((e) => e.moduleId === exception.moduleId)?.waived ?? [];
+    const fresh = exception.waived.filter((w) => !previous.some((p) => p.code === w.code && p.prerequisiteId === w.prerequisiteId));
+    session.exceptions = [...session.exceptions.filter((e) => e.moduleId !== exception.moduleId), { moduleId: exception.moduleId, waived: [...previous, ...fresh] }];
+    repo.updateSession(session.id, { exceptions: session.exceptions });
+    // Explanations mention eligibility, so cached ones are stale now.
+    clearExplanationCache();
+  }
+  const waived = exception?.waived.map((w) => (w.prerequisiteId ? `${w.code} ${w.prerequisiteId}` : w.code)).join(', ');
+  tracer.record({
+    actor: 'Senior Tutor',
+    kind: 'escalation',
+    input: `rule exception for ${moduleId ?? 'programme rule'}`,
+    output: approved
+      ? exception
+        ? `approved: waived ${waived} for ${exception.moduleId}; the credit cap still applies`
+        : 'approved: no module rule to waive, decision recorded'
+      : `declined${moduleId ? `: ${moduleId} stays ineligible` : ''}`,
+    verdict: null,
+  });
+}

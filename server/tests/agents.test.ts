@@ -7,6 +7,7 @@ import { classifyByRules } from '../src/agents/intent.ts';
 import { nextQuestion, QUICK_PLAN, reflect, unfilledSlots, whatIHeard } from '../src/agents/interviewer.ts';
 import { explainByRules } from '../src/agents/matcher.ts';
 import { canTransition } from '../src/agents/modes.ts';
+import { decisionReply, draftRuleException, reasonFrom, thirdPerson } from '../src/agents/escalation.ts';
 
 const PATHWAYS = ['aerospace-motorsport', 'robotics-automation', 'startup-founder'];
 const emptyProfile = {
@@ -69,6 +70,32 @@ describe('extractor', () => {
     expect(grounded(text, [u('I adore algebra')])).toEqual([]);
     // A repair that would skip a negation flips the meaning, so it is refused.
     expect(grounded('The CFD modules were not my favourite.', [u('the CFD modules were my favourite')])).toEqual([]);
+  });
+
+  it('reads negated assessment options, workload phrases and a hedged yes (issue #55)', () => {
+    const value = (text: string, slot: string, target: string[]) => extractByCues(text, target, PATHWAYS).find((x) => x.slot === slot)?.value;
+    const assessment = ['style.examPreference', 'style.appliedPreference'];
+    const team = ['style.groupPreference', 'style.workloadTolerance'];
+    expect(value('No exams please.', 'style.examPreference', assessment)).toBe(0.2);
+    expect(value('Coursework and projects, definitely not big exams.', 'style.examPreference', assessment)).toBe(0.2);
+    expect(value('Exams, not coursework.', 'style.examPreference', assessment)).toBe(0.8);
+    expect(value('A moderate workload is fine.', 'style.workloadTolerance', team)).toBe(0.5);
+    expect(value('Heavy is fine, I can handle a lot.', 'style.workloadTolerance', team)).toBe(0.8);
+    expect(value('Light, not too much.', 'style.workloadTolerance', team)).toBe(0.25);
+    expect(value('Yes, maybe one module outside engineering.', 'breadthAppetite', ['breadthAppetite'])).toBe(0.7);
+    // Phrases where "not" accepts the option, a rejected heavy load, and a style-only answer to the two-part question.
+    expect(value("I'm not averse to exams.", 'style.examPreference', assessment)).not.toBe(0.2);
+    expect(value('No problem with coursework, honestly.', 'style.examPreference', assessment)).not.toBe(0.8);
+    expect(value("Heavy isn't fine for me.", 'style.workloadTolerance', team)).toBe(0.25);
+    expect(value('Working alone is fine.', 'style.workloadTolerance', team)).toBeUndefined();
+    expect(value('Moderate.', 'style.workloadTolerance', team)).toBe(0.5);
+    expect(value('Heavy is fine, not a problem.', 'style.workloadTolerance', team)).toBe(0.8);
+    expect(value('Normal.', 'style.workloadTolerance', ['style.workloadTolerance'])).toBe(0.5);
+    expect(value('Manageable.', 'style.workloadTolerance', ['style.workloadTolerance'])).toBe(0.5);
+    expect(value("I don't know what's normal.", 'style.workloadTolerance', ['style.workloadTolerance'])).toBeUndefined();
+    expect(value("I'm not sure about group work, but a moderate workload is fine.", 'style.workloadTolerance', team)).toBe(0.5);
+    // A sentence about assessment is never read as breadth, even when breadth is a target.
+    expect(value('No exams please.', 'breadthAppetite', ['breadthAppetite'])).toBeUndefined();
   });
 
   it('lets the main clause decide the team preference', () => {
@@ -229,12 +256,58 @@ describe('matcher explanations', () => {
   });
 });
 
+describe('rule-exception drafts', () => {
+  const rob = fixtureModules.find((m) => m.id === 'ME3-ROB')!;
+  const violation = {
+    code: 'PREREQUISITE_MISSING' as const,
+    moduleId: rob.id,
+    prerequisiteId: 'ME2-CTRL',
+    message: 'ME3-ROB Robotics and Control requires ME2-CTRL (Control Systems), which is not among your completed modules.',
+  };
+
+  it('are written in the third person, for the Senior Tutor', () => {
+    const draft = draftRuleException(fixtureProfile, [violation], 'Can I take Robotics and Control?', rob);
+    expect(draft.summary).toContain(`The student asks to take ${rob.code} ${rob.title}`);
+    expect(draft.summary).toContain("not among the student's completed modules");
+    expect(draft.summary).not.toMatch(/\b[Yy]ou(r)?\b/);
+    expect(draft).toMatchObject({ moduleId: 'ME3-ROB', violations: [violation], reason: '' });
+  });
+
+  it('turn advice to the student into a statement of the rule', () => {
+    expect(thirdPerson('X is not open to year 3 students. You can choose the core modules.')).toBe('X is not open to year 3 students.');
+    expect(thirdPerson('Your plan totals 80 ECTS. Remove at least 5 ECTS.')).toBe("The student's plan totals 80 ECTS.");
+  });
+
+  it('suggest a reason only when the student gave one', () => {
+    expect(reasonFrom('Can I take it because I did control on placement?')).toBe('I did control on placement.');
+    expect(reasonFrom('Can I take Robotics and Control?')).toBe('');
+    expect(reasonFrom(`Please, since ${'x'.repeat(400)}`)).toHaveLength(200);
+  });
+
+  it('decision replies lead with the decision and keep the tutor message', () => {
+    const waiver = { moduleId: rob.id, waived: [{ code: 'PREREQUISITE_MISSING' as const, prerequisiteId: 'ME2-CTRL' }] };
+    expect(decisionReply('approve', rob, waiver, 'See me in week 1.')).toBe(
+      `Exception approved: you can now take ${rob.code} Robotics and Control, and add it to your shortlist. Its credits still count towards your credit cap. See me in week 1.`,
+    );
+    expect(decisionReply('decline', undefined, null, '')).toBe('Exception declined: the programme rule still applies.');
+  });
+
+  it('an approval that waives nothing, such as a credit-cap request, says the plan is unchanged', () => {
+    const reply = decisionReply('approve', rob, null, '');
+    expect(reply).toContain('your plan is unchanged');
+    expect(reply).not.toContain('you can now take');
+  });
+});
+
 describe('mode machine', () => {
   it('follows spec 12', () => {
     expect(canTransition('RECOMMEND', 'PLAN')).toBe(true);
     expect(canTransition('ESCALATED', 'RECOMMEND')).toBe(true);
     expect(canTransition('ONBOARD', 'PLAN')).toBe(false);
-    expect(canTransition('EXPLAIN', 'PLAN')).toBe(false);
+    expect(canTransition('PLAN', 'EXPLAIN')).toBe(true);
+    expect(canTransition('EXPLAIN', 'PLAN')).toBe(true);
+    expect(canTransition('ESCALATED', 'PLAN')).toBe(false);
+    expect(canTransition('EXPLAIN', 'ESCALATED')).toBe(true);
   });
 });
 

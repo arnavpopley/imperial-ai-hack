@@ -7,7 +7,9 @@ const TRANSCRIPT = new URL('../../data/demo/synthetic-transcript.txt', import.me
 
 /** The judge's answers, chosen by what the interviewer asks so the same script works with live wording. */
 const ANSWERS = {
-  love: 'I loved the robotics and control systems lectures, and anything with machine learning or programming robots.',
+  // States the maths interest outright: the sliders give comfort, not interest, and Mathematics A is the elective
+  // the demo swap brings in for Mechatronics 3A.
+  love: 'I loved the robotics and control systems lectures, especially the maths and modelling behind them, and anything with machine learning or programming robots.',
   avoid: 'I would avoid heavy thermodynamics and fluid mechanics if I could.',
   career: 'I want to work in robotics or autonomous vehicles after I graduate.',
   assessment: 'I prefer coursework and projects over exams, and I like hands-on applied work.',
@@ -33,16 +35,13 @@ const TOPICS = [
 ];
 
 export const RULE_BREAK = 'Can I take Nuclear Reactor Physics anyway, even without the prerequisite?';
-const STAFF_REPLY =
-  'Approved as an exception: you can take Nuclear Reactor Physics this year. Please read the Introduction to Nuclear Energy A notes before week 3.';
-/** The judge's top match (Embedded C for Microcontrollers A for the robotics persona), shortlisted first. */
-const TOP_PICK = 'MECH60009';
-/**
- * Two I-Explore modules the timetable puts at the same time in spring, whatever the profile (data/slots.json):
- * Demystifying Machine Learning and Space Mining. Embedded C and Mechatronics 3A also clash, but since swaps
- * must be of the same kind (#74), a robotics profile has no elective within 10 points of Mechatronics 3A.
- */
-const CLASHING = ['IEX-ML', 'IEX-SPACE'];
+/** The module the rule-break request names (data/modules.json), and the student's one-line reason for it. */
+const RULE_MODULE = 'MECH70002';
+const RULE_REASON = 'I covered reactor basics on my summer placement and want to work in nuclear energy.';
+/** The Senior Tutor's optional message, sent with Approve exception. */
+const STAFF_REPLY = 'Please read the Introduction to Nuclear Energy A notes before week 3.';
+/** Two modules the timetable puts at the same time in spring, whatever the profile (data/slots.json). */
+const CLASHING = ['MECH60009', 'MECH60018'];
 /** Finance & Financial Management: one of the two modules with a counterfactual that clears the bar (+2.1 fit). */
 const COUNTERFACTUAL_MODULE = 'BUSI60043';
 
@@ -133,9 +132,11 @@ export const STEPS = [
       await ctx.checkpoint(page, 'onboard');
       await page.click({ css: 'button[type="submit"]', text: 'Start the interview' });
       await pathIs(page, '/interview');
-      // "Your results" (spec 23) opens over the chat at the start. The demo skips it here; the optional step
-      // after the interview adds the marks from Your data instead.
-      await page.click({ css: 'button', text: { exact: 'Skip for now' } }, { desc: 'Skip for now on the results panel' });
+      // The interview opens on the optional results upload (spec 23); the demo skips it.
+      const skipResults = { css: 'button', text: 'Skip for now' };
+      await page.waitForElement(skipResults, { desc: 'the optional results step' });
+      await ctx.checkpoint(page, 'results-step');
+      await page.click(skipResults, { desc: 'Skip for now on the results step' });
       const scope = 'section[aria-label="Interview conversation"]';
       await page.waitFor((s) => Boolean(document.querySelector(`${s} ol[aria-label="Conversation"] li[aria-busy="false"] p`)), [scope], {
         desc: 'the first interview question',
@@ -384,15 +385,17 @@ export const STEPS = [
     async run(ctx) {
       const page = ctx.student;
       ctx.active = page;
-      // The top match plus two I-Explore modules that clash. A swap must be of the same kind and within 10 fit
-      // points (spec 9.2), and I-Explore fits sit close together, so the lower-fit one almost always has one.
+      // A swap must be an elective within 10 fit points of the lower-fit module in the clash (spec 9.2), and the
+      // closest candidates rank just below the pair, so the third pick comes from further down to keep them free.
       const eligible = await page.eval(() =>
         [...document.querySelectorAll('section[aria-labelledby="ranked-heading"] ol > li')]
           .filter((li) => li.querySelector('a[href^="/modules/"]') && !li.textContent.includes('Not eligible yet'))
           .map((li) => decodeURIComponent(li.querySelector('a[href^="/modules/"]').getAttribute('href').slice('/modules/'.length))),
       );
       if (!CLASHING.every((id) => eligible.includes(id))) fail(`${CLASHING.join(' and ')} are not both open to this student`);
-      const picks = [TOP_PICK, ...CLASHING];
+      const others = eligible.filter((id) => !CLASHING.includes(id));
+      const third = others[3] ?? others.at(-1) ?? fail('Not enough eligible modules to shortlist three');
+      const picks = [...CLASHING, third];
       for (const id of picks) {
         const button = { css: `section[aria-labelledby="ranked-heading"] ol > li:has(a[href="/modules/${id}"]) button[aria-pressed]` };
         await page.click(button, { desc: `Add to shortlist on ${id}` });
@@ -456,6 +459,14 @@ export const STEPS = [
       await page.waitForElement(send, { desc: 'the drafted escalation', timeout: ctx.timeout });
       const draft = await page.eval(() => document.querySelector('dialog[open] section[aria-label^="Escalation to the"] textarea')?.value ?? '');
       if (!/Nuclear Reactor Physics/.test(draft)) fail(`The drafted escalation does not name the module: "${draft.slice(0, 120)}"`);
+      // The draft is written for the tutor, about the student, and asks for a one-line reason before it can be sent.
+      if (/\b[Yy]ou(r)?\b/.test(draft)) fail(`The drafted escalation speaks to the student, not about them: "${draft.slice(0, 160)}"`);
+      const reason = { css: 'dialog[open] section[aria-label^="Escalation to the"] input[type="text"]' };
+      await page.waitForElement(reason, { desc: 'the one-line reason box' });
+      if (!(await page.eval(() => document.querySelector('dialog[open] section[aria-label^="Escalation to the"] button[type="submit"]')?.disabled))) {
+        fail('The escalation can be sent before the student gives a reason');
+      }
+      await page.type(reason, RULE_REASON, { desc: 'the one-line reason box' });
       await page.scrollIntoView(send);
       await ctx.checkpoint(page, 'held-position');
       await page.click(send, { desc: 'Send to the Senior Tutor' });
@@ -491,11 +502,16 @@ export const STEPS = [
       await ctx.checkpoint(staff, 'staff-queue');
       await staff.click(item);
       await pathIs(staff, { re: '^/staff/escalations/.+' });
+      // The request as data: the broken rule, the student's reason, their fit and completed modules.
+      for (const want of ['The request', 'Prerequisite not completed', RULE_REASON, 'Fit for the module', 'Completed modules']) {
+        await staff.waitForElement({ css: 'article', text: want }, { desc: `"${want}" in the request details` });
+      }
       await staff.type({ css: 'form textarea' }, STAFF_REPLY, {
-        desc: 'the staff reply box',
+        desc: 'the optional message to the student',
       });
-      await staff.click({ css: 'button[type="submit"]', text: 'Send reply and resolve' });
-      await staff.waitForElement({ css: 'h3', text: "Resolved. The reply is in the student's session" }, { desc: 'the resolved state' });
+      await ctx.checkpoint(staff, 'staff-decision');
+      await staff.click({ css: 'form button', text: 'Approve exception' });
+      await staff.waitForElement({ css: 'h3', text: "Exception approved. The decision is in the student's session" }, { desc: 'the approved state' });
       await ctx.checkpoint(staff, 'staff-resolved');
 
       // The student's tab has stayed open; the reply should arrive by itself, without a reload.
@@ -506,7 +522,7 @@ export const STEPS = [
       await student.waitFor(
         (reply) =>
           [...document.querySelectorAll('section[aria-label^="Escalation to the"]')].some(
-            (s) => /Reply from the/.test(s.textContent) && s.textContent.includes(reply),
+            (s) => /Exception approved by the Senior Tutor/.test(s.textContent) && s.textContent.includes(reply),
           ),
         [STAFF_REPLY],
         { desc: 'the staff reply in the student session', timeout: 20_000 },
@@ -529,6 +545,31 @@ export const STEPS = [
       await ctx.checkpoint(student, 'reply-in-chat');
       await student.click({ css: 'dialog[open] header button' }, { desc: 'Close the advisor' });
       await student.waitFor(() => !document.querySelector('dialog[open]'), [], { desc: 'the advisor to close' });
+
+      // The approval opens the module: its card says so, and it can now be shortlisted.
+      await student.click(STUDENT_TAB('Catalogue'));
+      await pathIs(student, '/catalogue');
+      const card = { css: `section[aria-labelledby="ranked-heading"] ol > li:has(a[href="/modules/${RULE_MODULE}"])` };
+      await student.waitFor(
+        (s) => {
+          const li = window.__e2e.one(s);
+          return Boolean(li && li.textContent.includes('Exception approved by the Senior Tutor') && !li.textContent.includes('Not eligible yet'));
+        },
+        [card],
+        { desc: `${RULE_MODULE} to show the approved exception and be eligible`, timeout: 20_000 },
+      );
+      const button = { css: `${card.css} button[aria-pressed]` };
+      await student.scrollIntoView(card);
+      await student.click(button, { desc: `Add to shortlist on ${RULE_MODULE}` });
+      await student.waitFor((s) => window.__e2e.one(s)?.getAttribute('aria-pressed') === 'true', [button], {
+        desc: `${RULE_MODULE} to be shortlisted`,
+      });
+      await student.waitFor(() => /4 shortlisted/.test(document.querySelector('nav[aria-label="Student sections"]')?.textContent ?? ''), [], {
+        desc: 'the Timetable tab to count 4 shortlisted',
+      });
+      ctx.state.shortlist = [...(ctx.state.shortlist ?? []), RULE_MODULE];
+      await ctx.checkpoint(student, 'exception-shortlisted');
+      await student.scrollTo('top');
     },
   },
   {
@@ -588,6 +629,13 @@ export const STEPS = [
       const rates = await page.eval(() => [...document.querySelectorAll('[aria-label*="percent passed"]')].map((e) => e.getAttribute('aria-label')));
       ctx.note(`evaluation: ${rates.join('; ')}`);
       await ctx.checkpoint(page, 'trace-top');
+      // The live-model panel's misses hold long one-line reasons: audit the page for overflow with every one open.
+      await page.waitFor(() => document.getElementById('live-eval-heading'), [], { desc: 'the live-model evaluation', timeout: ctx.timeout });
+      await page.eval(() => {
+        for (const d of document.querySelectorAll('section[aria-labelledby="live-eval-heading"] details')) d.open = true;
+      });
+      await page.scrollIntoView({ css: 'section[aria-labelledby="live-eval-heading"]' });
+      await ctx.checkpoint(page, 'trace-live-eval');
       const summary = await page.waitFor(
         () => {
           const t = document.querySelector('ul[aria-label="Summary"]')?.innerText ?? '';

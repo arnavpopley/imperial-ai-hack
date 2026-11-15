@@ -5,6 +5,7 @@
 //   npm run e2e -- --live            real models, using the API key in .env (one viewport by default)
 //   npm run e2e -- --only=desktop-light,phone-dark
 //   npm run e2e -- --headed          watch it run in a visible Chrome window
+//   npm run e2e -- --live --until=clash --skip-optional   a cheaper live check of steps 1 to 4
 //
 // It starts its own API and web server on free ports, with a fresh database per run, and stops every
 // process it started (by process group) when it finishes or fails. Screenshots, logs and a results table
@@ -34,6 +35,13 @@ const option = (name) => args.find((a) => a.startsWith(`--${name}=`))?.slice(nam
 
 const LIVE = flag('live');
 const HEADED = flag('headed');
+/** Stop after the step with this id (for example clash), to keep a live check cheap. */
+const UNTIL = option('until');
+const SKIP_OPTIONAL = flag('skip-optional');
+if (UNTIL && !STEPS.some((s) => s.id === UNTIL)) {
+  console.error(`Unknown step "${UNTIL}". Use one of: ${STEPS.map((s) => s.id).join(', ')}`);
+  process.exit(2);
+}
 
 const VIEWPORTS = {
   desktop: { width: 1440, height: 900, scale: 1, mobile: false },
@@ -327,9 +335,14 @@ async function runCombo(cdp, comboName, ports) {
   };
 
   let blocked = null;
+  const last = UNTIL ? STEPS.findIndex((s) => s.id === UNTIL) : STEPS.length - 1;
   for (const [i, step] of STEPS.entries()) {
     const result = results[i];
     current = result;
+    if (i > last || (SKIP_OPTIONAL && step.optional)) {
+      result.status = 'omitted';
+      continue;
+    }
     if (blocked) {
       result.status = 'skipped';
       result.error = `skipped: ${blocked} failed`;
@@ -379,7 +392,7 @@ function summarise(all) {
   const lines = [];
   const header = ['Step', ...combos];
   lines.push(`| ${header.join(' | ')} |`, `|${header.map(() => '---').join('|')}|`);
-  const mark = { pass: 'pass', issues: 'issues', fail: 'FAIL', skipped: 'skipped', pending: '-' };
+  const mark = { pass: 'pass', issues: 'issues', fail: 'FAIL', skipped: 'skipped', omitted: 'not run', pending: '-' };
   STEPS.forEach((step, i) => {
     lines.push(`| ${LABELS[i]}. ${step.title} | ${combos.map((c) => mark[all[c][i].status]).join(' | ')} |`);
   });
@@ -479,7 +492,7 @@ async function main() {
   console.log(`\n${summary.table}\n`);
   if (usage) console.log(`API usage: ${usage.calls} calls, about $${usage.cost.toFixed(2)}`);
   console.log(`Screenshots and logs: ${OUT}`);
-  const failed = crashed || combos.some((c) => all[c].some((r) => r.status !== 'pass'));
+  const failed = crashed || combos.some((c) => all[c].some((r) => r.status !== 'pass' && r.status !== 'omitted'));
   process.exitCode = failed ? 1 : 0;
 }
 
