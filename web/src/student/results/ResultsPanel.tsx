@@ -9,6 +9,7 @@ import { Icon, type IconName } from '../../components/Icon.tsx';
 import { SegmentedControl } from '../../components/SegmentedControl.tsx';
 import { ACCEPT, checkFile, formatBytes, MAX_FILE_BYTES, readAsBase64, uploadProblem } from './files.ts';
 import { MarkChips, UnmatchedCodes } from './MarkChips.tsx';
+import { onPublicDemo, PUBLIC_DEMO_MARKS_NOTE } from './publicDemo.ts';
 import { wantsAddMarks } from '../routes.ts';
 import { useResults, type UploadBody } from './ResultsProvider.tsx';
 
@@ -272,6 +273,7 @@ function UploadForm({ onUploaded, onSkip, skipLabel = 'Skip for now' }: { onUplo
         <Icon name="sparkle" size={13} className="mt-0.5 shrink-0 text-mode-explain" />
         A mark sheet with marks for each exam question also unlocks tailored exam feedback.
       </p>
+      {onPublicDemo() && <p className="text-xs leading-snug text-muted">{PUBLIC_DEMO_MARKS_NOTE}</p>}
 
       <label
         htmlFor={consentId}

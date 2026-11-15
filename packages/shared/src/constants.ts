@@ -137,3 +137,6 @@ export { FEEDBACK_COMMENT_MAX, FEEDBACK_EXCERPT_MAX, FEEDBACK_QUESTION_MAX } fro
 
 /** Results upload size limits (spec 23), defined beside ResultsUploadBody and re-exported for the server and web app. */
 export { RESULTS_BASE64_MAX, RESULTS_BODY_MAX_BYTES, RESULTS_FILE_MAX_BYTES } from './schemas.ts';
+
+/** Session restore snapshot limits, defined beside RestoreSessionBody. */
+export { RESTORE_BODY_MAX_BYTES, RESTORE_EVIDENCE_MAX, RESTORE_MESSAGE_CHARS_MAX, RESTORE_MESSAGES_MAX } from './schemas.ts';

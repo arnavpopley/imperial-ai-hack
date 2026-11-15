@@ -30,6 +30,7 @@ import type {
   PathwayProgress,
   ProfileEditBody,
   RecommendationsResponse,
+  RestoreSessionBody,
   SessionState,
   SendMessageBody,
   ShortlistBody,
@@ -64,22 +65,74 @@ export interface SessionLostDetail {
   sessionId: string;
 }
 
+/** The session a session-scoped path is for, or null for any other path. */
+function sessionIdIn(path: string): string | null {
+  const id = /^\/sessions\/([^/?]+)/.exec(path)?.[1];
+  return id ? decodeURIComponent(id) : null;
+}
+
 /**
  * Reads a failed response's text and announces a lost session (404 "session not found") with the session it was
  * for, so a late failure from an old session never ends the new one.
  */
 async function failure(res: Response, path: string): Promise<Error> {
   const err = new Error(`${res.status} ${await res.text()}`);
-  const sessionId = /^\/sessions\/([^/?]+)/.exec(path)?.[1];
+  const sessionId = sessionIdIn(path);
   if (sessionId && isSessionLost(err)) {
-    const detail: SessionLostDetail = { sessionId: decodeURIComponent(sessionId) };
+    const detail: SessionLostDetail = { sessionId };
     window.dispatchEvent(new CustomEvent(SESSION_LOST_EVENT, { detail }));
   }
   return err;
 }
 
+/** Gives the client's own copy of a session, or null when it holds none for that id. Set by the session provider. */
+type SnapshotSource = (sessionId: string) => RestoreSessionBody | null;
+let snapshotSource: SnapshotSource | null = null;
+
+export function setSnapshotSource(source: SnapshotSource | null): void {
+  snapshotSource = source;
+}
+
+/**
+ * Restore rounds per request. Each round puts the session on one more server instance, and a retry can still land on
+ * an instance that has not had it yet, so a request gets a few rounds before the session counts as lost.
+ */
+export const RESTORE_ROUNDS = 3;
+
+/** Sends the client's copy of the session to whichever instance answers; true once that instance has the session. */
+async function restore(sessionId: string): Promise<boolean> {
+  try {
+    const snapshot = snapshotSource?.(sessionId);
+    if (!snapshot) return false;
+    const res = await fetch(`/api${s(sessionId)}/restore`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(snapshot),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Sends a request. When the server answers that it does not know the session (a demo instance that never saw it),
+ * restores the session there from the client's copy and sends the request again. A 404 means the request did
+ * nothing, so sending it again is safe. If a restore fails, the 404 stands and the session counts as lost.
+ */
+async function send(path: string, init: RequestInit): Promise<Response> {
+  let res = await fetch(`/api${path}`, init);
+  const sessionId = sessionIdIn(path);
+  for (let round = 0; sessionId && res.status === 404 && round < RESTORE_ROUNDS; round++) {
+    if (!(await res.clone().text()).includes('session not found')) break;
+    if (!(await restore(sessionId))) break;
+    res = await fetch(`/api${path}`, init);
+  }
+  return res;
+}
+
 async function call<T>(path: string, init?: { method?: string; body?: unknown }): Promise<T> {
-  const res = await fetch(`/api${path}`, {
+  const res = await send(path, {
     method: init?.method ?? (init?.body === undefined ? 'GET' : 'POST'),
     headers: init?.body === undefined ? undefined : { 'content-type': 'application/json' },
     body: init?.body === undefined ? undefined : JSON.stringify(init.body),
@@ -88,7 +141,9 @@ async function call<T>(path: string, init?: { method?: string; body?: unknown })
   return (await res.json()) as T;
 }
 
-const s = (id: string) => `/sessions/${encodeURIComponent(id)}`;
+function s(id: string): string {
+  return `/sessions/${encodeURIComponent(id)}`;
+}
 
 export const api = {
   createSession: (body: CreateSessionInput) => call<SessionState>('/sessions', { body }),
@@ -165,7 +220,7 @@ export const api = {
 
 /** POSTs a body and streams the SSE events back. POST bodies rule out EventSource, so the stream is parsed here. */
 async function streamEvents(path: string, body: unknown, onEvent: (event: SseEvent) => void, signal?: AbortSignal): Promise<void> {
-  const res = await fetch(`/api${path}`, {
+  const res = await send(path, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(body),

@@ -66,6 +66,7 @@ export type ExtractorOutput = z.infer<typeof S.ExtractorOutput>;
 export type EvalResult = z.infer<typeof S.EvalResult>;
 export type EvalRun = z.infer<typeof S.EvalRun>;
 export type CreateSessionBody = z.infer<typeof S.CreateSessionBody>;
+export type RestoreSessionBody = z.input<typeof S.RestoreSessionBody>;
 export type SendMessageBody = z.infer<typeof S.SendMessageBody>;
 export type ProfileEditBody = z.infer<typeof S.ProfileEditBody>;
 export type ShortlistBody = z.infer<typeof S.ShortlistBody>;

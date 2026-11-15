@@ -9,6 +9,7 @@ import { Skeleton } from '../../components/StateViews.tsx';
 import { OPEN_RESULTS_STATE, paths } from '../routes.ts';
 import { errorStatus } from './files.ts';
 import { MarkChips, UnmatchedCodes } from './MarkChips.tsx';
+import { onPublicDemo, PUBLIC_DEMO_MARKS_NOTE } from './publicDemo.ts';
 import { useResults } from './ResultsProvider.tsx';
 
 function formatDate(iso: string | null): string | null {
@@ -58,6 +59,7 @@ export function ResultsDataSection({ canAdd = true }: { canAdd?: boolean }) {
               ? `Shared with your consent on ${consentDate}. Used only for gentle notes and your exam feedback.`
               : 'Optional. Marks are only ever kept if you share them and tick the consent box, and you can delete them here.'}
           </p>
+          {onPublicDemo() && <p className="text-xs text-muted">{PUBLIC_DEMO_MARKS_NOTE}</p>}
         </div>
       </header>
 
