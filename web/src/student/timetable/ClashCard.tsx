@@ -38,6 +38,8 @@ function overlapText(clash: Clash): string {
   return `${DAY_NAMES[first.a.day]} ${formatRange(start, end)}${more}, ${TERM_LABELS[clash.term]}`;
 }
 
+const swapKey = (swap: SwapSuggestion) => `${swap.replaceModuleId}->${swap.withModuleId}`;
+
 function ModuleName({ title, core }: { title: string; core: boolean }) {
   return (
     <span className="font-semibold">
@@ -59,7 +61,9 @@ export function ClashCard({
   onAsk,
   onEscalate,
 }: ClashCardProps) {
-  const [confirming, setConfirming] = useState<SwapSuggestion | null>(null);
+  // Which swap is being confirmed, by its modules: a reload brings new objects for the same swap, and a swap that
+  // is no longer offered simply stops matching, so nothing stays stuck in confirmation.
+  const [confirming, setConfirming] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const reduce = useReducedMotion();
   const [error, setError] = useState<string | null>(null);
@@ -90,11 +94,12 @@ export function ClashCard({
       setBusy(false);
     }
   };
+  const confirmingOpen = confirming !== null && [...swaps, ...widerSwaps].some((s) => swapKey(s) === confirming);
   const rowProps = {
     titleFor,
     busy,
     confirming,
-    onAsk: setConfirming,
+    onAsk: (swap: SwapSuggestion) => setConfirming(swapKey(swap)),
     onCancel: () => setConfirming(null),
     onConfirm: (swap: SwapSuggestion) => void apply(swap),
   };
@@ -144,7 +149,7 @@ export function ClashCard({
           )}
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px]">
             {removeTarget && (
-              <Button size="sm" icon="x" onClick={() => void remove(removeTarget)} busy={busy} disabled={confirming !== null}>
+              <Button size="sm" icon="x" onClick={() => void remove(removeTarget)} busy={busy} disabled={confirmingOpen}>
                 Remove {titleFor(removeTarget)}
               </Button>
             )}
@@ -182,7 +187,7 @@ interface SwapRowProps {
   beyond?: boolean;
   titleFor: (moduleId: string) => string;
   busy: boolean;
-  confirming: SwapSuggestion | null;
+  confirming: string | null;
   onAsk: (swap: SwapSuggestion) => void;
   onCancel: () => void;
   onConfirm: (swap: SwapSuggestion) => void;
@@ -192,7 +197,7 @@ interface SwapRowProps {
 function SwapRow({ swap, beyond = false, titleFor, busy, confirming, onAsk, onCancel, onConfirm }: SwapRowProps) {
   const from = titleFor(swap.replaceModuleId);
   const to = titleFor(swap.withModuleId);
-  const isConfirming = confirming === swap;
+  const isConfirming = confirming === swapKey(swap);
   const delta = `${swap.fitDelta > 0 ? '+' : swap.fitDelta < 0 ? '−' : ''}${Math.abs(swap.fitDelta)} fit`;
   return (
     <div className="rounded-xl bg-surface-2 p-3">
