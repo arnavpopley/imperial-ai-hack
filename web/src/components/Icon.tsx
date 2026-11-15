@@ -55,6 +55,7 @@ const paths = {
       <path d="M15 7h6v6" />
     </>
   ),
+  trophy: <path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8.5 20h7M10 17h4" />,
   undo: (
     <>
       <path d="M8.5 5.5 4.5 9.5l4 4" />
