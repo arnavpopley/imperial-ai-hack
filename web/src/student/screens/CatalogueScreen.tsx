@@ -1,6 +1,6 @@
 // Screen 3: ranked module cards with what-if weights, confidence handling (spec 8.6),
 // eligibility (spec 8.7), filters and a shortlist toggle on each card.
-import type { Module, Term } from '@modulematch/shared';
+import { STARTER_QUESTIONS, type Module, type Term } from '@modulematch/shared';
 import { useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { Button } from '../../components/Button.tsx';
@@ -37,7 +37,7 @@ const TERM_OPTIONS: readonly { value: TermFilter; label: string }[] = [
 ];
 
 export function CatalogueScreen() {
-  const { recs, ranked } = useCatalogue();
+  const { recs, ranked, scored } = useCatalogue();
   const { openAdvisor } = useAdvisor();
   const shortlist = useShortlist();
   const [type, setType] = useState<TypeFilter>('all');
@@ -62,12 +62,17 @@ export function CatalogueScreen() {
         image="catalogue-study-group"
         alt="A group of students studying together around a table"
         title="Your modules"
-        subtitle="Ranked by how well each one fits you. Open any module to see why, read a summary or ask about it."
+        subtitle={
+          scored
+            ? 'Ranked by how well each one fits you. Open any module to see why, read a summary or ask about it.'
+            : 'Modules for your year first, then the ones students like you shortlist. Tell us what you enjoy to rank them by fit.'
+        }
         aside={<SampleDataLabel />}
         focus="center 35%"
       />
 
-      {recs.data && confidence !== 'high' && <ConfidenceNotice level={confidence} />}
+      {recs.data && !scored && <StarterNotice />}
+      {recs.data && scored && confidence !== 'high' && <ConfidenceNotice level={confidence} />}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[19rem_minmax(0,1fr)] lg:items-start">
         <div className="grid gap-4 lg:sticky lg:top-20">
@@ -132,6 +137,7 @@ export function CatalogueScreen() {
                   <ModuleCard
                     item={item}
                     lowConfidence={confidence === 'low'}
+                    scored={scored}
                     shortlisted={shortlist.isShortlisted(item.moduleId)}
                     pending={shortlist.isPending(item.moduleId)}
                     onToggleShortlist={() => void shortlist.toggle(item.moduleId)}
@@ -160,6 +166,49 @@ function RankedRow({ first, children }: { first: boolean; children: ReactNode })
       </li>
       {children}
     </>
+  );
+}
+
+/**
+ * Spec 8.6 cold start: the student skipped the interview, so there is nothing to score. Says so plainly and
+ * offers a few questions, rather than fake precision or a tutor escalation.
+ */
+function StarterNotice() {
+  const navigate = useNavigate();
+  const { askTwoMore, sending } = useChat();
+  const [error, setError] = useState<string | null>(null);
+  return (
+    <div role="status" className="animate-rise flex flex-wrap items-center gap-x-4 gap-y-3 rounded-card border border-fit-mid/35 bg-fit-mid/8 px-4 py-3">
+      <Icon name="info" size={18} className="shrink-0 text-fit-mid" />
+      <div className="min-w-0 flex-1 text-sm">
+        <p className="font-semibold">We know little about you yet</p>
+        <p className="text-[13px] text-muted">
+          There are no fit scores until you tell us what you enjoy. This is a starter order, not a recommendation.
+        </p>
+      </div>
+      <Button
+        size="sm"
+        variant="primary"
+        icon="chat"
+        disabled={sending}
+        onClick={() => {
+          // The server reopens the interview with STARTER_QUESTIONS for a profile with nothing to score, and the
+          // first question appears in the chat straight away.
+          setError(null);
+          void askTwoMore().then(
+            () => navigate(paths.interview),
+            (err: unknown) => setError(errorMessage(err)),
+          );
+        }}
+      >
+        Answer {STARTER_QUESTIONS} quick questions
+      </Button>
+      {error && (
+        <p role="alert" className="basis-full text-[13px] text-fit-low">
+          {error}
+        </p>
+      )}
+    </div>
   );
 }
 

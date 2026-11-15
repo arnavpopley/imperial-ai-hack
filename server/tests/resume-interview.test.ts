@@ -20,9 +20,11 @@ async function chat(id: string, content: string) {
     .map((l) => S.SseEvent.parse(JSON.parse(l.slice(6))));
 }
 
+/** A session in RECOMMEND that knows one interest, so "two more" applies (a bare skip gets three: cold-start.test.ts). */
 async function recommendingSession(): Promise<string> {
   const created = await app.request('/api/sessions', send('POST', { programme: 'MEng Mechanical Engineering', yearOfStudy: 3 }));
   const { id } = S.SessionState.parse(await created.json());
+  await put(id, { interests: { 'fluid-mechanics': 0.8 } });
   expect((await put(id, { confirm: true })).mode).toBe('RECOMMEND');
   return id;
 }
