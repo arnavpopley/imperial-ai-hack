@@ -3,6 +3,7 @@
 import type { EscalationDraft, SessionState } from '@modulematch/shared';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { api } from '../../api.ts';
+import { draftIdentity } from '../../components/exceptions.ts';
 import { errorMessage } from '../../components/StateViews.tsx';
 import { readDismissedDraft, readStoredSessionId, writeDismissedDraft, writeStoredSessionId } from './storage.ts';
 
@@ -43,7 +44,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<SessionStatus>(resumeId ? 'loading' : 'none');
   const [error, setError] = useState<string | null>(null);
   const [offeredDraft, setOfferedDraft] = useState<EscalationDraft | null>(null);
-  const [dismissedSummary, setDismissedSummary] = useState<string | null>(null);
+  const [dismissedDraft, setDismissedDraft] = useState<string | null>(null);
   const [recsVersion, setRecsVersion] = useState(0);
 
   // Resume a stored session on first load, and again on retry.
@@ -115,21 +116,21 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setResumeId(null);
     setSession(null);
     setOfferedDraft(null);
-    setDismissedSummary(null);
+    setDismissedDraft(null);
     setError(null);
     setStatus('none');
   }, []);
 
   const serverDraft = session?.escalationDraft ?? null;
   // A dismissal is remembered for the session, so the stored draft does not come back on every reload.
-  const dismissed = dismissedSummary ?? (sessionId ? readDismissedDraft(sessionId) : null);
-  const draft = offeredDraft ?? (serverDraft && serverDraft.summary !== dismissed ? serverDraft : null);
+  const dismissed = dismissedDraft ?? (sessionId ? readDismissedDraft(sessionId) : null);
+  const draft = offeredDraft ?? (serverDraft && draftIdentity(serverDraft) !== dismissed ? serverDraft : null);
 
   const dismissDraft = useCallback(() => {
     setOfferedDraft(null);
     if (!draft) return;
-    setDismissedSummary(draft.summary);
-    if (sessionId) writeDismissedDraft(sessionId, draft.summary);
+    setDismissedDraft(draftIdentity(draft));
+    if (sessionId) writeDismissedDraft(sessionId, draftIdentity(draft));
   }, [draft, sessionId]);
 
   const value = useMemo<SessionContextValue>(

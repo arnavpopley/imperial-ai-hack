@@ -1,6 +1,6 @@
 {
-  "id": "64c59605-f39e-4df2-bf95-eb810c69476e",
-  "at": "2026-11-14T19:55:18.211Z",
+  "id": "e4a93685-afd4-4478-80eb-11fd6648a0af",
+  "at": "2026-11-15T00:52:56.049Z",
   "results": [
     {
       "name": "Ranking quality",
@@ -240,6 +240,174 @@
           "case": "sustainability engineer: style.examPreference",
           "pass": true,
           "note": "expected 0.5, got 0.5"
+        }
+      ]
+    },
+    {
+      "name": "Extraction (hard cases)",
+      "passed": 32,
+      "total": 32,
+      "target": 0.9,
+      "details": [
+        {
+          "case": "ADHD clause, then an interest: interest:electronics-embedded",
+          "pass": true,
+          "note": "expected 0.8, got 0.85"
+        },
+        {
+          "case": "finances clause, then an interest: interest:sustainability-climate",
+          "pass": true,
+          "note": "expected 0.85, got 0.85"
+        },
+        {
+          "case": "interest, then a grade: interest:computational-simulation",
+          "pass": true,
+          "note": "expected 0.85, got 0.85"
+        },
+        {
+          "case": "interest, then a grade: no interest:thermodynamics-energy",
+          "pass": true,
+          "note": "expected nothing, got null"
+        },
+        {
+          "case": "health reasons, then an interest: interest:control-robotics",
+          "pass": true,
+          "note": "expected 0.85, got 0.85"
+        },
+        {
+          "case": "health reasons, then an interest: no style.workloadTolerance",
+          "pass": true,
+          "note": "expected nothing, got null"
+        },
+        {
+          "case": "coursework named as a topic: interest:fluid-mechanics",
+          "pass": true,
+          "note": "expected 0.85, got 0.85"
+        },
+        {
+          "case": "coursework named as a topic: no style.examPreference",
+          "pass": true,
+          "note": "expected nothing, got null"
+        },
+        {
+          "case": "coursework named as a topic: no style.appliedPreference",
+          "pass": true,
+          "note": "expected nothing, got null"
+        },
+        {
+          "case": "disliking theory means applied: interest:nuclear-energy",
+          "pass": true,
+          "note": "expected 0.1, got 0.1"
+        },
+        {
+          "case": "disliking theory means applied: style.appliedPreference",
+          "pass": true,
+          "note": "expected 0.8, got 0.8"
+        },
+        {
+          "case": "proofs are a slog: style.mathsComfort",
+          "pass": true,
+          "note": "expected 0.3, got 0.3"
+        },
+        {
+          "case": "calculus is harder: style.mathsComfort",
+          "pass": true,
+          "note": "expected 0.3, got 0.3"
+        },
+        {
+          "case": "slider text is not an interest: no interest:mathematics-modelling",
+          "pass": true,
+          "note": "expected nothing, got null"
+        },
+        {
+          "case": "slider text is not an interest: no interest:programming-software",
+          "pass": true,
+          "note": "expected nothing, got null"
+        },
+        {
+          "case": "writing syntax is not coding: no style.codingComfort",
+          "pass": true,
+          "note": "expected nothing, got null"
+        },
+        {
+          "case": "avoid 8am lectures: timetablePrefs.earliestStart",
+          "pass": true,
+          "note": "expected \"09:00\", got \"09:00\""
+        },
+        {
+          "case": "study routine is not a start time: no timetablePrefs.earliestStart",
+          "pass": true,
+          "note": "expected nothing, got null"
+        },
+        {
+          "case": "night owl: no timetablePrefs.earliestStart",
+          "pass": true,
+          "note": "expected nothing, got null"
+        },
+        {
+          "case": "part-time job days: timetablePrefs.avoidDays",
+          "pass": true,
+          "note": "expected [\"tue\",\"thu\"], got [\"tue\",\"thu\"]"
+        },
+        {
+          "case": "part-time job days: no timetablePrefs.earliestStart",
+          "pass": true,
+          "note": "expected nothing, got null"
+        },
+        {
+          "case": "no Friday courses: timetablePrefs.avoidDays",
+          "pass": true,
+          "note": "expected [\"fri\"], got [\"fri\"]"
+        },
+        {
+          "case": "solo with a concession: style.groupPreference",
+          "pass": true,
+          "note": "expected 0.3, got 0.3"
+        },
+        {
+          "case": "solo with a concession: no style.workloadTolerance",
+          "pass": true,
+          "note": "expected nothing, got null"
+        },
+        {
+          "case": "rather a portfolio than tests: style.examPreference",
+          "pass": true,
+          "note": "expected 0.2, got 0.2"
+        },
+        {
+          "case": "torn between two careers: pathways",
+          "pass": true,
+          "note": "expected [\"research-academia\"], got [\"research-academia\"]"
+        },
+        {
+          "case": "torn between two careers: no pathwaysSkipped",
+          "pass": true,
+          "note": "expected nothing, got false"
+        },
+        {
+          "case": "a thesis topic is not a career: interest:sustainability-climate",
+          "pass": true,
+          "note": "expected 0.8, got 0.85"
+        },
+        {
+          "case": "a thesis topic is not a career: no pathways",
+          "pass": true,
+          "note": "expected nothing, got []"
+        },
+        {
+          "case": "behavioural economics: interest:finance-economics",
+          "pass": true,
+          "note": "expected 0.8, got 0.85"
+        },
+        {
+          "case": "maths modules: interest:mathematics-modelling",
+          "pass": true,
+          "note": "expected 0.85, got 0.85"
+        },
+        {
+          "case": "maths modules: interest:statistics-data",
+          "pass": true,
+          "note": "expected 0.85, got 0.85"
         }
       ]
     },

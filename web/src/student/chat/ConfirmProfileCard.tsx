@@ -3,7 +3,7 @@ import { motion, type Variants } from 'motion/react';
 import { useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { Button } from '../../components/Button.tsx';
-import { DAY_LABELS, DAY_NAMES, STYLE_KEYS, STYLE_META, styleValueText, topicLabel } from '../labels.ts';
+import { DAY_LABELS, DAY_NAMES, splitInterests, STYLE_KEYS, STYLE_META, styleValueText, topicLabel } from '../labels.ts';
 import { InterviewerAvatar } from '../interview/InterviewerAvatar.tsx';
 import { useInterviewer } from '../interview/personas.ts';
 import { ProfileEditor } from '../profile/ProfileEditor.tsx';
@@ -28,9 +28,8 @@ export function ConfirmProfileCard() {
   const navigate = useNavigate();
   const { profile } = session;
 
-  const interests = Object.entries(profile.interests)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 5);
+  const { liked, avoided } = splitInterests(profile.interests);
+  const interests = liked.slice(0, 5);
   const styles = STYLE_KEYS.flatMap((key) => {
     const value = profile.style[key];
     return value === null ? [] : [{ key, value }];
@@ -38,6 +37,7 @@ export function ConfirmProfileCard() {
   const { avoidDays, earliestStart } = profile.timetablePrefs;
   const empty =
     interests.length === 0 &&
+    avoided.length === 0 &&
     profile.pathways.length === 0 &&
     styles.length === 0 &&
     profile.breadthAppetite === null &&
@@ -96,6 +96,21 @@ export function ConfirmProfileCard() {
                           style={{ width: `${Math.round(strength * 100)}%` }}
                         />
                         <span className="relative">{topicLabel(topic)}</span>
+                      </motion.li>
+                    ))}
+                  </ul>
+                </Group>
+              )}
+              {avoided.length > 0 && (
+                <Group title="Avoid" wide>
+                  <ul className="flex flex-wrap gap-2">
+                    {avoided.map(([topic]) => (
+                      <motion.li
+                        key={topic}
+                        variants={ITEM}
+                        className="rounded-full bg-surface-2 px-3.5 py-1.5 text-[14px] font-medium text-muted"
+                      >
+                        {topicLabel(topic)}
                       </motion.li>
                     ))}
                   </ul>

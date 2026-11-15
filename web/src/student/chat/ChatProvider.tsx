@@ -47,6 +47,11 @@ interface ChatContextValue {
   importCv: (text: string) => Promise<CvResponse>;
   /** Resend the request behind a failed reply, identified by the reply's id. */
   retry: (replyId: string) => void;
+  /**
+   * "Answer two more" (spec 8.6): returns the session to the interview with a budget of two questions. The server
+   * asks the first one straight away; it is appended to the transcript here. Shares the send lock.
+   */
+  askTwoMore: () => Promise<void>;
 }
 
 const ChatContext = createContext<ChatContextValue | null>(null);
@@ -122,16 +127,15 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     [sessionId, update],
   );
 
-  // Assistant messages saved outside a chat turn reach the transcript through the session: staff replies
-  // (session poll), and the question a resumed interview posts. Append each once. While a reply streams, only
-  // staff messages are taken, so the reply being streamed is never added twice.
+  // Staff replies also arrive as assistant messages (agent "staff") through the session poll.
+  // The transcript is otherwise local, so append only those, once each.
   const { messages } = session;
   useEffect(() => {
-    const saved = messages.filter((m) => m.role === 'assistant' && (m.agent === STAFF_AGENT || !abortRef.current));
-    if (saved.length === 0) return;
+    const staff = messages.filter((m) => m.agent === STAFF_AGENT);
+    if (staff.length === 0) return;
     setTurns((list) => {
-      const known = new Set(list.flatMap((t) => [t.id, t.messageId ?? '']));
-      const fresh = saved.filter((m) => !known.has(m.id));
+      const known = new Set(list.map((t) => t.id));
+      const fresh = staff.filter((m) => !known.has(m.id));
       return fresh.length > 0 ? [...list, ...fresh.map(fromMessage)] : list;
     });
   }, [messages]);
@@ -246,9 +250,32 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     [send],
   );
 
+  const askTwoMore = useCallback(async () => {
+    if (abortRef.current) throw new Error(BUSY_MESSAGE);
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setSending(true);
+    try {
+      const fresh = await api.editProfile(sessionId, { resumeInterview: true });
+      if (controller.signal.aborted) return;
+      replace(fresh);
+      invalidateRecs();
+      // The old "Here is what I heard" card must not come back beside the new question.
+      setWidget(null);
+      // The server stores the first question as the newest message.
+      const question = fresh.messages.at(-1);
+      if (question && question.role === 'assistant' && question.agent === 'interviewer') {
+        setTurns((list) => (list.some((t) => t.id === question.id) ? list : [...list, fromMessage(question)]));
+      }
+    } finally {
+      abortRef.current = null;
+      setSending(false);
+    }
+  }, [sessionId, replace, invalidateRecs]);
+
   const value = useMemo(
-    () => ({ turns, sending, widget, recommendationsReady, send, importCv, retry }),
-    [turns, sending, widget, recommendationsReady, send, importCv, retry],
+    () => ({ turns, sending, widget, recommendationsReady, send, importCv, retry, askTwoMore }),
+    [turns, sending, widget, recommendationsReady, send, importCv, retry, askTwoMore],
   );
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
 }

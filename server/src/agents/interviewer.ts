@@ -107,11 +107,12 @@ export function nextQuestion(session: SessionState, askedStepIds: string[]): Nex
   );
   if (planned) return { step: planned, targetSlots: planned.slots };
   const gap = gaps.find((slot) => !askedStepIds.includes(`follow:${slot}`));
-  if (!gap) return null;
-  return {
-    step: { id: `follow:${gap}`, slots: [gap], question: FOLLOW_UPS[gap] ?? FOLLOW_UPS.interest!, widget: null },
-    targetSlots: [gap],
-  };
+  return gap ? followUp(gap) : null;
+}
+
+/** The targeted follow-up question for one slot. */
+export function followUp(slot: string): NextQuestion {
+  return { step: { id: `follow:${slot}`, slots: [slot], question: FOLLOW_UPS[slot] ?? FOLLOW_UPS.interest!, widget: null }, targetSlots: [slot] };
 }
 
 const topicLabel = (id: string) => taxonomy.topics[id as keyof typeof taxonomy.topics]?.label ?? id;
@@ -195,7 +196,8 @@ export const studentTurn = (text: string): ChatMessage => ({ role: 'user', conte
 
 /** The "Here is what I heard" card (spec 10.2), written from the profile so it never invents anything. */
 export function whatIHeard(profile: StudentProfile, pathwayTitles: Record<string, string>): string {
-  const pct = (v: number | null) => (v === null ? 'not asked' : `${Math.round(v * 100)}%`);
+  // "Not answered yet", not "not asked": the question may have been asked without an answer the extractor could read.
+  const pct = (v: number | null) => (v === null ? 'not answered yet' : `${Math.round(v * 100)}%`);
   const interests = Object.entries(profile.interests)
     .filter(([, v]) => v >= 0.5)
     .sort((a, b) => b[1] - a[1])
@@ -203,12 +205,12 @@ export function whatIHeard(profile: StudentProfile, pathwayTitles: Record<string
   const avoid = Object.entries(profile.interests)
     .filter(([, v]) => v < 0.3)
     .map(([t]) => topicLabel(t));
-  const lean = (v: number | null, low: string, high: string) => (v === null ? 'not asked' : v >= 0.6 ? high : v <= 0.4 ? low : 'a mix');
+  const lean = (v: number | null, low: string, high: string) => (v === null ? 'not answered yet' : v >= 0.6 ? high : v <= 0.4 ? low : 'a mix');
   return [
     'Here is what I heard:',
     `• Interested in: ${interests.join(', ') || 'nothing specific yet'}`,
     avoid.length ? `• Would rather avoid: ${avoid.join(', ')}` : null,
-    `• After graduating: ${profile.pathways.map((p) => pathwayTitles[p] ?? p).join(', ') || (profile.pathwaysSkipped ? 'not decided yet' : 'not asked')}`,
+    `• After graduating: ${profile.pathways.map((p) => pathwayTitles[p] ?? p).join(', ') || (profile.pathwaysSkipped ? 'not decided yet' : 'not answered yet')}`,
     `• Assessment: ${lean(profile.style.examPreference, 'coursework and projects', 'exams')}; style: ${lean(profile.style.appliedPreference, 'theory', 'applied')}; working: ${lean(profile.style.groupPreference, 'alone', 'in a team')}`,
     `• Maths comfort ${pct(profile.style.mathsComfort)}, coding comfort ${pct(profile.style.codingComfort)}, workload ${pct(profile.style.workloadTolerance)}`,
     `• Outside your degree: ${lean(profile.breadthAppetite, 'rather not', 'keen')}`,

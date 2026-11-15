@@ -7,12 +7,14 @@ import { api } from '../../api.ts';
 import { buttonClass } from '../../components/Button.tsx';
 import { ConfidenceBadge } from '../../components/ConfidenceBadge.tsx';
 import { cx } from '../../components/cx.ts';
+import { decisionsKey } from '../../components/exceptions.ts';
 import { FIT_BAND_LABELS, fitBand } from '../../components/FitScore.tsx';
 import { Icon } from '../../components/Icon.tsx';
 import { ModuleTypeChip } from '../../components/ModuleTypeChip.tsx';
 import { SampleDataLabel } from '../../components/SampleDataLabel.tsx';
 import { EmptyState, ErrorState, Skeleton } from '../../components/StateViews.tsx';
 import { SubScoreBars } from '../../components/SubScoreBars.tsx';
+import { ExceptionChip } from '../catalogue/ExceptionChip.tsx';
 import { reasonSource } from '../catalogue/reasonSource.ts';
 import { NoScoreRing, ScoreRing } from '../catalogue/ScoreRing.tsx';
 import { ShortlistButton } from '../catalogue/ShortlistButton.tsx';
@@ -45,9 +47,11 @@ export function ModuleDetailScreen() {
   const nudge = useNudge(moduleId);
   const relatedFeedback = useFeedbackAffecting(moduleId);
   const sessionId = session.id;
+  // A Senior Tutor decision changes the module's watch-outs, so it fetches the explanation again too.
+  const decisions = decisionsKey(session);
   const explanation = useAsync(
     () => api.explanation(sessionId, moduleId),
-    [sessionId, moduleId, session.profile.updatedAt],
+    [sessionId, moduleId, session.profile.updatedAt, decisions],
   );
   const module = moduleById.get(moduleId);
   const rec = byId.get(moduleId);
@@ -122,6 +126,7 @@ export function ModuleDetailScreen() {
             <div className="flex flex-wrap items-center gap-1.5">
               <ModuleTypeChip variant={module.type} />
               {rec && <ConfidenceBadge variant={rec.confidence} />}
+              {rec?.exception && <ExceptionChip decision={rec.exception} />}
               {rec && scored && (
                 <span className="text-[12px] font-medium text-muted">
                   {FIT_BAND_LABELS[fitBand(rec.fit)]} · ranked #{rec.rank}

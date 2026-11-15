@@ -2,27 +2,24 @@
 // eligibility (spec 8.7), filters and a shortlist toggle on each card.
 import { STARTER_QUESTIONS, type Module, type Term } from '@modulematch/shared';
 import { useState, type ReactNode } from 'react';
-import { Link, useNavigate } from 'react-router';
-import { Button, buttonClass } from '../../components/Button.tsx';
+import { useNavigate } from 'react-router';
+import { Button } from '../../components/Button.tsx';
 import { cx } from '../../components/cx.ts';
 import { Icon } from '../../components/Icon.tsx';
 import { MODULE_TYPE_LABELS } from '../../components/ModuleTypeChip.tsx';
 import { SampleDataLabel } from '../../components/SampleDataLabel.tsx';
 import { SegmentedControl } from '../../components/SegmentedControl.tsx';
-import { EmptyState, ErrorState, Skeleton } from '../../components/StateViews.tsx';
+import { EmptyState, ErrorState, errorMessage, Skeleton } from '../../components/StateViews.tsx';
 import { ModuleCard } from '../catalogue/ModuleCard.tsx';
 import { PhotoBanner } from '../catalogue/PhotoBanner.tsx';
 import { WeightPanel } from '../catalogue/WeightPanel.tsx';
 import { useChat } from '../chat/ChatProvider.tsx';
 import { useFlip } from '../hooks/useFlip.ts';
 import { useShortlist } from '../hooks/useShortlist.ts';
-import { useProfileActions } from '../profile/useProfileActions.ts';
 import { TERM_LABELS, TERMS } from '../labels.ts';
 import { paths } from '../routes.ts';
 import { useAdvisor } from '../shell/StudentShell.tsx';
 import { useCatalogue } from '../state/CatalogueProvider.tsx';
-import { useReadySession } from '../state/SessionProvider.tsx';
-import { yourDataPath } from '../yourdata/paths.ts';
 
 type TypeFilter = 'all' | Module['type'];
 type TermFilter = 'all' | Term;
@@ -178,11 +175,8 @@ function RankedRow({ first, children }: { first: boolean; children: ReactNode })
  */
 function StarterNotice() {
   const navigate = useNavigate();
-  const { session } = useReadySession();
-  const { save, saving, error } = useProfileActions();
-  // Spec 12: only RECOMMEND returns to the interview. Elsewhere (planning a timetable, say) the profile
-  // is edited in "Your data" instead.
-  const canResume = session.mode === 'RECOMMEND';
+  const { askTwoMore, sending } = useChat();
+  const [error, setError] = useState<string | null>(null);
   return (
     <div role="status" className="animate-rise flex flex-wrap items-center gap-x-4 gap-y-3 rounded-card border border-fit-mid/35 bg-fit-mid/8 px-4 py-3">
       <Icon name="info" size={18} className="shrink-0 text-fit-mid" />
@@ -191,26 +185,28 @@ function StarterNotice() {
         <p className="text-[13px] text-muted">
           There are no fit scores until you tell us what you enjoy. This is a starter order, not a recommendation.
         </p>
-        {error && (
-          <p role="alert" className="mt-1 text-[13px] text-fit-low">
-            {error}
-          </p>
-        )}
       </div>
-      {canResume ? (
-        <Button
-          size="sm"
-          variant="primary"
-          icon="chat"
-          busy={saving}
-          onClick={() => void save({ resumeInterview: true }).then((saved) => saved?.mode === 'INTERVIEW' && navigate(paths.interview))}
-        >
-          Answer {STARTER_QUESTIONS} quick questions
-        </Button>
-      ) : (
-        <Link to={yourDataPath} className={buttonClass('secondary', 'sm')}>
-          Add your interests
-        </Link>
+      <Button
+        size="sm"
+        variant="primary"
+        icon="chat"
+        disabled={sending}
+        onClick={() => {
+          // The server reopens the interview with STARTER_QUESTIONS for a profile with nothing to score, and the
+          // first question appears in the chat straight away.
+          setError(null);
+          void askTwoMore().then(
+            () => navigate(paths.interview),
+            (err: unknown) => setError(errorMessage(err)),
+          );
+        }}
+      >
+        Answer {STARTER_QUESTIONS} quick questions
+      </Button>
+      {error && (
+        <p role="alert" className="basis-full text-[13px] text-fit-low">
+          {error}
+        </p>
       )}
     </div>
   );
@@ -218,7 +214,8 @@ function StarterNotice() {
 
 function ConfidenceNotice({ level }: { level: 'medium' | 'low' }) {
   const navigate = useNavigate();
-  const { send, sending } = useChat();
+  const { askTwoMore, sending } = useChat();
+  const [error, setError] = useState<string | null>(null);
   const medium = level === 'medium';
   return (
     <div
@@ -243,12 +240,22 @@ function ConfidenceNotice({ level }: { level: 'medium' | 'low' }) {
         icon="chat"
         disabled={sending}
         onClick={() => {
-          if (medium) void send('I have time for two more questions.');
-          navigate(paths.interview);
+          // Both levels return to the interview for two targeted questions; the first is asked straight away.
+          // A failed request keeps the student here with the reason, so they can try again.
+          setError(null);
+          void askTwoMore().then(
+            () => navigate(paths.interview),
+            (err: unknown) => setError(errorMessage(err)),
+          );
         }}
       >
         {medium ? 'Answer two more' : 'Back to the interview'}
       </Button>
+      {error && (
+        <p role="alert" className="basis-full text-[13px] text-fit-low">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

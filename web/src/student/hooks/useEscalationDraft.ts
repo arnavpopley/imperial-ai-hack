@@ -15,14 +15,17 @@ export function useEscalationDraft() {
   const [error, setError] = useState<string | null>(null);
   const sessionId = session.id;
   const type = draft?.type;
+  const moduleId = draft?.moduleId ?? undefined;
 
   const approve = useCallback(
-    async (summary: string) => {
+    async (summary: string, reason?: string) => {
       if (!type) return;
       setSending(true);
       setError(null);
       try {
-        const created = await api.escalate(sessionId, { type, summary });
+        // A rule exception names its module and carries the student's one-line reason (spec 11.1).
+        const extra = type === 'RULE_EXCEPTION' ? { moduleId, reason } : {};
+        const created = await api.escalate(sessionId, { type, summary, ...extra });
         update((s) => ({ ...s, escalationDraft: null, escalations: upsertEscalation(s.escalations, created) }));
         dismissDraft();
         // Pick up the server's mode change (ESCALATED). The local copy is already correct if this fails.
@@ -33,7 +36,7 @@ export function useEscalationDraft() {
         setSending(false);
       }
     },
-    [type, sessionId, update, dismissDraft, refresh],
+    [type, moduleId, sessionId, update, dismissDraft, refresh],
   );
 
   return { draft, approve, discard: dismissDraft, sending, error };
