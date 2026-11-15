@@ -1,6 +1,6 @@
 // Supervisor (spec 10.1): owns the mode, routes each student turn to one agent, and raises escalations.
 // It is a deterministic state machine plus one intent classification. Every step is traced.
-import { confidenceLabel, STARTER_QUESTIONS, type Message, type SendMessageBody, type SessionState, type SseEvent, type Weights } from '@modulematch/shared';
+import { confidenceLabel, intentLabel, STARTER_QUESTIONS, type Message, type SendMessageBody, type SessionState, type SseEvent, type Weights } from '@modulematch/shared';
 import { randomUUID } from 'node:crypto';
 import * as repo from '../db/repo.ts';
 import { SCOPE_REDIRECT } from '../guardrails/g1-scope.ts';
@@ -486,7 +486,7 @@ async function runTurn(sessionId: string, body: SendMessageBody, emit: Emit): Pr
   const intent = await tracer.timed(
     { actor: 'supervisor', kind: 'agent', input: `classify intent in ${session.mode}` },
     () => classifyIntent(turn.text, session.mode, catalogue.modules()),
-    (r) => ({ output: `${r.intent} (${r.confidence.toFixed(2)})`, verdict: null }),
+    (r) => ({ output: intentLabel(r.intent, r.confidence), verdict: null }),
   );
   if (COMPLAINT.test(turn.text)) {
     await say(turn, 'supervisor', 'I am sorry this has not been helpful. I have drafted a note to the admin team; edit it if you like and approve it to send.');

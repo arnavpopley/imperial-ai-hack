@@ -1,6 +1,6 @@
 import taxonomyJson from '../../../data/taxonomy.json' with { type: 'json' };
 import { slotValueSchema } from './schemas.ts';
-import type { Confidence, RuleViolation, Weights } from './types.ts';
+import type { Confidence, Intent, RuleViolation, Weights } from './types.ts';
 
 /**
  * Plain names for the rules-engine codes (spec 9.1). The one map every screen uses, so no raw code such as
@@ -19,6 +19,28 @@ export const RULE_CODE_LABELS: Record<RuleViolation['code'], string> = {
 
 /** Spec 8.5 default weights. The what-if sliders change these four numbers and nothing else. */
 export const DEFAULT_WEIGHTS: Weights = { interest: 0.45, goal: 0.25, style: 0.2, breadth: 0.1 };
+
+/** The Supervisor's intents (spec 10.1) in plain words, for the trace and anything else a person reads. */
+export const INTENT_LABELS: Record<Intent, string> = {
+  answer_interview: 'Interview answer',
+  ask_why: 'Asks why',
+  what_if: 'What if',
+  edit_profile: 'Profile edit',
+  shortlist_action: 'Shortlist change',
+  timetable_action: 'Timetable question',
+  rule_exception_request: 'Rule exception request',
+  pathway_action: 'Pathway question',
+  catalogue_question: 'Catalogue question',
+  smalltalk: 'Small talk',
+  out_of_scope: 'Out of scope',
+  wellbeing: 'Wellbeing',
+};
+
+/** "Rule exception request · 90% sure": an intent and the classifier's confidence, as the trace shows them. */
+export function intentLabel(intent: Intent, confidence?: number): string {
+  const label = INTENT_LABELS[intent] ?? intent;
+  return confidence === undefined ? label : `${label} · ${Math.round(confidence * 100)}% sure`;
+}
 
 /** Spec 8.6 confidence thresholds on profile completeness. */
 export const CONFIDENCE_THRESHOLDS = { high: 0.8, medium: 0.5 } as const;
