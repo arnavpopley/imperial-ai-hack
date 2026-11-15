@@ -3,7 +3,7 @@
 // and leaves out anything near capacity itself. Adding keeps both; a swap is applied only after the student
 // confirms it (spec 10.6). Fit scores and ranking are never changed.
 import type { CapacityBackup } from '@modulematch/shared';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Button } from '../../components/Button.tsx';
 import { cx } from '../../components/cx.ts';
 import { FitScore } from '../../components/FitScore.tsx';
@@ -19,11 +19,35 @@ interface CapacityBackupPanelProps {
   titleFor: (moduleId: string) => string;
 }
 
+type Shortlist = ReturnType<typeof useShortlist>;
+
+/** Runs one row's change at a time, so two rows sharing a backup can never both swap it in. */
+type RunOne = (key: string, action: () => Promise<void>) => Promise<void>;
+
+const rowKey = (b: CapacityBackup) => `${b.replaceModuleId}-${b.withModuleId}`;
+
 export function CapacityBackupPanel({ backups, titleFor }: CapacityBackupPanelProps) {
-  const { shortlist } = useShortlist();
+  const shortlist = useShortlist();
+  const [active, setActive] = useState<string | null>(null);
+  // A ref as well as state, so two clicks in the same tick cannot both pass the check.
+  const lock = useRef(false);
+  const runOne: RunOne = async (key, action) => {
+    if (lock.current) return;
+    lock.current = true;
+    setActive(key);
+    try {
+      await action();
+    } finally {
+      lock.current = false;
+      setActive(null);
+    }
+  };
+
   // The rows come from the last timetable response; until the next one lands, drop any that the shortlist has
   // already settled (the backup added, or the pick removed), so no button acts on a stale suggestion.
-  const live = backups.filter((b) => shortlist.includes(b.replaceModuleId) && !shortlist.includes(b.withModuleId));
+  const live = backups.filter(
+    (b) => shortlist.isShortlisted(b.replaceModuleId) && !shortlist.isShortlisted(b.withModuleId),
+  );
   if (live.length === 0) return null;
   return (
     <section aria-labelledby="backup-heading" className="rounded-card border border-line bg-surface p-4 shadow-soft">
@@ -36,35 +60,54 @@ export function CapacityBackupPanel({ backups, titleFor }: CapacityBackupPanelPr
       </p>
       <ul className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-2">
         {live.map((backup) => (
-          <BackupItem key={`${backup.replaceModuleId}-${backup.withModuleId}`} backup={backup} titleFor={titleFor} />
+          <BackupItem
+            key={rowKey(backup)}
+            backup={backup}
+            titleFor={titleFor}
+            shortlist={shortlist}
+            busy={active === rowKey(backup)}
+            locked={active !== null}
+            runOne={runOne}
+          />
         ))}
       </ul>
     </section>
   );
 }
 
-function BackupItem({ backup, titleFor }: { backup: CapacityBackup; titleFor: (moduleId: string) => string }) {
-  const shortlist = useShortlist();
+function BackupItem({
+  backup,
+  titleFor,
+  shortlist,
+  busy,
+  locked,
+  runOne,
+}: {
+  backup: CapacityBackup;
+  titleFor: (moduleId: string) => string;
+  shortlist: Shortlist;
+  /** This row's change is in flight. */
+  busy: boolean;
+  /** Some row's change is in flight, so every row waits. */
+  locked: boolean;
+  runOne: RunOne;
+}) {
   const signal = useReferenceData().demandById.get(backup.replaceModuleId);
   // Starter profiles have no fit signal yet (spec 8.6), so their fit numbers are not shown, as in the catalogue.
   const { scored } = useCatalogue();
   const [confirming, setConfirming] = useState(false);
-  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const pick = titleFor(backup.replaceModuleId);
   const alternative = titleFor(backup.withModuleId);
-  const pending = busy || shortlist.isPending(backup.replaceModuleId) || shortlist.isPending(backup.withModuleId);
+  const pending = locked || shortlist.isPending(backup.replaceModuleId) || shortlist.isPending(backup.withModuleId);
 
   const run = async (action: () => Promise<void>) => {
-    setBusy(true);
     setError(null);
     try {
-      await action();
+      await runOne(rowKey(backup), action);
       setConfirming(false);
     } catch (err) {
       setError(errorMessage(err));
-    } finally {
-      setBusy(false);
     }
   };
   // toggle reports its own failure through shortlist.error rather than throwing. It only ever adds here: a backup
@@ -73,7 +116,10 @@ function BackupItem({ backup, titleFor }: { backup: CapacityBackup; titleFor: (m
     run(async () => {
       if (!shortlist.isShortlisted(backup.withModuleId)) await shortlist.toggle(backup.withModuleId);
     });
-  const swap = () => run(() => shortlist.swap(backup.replaceModuleId, backup.withModuleId));
+  const swap = () =>
+    run(async () => {
+      if (!shortlist.isShortlisted(backup.withModuleId)) await shortlist.swap(backup.replaceModuleId, backup.withModuleId);
+    });
 
   return (
     <li className="rounded-xl bg-surface-2 p-3">
@@ -124,10 +170,10 @@ function BackupItem({ backup, titleFor }: { backup: CapacityBackup; titleFor: (m
           </p>
           <p className="text-[12px] text-muted">Your shortlist changes only when you confirm.</p>
           <div className="mt-2 flex flex-wrap gap-2">
-            <Button size="sm" variant="primary" icon="check" busy={busy} onClick={() => void swap()}>
+            <Button size="sm" variant="primary" icon="check" busy={busy} disabled={pending} onClick={() => void swap()}>
               Confirm swap
             </Button>
-            <Button size="sm" variant="ghost" onClick={() => setConfirming(false)} disabled={busy}>
+            <Button size="sm" variant="ghost" onClick={() => setConfirming(false)} disabled={pending}>
               Cancel
             </Button>
           </div>
