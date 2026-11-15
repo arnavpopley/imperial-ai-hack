@@ -305,7 +305,8 @@ function ReplyBox({ escalation }: { escalation: StaffEscalation }) {
 
   return (
     <form
-      className="grid gap-2"
+      // Sticks to the bottom of the detail pane while the request above it scrolls (wide screens only).
+      className="grid gap-2 lg:sticky lg:bottom-0 lg:z-10 lg:-mx-5 lg:-mb-5 lg:border-t lg:border-line lg:bg-surface lg:px-5 lg:pt-3 lg:pb-4"
       onSubmit={(ev) => {
         ev.preventDefault();
         if (!decides && trimmed) void submit('reply');

@@ -119,7 +119,11 @@ export function EscalationsPage() {
               </ul>
             )}
           </section>
-          <div className="min-w-0 lg:sticky lg:top-20 lg:max-h-[calc(100dvh-6rem)] lg:overflow-y-auto lg:overscroll-contain lg:rounded-panel">
+          {/*
+            The pane ends at the bottom of the first screen (it starts about 15rem down), and its reply form sticks to the
+            pane's bottom edge, so the decision is in view without scrolling the page, at 1280x720 as at 1440x900.
+          */}
+          <div className="min-w-0 lg:sticky lg:top-20 lg:max-h-[calc(100dvh-16rem)] lg:overflow-y-auto lg:overscroll-contain lg:rounded-panel">
             <Outlet />
           </div>
         </div>
