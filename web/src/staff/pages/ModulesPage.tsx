@@ -1,6 +1,7 @@
 // Screen 8 shell: module picker beside the selected module's dashboard or tag editor.
 import type { StaffModuleSummary } from '@modulematch/shared';
-import { Navigate, NavLink, Outlet, useOutletContext, useParams } from 'react-router';
+import { useEffect } from 'react';
+import { NavLink, Outlet, useNavigate, useOutletContext, useParams } from 'react-router';
 import { api } from '../../api.ts';
 import { ModulePicker } from '../components/ModulePicker.tsx';
 import { EmptyState, ErrorState, LoadingState } from '../components/ui.tsx';
@@ -49,8 +50,15 @@ export function ModulesPage() {
 /** `/staff` lands on the highest-fit module so the dashboard is never blank. */
 export function FirstModuleRedirect() {
   const { summaries } = useOutletContext<ModulesOutlet>();
+  const navigate = useNavigate();
   const first = [...summaries].sort(byCohortFigure((m) => m.averageFit))[0];
-  return first ? <Navigate to={`/staff/modules/${encodeURIComponent(first.moduleId)}`} replace /> : null;
+  const target = first ? `/staff/modules/${encodeURIComponent(first.moduleId)}` : null;
+  useEffect(() => {
+    // The router renders location changes in a transition, so this can still commit for /staff after the user
+    // has clicked another tab. Redirect only while the browser is really on /staff, or it would undo that click.
+    if (target && /^\/staff\/?$/.test(window.location.pathname)) navigate(target, { replace: true });
+  }, [target, navigate]);
+  return null;
 }
 
 const typeLabel: Record<StaffModuleSummary['type'], string> = {

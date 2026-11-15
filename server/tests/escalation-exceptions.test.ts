@@ -115,6 +115,14 @@ describe('Senior Tutor decisions', () => {
     expect(view.rules.violations.some((v) => v.moduleId === ROBOT)).toBe(false);
   });
 
+  it('an approved module can be added from the chat too', async () => {
+    const id = await rosaInRecommend();
+    const { escalation } = await requestException(id, 'I built a robot arm controller on placement.');
+    await app.request(`/api/staff/escalations/${escalation.id}/respond`, json({ decision: 'approve' }));
+    await (await app.request(`/api/sessions/${id}/messages`, json({ content: 'Add Robot dynamics and control to my shortlist' }))).text();
+    expect((await session(id)).shortlist).toContain(ROBOT);
+  });
+
   it('a decline keeps the module ineligible and says so', async () => {
     const id = await rosaInRecommend();
     const { escalation } = await requestException(id, 'It fits my career plan.');

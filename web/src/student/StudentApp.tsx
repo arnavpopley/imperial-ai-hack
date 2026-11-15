@@ -7,12 +7,15 @@
 //   /modules/:moduleId   explanation with evidence
 //   /timetable           weekly grid, clashes and swaps
 //   /pathways            pathways, progress and societies
+//   /feedback            tailored exam feedback from the examiner's notes and the student's own marks (spec 23)
 //   /your-data           what we hold, the quotes behind it, edit and delete (spec 20.3)
 import type { ReactNode } from 'react';
 import { Navigate, Route, Routes } from 'react-router';
 import { Button } from '../components/Button.tsx';
 import { ErrorState, LoadingState } from '../components/StateViews.tsx';
 import { ChatProvider } from './chat/ChatProvider.tsx';
+import { FeedbackScreen } from './feedback/FeedbackScreen.tsx';
+import { ResultsProvider } from './results/ResultsProvider.tsx';
 import { paths, routeForMode } from './routes.ts';
 import { CatalogueScreen } from './screens/CatalogueScreen.tsx';
 import { InterviewScreen } from './screens/InterviewScreen.tsx';
@@ -42,6 +45,7 @@ export function StudentApp() {
             <Route path="modules/:moduleId" element={<ModuleDetailScreen />} />
             <Route path="timetable" element={<TimetableScreen />} />
             <Route path="pathways" element={<PathwaysScreen />} />
+            <Route path={paths.feedback.slice(1)} element={<FeedbackScreen />} />
             <Route path={yourDataPath.slice(1)} element={<YourDataPage />} />
           </Route>
           <Route path="*" element={<Navigate to={paths.onboard} replace />} />
@@ -73,7 +77,9 @@ function SessionGate() {
   return (
     <ChatProvider key={session.id}>
       <CatalogueProvider key={session.id}>
-        <StudentShell />
+        <ResultsProvider key={session.id}>
+          <StudentShell />
+        </ResultsProvider>
       </CatalogueProvider>
     </ChatProvider>
   );

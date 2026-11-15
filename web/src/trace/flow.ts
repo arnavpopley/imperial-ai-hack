@@ -28,8 +28,11 @@ export type NodeId =
   | 'insights'
   | 'insightsAgent';
 
-/** Everything a trace can show was used: the flowchart's steps, plus the module knowledge agent, whose route skips them. */
-export type UsedId = NodeId | 'knowledge';
+/**
+ * Everything a trace can show was used: the flowchart's steps, plus the agents whose routes skip them (module
+ * knowledge, the results reader and exam feedback answer on their own pages).
+ */
+export type UsedId = NodeId | 'knowledge' | 'resultsReader' | 'examFeedback';
 
 export type GroupId = 'input' | 'agents' | 'engines' | 'output';
 
@@ -271,6 +274,8 @@ const ACTOR_NODES: Record<string, UsedId> = {
   timetabler: 'timetabler',
   catalogue: 'catalogue',
   knowledge: 'knowledge',
+  'results reader': 'resultsReader',
+  'exam feedback': 'examFeedback',
   staff: 'staff',
 };
 
