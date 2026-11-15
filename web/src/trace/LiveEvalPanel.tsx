@@ -3,6 +3,7 @@
 // it was, never re-run on a deploy.
 import { motion } from 'motion/react';
 import { useEffect, useState, type ReactNode } from 'react';
+import { Badge } from '../components/Badge.tsx';
 import { cx } from '../components/cx.ts';
 import { Icon } from '../components/Icon.tsx';
 import { modelName, summarise, type LiveEvalRun } from './liveEval.ts';
@@ -131,9 +132,10 @@ export function LiveEvalPanel() {
 
 function Chip({ icon, strong, children }: { icon: 'calendar' | 'check' | 'chat' | 'user' | 'shield'; strong?: boolean; children: ReactNode }) {
   return (
-    <li className={cx('flex items-center gap-1.5 rounded-full px-2.5 py-1 ring-1', strong ? 'bg-brand-soft text-brand ring-brand/30' : 'bg-surface-2 text-muted ring-line')}>
-      <Icon name={icon} size={12} />
-      {children}
+    <li className="flex">
+      <Badge tone={strong ? 'brand' : 'neutral'} size="md" icon={icon}>
+        {children}
+      </Badge>
     </li>
   );
 }

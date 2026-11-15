@@ -16,7 +16,7 @@ export function demandText(signal: ModuleDemandSignal): string {
 
 export function DemandChip({ signal, className }: { signal: ModuleDemandSignal; className?: string }) {
   return (
-    <Badge tone={TONE[signal.status]} icon="user" title={SOURCE} className={className}>
+    <Badge tone={TONE[signal.status]} icon="user" wrap title={SOURCE} className={className}>
       <span className="tabular-nums">{demandText(signal)}</span>
       <span className="sr-only"> ({SOURCE.toLowerCase()})</span>
     </Badge>

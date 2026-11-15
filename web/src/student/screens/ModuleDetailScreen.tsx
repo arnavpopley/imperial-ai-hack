@@ -4,11 +4,12 @@ import type { Evidence } from '@modulematch/shared';
 import { motion, useReducedMotion } from 'motion/react';
 import { Link, useParams } from 'react-router';
 import { api } from '../../api.ts';
+import { Badge } from '../../components/Badge.tsx';
 import { buttonClass } from '../../components/Button.tsx';
 import { ConfidenceBadge } from '../../components/ConfidenceBadge.tsx';
 import { cx } from '../../components/cx.ts';
 import { decisionsKey } from '../../components/exceptions.ts';
-import { FIT_BAND_LABELS, fitBand } from '../../components/FitScore.tsx';
+import { FIT_BAND_LABELS, FIT_BAND_TONE, fitBand } from '../../components/FitScore.tsx';
 import { Icon } from '../../components/Icon.tsx';
 import { ModuleTypeChip } from '../../components/ModuleTypeChip.tsx';
 import { SampleDataLabel } from '../../components/SampleDataLabel.tsx';
@@ -130,9 +131,9 @@ export function ModuleDetailScreen() {
               {rec && <ConfidenceBadge variant={rec.confidence} />}
               {rec?.exception && <ExceptionChip decision={rec.exception} />}
               {rec && scored && (
-                <span className="text-2xs font-medium text-muted">
+                <Badge tone={FIT_BAND_TONE[fitBand(rec.fit)]}>
                   {FIT_BAND_LABELS[fitBand(rec.fit)]} · {rec.rank === 1 ? 'your best match' : `ranked #${rec.rank}`}
-                </span>
+                </Badge>
               )}
             </div>
             <h1 className="mt-2 text-title text-balance">

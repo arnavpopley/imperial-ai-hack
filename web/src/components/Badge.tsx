@@ -66,15 +66,22 @@ export const BADGE_TONES: Record<BadgeTone, ToneSpec> = {
   },
 };
 
-const SIZES: Record<BadgeSize, { box: string; icon: number }> = {
-  sm: { box: 'h-5 gap-1 px-2 text-2xs', icon: 11 },
-  md: { box: 'h-6 gap-1.5 px-2.5 text-xs', icon: 13 },
+const SIZES: Record<BadgeSize, { box: string; height: string; minHeight: string; icon: number }> = {
+  sm: { box: 'gap-1 px-2 text-2xs', height: 'h-5', minHeight: 'min-h-5', icon: 11 },
+  md: { box: 'gap-1.5 px-2.5 text-xs', height: 'h-6', minHeight: 'min-h-6', icon: 13 },
 };
 
 /** The badge's classes, for controls that must look like a badge (for example a popover trigger). */
-export function badgeClass({ tone = 'neutral', variant = 'soft', size = 'sm' }: { tone?: BadgeTone; variant?: BadgeVariant; size?: BadgeSize } = {}) {
+export function badgeClass({
+  tone = 'neutral',
+  variant = 'soft',
+  size = 'sm',
+  wrap = false,
+}: { tone?: BadgeTone; variant?: BadgeVariant; size?: BadgeSize; wrap?: boolean } = {}) {
   return cx(
-    'inline-flex shrink-0 items-center rounded-full font-semibold whitespace-nowrap',
+    'inline-flex items-center rounded-full font-semibold',
+    // A wrapping badge keeps its height on one line and grows only when its column is too narrow for the label.
+    wrap ? cx('max-w-full py-0.5', SIZES[size].minHeight) : cx('shrink-0 whitespace-nowrap', SIZES[size].height),
     SIZES[size].box,
     BADGE_TONES[tone][variant],
   );
@@ -88,16 +95,18 @@ interface BadgeProps {
   icon?: IconName | ReactNode;
   /** A leading status dot, for states such as "Open". */
   dot?: boolean;
+  /** Let a long, data-driven label wrap on a narrow screen instead of widening its container. */
+  wrap?: boolean;
   title?: string;
   className?: string;
   children: ReactNode;
 }
 
-export function Badge({ tone = 'neutral', variant = 'soft', size = 'sm', icon, dot = false, title, className, children }: BadgeProps) {
+export function Badge({ tone = 'neutral', variant = 'soft', size = 'sm', icon, dot = false, wrap = false, title, className, children }: BadgeProps) {
   return (
-    <span title={title} className={cx(badgeClass({ tone, variant, size }), className)}>
+    <span title={title} className={cx(badgeClass({ tone, variant, size, wrap }), className)}>
       {dot && <span aria-hidden="true" className={cx('size-1.5 shrink-0 rounded-full', BADGE_TONES[tone].dot)} />}
-      {typeof icon === 'string' ? <Icon name={icon as IconName} size={SIZES[size].icon} /> : icon}
+      {typeof icon === 'string' ? <Icon name={icon as IconName} size={SIZES[size].icon} className="shrink-0" /> : icon}
       {children}
     </span>
   );
