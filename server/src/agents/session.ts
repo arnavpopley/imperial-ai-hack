@@ -23,7 +23,7 @@ import * as repo from '../db/repo.ts';
 import { buildTimetable, checkShortlist, completeness, findClashes, performanceView, profileHash, rankModules, suggestSwaps } from '../engines/index.ts';
 import type { Tracer } from '../trace/tracer.ts';
 import { explain } from './matcher.ts';
-import { canTransition } from './modes.ts';
+import { canTransition, restingModeFor } from './modes.ts';
 
 export const catalogue = {
   /** Modules with their staff-provided resources (past papers, reading) merged in from data/module-resources.json. */
@@ -205,10 +205,36 @@ export function setMode(session: SessionState, to: Mode, tracer: Tracer, reason:
  * trace records each change of mode once instead of PLAN -> RECOMMEND -> PLAN on every edit.
  */
 export function syncPlanMode(session: SessionState, tracer: Tracer): Mode | null {
-  const planning = session.shortlist.length >= 2;
-  if (session.mode === 'RECOMMEND' && planning) return setMode(session, 'PLAN', tracer, 'shortlist has two or more modules');
-  if (session.mode === 'PLAN' && !planning) return setMode(session, 'RECOMMEND', tracer, 'shortlist edited');
-  return null;
+  if (session.mode !== 'RECOMMEND' && session.mode !== 'PLAN') return null;
+  const to = restingModeFor(session.shortlist);
+  return setMode(session, to, tracer, to === 'PLAN' ? 'shortlist has two or more modules' : 'shortlist edited');
+}
+
+/**
+ * A chat turn's copy of the session can be stale: it awaits guardrails and intent first, and the student may
+ * edit the shortlist or send an escalation in another tab meanwhile. Read the saved mode and shortlist back
+ * just before a transition; the read and the mode write then run synchronously, so nothing slips in between.
+ */
+function reloadModeAndShortlist(session: SessionState): void {
+  const saved = repo.getSession(session.id);
+  if (!saved) return;
+  session.mode = saved.mode;
+  session.shortlist = saved.shortlist;
+}
+
+/** Spec 12: RECOMMEND or PLAN -> EXPLAIN when the student asks why or what-if. Returns the mode it left. */
+export function enterExplain(session: SessionState, tracer: Tracer, reason: string): Mode | null {
+  reloadModeAndShortlist(session);
+  return setMode(session, 'EXPLAIN', tracer, reason);
+}
+
+/**
+ * Spec 12: EXPLAIN returns to the mode the shortlist implies (restingModeFor), PLAN at two or more modules.
+ * A session that left EXPLAIN meanwhile, for example to ESCALATED, is left where it is.
+ */
+export function leaveExplain(session: SessionState, tracer: Tracer, reason: string): Mode | null {
+  reloadModeAndShortlist(session);
+  return session.mode === 'EXPLAIN' ? setMode(session, restingModeFor(session.shortlist), tracer, reason) : null;
 }
 
 /**
@@ -216,12 +242,10 @@ export function syncPlanMode(session: SessionState, tracer: Tracer): Mode | null
  * trace: saves it, records it, and applies the spec 12 shortlist-size transitions. Eligibility is the
  * caller's gate. Returns the mode the session left, or null when the mode did not change.
  *
- * The caller's copy of the session can be stale (a chat turn awaits guardrails and intent first, and the
- * student may approve an escalation in another tab meanwhile), so the saved mode is read back before the
- * transition. The read, the edit and the mode write run synchronously, so nothing can slip in between.
+ * The saved mode is read back first (reloadModeAndShortlist), so a stale chat copy cannot overwrite it.
  */
 export function applyShortlistEdit(session: SessionState, moduleId: string, action: 'add' | 'remove', tracer: Tracer): Mode | null {
-  session.mode = repo.getSession(session.id)?.mode ?? session.mode;
+  reloadModeAndShortlist(session);
   if (action === 'add') repo.addToShortlist(session.id, moduleId);
   else repo.removeFromShortlist(session.id, moduleId);
   session.shortlist = repo.listShortlist(session.id);

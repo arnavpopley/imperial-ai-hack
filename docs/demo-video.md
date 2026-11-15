@@ -35,7 +35,7 @@ The spec section 18.2 flow, cut to two minutes for the Devpost video. Record at 
 - **Shot 7.** The clash comes from the synthetic timetable: MECH60018 lectures and MECH60009's lab both start on Tuesday at 14:00 in spring. If the swap list differs from the one you rehearsed, pick the top swap.
 - **Shot 8.** In offline mode the reply is the template captured in `docs/EXAMPLES.md` (example 2). With live models the wording changes, but the refusal and the draft do not, because they come from the rules engine.
 - **Shot 10.** The clash card for MECH60018 is the second-highest clash priority in the cohort (30 students, certain). Counterfactual uplifts are small, under 3 fit points everywhere in the synthetic cohort, so don't promise a big number in the voice-over.
-- **Shot 11.** The "How it works" page shows the offline evaluation. The live numbers (`data/eval-live-latest.json`) go in the voice-over only.
+- **Shot 11.** The "How it works" page shows the offline evaluation and, under it, "With the live models": the committed live run (`data/eval-live-latest.json`) with its date, the Fable 5.1 judge and each miss.
 
 ## Backup plan if the live API is slow
 

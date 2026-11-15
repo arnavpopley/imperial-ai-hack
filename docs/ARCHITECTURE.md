@@ -54,13 +54,16 @@ stateDiagram-v2
   ONBOARD --> INTERVIEW: programme and year entered
   INTERVIEW --> RECOMMEND: profile confirmed or interview skipped
   RECOMMEND --> EXPLAIN: asks why or what-if
-  EXPLAIN --> RECOMMEND: done
+  EXPLAIN --> RECOMMEND: done, shortlist has fewer than two modules
+  EXPLAIN --> PLAN: done, shortlist has two or more modules
   RECOMMEND --> INTERVIEW: low confidence and student agrees
   RECOMMEND --> PLAN: shortlist has two or more modules
-  PLAN --> RECOMMEND: shortlist drops below two, or an explanation or what-if ends
+  PLAN --> EXPLAIN: asks why or what-if
+  PLAN --> RECOMMEND: shortlist drops below two modules
   INTERVIEW --> ESCALATED: guardrail trigger
   RECOMMEND --> ESCALATED: rule exception or low confidence
   PLAN --> ESCALATED: clash with no valid swap
+  EXPLAIN --> ESCALATED: escalation sent during an explanation
   ESCALATED --> RECOMMEND: staff responds
 ```
 
@@ -151,7 +154,7 @@ Staff see totals, up and down by answer type, and recent down-votes at `/staff/f
 | Harness | Command | Models | What it checks | Results |
 |---|---|---|---|---|
 | Offline | `npm run eval` (`scripts/run-evals.ts`) | None | Ranking quality (12 personas), extraction (4 scripted interviews, 33 slots), 15 adversarial guardrail inputs, determinism, the privacy threshold | `data/eval-latest.json`, stored in `eval_runs` and shown on the "How it works" page |
-| Live | `npm run eval:live` (`scripts/run-live-evals.ts`) | `MODEL_SMART` and `MODEL_FAST`, with `MODEL_JUDGE` (Fable 5.1) as judge | Module facts from published data, declining questions the data cannot answer, live extraction, 7 subtle guardrail cases, grounded explanations | `data/eval-live-latest.json` |
+| Live | `npm run eval:live` (`scripts/run-live-evals.ts`) | `MODEL_SMART` and `MODEL_FAST`, with `MODEL_JUDGE` (Fable 5.1) as judge | Module facts from published data, declining questions the data cannot answer, live extraction, 7 subtle guardrail cases, grounded explanations | `data/eval-live-latest.json` (with the model IDs it ran), committed and served read-only at `/api/eval/live`; shown on the "How it works" page as "With the live models", never re-run on a deploy |
 
 The cases live in `scripts/eval-cases.ts`. A live answer that silently fell back to a template never counts as a live pass, and a live run that misses any target exits non-zero. The README lists the latest numbers.
 
