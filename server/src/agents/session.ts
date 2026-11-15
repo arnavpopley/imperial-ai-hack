@@ -245,8 +245,10 @@ export async function explanationFor(
   if (!module || !rec) return null;
   const results = opts.withNudge ? repo.getResults(session.id) : null;
   const nudge = results?.consent.granted ? nudgeFor(performanceFor(session), moduleId) : undefined;
-  // Explanations without a nudge share one cache entry; a nudged one is keyed by the results version too.
-  const key = `${profileHash(session.profile, session.weights)}:${moduleId}${nudge ? `:nudge:${results?.updatedAt}` : ''}`;
+  // Explanations without a nudge share one cache entry; a nudged one is keyed by the results version too. The rules
+  // waived for this module are in the key, so an explanation written before an approval never fills the new entry.
+  const waived = session.exceptions.find((e) => e.moduleId === moduleId)?.waived;
+  const key = `${profileHash(session.profile, session.weights)}:${moduleId}${nudge ? `:nudge:${results?.updatedAt}` : ''}${waived ? `:waived:${JSON.stringify(waived)}` : ''}`;
   const cached = explanationCache.get(key);
   if (cached) return cached;
   const explanation = await tracer.timed(

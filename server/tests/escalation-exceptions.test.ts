@@ -72,15 +72,20 @@ describe('Senior Tutor decisions', () => {
     const { escalation } = await requestException(id, 'I built a robot arm controller on placement.');
     expect((await robotRec(id)).eligible).toBe(false);
     expect((await shortlist(id)).status).toBe(422);
+    const explain = async () =>
+      S.ExplanationResponse.parse(await (await app.request(`/api/sessions/${id}/modules/${ROBOT}/explanation`)).json()).explanation.watchOuts;
+    expect((await explain()).some((w) => w.includes('is not open to'))).toBe(true);
 
     const res = await app.request(`/api/staff/escalations/${escalation.id}/respond`, json({ decision: 'approve', response: 'Do the bridging notes first.' }));
     expect(res.status).toBe(200);
     const decided = S.Escalation.parse(await res.json());
     expect(decided).toMatchObject({ status: 'resolved', decision: 'approved' });
-    expect(decided.staffResponse).toMatch(/^Exception approved: .*MECH70057.* Do the bridging notes first\.$/);
+    expect(decided.staffResponse).toMatch(/^Exception approved: .*MECH70057.*credit cap\. Do the bridging notes first\.$/);
 
     const rec = await robotRec(id);
     expect(rec).toMatchObject({ eligible: true, ineligibleReasons: [], exception: 'approved' });
+    // The explanation cached before the approval is not reused: the waived rule is no longer a watch-out.
+    expect((await explain()).some((w) => w.includes('is not open to'))).toBe(false);
     expect((await shortlist(id)).status).toBe(200);
     const after = await session(id);
     expect(after.exceptions).toEqual([{ moduleId: ROBOT, waived: [{ code: 'NOT_ALLOWED' }] }]);

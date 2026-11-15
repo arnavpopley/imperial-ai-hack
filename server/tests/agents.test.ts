@@ -161,8 +161,17 @@ describe('rule-exception drafts', () => {
   });
 
   it('decision replies lead with the decision and keep the tutor message', () => {
-    expect(decisionReply('approve', rob, 'See me in week 1.')).toBe(`Exception approved: you can now take ${rob.code} Robotics and Control, and add it to your shortlist. See me in week 1.`);
-    expect(decisionReply('decline', undefined, '')).toBe('Exception declined: the programme rule still applies.');
+    const waiver = { moduleId: rob.id, waived: [{ code: 'PREREQUISITE_MISSING' as const, prerequisiteId: 'ME2-CTRL' }] };
+    expect(decisionReply('approve', rob, waiver, 'See me in week 1.')).toBe(
+      `Exception approved: you can now take ${rob.code} Robotics and Control, and add it to your shortlist. Its credits still count towards your credit cap. See me in week 1.`,
+    );
+    expect(decisionReply('decline', undefined, null, '')).toBe('Exception declined: the programme rule still applies.');
+  });
+
+  it('an approval that waives nothing, such as a credit-cap request, says the plan is unchanged', () => {
+    const reply = decisionReply('approve', rob, null, '');
+    expect(reply).toContain('your plan is unchanged');
+    expect(reply).not.toContain('you can now take');
   });
 });
 

@@ -127,14 +127,22 @@ export function exceptionFor(request: ExceptionRequest | null): ModuleException 
   return waived.length > 0 ? { moduleId, waived } : null;
 }
 
-/** The reply the student sees for a Senior Tutor decision, followed by the tutor's optional message. */
-export function decisionReply(decision: 'approve' | 'decline', module: Module | undefined, message: string): string {
+/**
+ * The reply the student sees for a Senior Tutor decision, followed by the tutor's optional message. An approval only
+ * promises the module when it waived a rule (`exception`); otherwise it says the plan is unchanged.
+ */
+export function decisionReply(
+  decision: 'approve' | 'decline',
+  module: Module | undefined,
+  exception: ModuleException | null,
+  message: string,
+): string {
   const named = module ? `${module.code} ${module.title}` : null;
   const lead =
     decision === 'approve'
-      ? named
-        ? `Exception approved: you can now take ${named}, and add it to your shortlist.`
-        : 'Exception approved.'
+      ? exception && named
+        ? `Exception approved: you can now take ${named}, and add it to your shortlist. Its credits still count towards your credit cap.`
+        : 'Exception approved, but it waives no programme rule: the credit cap and the other plan rules always apply, so your plan is unchanged.'
       : named
         ? `Exception declined: the programme rule still applies, so ${named} stays unavailable.`
         : 'Exception declined: the programme rule still applies.';

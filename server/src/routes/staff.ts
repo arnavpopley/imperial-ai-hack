@@ -150,7 +150,9 @@ export const staffRoutes = new Hono()
     // A decision always resolves the case; the tutor's message is optional and follows the decision.
     const resolve = decision ? true : resolveAsked;
     const module = current.request?.moduleId ? catalogue.modules().find((m) => m.id === current.request?.moduleId) : undefined;
-    const reply = decision ? decisionReply(decision, module, response) : response;
+    // Only rules the module itself broke can be waived, so the reply says what the approval actually changes.
+    const exception = decision === 'approve' ? exceptionFor(current.request) : null;
+    const reply = decision ? decisionReply(decision, module, exception, response) : response;
     const escalation = repo.updateEscalation(current.id, {
       staffResponse: reply,
       status: resolve ? 'resolved' : 'claimed',
