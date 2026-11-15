@@ -269,9 +269,11 @@ export function alternativesTo(
   const open = similar
     .filter(({ r }) => !shortlist.includes(r.moduleId) && (!fitSignal || r.fit >= MIN_ALTERNATIVE_FIT))
     .map(({ r }) => ({ moduleId: r.moduleId, fit: r.fit, prerequisite: false }));
+  // A missing prerequisite the student has already shortlisted is named first, so their choice is acknowledged.
+  const shortlistedPrerequisites = prerequisiteIds.filter((id) => recOf.get(id)?.eligible && shortlist.includes(id));
   return {
     open: [...prerequisites, ...open].slice(0, n),
-    shortlisted: similar.filter(({ r }) => shortlist.includes(r.moduleId)).slice(0, 2).map(({ r }) => r.moduleId),
+    shortlisted: [...shortlistedPrerequisites, ...similar.filter(({ r }) => shortlist.includes(r.moduleId)).map(({ r }) => r.moduleId)].slice(0, 2),
   };
 }
 
@@ -282,7 +284,7 @@ export function andList(items: readonly string[]): string {
 
 /**
  * Each broken rule as a short clause after "I can't approve X myself:", so the rule fits on one line (issue 112).
- * Missing prerequisites are combined into one clause.
+ * Missing prerequisites are combined into one clause, named when there are one or two and counted beyond that.
  */
 export function ruleClauses(
   violations: readonly RuleViolation[],
@@ -305,7 +307,8 @@ export function ruleClauses(
         return [v.message.replace(/\.$/, '')];
     }
   });
-  return missing.length ? [...clauses, `it needs ${andList(missing)} first`] : clauses;
+  const needs = missing.length > 2 ? `it needs ${missing.length} prerequisites you haven't completed` : `it needs ${andList(missing)} first`;
+  return missing.length ? [...clauses, needs] : clauses;
 }
 
 const HOLD_SYSTEM = `${SYSTEM}
@@ -316,7 +319,16 @@ make exceptions, so you have drafted a request below that is only sent if they a
 alternatives given; if there are none, say nothing else open to them covers it closely. Never say yes, never suggest a
 workaround, never contradict yourself about exceptions. Reply with only the message.`;
 
-/** The reply when the student asks to break a rule: the agent holds its position (demo step 5, issue 112). */
+/** The most words a refusal may run to, offline and live (issue 112). */
+export const HOLD_WORD_BUDGET = 60;
+
+const wordCount = (text: string) => text.trim().split(/\s+/).length;
+
+/**
+ * The reply when the student asks to break a rule: the agent holds its position (demo step 5, issue 112). It is built
+ * from the fullest version down, dropping the last alternative, then the shortlisted names, then the alternatives line,
+ * then the longer lead, until it fits HOLD_WORD_BUDGET. The rule and the drafted request always stay.
+ */
 export function holdTemplate(args: {
   module: Module;
   clauses: string[];
@@ -324,20 +336,32 @@ export function holdTemplate(args: {
   shortlisted: string[];
 }): string {
   const rule = andList(args.clauses);
-  const lead =
+  const leads = [
     `I can't approve ${args.module.title} myself: ${rule}. ` +
-    "The Senior Tutor can make exceptions, so I've drafted a request below; it's only sent if you approve it.";
+      "The Senior Tutor can make exceptions, so I've drafted a request below; it's only sent if you approve it.",
+    `I can't approve ${args.module.title} myself: ${rule}. The Senior Tutor can, so I've drafted a request below.`,
+  ];
   // Fit in words, on the shared scale (#105).
-  const open = args.open.map((a) => (a.prerequisite ? `${a.title} (its prerequisite)` : `${a.title} (${FIT_BAND_LABELS[fitBand(a.fit)].toLowerCase()})`));
-  const alternatives = open.length
-    ? ` Open to you instead: ${andList(open)}.`
-    : args.shortlisted.length
-      ? ''
-      : ' Nothing else open to you covers this closely.';
-  const shortlisted = args.shortlisted.length
-    ? ` ${andList(args.shortlisted)}, already on your shortlist, ${args.shortlisted.length > 1 ? 'cover' : 'covers'} similar ground.`
-    : '';
-  return `${lead}${alternatives}${shortlisted}`;
+  const named = (a: (typeof args.open)[number]) =>
+    a.prerequisite ? `${a.title} (its prerequisite)` : `${a.title} (${FIT_BAND_LABELS[fitBand(a.fit)].toLowerCase()})`;
+  const tail = (open: typeof args.open, shortlisted: string[]) => {
+    const alternatives = open.length
+      ? ` Open to you instead: ${andList(open.map(named))}.`
+      : shortlisted.length
+        ? ''
+        : ' Nothing else open to you covers this closely.';
+    const already = shortlisted.length
+      ? ` ${andList(shortlisted)}, already on your shortlist, ${shortlisted.length > 1 ? 'cover' : 'covers'} similar ground.`
+      : '';
+    return `${alternatives}${already}`;
+  };
+  const versions: string[] = [];
+  for (const lead of leads) {
+    for (let k = args.open.length; k >= 0; k -= 1) versions.push(`${lead}${tail(args.open.slice(0, k), args.shortlisted)}`);
+    if (args.shortlisted.length > 1) versions.push(`${lead}${tail([], args.shortlisted.slice(0, 1))}`);
+    versions.push(lead);
+  }
+  return versions.find((v) => wordCount(v) <= HOLD_WORD_BUDGET) ?? versions.at(-1)!;
 }
 
 export async function holdPosition(

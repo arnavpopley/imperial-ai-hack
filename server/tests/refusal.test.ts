@@ -4,7 +4,7 @@ import { schemas as S } from '@modulematch/shared';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../src/app.ts';
 import { seedIfEmpty } from '../src/bootstrap.ts';
-import { alternativesTo, andList, holdTemplate, MIN_ALTERNATIVE_FIT, ruleClauses } from '../src/agents/matcher.ts';
+import { alternativesTo, andList, HOLD_WORD_BUDGET, holdTemplate, MIN_ALTERNATIVE_FIT, ruleClauses } from '../src/agents/matcher.ts';
 import { makeModule, makeProfile } from './engines-fixtures.ts';
 
 const words = (text: string) => text.trim().split(/\s+/).length;
@@ -42,6 +42,13 @@ describe('alternativesTo', () => {
     ]);
   });
 
+  it('names a missing prerequisite the student has already shortlisted', () => {
+    const ranked = [rec('robots', 30, false), rec('intro', 20), rec('control', 60)];
+    const result = alternativesTo(target, modules, ranked, ['intro'], { prerequisiteIds: ['intro'] });
+    expect(result.shortlisted[0]).toBe('intro');
+    expect(result.open.map((a) => a.moduleId)).toEqual(['control']);
+  });
+
   it('pads nothing in when nothing qualifies', () => {
     const ranked = [rec('robots', 30, false), rec('maths', 90), rec('intro', 90)];
     expect(alternativesTo(target, modules, ranked, [])).toEqual({ open: [], shortlisted: [] });
@@ -68,6 +75,26 @@ describe('the refusal wording', () => {
     expect(text).not.toMatch(/can.?t make an exception/i);
     expect(text).toContain('Introduction to Nuclear Energy A (its prerequisite)');
     expect(words(text)).toBeLessThanOrEqual(60);
+  });
+
+  it('stays within the word budget with many missing prerequisites and every list full', () => {
+    const many = [
+      { code: 'NOT_ALLOWED' as const, moduleId: 'X', message: 'x' },
+      ...['A', 'B', 'C', 'D', 'E'].map((p) => ({ code: 'PREREQUISITE_MISSING' as const, moduleId: 'X', prerequisiteId: p, message: p })),
+    ];
+    const big = makeModule('X', { title: 'Machine Dynamics and Vibrations A' });
+    const longTitle = (id: string) => `A Very Long Module Title Number ${id} With Several Words`;
+    const manyClauses = ruleClauses(many, big, 4, longTitle);
+    expect(manyClauses.at(-1)).toBe("it needs 5 prerequisites you haven't completed");
+    const text = holdTemplate({
+      module: big,
+      clauses: manyClauses,
+      open: ['F', 'G', 'H'].map((id) => ({ title: longTitle(id), fit: 55, prerequisite: false })),
+      shortlisted: [longTitle('I'), longTitle('J')],
+    });
+    expect(text.trim().split(/\s+/).length).toBeLessThanOrEqual(HOLD_WORD_BUDGET);
+    expect(text).toContain("I can't approve Machine Dynamics and Vibrations A myself");
+    expect(text).toContain('drafted a request below');
   });
 
   it('says so when nothing else fits, and names shortlisted modules instead of padding', () => {
