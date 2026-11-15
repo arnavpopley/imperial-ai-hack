@@ -693,6 +693,7 @@ All routes are under `/api`. Bodies and responses are validated with the shared 
 |---|---|
 | `POST /sessions` | Create a session. Body: programme, year, completed modules. |
 | `GET /sessions/:id` | Full session state for resume. |
+| `POST /sessions/:id/restore` | Recreate a session this server instance does not have, from the client's copy (public demo: each instance has its own database). Creates it only when missing, never overwrites. Takes profile, evidence, messages, weights, shortlist, interview and mode, up to 512 KB; staff-side state and marks are never included. Stored text passes the G2 and G3 pattern rules, unknown modules are dropped, transient modes rest, and the trace records "session restored on this instance". The client restores and retries when a request answers 404 "session not found". Its copy stays complete: a chat turn's stream ends with a `session` event carrying the session as stored, and saved weights update it. |
 | `POST /sessions/:id/messages` | Send a student turn. Response is an SSE stream. |
 | `PUT /sessions/:id/profile` | Student edits to the profile. |
 | `DELETE /sessions/:id/profile` | Student deletes the profile and evidence. |

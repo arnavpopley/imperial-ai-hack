@@ -1,12 +1,14 @@
 // Student routes (spec 13). Every body is validated with the shared zod schemas.
-import { schemas, type Evidence, type ExceptionRequest, type Feedback, type FeedbackBody, type ProfileEditBody, type SessionState, type SseEvent } from '@modulematch/shared';
+import { RESTORE_BODY_MAX_BYTES, schemas, type Evidence, type ExceptionRequest, type Feedback, type FeedbackBody, type ProfileEditBody, type SessionState, type SseEvent } from '@modulematch/shared';
 import { Hono, type Context } from 'hono';
+import { bodyLimit } from 'hono/body-limit';
 import { streamSSE } from 'hono/streaming';
 import { randomUUID } from 'node:crypto';
 import { compareView } from '../agents/compare.ts';
 import { draftWellbeing, exceptionRequest } from '../agents/escalation.ts';
 import { extract, mergeUpdates } from '../agents/extractor.ts';
 import { QUICK_PLAN } from '../agents/interviewer.ts';
+import { restoredSession, SESSION_ID } from '../agents/restore.ts';
 import { answerModuleQuestion, moduleFacts } from '../agents/knowledge.ts';
 import { asksForGuarantee, guaranteeReply } from '../agents/outcomes.ts';
 import { emitWords } from '../agents/llm.ts';
@@ -89,6 +91,43 @@ export const studentRoutes = new Hono()
     const session = load(c);
     return session instanceof Response ? session : c.json(session);
   })
+  // The client's copy of a session this instance does not have (spec 13: each demo instance keeps its own database).
+  // Creates the session only when it is missing here; an existing session is returned as it is, never overwritten.
+  .post(
+    '/:id/restore',
+    bodyLimit({ maxSize: RESTORE_BODY_MAX_BYTES, onError: (c) => c.json({ error: 'snapshot too large' }, 413) }),
+    body(schemas.RestoreSessionBody),
+    (c) => {
+      const id = c.req.param('id');
+      const existing = repo.getSession(id);
+      if (existing) return c.json(existing, 200);
+      if (!SESSION_ID.test(id)) return c.json({ error: 'invalid session id' }, 400);
+      const moduleIds = new Set(catalogue.modules().map((m) => m.id));
+      const { state, cleaned, droppedModules } = restoredSession(id, c.req.valid('json'), moduleIds);
+      try {
+        repo.createSession(state);
+      } catch (error) {
+        // Another request restored it first, or the snapshot's ids clash with stored rows; never overwrite either.
+        const now = repo.getSession(id);
+        if (now) return c.json(now, 200);
+        console.error(error);
+        return c.json({ error: 'snapshot could not be restored' }, 400);
+      }
+      const tracer = createTracer(id, tracerSink);
+      if (cleaned > 0) {
+        tracer.record({ actor: 'G2+G3', kind: 'guardrail', input: `restore snapshot: ${cleaned} stored text(s)`, output: 'pattern rules removed text before storing', verdict: 'redact' });
+      }
+      const note = droppedModules.length ? `; dropped unknown modules ${droppedModules.join(', ')}` : '';
+      tracer.record({
+        actor: 'supervisor',
+        kind: 'mode',
+        input: `snapshot from the student's browser: ${state.messages.length} messages, ${state.evidence.length} evidence, ${state.shortlist.length} shortlisted`,
+        output: `session restored on this instance in ${state.mode}${note}`,
+        verdict: null,
+      });
+      return c.json(fresh(id), 201);
+    },
+  )
   .post('/:id/messages', body(schemas.SendMessageBody), (c) => {
     const session = load(c);
     if (session instanceof Response) return session;
@@ -100,6 +139,9 @@ export const studentRoutes = new Hono()
         // An empty messageId: this apology is not stored, so it cannot be rated.
         await stream.writeSSE({ event: 'done', data: JSON.stringify({ type: 'done', messageId: '', widget: null }) });
       });
+      // The session as stored after the turn, so the client's copy (which can restore other instances) is complete.
+      const after = repo.getSession(session.id);
+      if (after) await stream.writeSSE({ event: 'session', data: JSON.stringify({ type: 'session', session: after }) });
     });
   })
   .put('/:id/profile', body(schemas.ProfileEditBody), (c) => {

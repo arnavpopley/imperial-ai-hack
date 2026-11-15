@@ -2,9 +2,10 @@
 // local patches from the SSE stream, and polling while a member of staff owes a reply.
 import type { EscalationDraft, SessionState } from '@modulematch/shared';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { api, isSessionLost, SESSION_LOST_EVENT, type SessionLostDetail } from '../../api.ts';
+import { api, isSessionLost, SESSION_LOST_EVENT, setSnapshotSource, type SessionLostDetail } from '../../api.ts';
 import { draftIdentity } from '../../components/exceptions.ts';
 import { errorMessage } from '../../components/StateViews.tsx';
+import { sessionSnapshot } from './snapshot.ts';
 import { readDismissedDraft, readStoredSessionId, writeDismissedDraft, writeStoredSessionId } from './storage.ts';
 
 export type CreateSessionInput = Parameters<typeof api.createSession>[0];
@@ -74,9 +75,18 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   // waits on data that will never come. Only the session this tab holds counts (loaded, or still resuming): a late
   // 404 from a session the student has left must not end the new one, and another tab's storage writes don't matter.
   const ownedId = useRef<string | null>(resumeId);
+  const latest = useRef<SessionState | null>(null);
   useEffect(() => {
     ownedId.current = session?.id ?? resumeId;
+    latest.current = session;
   }, [session, resumeId]);
+
+  // When a demo server instance does not have the session, the API client restores it there from this copy and
+  // retries (spec 13), so the student never notices. Without a loaded copy (a reload) there is nothing to restore.
+  useEffect(() => {
+    setSnapshotSource((id) => (latest.current?.id === id ? sessionSnapshot(latest.current) : null));
+    return () => setSnapshotSource(null);
+  }, []);
   useEffect(() => {
     const onLost = (event: Event) => {
       const { sessionId } = (event as CustomEvent<SessionLostDetail>).detail;

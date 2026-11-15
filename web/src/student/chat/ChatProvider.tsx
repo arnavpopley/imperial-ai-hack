@@ -195,6 +195,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             }
             break;
           }
+          case 'session':
+            // The session as stored after the turn, so the client's copy (its restore snapshot, spec 13) is complete.
+            if (event.session.id === sessionId) replace(event.session);
+            break;
           case 'done':
             setWidget(event.widget);
             patchReply((t) => ({ ...t, status: 'done', messageId: event.messageId }));
@@ -215,7 +219,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         setSending(false);
       }
     },
-    [sessionId, update, offerDraft, invalidateRecs, refreshProgress],
+    [sessionId, update, replace, offerDraft, invalidateRecs, refreshProgress],
   );
 
   const importCv = useCallback(

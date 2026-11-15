@@ -619,6 +619,31 @@ export const CreateSessionBody = z.object({
   interviewDepth: z.enum(['quick', 'deep']).default('quick'),
 });
 
+/** Restore snapshot limits: the largest JSON body, and how many messages and evidence items it may carry. */
+export const RESTORE_BODY_MAX_BYTES = 512_000;
+export const RESTORE_MESSAGES_MAX = 120;
+export const RESTORE_EVIDENCE_MAX = 400;
+export const RESTORE_MESSAGE_CHARS_MAX = 8_000;
+
+/**
+ * The student's own copy of their session, sent to POST /sessions/:id/restore when a demo server instance does not
+ * have the session (each instance keeps its own database). It carries only what the student built: the profile and
+ * its evidence, the conversation, weights, shortlist, interview and mode. Staff-side state (escalations, approved
+ * exceptions, the escalation draft) and marks (consented results) are not part of it, and unknown keys are refused.
+ */
+export const RestoreSessionBody = z
+  .object({
+    mode: Mode,
+    profile: StudentProfile,
+    evidence: z.array(Evidence).max(RESTORE_EVIDENCE_MAX),
+    messages: z.array(Message.extend({ content: z.string().max(RESTORE_MESSAGE_CHARS_MAX) })).max(RESTORE_MESSAGES_MAX),
+    weights: Weights,
+    shortlist: z.array(z.string()).max(40),
+    interview: InterviewState,
+    createdAt: IsoDate,
+  })
+  .strict();
+
 export const SendMessageBody = z.object({
   content: z.string().min(1).max(2000),
   /** Structured answers from inline widgets (for example the maths and coding sliders). */
@@ -1026,6 +1051,8 @@ export const SseEvent = z.discriminatedUnion('type', [
     draft: EscalationDraft.nullable(),
     escalation: Escalation.nullable(),
   }),
+  /** Chat only, after `done`: the session as stored after the turn, so the client's copy (its restore snapshot) is complete. */
+  z.object({ type: z.literal('session'), session: SessionState }),
   z.object({
     type: z.literal('done'),
     /** The stored assistant message id (chat) or a fresh id (module Q&A). Empty when the reply was not stored. */
