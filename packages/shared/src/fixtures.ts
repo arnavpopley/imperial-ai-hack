@@ -285,6 +285,7 @@ export const fixtureTimetable: TimetableView = {
       keepFreeConflicts: 0,
     },
   ],
+  backups: [],
   // fixtureProfile keeps Fridays free and starts no earlier than 10:00; nothing on the shortlist falls in that time.
   coreModuleIds: [],
   keepFree: [

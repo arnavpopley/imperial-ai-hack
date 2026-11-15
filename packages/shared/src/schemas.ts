@@ -344,6 +344,15 @@ export const SwapSuggestion = z.object({
   keepFreeConflicts: z.number().int().min(0),
 });
 
+/**
+ * Issue #68: a backup for a shortlisted option that the synthetic cohort's demand puts near or over capacity.
+ * replaceModuleId is the popular pick, withModuleId the backup. canAdd is true when both can be kept.
+ */
+export const CapacityBackup = SwapSuggestion.extend({
+  status: z.enum(['near', 'over']),
+  canAdd: z.boolean(),
+});
+
 export const TermGrid = z.object({ term: Term, slots: z.array(Slot) });
 
 /** A stretch of the week the student asked to keep free: a whole day, half a day, or before their earliest start. */
@@ -364,6 +373,8 @@ export const TimetableView = z.object({
   coreModuleIds: z.array(z.string()),
   clashes: z.array(Clash),
   swaps: z.array(SwapSuggestion),
+  /** Backups for picks near or over capacity in the synthetic cohort (issue #68); never a change to fit. */
+  backups: z.array(CapacityBackup),
   keepFree: z.array(KeepFreeWindow),
   keepFreeConflicts: z.array(KeepFreeConflict),
   /** ECTS in the plan: core modules, chosen electives and I-Explore, against the programme cap. */

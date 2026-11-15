@@ -21,6 +21,7 @@ import { paths } from '../routes.ts';
 import { useAdvisor } from '../shell/StudentShell.tsx';
 import { useReferenceData } from '../state/ReferenceDataProvider.tsx';
 import { useReadySession } from '../state/SessionProvider.tsx';
+import { CapacityBackupPanel } from '../timetable/CapacityBackupPanel.tsx';
 import { ClashCard } from '../timetable/ClashCard.tsx';
 import { moduleColours } from '../timetable/moduleColours.ts';
 import { WeekGrid } from '../timetable/WeekGrid.tsx';
@@ -190,6 +191,8 @@ function TimetableBody({ view, onChanged, refreshing }: { view: TimetableView; o
         <KeepFreePanel view={view} titleFor={titleFor} />
 
         <RulesPanel view={view} />
+
+        <CapacityBackupPanel backups={view.backups} titleFor={titleFor} />
 
         <section aria-labelledby="shortlist-heading" className="rounded-card border border-line bg-surface p-4 shadow-soft">
           <div className="mb-2 flex items-baseline justify-between">
