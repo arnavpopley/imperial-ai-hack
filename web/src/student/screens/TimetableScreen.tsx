@@ -10,6 +10,8 @@ import { ClashMarker } from '../../components/ClashMarker.tsx';
 import { cx } from '../../components/cx.ts';
 import { decisionsKey } from '../../components/exceptions.ts';
 import { Icon } from '../../components/Icon.tsx';
+import { GlanceStats, PageHeader } from '../../components/PageHeader.tsx';
+import { Meter } from '../../components/Meter.tsx';
 import { SampleDataLabel } from '../../components/SampleDataLabel.tsx';
 import { SegmentedControl } from '../../components/SegmentedControl.tsx';
 import { EmptyState, ErrorState, Skeleton } from '../../components/StateViews.tsx';
@@ -17,7 +19,6 @@ import { downloadFile } from '../download.ts';
 import { useAsync } from '../hooks/useAsync.ts';
 import { useShortlist } from '../hooks/useShortlist.ts';
 import { DAY_LABELS, keepFreeLabel, TERM_LABELS } from '../labels.ts';
-import { PhotoBanner } from '../catalogue/PhotoBanner.tsx';
 import { paths } from '../routes.ts';
 import { ectsLabels } from '../rulesStatus.ts';
 import { useAdvisor } from '../shell/StudentShell.tsx';
@@ -44,12 +45,11 @@ export function TimetableScreen() {
 
   return (
     <div className="grid grid-cols-1 gap-6">
-      <PhotoBanner
-        image="timetable-whiteboard"
-        alt="Students planning together at a whiteboard"
+      <PageHeader
         title="Your timetable"
         subtitle="A mock week built from your shortlist, with clashes caught before you commit."
-        aside={<SampleDataLabel variant="synthetic" />}
+        label={<SampleDataLabel variant="synthetic" />}
+        glance={timetable.data && !nothingToShow && <TimetableGlance view={timetable.data} />}
       />
       <ProvisionalNotice />
 
@@ -351,6 +351,27 @@ function ProvisionalNotice() {
         <span className="text-muted">Check the confirmed timetable once it is published.</span>
       </p>
     </div>
+  );
+}
+
+/** The week at a glance: clashes left to resolve, and ECTS planned against the year's target as a meter. */
+function TimetableGlance({ view }: { view: TimetableView }) {
+  const total = view.ects.core + view.ects.elective + view.ects.iExplore;
+  const labels = ectsLabels(total, view.ects.max);
+  return (
+    <GlanceStats label="Your timetable at a glance" items={[{ label: view.clashes.length === 1 ? 'clash' : 'clashes', value: view.clashes.length }]}>
+      <span className="grid w-28 gap-1">
+        <span className="text-[11px] leading-tight text-muted">
+          <span className="font-semibold text-ink tabular-nums">{total}</span> {labels.of}
+        </span>
+        <Meter
+          value={view.ects.max ? total / view.ects.max : 0}
+          label="ECTS planned"
+          valueText={`${total} ${labels.of}`}
+          tone={labels.over ? 'mid' : 'brand'}
+        />
+      </span>
+    </GlanceStats>
   );
 }
 

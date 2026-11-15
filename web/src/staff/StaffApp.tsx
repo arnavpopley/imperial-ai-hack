@@ -5,6 +5,9 @@ import type { ReactNode } from 'react';
 import { Link, Route, Routes, useLocation } from 'react-router';
 import { ClockAlertIcon, GridIcon, InboxIcon, LockIcon, MessageIcon } from './components/icons.tsx';
 import { PrivacyNote } from './components/PrivacyNote.tsx';
+import { GlanceStats, PageHeader } from '../components/PageHeader.tsx';
+import { api } from '../api.ts';
+import { useResource } from './hooks/useResource.ts';
 import { EmptyState } from './components/ui.tsx';
 import { focusRing } from './lib/format.ts';
 import { Lazy, lazyNamed } from '../components/LazyRoute.tsx';
@@ -78,7 +81,7 @@ export function StaffApp() {
 /** The console's column. Escalations uses tighter gaps so the request and its decision fit the first screen. */
 function StaffLayout({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
-  const gap = sectionFor(pathname) === 'escalations' ? 'gap-4' : 'gap-8';
+  const gap = sectionFor(pathname) === 'escalations' ? 'gap-4' : 'gap-6';
   return <div className={`grid grid-cols-1 ${gap} [&_:is(a,button,input,select,textarea,summary,[tabindex])]:scroll-mt-24`}>{children}</div>;
 }
 
@@ -104,36 +107,20 @@ function StaffHeader() {
   const { queue } = useStaffData();
   const current = sectionFor(pathname);
 
-  // On Escalations the request is the point of the page (demo step 6), so the hero shrinks to one line.
-  const slim = current === 'escalations';
-
+  // One slim header on every tab (issue 136), so the charts and the escalation request start above the fold.
   return (
-    <div className={slim ? 'grid gap-4' : 'grid gap-6'}>
-      {slim ? (
-        <header className="flex flex-wrap items-center justify-between gap-3 rounded-panel bg-slate-950 px-5 py-2 text-white shadow-soft">
-          <h1 className="text-lg font-semibold tracking-tight">Staff console</h1>
-          <PrivacyNote />
-        </header>
-      ) : (
-      <header className="relative isolate overflow-hidden rounded-panel bg-slate-950 text-white shadow-lift">
-        <img
-          src="/images/staff-meeting.jpg"
-          alt=""
-          className="absolute inset-0 -z-10 size-full object-cover opacity-55"
-        />
-        <div aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-r from-slate-950 via-slate-950/80 to-slate-950/10" />
-        <div className="grid gap-4 px-6 py-8 sm:px-10 sm:py-10">
-          <p className="inline-flex items-center gap-2 text-sm font-medium text-white/80">
+    <div className="grid gap-3">
+      <PageHeader
+        eyebrow={
+          <span className="inline-flex items-center gap-1.5">
             <LockIcon className="size-4" /> No sign-in in this prototype
-          </p>
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Staff console</h1>
-          <p className="max-w-xl text-base text-white/85 text-pretty">
-            See what students want, fix timetable clashes early, and answer the questions the AI hands to you.
-          </p>
-          <PrivacyNote />
-        </div>
-      </header>
-      )}
+          </span>
+        }
+        title="Staff console"
+        subtitle="See what students want, fix timetable clashes early, and answer the questions the AI hands to you."
+        label={<PrivacyNote />}
+        glance={<ConsoleGlance unresolved={queue.unresolvedCount} />}
+      />
       <nav aria-label="Staff sections" className="-mx-1 overflow-x-auto px-1 [scrollbar-width:none]">
         <ul className="flex w-max gap-1 rounded-full bg-surface-2 p-1 ring-1 ring-line">
           {SECTIONS.map(({ key, to, label, Icon }) => {
@@ -172,5 +159,26 @@ function StaffHeader() {
         </ul>
       </nav>
     </div>
+  );
+}
+
+/**
+ * The console at a glance: the cohort size, the clashing module pairs and the escalations still open.
+ */
+function ConsoleGlance({ unresolved }: { unresolved: number }) {
+  const modules = useResource('staff-glance-modules', api.staff.modules);
+  const clashes = useResource('staff-glance-clashes', api.staff.clashPriorities);
+  // Every module summary covers the same cohort, and the server never reports one under five.
+  const cohort = modules.state.status === 'ready' ? (modules.state.data[0]?.cohortSize ?? null) : null;
+  const pairs = clashes.state.status === 'ready' ? clashes.state.data.length : null;
+  return (
+    <GlanceStats
+      label="The console at a glance"
+      items={[
+        ...(cohort !== null ? [{ label: 'students', value: cohort }] : []),
+        ...(pairs !== null ? [{ label: pairs === 1 ? 'clashing pair' : 'clashing pairs', value: pairs }] : []),
+        { label: unresolved === 1 ? 'open escalation' : 'open escalations', value: unresolved },
+      ]}
+    />
   );
 }

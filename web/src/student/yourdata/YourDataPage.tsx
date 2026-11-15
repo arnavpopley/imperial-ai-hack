@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router';
 import { api } from '../../api.ts';
 import { Button } from '../../components/Button.tsx';
 import { ConfidenceBadge } from '../../components/ConfidenceBadge.tsx';
+import { GlanceStats, PageHeader } from '../../components/PageHeader.tsx';
 import { cx } from '../../components/cx.ts';
 import { Icon, type IconName } from '../../components/Icon.tsx';
 import { errorMessage } from '../../components/StateViews.tsx';
@@ -47,7 +48,7 @@ export function YourDataPage() {
   const [editing, setEditing] = useState(false);
 
   return (
-    <div className="mx-auto grid max-w-5xl gap-section">
+    <div className="grid gap-section">
       <Hero profile={profile} quoteCount={evidence.length} />
 
       <section aria-labelledby="known-heading" className="grid gap-6">
@@ -143,32 +144,40 @@ function ResultsSection() {
   );
 }
 
+/** The page header, then the facts the profile starts from. Completeness sits in the glance slot. */
 function Hero({ profile, quoteCount }: { profile: StudentProfile; quoteCount: number }) {
   const moduleTitle = useModuleTitle();
   const completed = profile.completedModuleIds;
   return (
-    <motion.header {...rise} className="overflow-hidden rounded-panel bg-surface shadow-soft ring-1 ring-line">
-      <div className="grid gap-8 p-card-lg md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
-        <div className="grid gap-4">
-          <p className="inline-flex items-center gap-2 text-sm font-medium text-brand">
-            <Icon name="lock" size={16} /> Private to you
-          </p>
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Your data</h1>
-          <p className="max-w-xl text-base text-muted text-pretty">
-            Your interests, goals and preferences, and marks only if you choose to share them. Never health or
-            background. Staff only ever see totals for groups of five or more.
-          </p>
-          <ul className="flex flex-wrap gap-2 text-sm">
-            <Fact icon="tutor">{profile.programme}</Fact>
-            <Fact icon="calendar">Year {profile.yearOfStudy}</Fact>
-            <Fact icon="check">
-              {completed.length > 0 ? `${completed.length} completed: ${completed.map(moduleTitle).join(', ')}` : 'No completed modules listed'}
-            </Fact>
-          </ul>
-        </div>
-        <CompletenessRing value={profile.completeness} quoteCount={quoteCount} />
-      </div>
-    </motion.header>
+    <div className="grid gap-4">
+      <PageHeader
+        eyebrow={
+          <span className="inline-flex items-center gap-1.5 font-medium text-brand">
+            <Icon name="lock" size={14} /> Private to you
+          </span>
+        }
+        title="Your data"
+        subtitle="Your interests, goals and preferences, and marks only if you choose to share them. Never health or background."
+        glance={
+          <GlanceStats
+            label="Your profile at a glance"
+            items={[
+              { label: 'complete', value: percent(profile.completeness) },
+              { label: quoteCount === 1 ? 'quote kept' : 'quotes kept', value: quoteCount },
+            ]}
+          >
+            <ConfidenceBadge variant={confidenceLabel(profile.completeness)} />
+          </GlanceStats>
+        }
+      />
+      <motion.ul {...rise} className="flex flex-wrap gap-2 text-sm" aria-label="Your programme">
+        <Fact icon="tutor">{profile.programme}</Fact>
+        <Fact icon="calendar">Year {profile.yearOfStudy}</Fact>
+        <Fact icon="check">
+          {completed.length > 0 ? `${completed.length} completed: ${completed.map(moduleTitle).join(', ')}` : 'No completed modules listed'}
+        </Fact>
+      </motion.ul>
+    </div>
   );
 }
 
@@ -178,41 +187,6 @@ function Fact({ icon, children }: { icon: IconName; children: ReactNode }) {
       <Icon name={icon} size={15} className="shrink-0 text-muted" />
       <span className="min-w-0 break-words">{children}</span>
     </li>
-  );
-}
-
-function CompletenessRing({ value, quoteCount }: { value: number; quoteCount: number }) {
-  const r = 52;
-  const c = 2 * Math.PI * r;
-  return (
-    <div className="flex items-center gap-5 md:flex-col md:gap-3">
-      <div className="relative size-36 shrink-0">
-        <svg viewBox="0 0 120 120" className="size-full -rotate-90" aria-hidden="true">
-          <circle cx="60" cy="60" r={r} fill="none" strokeWidth="10" className="stroke-surface-2" />
-          <motion.circle
-            cx="60"
-            cy="60"
-            r={r}
-            fill="none"
-            strokeWidth="10"
-            strokeLinecap="round"
-            className="stroke-brand"
-            strokeDasharray={c}
-            initial={{ strokeDashoffset: c }}
-            animate={{ strokeDashoffset: c * (1 - value) }}
-            transition={{ duration: 1.1, ease: [0.2, 0.8, 0.2, 1], delay: 0.2 }}
-          />
-        </svg>
-        <div className="absolute inset-0 grid place-content-center text-center">
-          <span className="text-3xl font-semibold tabular-nums">{percent(value)}</span>
-          <span className="text-xs text-muted">complete</span>
-        </div>
-      </div>
-      <div className="grid justify-items-start gap-2 md:justify-items-center">
-        <ConfidenceBadge variant={confidenceLabel(value)} />
-        <p className="text-sm text-muted">{quoteCount === 1 ? '1 quote kept' : `${quoteCount} quotes kept`}</p>
-      </div>
-    </div>
   );
 }
 

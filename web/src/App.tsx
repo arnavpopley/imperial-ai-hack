@@ -47,7 +47,7 @@ export function App() {
             Public demo: all students are synthetic, and data resets when the server sleeps.
           </p>
         )}
-        <main id="main" className="mx-auto w-full max-w-7xl px-4 pt-8 pb-28 sm:px-6 lg:px-8">
+        <main id="main" className="mx-auto w-full max-w-7xl px-4 pt-6 pb-28 sm:px-6 lg:px-8">
           {/* Keyed by role so switching role fades the new console in; routes inside a role animate themselves. */}
           <motion.div
             key={role}
