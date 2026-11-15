@@ -29,14 +29,39 @@ export function plainWording(card: z.infer<typeof Card>): boolean {
   return !INTERNAL_TERMS.test(`${card.headline} ${card.detail}`);
 }
 
+/**
+ * The words each engine card was given, keyed by that card's own content. A card is reworded once and then
+ * reads the same on every load, so a reload after a staff decision never shows different words for the same
+ * numbers. New engine content (for example after a tag edit) is a new key, so it is worded afresh.
+ */
+const wording = new Map<string, z.infer<typeof Card>>();
+/** Enough for every card in the catalogue several times over; the oldest entry goes first. */
+const MAX_WORDINGS = 1000;
+
+const wordingKey = (insight: Insight) => JSON.stringify([insight.id, insight.kind, insight.headline, insight.detail]);
+
+/** Forgets every stored wording (tests, and a full catalogue reload). */
+export function clearInsightWording(): void {
+  wording.clear();
+}
+
 export async function wordInsight(insight: Insight): Promise<Insight> {
   if (!isLive()) return insight;
+  const key = wordingKey(insight);
+  const known = wording.get(key);
+  if (known) return { ...insight, ...known };
   const rewrite = await structured(Card, {
     tier: 'smart',
     system: SYSTEM,
     messages: [{ role: 'user', content: asData('insight', JSON.stringify({ kind: insight.kind, headline: insight.headline, detail: insight.detail })) }],
   }).catch(() => null);
+  // A failed call is not remembered, so the next load tries again; the engine's own words stand meanwhile.
+  if (!rewrite) return insight;
   // A rewrite may not bring in internal units the engine's card did not have (a clash priority can be a decimal).
   const plain = (card: z.infer<typeof Card>) => plainWording(card) || !plainWording(insight);
-  return rewrite && sameNumbers(insight, rewrite) && plain(rewrite) ? { ...insight, ...rewrite } : insight;
+  // A rejected rewrite is remembered as the engine's words, so the card does not change on the next load either.
+  const words = sameNumbers(insight, rewrite) && plain(rewrite) ? rewrite : { headline: insight.headline, detail: insight.detail };
+  if (wording.size >= MAX_WORDINGS) wording.delete(wording.keys().next().value!);
+  wording.set(key, words);
+  return { ...insight, ...words };
 }
