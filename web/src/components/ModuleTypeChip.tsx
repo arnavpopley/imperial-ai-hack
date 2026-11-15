@@ -20,7 +20,7 @@ export function ModuleTypeChip({ variant, className }: { variant: ModuleType; cl
   return (
     <span
       className={cx(
-        'inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-semibold tracking-wide uppercase',
+        'inline-flex items-center rounded-md px-1.5 py-0.5 text-2xs font-semibold tracking-wide uppercase',
         styles[variant].className,
         className,
       )}

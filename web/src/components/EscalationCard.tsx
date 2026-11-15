@@ -116,7 +116,7 @@ function DraftBody({ summary, onSend, onDiscard, sending, error, queue }: DraftP
           onChange={(event) => setText(event.target.value)}
           className="mt-1.5 w-full resize-y rounded-xl border border-line-strong bg-canvas px-3 py-2 text-sm leading-relaxed focus:border-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
         />
-        <p className="mt-1 text-right text-[11px] text-muted tabular-nums">
+        <p className="mt-1 text-right text-2xs text-muted tabular-nums">
           {text.length}/{SUMMARY_MAX}
         </p>
       </div>

@@ -73,13 +73,13 @@ export function RangeSlider({
         />
       </div>
       {(lowLabel || highLabel) && (
-        <div className="mt-0.5 flex justify-between gap-3 text-[11px] text-muted" aria-hidden="true">
+        <div className="mt-0.5 flex justify-between gap-3 text-2xs text-muted" aria-hidden="true">
           <span>{lowLabel}</span>
           <span className="text-right">{highLabel}</span>
         </div>
       )}
       {hint && (
-        <p id={hintId} className="mt-1 text-[11px] text-muted">
+        <p id={hintId} className="mt-1 text-2xs text-muted">
           {hint}
         </p>
       )}

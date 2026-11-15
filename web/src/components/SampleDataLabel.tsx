@@ -13,7 +13,7 @@ export function SampleDataLabel({ variant = 'modules', className }: { variant?: 
     <p
       title={copy[variant]}
       className={cx(
-        'inline-flex items-center gap-1.5 rounded-full border border-line px-2.5 py-0.5 text-[11px] font-medium text-muted',
+        'inline-flex items-center gap-1.5 rounded-full border border-line px-2.5 py-0.5 text-2xs font-medium text-muted',
         className,
       )}
     >

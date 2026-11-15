@@ -86,7 +86,7 @@ export function StudentShell() {
                             <Icon name={tab.icon} size={16} />
                             {tab.label}
                             {tab.to === paths.timetable && shortlistCount > 0 && (
-                              <span className="grid h-5 min-w-5 place-items-center rounded-full bg-brand px-1.5 text-[11px] font-semibold text-on-brand tabular-nums">
+                              <span className="grid h-5 min-w-5 place-items-center rounded-full bg-brand px-1.5 text-2xs font-semibold text-on-brand tabular-nums">
                                 {shortlistCount}
                                 <span className="sr-only"> shortlisted</span>
                               </span>
