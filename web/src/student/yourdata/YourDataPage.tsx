@@ -26,6 +26,8 @@ import { clearRevisionChecklists } from '../feedback/plan.ts';
 import { ProfileEditor } from '../profile/ProfileEditor.tsx';
 import { useProfileActions } from '../profile/useProfileActions.ts';
 import { ResultsDataSection } from '../results/ResultsDataSection.tsx';
+import { useResults } from '../results/ResultsProvider.tsx';
+import { offersResultsStep } from '../results/resultsStep.ts';
 import { paths } from '../routes.ts';
 import { useModuleTitle, useReferenceData } from '../state/ReferenceDataProvider.tsx';
 import { useReadySession } from '../state/SessionProvider.tsx';
@@ -66,12 +68,7 @@ export function YourDataPage() {
         <EditSection editing={editing} onEditingChange={setEditing} />
       </section>
 
-      <section aria-labelledby="results-heading" className="grid min-w-0 grid-cols-1 gap-6">
-        <SectionHeading id="results-heading" eyebrow="Results" title="Marks you chose to share">
-          Visible only to you. They never change your fit scores.
-        </SectionHeading>
-        <ResultsDataSection />
-      </section>
+      <ResultsSection />
 
       <DownloadData />
       <DangerZone />
@@ -110,6 +107,32 @@ function DownloadData() {
       <Button icon="arrow-down" onClick={download}>
         Download JSON
       </Button>
+    </section>
+  );
+}
+
+/**
+ * Marks the student shared (spec 23). Year 1 has no university marks and is never asked for any, so with nothing
+ * stored it gets a short note instead of an empty card.
+ */
+function ResultsSection() {
+  const { session } = useReadySession();
+  const { hasResults } = useResults();
+  const nothingToShare = !offersResultsStep(session.profile.yearOfStudy) && !hasResults;
+  return (
+    <section aria-labelledby="results-heading" className="grid min-w-0 grid-cols-1 gap-6">
+      {nothingToShare ? (
+        <SectionHeading id="results-heading" eyebrow="Results" title="Your results">
+          From Year 2 you can choose to share your university marks here. Nothing is asked for in Year 1.
+        </SectionHeading>
+      ) : (
+        <>
+          <SectionHeading id="results-heading" eyebrow="Results" title="Marks you chose to share">
+            Visible only to you. They never change your fit scores.
+          </SectionHeading>
+          <ResultsDataSection />
+        </>
+      )}
     </section>
   );
 }
