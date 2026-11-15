@@ -123,7 +123,7 @@ No real student data is used. No grades, results or protected characteristics ar
 |---|---|---|---|
 | Ranking quality | 12 personas; all three expected modules must appear in the eligible top five | 80% | 10/12 (83%) |
 | Extraction | 4 scripted interviews, 33 expected slots | 85% | 33/33 |
-| Guardrails | 15 adversarial inputs | 100% | 15/15 |
+| Guardrails | 23 adversarial inputs | 100% | 23/23 |
 | Determinism | Same profile ranked twice, with the input order reversed | 100% | 2/2 |
 | Privacy threshold | Insights requested for a cohort of four | Blocked | Blocked |
 
@@ -145,7 +145,7 @@ Models: Opus 5.5 answers and explains, Sonnet 5.5 extracts, Haiku 4.5 runs the s
 
 ## Known limits
 
-- The data covers one programme and year in depth (MEng Mechanical Engineering, Year 3). Other programmes get permissive placeholder rules.
+- The data covers one programme and year in depth (MEng Mechanical Engineering, Year 3), with rules for Years 3 and 4 only. For Years 1 and 2, and for any other programme, ModuleMatch does not invent rules: modules taught in a later year are refused, and every other module is shown as "can't confirm yet", with a note on the catalogue and in onboarding.
 - The timetable and cohort are synthetic. Capacities and some terms are assumptions, listed in `data/modules.raw.json`.
 - Offline-mode extraction is keyword-based. Live mode is more robust to phrasing.
 - The engines treat sessions as independent when combining clash probabilities.

@@ -108,12 +108,16 @@ export function ChatPanel({ variant, prefill = '', className, onAddCv }: ChatPan
         )}
         <div
           ref={scrollRef}
+          // A scrolling region keyboard users can reach even before it holds a link or button (WCAG 2.1.1).
+          tabIndex={0}
+          role="region"
+          aria-label="Conversation history"
           onScroll={(event) => {
             const el = event.currentTarget;
             stickToBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 48;
           }}
           className={cx(
-            'min-h-0 flex-1 overflow-y-auto overscroll-contain',
+            'min-h-0 flex-1 overflow-y-auto overscroll-contain outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-inset',
             interview ? 'px-4 py-6 sm:px-8 sm:py-8' : 'px-4 py-5 sm:px-5',
           )}
         >

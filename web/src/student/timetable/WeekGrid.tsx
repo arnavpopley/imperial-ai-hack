@@ -70,7 +70,13 @@ export function WeekGrid({
   const hourCount = (DAY_END - DAY_START) / 60;
 
   return (
-    <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+    // On a phone the week scrolls sideways; the scroller takes focus so arrow keys can scroll it too.
+    <div
+      tabIndex={0}
+      role="region"
+      aria-label={`${TERM_LABELS[term]} term week, scrolls sideways`}
+      className="-mx-4 overflow-x-auto px-4 outline-none focus-visible:ring-2 focus-visible:ring-brand sm:mx-0 sm:px-0"
+    >
       <div role="group" aria-label={`${TERM_LABELS[term]} term week`} className="min-w-[36rem]">
         <div className="grid grid-cols-[3rem_repeat(5,minmax(0,1fr))] pb-2 text-[12px] font-semibold text-muted">
           <span />

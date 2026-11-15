@@ -76,7 +76,6 @@ function ToggleButton({ title, shortlisted, pending, onToggle, size = 'md', clas
     <motion.button
       type="button"
       aria-pressed={shortlisted}
-      aria-label={`Shortlist ${title}`}
       aria-busy={pending || undefined}
       disabled={pending}
       onClick={onToggle}
@@ -105,7 +104,10 @@ function ToggleButton({ title, shortlisted, pending, onToggle, size = 'md', clas
           </motion.span>
         </AnimatePresence>
       </span>
-      <span aria-hidden="true">{shortlisted ? 'Shortlisted' : 'Add to shortlist'}</span>
+      <span>
+        {shortlisted ? 'Shortlisted' : 'Add to shortlist'}
+        <span className="sr-only">: {title}</span>
+      </span>
     </motion.button>
   );
 }

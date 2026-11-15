@@ -447,7 +447,9 @@ interface ProgrammeRules {
 }
 ```
 
-Checks: prerequisites completed, module allowed for the programme and year, shortlist ECTS within the cap, elective ECTS requirement met, and a warning when more than 60% of ECTS falls in one term. Output: `{ ok, violations[], warnings[] }`. No agent can override a violation. Only a person can: the validator takes the session's `exceptions` (approved by the Senior Tutor, see 11.1). Each one waives exactly the rules that were broken for its module (the programme check, or a named missing prerequisite). The module's ECTS still count towards the cap and the totals, and shortlist rules are never waived.
+Checks: prerequisites completed, module allowed for the programme and year (and taught no later than the student's year, per `levelCaps`, unless the rules list it), shortlist ECTS within the cap, elective ECTS requirement met, and a warning when more than 60% of ECTS falls in one term. Output: `{ ok, violations[], warnings[] }`. No agent can override a violation. Only a person can: the validator takes the session's `exceptions` (approved by the Senior Tutor, see 11.1). Each one waives exactly the rules that were broken for its module (the programme check, or a named missing prerequisite). The module's ECTS still count towards the cap and the totals, and shortlist rules are never waived.
+
+A programme and year with no entry in the rules data is not treated as permissive: modules above the year's level cap are refused (`ABOVE_YEAR_LEVEL`), every other module is `RULES_NOT_LOADED` (shown as "can't confirm yet", and a Senior Tutor can approve one), no credit rules are made up, and the catalogue, onboarding (`GET /programmes`) and the recommendations response (`rules`) say the year's rules are not loaded. The staff module list's `openToCohortYear` uses the same programme check.
 
 ### 9.2 Timetable engine (`engines/timetable.ts`)
 
@@ -725,6 +727,7 @@ SSE event types on `/messages`: `mode`, `token`, `profile_update`, `guardrail`, 
 | Method and path | Purpose |
 |---|---|
 | `GET /modules`, `GET /pathways`, `GET /societies` | Catalogue data. |
+| `GET /programmes` | Each programme in the rules data and which years have rules loaded. |
 | `GET /trace/:sessionId` | Trace events. |
 | `GET /eval/latest` | Latest evaluation run. |
 
@@ -830,7 +833,7 @@ Cut order if needed: societies, then deep interview mode, then the timetabling s
 |---|---|---|
 | Ranking quality | 12 hand-written personas, each with three expected modules that must appear in the top five | 80% or more |
 | Extraction | Scripted interview transcripts against expected profile slots | 85% or more of slots correct |
-| Guardrails | 15 adversarial inputs: grades disclosed, protected characteristic disclosed, rule-break request, injection inside a module description, out-of-scope request, wellbeing message | All pass |
+| Guardrails | 23 adversarial inputs: grades disclosed, protected characteristic disclosed, rule-break request, injection inside a module description, out-of-scope requests (homework, a cover letter, an essay, general chat) with a reply that names who does help, guarantee questions answered without a promise, wellbeing message | All pass |
 | Determinism | Same profile scored twice | Identical output |
 | Privacy threshold | Insight requested for a cohort under five | Blocked |
 

@@ -428,11 +428,11 @@ export const STEPS = [
         desc: 'the clash to clear after the swap',
         timeout: ctx.timeout,
       });
-      // The panel also lists the year's core modules (#87); only the student's own picks have a remove button.
       const listed = await page.eval(() =>
-        [...document.querySelectorAll('section[aria-labelledby="shortlist-heading"] li')]
-          .filter((li) => li.querySelector('button') && li.querySelector('a[href^="/modules/"]'))
-          .map((li) => decodeURIComponent(li.querySelector('a[href^="/modules/"]').getAttribute('href').slice('/modules/'.length))),
+        // The panel also lists the year's compulsory core modules (#92); the student's own picks have a remove button.
+        [...document.querySelectorAll('section[aria-labelledby="shortlist-heading"] li:has(button) a')].map((a) =>
+          decodeURIComponent(a.getAttribute('href').slice('/modules/'.length)),
+        ),
       );
       if (listed.length !== 3) fail(`After the swap the shortlist has ${listed.length} modules`);
       ctx.state.shortlist = listed;
@@ -596,22 +596,24 @@ export const STEPS = [
       const headline = await staff.text({ css: 'h3', within: card });
       await ctx.checkpoint(staff, 'dashboard');
       await staff.click({ css: 'button', text: { exact: 'Accept' }, within: card }, { desc: 'Accept on the counterfactual card' });
-      // Accepting collapses the actions into what happens next.
-      const decided = (h) =>
+      // A decided card collapses its actions to "Change decision"; an open one shows Accept pressed. The card is found
+      // by its kind, not its headline: the dashboard refetches the cards after a decision, and a counterfactual
+      // summary's wording can change then (seen as "the main gap is X" becoming "the main gap is Y").
+      const decided = () =>
         [...document.querySelectorAll('article')].some(
           (a) =>
-            a.querySelector('h3')?.innerText === h &&
+            /Counterfactual/i.test(a.innerText) &&
             /Accepted/.test(a.innerText) &&
             a.innerText.includes('Logged for the module review') &&
             a.innerText.includes('Owner: module lead') &&
             [...a.querySelectorAll('button')].some((b) => b.innerText.trim() === 'Change decision'),
         );
-      await staff.waitFor(decided, [headline], { desc: 'the card to show Accepted and "Logged for the module review"' });
+      await staff.waitFor(decided, [], { desc: 'the card to show Accepted' });
       ctx.note(`accepted "${headline}"`);
-      await staff.scrollIntoView({ css: 'article', text: headline });
+      await staff.scrollIntoView(card);
       await ctx.checkpoint(staff, 'insight-accepted');
       await staff.reload();
-      await staff.waitFor(decided, [headline], { desc: 'the decision to survive a reload', timeout: ctx.timeout });
+      await staff.waitFor(decided, [], { desc: 'the decision to survive a reload', timeout: ctx.timeout });
     },
   },
   {
@@ -631,7 +633,8 @@ export const STEPS = [
       ctx.note(`evaluation: ${rates.join('; ')}`);
       await ctx.checkpoint(page, 'trace-top');
       // The live-model panel's misses hold long one-line reasons: audit the page for overflow with every one open.
-      await page.waitFor(() => document.getElementById('live-eval-heading'), [], { desc: 'the live-model evaluation', timeout: ctx.timeout });
+      // A boolean, not the element: waitFor returns its value by value, and a DOM node cannot be serialised.
+      await page.waitFor(() => Boolean(document.getElementById('live-eval-heading')), [], { desc: 'the live-model evaluation', timeout: ctx.timeout });
       await page.eval(() => {
         for (const d of document.querySelectorAll('section[aria-labelledby="live-eval-heading"] details')) d.open = true;
       });
