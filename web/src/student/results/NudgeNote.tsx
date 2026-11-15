@@ -7,7 +7,6 @@ import { cx } from '../../components/cx.ts';
 import { Icon } from '../../components/Icon.tsx';
 import { topicLabel } from '../labels.ts';
 import { yourDataPath } from '../yourdata/paths.ts';
-import { BulbIcon } from './icons.tsx';
 
 export const NUDGE_EXPLAINER = 'Based on your own marks. Your fit score is unchanged.';
 
@@ -67,7 +66,7 @@ export function NudgeNote({ nudge, variant = 'card', className }: NudgeNoteProps
           className,
         )}
       >
-        <BulbIcon size={15} className="mt-0.5 shrink-0 text-mode-plan" />
+        <Icon name="bulb" size={15} className="mt-0.5 shrink-0 text-mode-plan" />
         <p className="min-w-0 flex-1 leading-snug">
           <span className="font-semibold text-mode-plan">Keep in mind </span>
           <span className="text-ink/85">{nudge.message}</span>
@@ -82,7 +81,7 @@ export function NudgeNote({ nudge, variant = 'card', className }: NudgeNoteProps
       className={cx('relative flex gap-3.5 rounded-2xl bg-mode-plan/8 p-4 ring-1 ring-mode-plan/20 ring-inset sm:p-5', className)}
     >
       <span aria-hidden="true" className="grid size-9 shrink-0 place-items-center rounded-full bg-mode-plan/15 text-mode-plan">
-        <BulbIcon size={18} />
+        <Icon name="bulb" size={18} />
       </span>
       <div className="grid min-w-0 flex-1 gap-2">
         <p className="text-2xs font-semibold tracking-[0.08em] text-mode-plan uppercase">Keep in mind</p>
