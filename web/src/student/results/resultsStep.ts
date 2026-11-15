@@ -30,6 +30,12 @@ function writeStepMemory(sessionId: string, memory: StepMemory): void {
   }
 }
 
+/**
+ * Year 1 students have no university marks yet, and school results would match no module in the catalogue, so the
+ * results step is offered from Year 2 only.
+ */
+export const offersResultsStep = (yearOfStudy: number): boolean => yearOfStudy >= 2;
+
 export function resultsStepStatus(hasResults: boolean, memory: StepMemory): ResultsStepStatus {
   if (hasResults) return 'done';
   return memory.skipped ? 'skipped' : 'todo';

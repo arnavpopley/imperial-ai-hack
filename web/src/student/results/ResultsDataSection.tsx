@@ -7,10 +7,12 @@ import { Button } from '../../components/Button.tsx';
 import { Icon } from '../../components/Icon.tsx';
 import { Skeleton } from '../../components/StateViews.tsx';
 import { OPEN_RESULTS_STATE, paths } from '../routes.ts';
+import { useReadySession } from '../state/SessionProvider.tsx';
 import { errorStatus } from './files.ts';
 import { MarkSheetIcon } from './icons.tsx';
 import { MarkChips, UnmatchedCodes } from './MarkChips.tsx';
 import { useResults } from './ResultsProvider.tsx';
+import { offersResultsStep } from './resultsStep.ts';
 
 function formatDate(iso: string | null): string | null {
   if (!iso) return null;
@@ -21,6 +23,8 @@ function formatDate(iso: string | null): string | null {
 
 export function ResultsDataSection() {
   const { results, hasResults, unmatched, withdraw } = useResults();
+  const { session } = useReadySession();
+  const canShare = offersResultsStep(session.profile.yearOfStudy);
   const navigate = useNavigate();
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -56,7 +60,9 @@ export function ResultsDataSection() {
           <p className="text-sm text-muted">
             {hasResults && consentDate
               ? `Shared with your consent on ${consentDate}. Used only for gentle notes and your exam feedback.`
-              : 'Optional. Marks are only ever kept if you share them and tick the consent box.'}
+              : canShare
+                ? 'Optional. Marks are only ever kept if you share them and tick the consent box, and you can delete them here.'
+                : 'From Year 2 you can choose to share your university marks here. Nothing is asked for in Year 1.'}
           </p>
         </div>
       </header>
@@ -132,9 +138,11 @@ export function ResultsDataSection() {
                 ? 'No marks shared.'
                 : 'Your results could not be loaded just now.'}
           </p>
-          <Button size="sm" icon="plus" onClick={() => navigate(paths.interview, { state: OPEN_RESULTS_STATE })}>
-            Add your results
-          </Button>
+          {canShare && (
+            <Button size="sm" icon="plus" onClick={() => navigate(paths.interview, { state: OPEN_RESULTS_STATE })}>
+              Add your results
+            </Button>
+          )}
         </div>
       )}
     </div>

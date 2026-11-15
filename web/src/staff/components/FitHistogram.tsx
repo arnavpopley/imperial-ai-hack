@@ -1,10 +1,11 @@
 // Fit distribution across the synthetic cohort: ten 10-point buckets from StaffModuleSummary.fitHistogram.
+import { FIT_BAND_FLOORS } from '@modulematch/shared';
 import { niceCeiling, percent, plural } from '../lib/format.ts';
 
 const bucketLabel = (i: number) => (i === 9 ? '90–100' : `${i * 10}–${i * 10 + 9}`);
 
-/** Fit at or above this counts as a strong fit in the summary line. */
-const STRONG_FIT_BUCKET = 7;
+/** Fit at or above the shared strong floor counts as a strong fit in the summary line. */
+const STRONG_FIT_BUCKET = FIT_BAND_FLOORS.strong / 10;
 
 export function FitHistogram({ buckets, averageFit }: { buckets: readonly number[]; averageFit: number }) {
   const total = buckets.reduce((sum, n) => sum + n, 0);
@@ -16,7 +17,7 @@ export function FitHistogram({ buckets, averageFit }: { buckets: readonly number
     total === 0
       ? 'No students scored yet.'
       : `${plural(total, 'student')} scored. Most common fit ${bucketLabel(peak)}. ` +
-        `${percent(strong / total)} score 70 or above. Average fit ${Math.round(averageFit)}.`;
+        `${percent(strong / total)} score ${FIT_BAND_FLOORS.strong} or above (a strong fit). Average fit ${Math.round(averageFit)}.`;
 
   return (
     <figure>

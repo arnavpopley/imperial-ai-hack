@@ -7,7 +7,7 @@
 import { animate, motion, useMotionValue, useTransform } from 'motion/react';
 import { useEffect, useRef } from 'react';
 import { cx } from '../../components/cx.ts';
-import { FIT_BAND_LABELS, fitBand } from '../../components/FitScore.tsx';
+import { FIT_BAND_LABELS, FIT_BAND_TEXT, fitBand } from '../../components/FitScore.tsx';
 import { MOTION, useMotionTokens } from '../../motion/tokens.ts';
 
 const RADIUS = 20;
@@ -15,7 +15,6 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 /** How far, in pixels, the number lifts or dips before it settles. */
 const SETTLE_NUDGE = 3;
 
-const toneClass = { high: 'text-fit-high', mid: 'text-fit-mid', low: 'text-fit-low' } as const;
 
 interface ScoreRingProps {
   value: number;
@@ -61,7 +60,7 @@ export function ScoreRing({ value, size = 'md', dimmed = false, delay = 0, class
   }, [value, reduce, progress, numberY, delay]);
 
   const band = fitBand(value);
-  const tone = dimmed ? 'text-muted' : toneClass[band];
+  const tone = dimmed ? 'text-muted' : FIT_BAND_TEXT[band];
   const label = `Fit ${value} out of 100, ${FIT_BAND_LABELS[band].toLowerCase()}${dimmed ? ', shown greyed' : ''}`;
   const px = size === 'lg' ? 104 : 64;
 

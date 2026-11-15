@@ -953,10 +953,25 @@ export const ExamAwaitingMarks = z.object({
 export const TailoredFeedback = z.object({
   moduleId: z.string(),
   examLabel: z.string(),
+  /** The student's overall mark on this exam, for the at-a-glance strip. */
+  mark: z.number().min(0).max(100).optional(),
+  /** Every question the student has a mark for, in paper order, for the per-question chart. */
+  questions: z
+    .array(z.object({ questionId: z.string(), label: z.string(), mark: z.number().min(0), maxMarks: z.number().positive() }))
+    .optional(),
+  /** One sentence naming where most marks went; the numbers live in the chart, so it does not repeat them. */
   overall: z.string(),
   strengths: z.array(z.string()),
   weakPoints: z.array(
-    z.object({ questionId: z.string(), topics: z.array(TopicId), lostMarks: z.number().min(0), advice: z.string() }),
+    z.object({
+      questionId: z.string(),
+      /** The question's subject without its "Q3:" prefix, such as "Boundary layers and the Blasius solution". */
+      label: z.string().optional(),
+      topics: z.array(TopicId),
+      lostMarks: z.number().min(0),
+      /** The examiner's common mistakes and what good answers did; the marks lost are shown in the chart instead. */
+      advice: z.string(),
+    }),
   ),
   revisionPlan: z.array(z.string()),
   /** Future modules that build on the weak topics, with a short note each. */

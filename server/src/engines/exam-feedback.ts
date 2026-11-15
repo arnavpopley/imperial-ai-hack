@@ -116,26 +116,33 @@ const subject = (q: QuestionFact) => q.label.replace(/^Q\w*\s*[:.)-]\s*/i, '').t
 
 const lowerFirst = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
 
-/** Default advice for one weak question, from the examiner's own mistakes and pointers. */
+/**
+ * Default advice for one weak question: the examiner's common mistakes and what good answers did. The marks lost
+ * are shown in the student's chart, so the advice does not repeat them.
+ */
 export function weakAdvice(q: WeakQuestionFact): string {
-  const parts = [`You lost ${q.lostMarks} of ${q.maxMarks} marks on ${q.questionId} (${subject(q)}).`];
+  const parts: string[] = [];
   if (q.commonMistakes.length) {
     parts.push(`Common mistakes the examiners saw: ${q.commonMistakes.slice(0, 2).map((m) => lowerFirst(m.trim().replace(/\.$/, ''))).join('; ')}.`);
   }
   const good = q.whatGoodAnswersDid.trim();
   // The field holds what good answers did ("Drew a diagram."), so it reads on from "Good answers".
   if (good) parts.push(/^(good|best|strong)/i.test(good) ? sentence(good) : `Good answers ${lowerFirst(sentence(good))}`);
+  if (parts.length === 0) parts.push(`Work through ${lowerFirst(subject(q))} again with the examiners' pointers in your plan.`);
   return parts.join(' ');
 }
+
+/** A question's subject, for the chart and the weak-point headings. */
+export const questionSubject = subject;
 
 /** Offline feedback built only from the facts (spec 23). */
 export function templateFeedback(f: ExamFacts): TailoredFeedback {
   const names = f.weak.map((q) => `${q.questionId} (${subject(q)})`);
   const weakNames = names.length <= 1 ? (names[0] ?? '') : `${names.slice(0, -1).join(', ')} and ${names.at(-1)}`;
-  const opening = `For ${f.moduleTitle}, ${f.examLabel}, you scored ${f.mark}.`;
+  // One sentence, said once: the mark and the per-question numbers are in the chart beside it.
   const overall = f.weak.length
-    ? `${opening} Most of the marks you lost were on ${weakNames}. The plan below uses the examiners' own pointers for those questions.`
-    : `${opening} You did well across the paper, and the examiners' general comments are a good guide to the last few marks.`;
+    ? `Most marks went on ${weakNames}.`
+    : `A strong paper all round; the examiners' general comments are a good guide to the last few marks.`;
   const plan = unique([
     ...f.weak.flatMap((q) => q.revisionPointers.slice(0, 2).map(sentence)),
     ...f.weak.slice(0, 2).map((q) => `Re-attempt ${q.questionId} under timed conditions, then compare your answer with what good answers did.`),
@@ -143,9 +150,12 @@ export function templateFeedback(f: ExamFacts): TailoredFeedback {
   return {
     moduleId: f.moduleId,
     examLabel: f.examLabel,
+    mark: f.mark,
+    questions: f.questions.map((q) => ({ questionId: q.questionId, label: subject(q), mark: q.mark, maxMarks: q.maxMarks })),
     overall,
-    strengths: f.strong.map((q) => `${q.questionId} (${subject(q)}): ${q.mark} out of ${q.maxMarks}, a strong answer.`),
-    weakPoints: f.weak.map((q) => ({ questionId: q.questionId, topics: q.topics, lostMarks: q.lostMarks, advice: weakAdvice(q) })),
+    // The topic only: the marks are in the chart, and the same praise on every strong answer said nothing.
+    strengths: f.strong.map((q) => `${q.questionId} ${subject(q)}`),
+    weakPoints: f.weak.map((q) => ({ questionId: q.questionId, label: subject(q), topics: q.topics, lostMarks: q.lostMarks, advice: weakAdvice(q) })),
     revisionPlan: plan,
     affectsModules: f.affects.map((a) => ({ moduleId: a.moduleId, note: affectedNote(a, f.moduleTitle) })),
     source: 'template',

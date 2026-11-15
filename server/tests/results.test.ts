@@ -352,6 +352,21 @@ describe('tailored exam feedback', () => {
     expect(template.weakPoints[0]).toMatchObject({ questionId: 'Q3', lostMarks: 14, topics: ['fluid-mechanics', 'mathematics-modelling'] });
     expect(template.weakPoints[0]!.advice).toMatch(/Blasius/);
     expect(template.revisionPlan.length).toBeGreaterThan(0);
+    // Each fact once: the numbers live in the per-question chart, the headline names the weakest question,
+    // and the advice holds only the examiner's mistakes and what good answers did.
+    expect(template.mark).toBe(57);
+    expect(template.questions?.map((q) => [q.questionId, q.mark, q.maxMarks])).toEqual([
+      ['Q1', 15, 20],
+      ['Q2', 13, 20],
+      ['Q3', 6, 20],
+      ['Q4', 12, 20],
+      ['Q5', 11, 20],
+    ]);
+    expect(template.overall).toMatch(/^Most marks went on Q3 \(/);
+    expect(template.overall).not.toMatch(/57|14 of 20/);
+    expect(template.weakPoints[0]!.label).toMatch(/Blasius/i);
+    for (const w of template.weakPoints) expect(w.advice).not.toMatch(/You lost|\d+ of \d+ marks/);
+    expect(template.strengths.join(' ')).not.toMatch(/strong answer|out of/);
 
     const id = await newSession();
     await upload(id, { consent: true, text: demoTranscript });
