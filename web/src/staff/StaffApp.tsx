@@ -111,7 +111,7 @@ function StaffHeader() {
     <div className={slim ? 'grid gap-4' : 'grid gap-6'}>
       {slim ? (
         <header className="flex flex-wrap items-center justify-between gap-3 rounded-panel bg-slate-950 px-5 py-2 text-white shadow-soft">
-          <h1 className="text-lg font-semibold tracking-tight">Staff console</h1>
+          <h1 className="text-heading">Staff console</h1>
           <PrivacyNote />
         </header>
       ) : (
@@ -126,7 +126,7 @@ function StaffHeader() {
           <p className="inline-flex items-center gap-2 text-sm font-medium text-white/80">
             <LockIcon className="size-4" /> No sign-in in this prototype
           </p>
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Staff console</h1>
+          <h1 className="text-title">Staff console</h1>
           <p className="max-w-xl text-base text-white/85 text-pretty">
             See what students want, fix timetable clashes early, and answer the questions the AI hands to you.
           </p>

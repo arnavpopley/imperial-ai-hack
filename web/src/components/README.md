@@ -34,7 +34,7 @@ component below has a matching Figma component with the same variant names (spec
 
 ## Tokens added for these components
 
-`surface-2`, `line-strong`, `on-brand`, `scrim`, `module-1` to `module-8` (timetable colours), dark-mode
+`surface-2`, `line-strong`, `on-brand`, `scrim`, `module-1` to `module-8` (module identity: timetable and compare only), `factor-*` (fit factors), `assess-*` (assessment types), `art-1` to `art-8` (decoration), dark-mode
 values for the fit, clash and mode colours, `shadow-soft`, `shadow-lift`, the `ease-out-soft` curve, the
 `rise`, `fade`, `slide-in`, `glow`, `caret` and `pulse-dot` animations, and a `hatch` utility for clash
 overlaps and n/a bars. All motion is reduced to near zero under `prefers-reduced-motion`.

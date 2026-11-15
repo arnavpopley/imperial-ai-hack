@@ -69,7 +69,7 @@ export function ResultsDataSection({ canAdd = true }: { canAdd?: boolean }) {
         </div>
       ) : hasResults && data ? (
         <>
-          <ul className="flex flex-wrap gap-x-5 gap-y-1 text-[13px] text-muted">
+          <ul className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-muted">
             <li>
               <span className="font-semibold text-ink tabular-nums">{data.results.filter((r) => r.matched).length}</span> modules
             </li>

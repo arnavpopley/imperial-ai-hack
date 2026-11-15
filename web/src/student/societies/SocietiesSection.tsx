@@ -96,7 +96,7 @@ export function SocietiesSection() {
 /** What the bubbles mean (issue 117): size is fit, the dashed ring is the wildcard, and the outer ring is unscored. */
 function CloudLegend() {
   return (
-    <ul className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-[11px] text-muted" aria-label="Bubble key">
+    <ul className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-2xs text-muted" aria-label="Bubble key">
       <li className="flex items-center gap-1.5">
         <span aria-hidden="true" className="flex items-end gap-0.5">
           <span className="size-2.5 rounded-full border border-brand/40 bg-surface" />
@@ -147,7 +147,7 @@ function SocietyDetail({ id, society, match, listError, onRetry }: SocietyDetail
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 {match?.wildcard && (
-                  <span className="mb-1 inline-flex items-center gap-1 text-[11px] font-semibold tracking-[0.08em] text-mode-explain uppercase">
+                  <span className="mb-1 inline-flex items-center gap-1 text-2xs font-semibold tracking-[0.08em] text-mode-explain uppercase">
                     <Icon name="sparkle" size={11} />
                     Wildcard
                   </span>
@@ -156,13 +156,13 @@ function SocietyDetail({ id, society, match, listError, onRetry }: SocietyDetail
               </div>
               {match && <FitScore value={match.fit} variant="compact" className="text-sm" />}
             </div>
-            <p className="mt-2 text-[13px] leading-relaxed text-muted">{match?.reason ?? society?.description}</p>
+            <p className="mt-2 text-xs leading-relaxed text-muted">{match?.reason ?? society?.description}</p>
             {society ? (
               <a
                 href={society.sourceUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-3 inline-flex items-center gap-1 text-[13px] font-semibold text-brand underline-offset-2 hover:underline"
+                className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-brand underline-offset-2 hover:underline"
               >
                 See it on the Union site
                 <Icon name="external" size={13} />
@@ -170,7 +170,7 @@ function SocietyDetail({ id, society, match, listError, onRetry }: SocietyDetail
               </a>
             ) : (
               listError && (
-                <p role="alert" className="mt-3 text-[12px] text-muted">
+                <p role="alert" className="mt-3 text-2xs text-muted">
                   Society details did not load.{' '}
                   <button type="button" onClick={onRetry} className="font-semibold text-brand underline-offset-2 hover:underline">
                     Try again
@@ -180,7 +180,7 @@ function SocietyDetail({ id, society, match, listError, onRetry }: SocietyDetail
             )}
           </motion.div>
         ) : (
-          <motion.p key="empty" className="text-[13px] text-muted">
+          <motion.p key="empty" className="text-xs text-muted">
             Pick a bubble to see why it suits you.
           </motion.p>
         )}

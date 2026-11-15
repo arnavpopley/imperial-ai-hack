@@ -70,14 +70,14 @@ export function ClaimCheck({ label = 'Check this answer', storageKey, compact = 
         className={cx(
           small
             ? 'grid size-7 place-items-center rounded-full border border-dashed border-line-strong text-brand transition-colors hover:bg-surface-2/60'
-            : 'flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[13px] font-medium text-muted transition-colors hover:bg-surface-2/60 hover:text-ink',
+            : 'flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-medium text-muted transition-colors hover:bg-surface-2/60 hover:text-ink',
         )}
       >
         <Icon name="search" size={small ? 13 : 14} className="shrink-0 text-brand" />
         <span className={small ? 'sr-only' : 'min-w-0 flex-1'}>{label}</span>
         {!small && (
           <>
-            <span className="hidden shrink-0 text-[11px] font-normal sm:inline">Optional</span>
+            <span className="hidden shrink-0 text-2xs font-normal sm:inline">Optional</span>
             <Icon
               name="chevron-down"
               size={14}
@@ -99,7 +99,7 @@ export function ClaimCheck({ label = 'Check this answer', storageKey, compact = 
             transition={{ duration: 0.22 }}
             className="overflow-hidden"
           >
-            <div className="grid gap-3 px-3 pt-1 pb-3 text-[13px] leading-relaxed">
+            <div className="grid gap-3 px-3 pt-1 pb-3 text-xs leading-relaxed">
               <p className="text-muted">
                 AI is often right, and you can’t tell from how sure it sounds. A quick plan for checking it:
               </p>
@@ -135,7 +135,7 @@ export function ClaimCheck({ label = 'Check this answer', storageKey, compact = 
                 </Step>
               </ol>
               <div className="grid gap-1">
-                <label htmlFor={`${id}-note`} className="text-[12px] font-medium">
+                <label htmlFor={`${id}-note`} className="text-2xs font-medium">
                   One thing you’ll check (optional)
                 </label>
                 <input
@@ -145,9 +145,9 @@ export function ClaimCheck({ label = 'Check this answer', storageKey, compact = 
                   maxLength={200}
                   placeholder="For example: is the exam really 70%?"
                   aria-describedby={`${id}-note-hint`}
-                  className="h-9 min-w-0 rounded-lg border border-line-strong bg-canvas px-3 text-[13px] placeholder:text-muted focus:border-brand focus:outline-none"
+                  className="h-9 min-w-0 rounded-lg border border-line-strong bg-canvas px-3 text-xs placeholder:text-muted focus:border-brand focus:outline-none"
                 />
-                <p id={`${id}-note-hint`} className="text-[11px] text-muted">
+                <p id={`${id}-note-hint`} className="text-2xs text-muted">
                   Kept only in this browser. It is not sent anywhere.
                 </p>
               </div>
@@ -164,7 +164,7 @@ function Step({ n, title, children }: { n: number; title: string; children: Reac
     <li className="grid grid-cols-[1.5rem_minmax(0,1fr)] gap-x-2">
       <span
         aria-hidden="true"
-        className="mt-0.5 grid size-5 place-items-center rounded-full bg-brand-soft text-[11px] font-semibold text-brand"
+        className="mt-0.5 grid size-5 place-items-center rounded-full bg-brand-soft text-2xs font-semibold text-brand"
       >
         {n}
       </span>

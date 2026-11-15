@@ -87,7 +87,7 @@ function CardHeader({ icon, title, detail, tone }: { icon: 'tutor' | 'check' | '
       </span>
       <div className="min-w-0">
         <h3 className="text-sm font-semibold">{title}</h3>
-        <p className="text-[13px] text-muted">{detail}</p>
+        <p className="text-xs text-muted">{detail}</p>
       </div>
     </div>
   );
@@ -117,7 +117,7 @@ function DraftBody({ escalationType, summary, reason: suggested = '', onSend, on
         tone="bg-mode-escalated/12 text-mode-escalated"
       />
       <div>
-        <label htmlFor={fieldId} className="text-[13px] font-medium">
+        <label htmlFor={fieldId} className="text-xs font-medium">
           What the {queue} will see
         </label>
         <textarea
@@ -134,7 +134,7 @@ function DraftBody({ escalationType, summary, reason: suggested = '', onSend, on
       </div>
       {withReason && (
         <div>
-          <label htmlFor={reasonId} className="text-[13px] font-medium">
+          <label htmlFor={reasonId} className="text-xs font-medium">
             Why do you want this exception? <span className="font-normal text-muted">One line</span>
           </label>
           <input
@@ -155,7 +155,7 @@ function DraftBody({ escalationType, summary, reason: suggested = '', onSend, on
         </div>
       )}
       {error && (
-        <p role="alert" className="text-[13px] text-fit-low">
+        <p role="alert" className="text-xs text-fit-low">
           {error}
         </p>
       )}
@@ -214,7 +214,7 @@ function AnsweredBody({ summary, staffResponse, createdAt, decision, queue, subj
 
 function SummaryDetails({ summary }: { summary: string }) {
   return (
-    <details className="group text-[13px]">
+    <details className="group text-xs">
       <summary className="inline-flex cursor-pointer items-center gap-1 rounded text-muted marker:content-none hover:text-ink">
         <Icon name="chevron-down" size={14} className="transition group-open:rotate-180" />
         What you sent
