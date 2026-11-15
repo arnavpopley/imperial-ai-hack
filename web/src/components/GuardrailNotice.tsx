@@ -48,7 +48,7 @@ export function GuardrailNotice({ variant, message, stage, children, className }
     <aside
       role={variant === 'wellbeing' ? 'alert' : 'note'}
       aria-label={m.title}
-      className={cx('animate-rise flex gap-3 rounded-xl border px-3.5 py-3 text-[13px]', m.className, className)}
+      className={cx('animate-rise flex gap-3 rounded-xl border px-3.5 py-3 text-xs', m.className, className)}
     >
       <span className={cx('grid size-7 shrink-0 place-items-center rounded-full', m.iconClass)}>
         <Icon name={m.icon} size={15} />

@@ -82,7 +82,7 @@ export function ModuleCard({ item, lowConfidence, scored, shortlisted, pending, 
                   {module && <ModuleTypeChip variant={module.type} />}
                   <ConfidenceBadge variant={item.confidence} />
                   {!eligible && (
-                    <span className="inline-flex items-center gap-1 rounded-md bg-ink/6 px-1.5 py-0.5 text-[11px] font-semibold text-muted">
+                    <span className="inline-flex items-center gap-1 rounded-md bg-ink/6 px-1.5 py-0.5 text-2xs font-semibold text-muted">
                       <Icon name={item.unconfirmed ? 'info' : 'lock'} size={11} />
                       {item.unconfirmed ? "Can't confirm yet" : 'Not eligible yet'}
                     </span>
@@ -91,7 +91,7 @@ export function ModuleCard({ item, lowConfidence, scored, shortlisted, pending, 
                   {/* Above the stretched card link, so hovering shows where the count comes from. */}
                   {demand && <DemandChip signal={demand} className="relative z-10" />}
                 </div>
-                <h3 className={cx('mt-1.5 text-[17px] leading-snug font-semibold tracking-tight', !eligible && 'text-muted')}>
+                <h3 className={cx('mt-1.5 text-base leading-snug font-semibold tracking-tight', !eligible && 'text-muted')}>
                   <Link
                     to={paths.module(item.moduleId)}
                     className="rounded-sm outline-none after:absolute after:inset-0 after:rounded-card focus-visible:after:ring-2 focus-visible:after:ring-brand"
@@ -100,8 +100,8 @@ export function ModuleCard({ item, lowConfidence, scored, shortlisted, pending, 
                   </Link>
                 </h3>
                 {module && (
-                  <p className="mt-0.5 text-[13px] text-muted">
-                    <span className="font-mono text-[12px]">{module.code}</span> · {module.ects} ECTS ·{' '}
+                  <p className="mt-0.5 text-xs text-muted">
+                    <span className="font-mono text-2xs">{module.code}</span> · {module.ects} ECTS ·{' '}
                     {module.terms.map((t) => TERM_LABELS[t]).join(', ')}
                   </p>
                 )}
@@ -121,7 +121,7 @@ export function ModuleCard({ item, lowConfidence, scored, shortlisted, pending, 
             {nudge && <NudgeNote nudge={nudge} className="mt-3 max-w-lg" />}
 
             {!eligible && item.ineligibleReasons.length > 0 && (
-              <div className="relative z-10 mt-3 flex flex-wrap items-start justify-between gap-2 rounded-xl bg-surface-2 px-3 py-2 text-[13px]">
+              <div className="relative z-10 mt-3 flex flex-wrap items-start justify-between gap-2 rounded-xl bg-surface-2 px-3 py-2 text-xs">
                 <ul className="min-w-0 flex-1">
                   {item.ineligibleReasons.map((reason) => (
                     <li key={reason} className="flex gap-1.5">
@@ -165,7 +165,7 @@ function RankShift({ rank, shift }: { rank: number; shift: number }) {
   const { softEnter } = useMotionTokens();
   const enter = softEnter('progressUpdate', 4);
   return (
-    <span className="relative flex items-center gap-1 text-[12px] font-semibold text-muted tabular-nums">
+    <span className="relative flex items-center gap-1 text-2xs font-semibold text-muted tabular-nums">
       #{rank}
       <AnimatePresence mode="popLayout" initial={false}>
         {shift !== 0 && (

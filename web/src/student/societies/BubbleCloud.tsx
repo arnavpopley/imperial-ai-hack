@@ -116,9 +116,8 @@ export function BubbleCloud({ featured, others, selectedId, onSelect, detailId }
             )}
             style={{ fontSize: labelFontSize(place.diameter, lines, prominent) }}
           >
-            {item.wildcard && (
-              <span className="mb-0.5 block text-[0.75em] font-bold tracking-[0.06em] uppercase">Wildcard</span>
-            )}
+            {/* type-scale: the Wildcard tag is sized relative to its bubble's label (labelFontSize), so it scales with the bubble. */}
+            {item.wildcard && <span className="mb-0.5 block text-[0.75em] font-bold tracking-[0.06em] uppercase">Wildcard</span>}
             {lines.map((line, i) => (
               <span key={`${i}-${line}`} className="block w-full truncate">
                 {line}

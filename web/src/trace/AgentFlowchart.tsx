@@ -71,7 +71,7 @@ export function AgentFlowchart({ seen }: AgentFlowchartProps) {
                   x={box.x + box.w / 2}
                   y={box.y + 21}
                   textAnchor="middle"
-                  className="fill-muted text-[11px] font-semibold tracking-[0.06em] uppercase"
+                  className="fill-muted text-2xs font-semibold tracking-[0.02em] uppercase"
                 >
                   {GROUP_LABELS[g]}
                 </text>
@@ -252,7 +252,8 @@ function FlowNodeShape({ node, box, index, inView, active, lit, dimmed, onActiva
         dominantBaseline="central"
         className={cx(
           'pointer-events-none',
-          big ? 'text-[14px] font-semibold' : 'text-[12.5px] font-medium',
+          // The chart's boxes were sized for these labels: hubs at the xs step, so "Student message" fits its box.
+          big ? 'text-xs font-semibold' : 'text-xs font-medium',
           big && !escalation ? 'fill-on-brand' : 'fill-ink',
         )}
       >

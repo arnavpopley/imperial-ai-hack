@@ -18,14 +18,14 @@ const FLOOR_PX = 12;
 const REASON = 'type-scale:';
 
 /**
- * Budgets. They only go down: each codemod PR lowers them to what it leaves, and the end state is no arbitrary
- * size below the floor, no relative size without a reason, and at most 20 deliberate ones, each with a reason.
+ * Budgets, at their end state since the codemod (issue #139): no arbitrary size below the floor, none without a reason,
+ * and at most 20 deliberate ones, each with a reason. They only ever go down.
  */
-const MAX_BELOW_FLOOR = 68;
-const MAX_UNEXPLAINED = 372;
+const MAX_BELOW_FLOOR = 0;
+const MAX_UNEXPLAINED = 0;
 const MAX_EXPLAINED = 20;
 /** Relative (em) sizes depend on the parent's size, so the floor cannot be checked; each needs a reason. */
-const MAX_RELATIVE_UNEXPLAINED = 1;
+const MAX_RELATIVE_UNEXPLAINED = 0;
 
 interface Use {
   file: string;

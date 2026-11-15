@@ -665,7 +665,7 @@ function StartPanel({
                   disabled={drafting}
                   placeholder={'Q1 (20 marks), Bernoulli. Best answers stated assumptions first…\nCommon mistakes: …\nRevise: …'}
                   onChange={(e) => setNotes(e.target.value)}
-                  className="bg-surface font-mono text-[13px]"
+                  className="bg-surface font-mono text-xs"
                 />
               )}
             </Field>

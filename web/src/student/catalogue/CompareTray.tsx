@@ -30,11 +30,11 @@ export function CompareTray({ selected, onRemove, onClear, onOpen }: CompareTray
           <ul className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
             {selected.map((m, i) => (
               <li key={m.moduleId}>
-                <span className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-surface-2 pr-1 pl-2 text-[13px] font-medium">
-                  <span aria-hidden="true" className={`grid size-4 place-items-center rounded-[5px] text-[10px] leading-none font-bold text-on-brand ${COMPARE_DOT[i]}`}>
+                <span className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-surface-2 pr-1 pl-2 text-xs font-medium">
+                  <span aria-hidden="true" className={`grid size-4 place-items-center rounded-[5px] text-2xs leading-none font-bold text-on-brand ${COMPARE_DOT[i]}`}>
                     {COMPARE_LETTERS[i]}
                   </span>
-                  <span className="font-mono text-[12px]">{m.code}</span>
+                  <span className="font-mono text-2xs">{m.code}</span>
                   <button
                     type="button"
                     onClick={() => onRemove(m.moduleId)}
@@ -45,7 +45,7 @@ export function CompareTray({ selected, onRemove, onClear, onOpen }: CompareTray
                 </span>
               </li>
             ))}
-            {!ready && <li className="text-[12px] text-muted">Tick one more to compare (up to {MAX_COMPARE})</li>}
+            {!ready && <li className="text-2xs text-muted">Tick one more to compare (up to {MAX_COMPARE})</li>}
           </ul>
           <div className="flex items-center gap-1.5">
             <Button size="sm" variant="ghost" onClick={onClear}>

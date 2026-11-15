@@ -56,7 +56,7 @@ export function CompareDrawer(props: CompareDrawerProps) {
       subtitle="Fit from your ranking. Everything else from the module records and the timetable."
       footer={
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-[12px] text-muted">Numbers come from code, not a model.</p>
+          <p className="text-2xs text-muted">Numbers come from code, not a model.</p>
           <Button
             variant="primary"
             icon="chat"
@@ -110,10 +110,10 @@ function CompareTable({ modules, byId, scored, lowConfidence, isShortlisted }: C
             <li key={m.moduleId} className="flex min-w-0 items-start gap-2">
               <Letter index={i} />
               <div className="min-w-0">
-                <Link to={paths.module(m.moduleId)} className="block truncate text-[14px] leading-snug font-semibold hover:underline sm:whitespace-normal">
+                <Link to={paths.module(m.moduleId)} className="block truncate text-sm leading-snug font-semibold hover:underline sm:whitespace-normal">
                   {m.title}
                 </Link>
-                <p className="flex flex-wrap items-center gap-x-1.5 text-[12px] text-muted">
+                <p className="flex flex-wrap items-center gap-x-1.5 text-2xs text-muted">
                   <span className="font-mono">{m.code}</span>
                   {isShortlisted(m.moduleId) && <span className="font-semibold text-brand">· Shortlisted</span>}
                   {ranked && !ranked.eligible && (
@@ -130,15 +130,15 @@ function CompareTable({ modules, byId, scored, lowConfidence, isShortlisted }: C
 
       {row('Fit for you', (m) => {
         const ranked = byId.get(m.moduleId);
-        if (!scored || !ranked) return <p className="text-[13px] text-muted">No fit score yet: tell the interviewer what you enjoy.</p>;
+        if (!scored || !ranked) return <p className="text-xs text-muted">No fit score yet: tell the interviewer what you enjoy.</p>;
         const band = fitBand(ranked.fit);
         return (
           <div className={cx('grid gap-2', lowConfidence && 'grayscale')}>
             <div className="flex items-baseline gap-2">
               <span className={cx('text-2xl leading-none font-semibold tabular-nums', FIT_BAND_TEXT[band])}>{ranked.fit}</span>
-              <span className="text-[12px] text-muted">/ 100</span>
+              <span className="text-2xs text-muted">/ 100</span>
               {ranked.fit === best && bestIsUnique && (
-                <span className="ml-auto rounded-md bg-fit-high/10 px-1.5 py-0.5 text-[11px] font-semibold text-fit-high">Best fit</span>
+                <span className="ml-auto rounded-md bg-fit-high/10 px-1.5 py-0.5 text-2xs font-semibold text-fit-high">Best fit</span>
               )}
             </div>
             <Meter value={ranked.fit / 100} tone={FIT_BAND_METER[band]} label={`Fit for ${m.title}`} valueText={`${ranked.fit} out of 100`} />
@@ -158,7 +158,7 @@ function CompareTable({ modules, byId, scored, lowConfidence, isShortlisted }: C
               ['Workload', m.workloadPercent],
             ] as const
           ).map(([label, value]) => (
-            <div key={label} className="grid grid-cols-[4.5rem_1fr_2.25rem] items-center gap-2 text-[12px]">
+            <div key={label} className="grid grid-cols-[4.5rem_1fr_2.25rem] items-center gap-2 text-2xs">
               <dt className="text-muted">{label}</dt>
               <dd className="contents">
                 <Meter value={value / 100} tone="brand" label={`${label} for ${m.title}`} />
@@ -170,7 +170,7 @@ function CompareTable({ modules, byId, scored, lowConfidence, isShortlisted }: C
       ))}
 
       {row('Credits and term', (m) => (
-        <p className="text-[13px]">
+        <p className="text-xs">
           <span className="font-semibold tabular-nums">{m.ects}</span> ECTS · {m.terms.map((t) => TERM_LABELS[t]).join(', ')}
         </p>
       ))}
@@ -179,25 +179,25 @@ function CompareTable({ modules, byId, scored, lowConfidence, isShortlisted }: C
         m.topics.length ? (
           <ul className="flex flex-wrap gap-1">
             {m.topics.map((t) => (
-              <li key={t} className="rounded-md bg-surface-2 px-1.5 py-0.5 text-[12px]">
+              <li key={t} className="rounded-md bg-surface-2 px-1.5 py-0.5 text-2xs">
                 {t}
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-[13px] text-muted">None tagged</p>
+          <p className="text-xs text-muted">None tagged</p>
         ),
       )}
 
       {row('Prerequisites and eligibility', (m) => {
         const ranked = byId.get(m.moduleId);
         return (
-          <div className="grid gap-1.5 text-[13px]">
+          <div className="grid gap-1.5 text-xs">
             {m.prerequisites.length ? (
               <ul className="grid gap-0.5">
                 {m.prerequisites.map((p) => (
                   <li key={p.moduleId}>
-                    <span className="font-mono text-[12px]">{p.moduleId}</span> {p.title}
+                    <span className="font-mono text-2xs">{p.moduleId}</span> {p.title}
                   </li>
                 ))}
               </ul>
@@ -224,19 +224,19 @@ function CompareTable({ modules, byId, scored, lowConfidence, isShortlisted }: C
 
       {row('Clashes with your plan', (m) =>
         m.clashes.length ? (
-          <ul className="grid gap-1.5 text-[13px]">
+          <ul className="grid gap-1.5 text-xs">
             {m.clashes.map((c) => (
               <li key={`${c.withModuleId}-${c.term}`} className="grid gap-1">
                 <ClashMarker variant={c.label} probability={c.probability} className="justify-self-start" />
                 <span>
-                  {TERM_LABELS[c.term]}: with <span className="font-mono text-[12px]">{c.withModuleId}</span> {c.withTitle}
+                  {TERM_LABELS[c.term]}: with <span className="font-mono text-2xs">{c.withModuleId}</span> {c.withTitle}
                   {c.core && <span className="text-muted"> (core)</span>}
                 </span>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="flex items-start gap-1 text-[13px] text-muted">
+          <p className="flex items-start gap-1 text-xs text-muted">
             <Icon name="check" size={13} className="mt-0.5 shrink-0 text-fit-high" /> No clashes with your shortlist or core modules
           </p>
         ),
@@ -245,7 +245,7 @@ function CompareTable({ modules, byId, scored, lowConfidence, isShortlisted }: C
       {row('Timetable', (m) => {
         const lines = timetableLines(m.slots);
         return lines.length ? (
-          <ul className="grid gap-1 text-[12px]">
+          <ul className="grid gap-1 text-2xs">
             {lines.map((line) => (
               <li key={line.term}>
                 <span className="font-semibold">{line.term}</span>
@@ -255,7 +255,7 @@ function CompareTable({ modules, byId, scored, lowConfidence, isShortlisted }: C
             ))}
           </ul>
         ) : (
-          <p className="text-[13px] text-muted">No times published yet</p>
+          <p className="text-xs text-muted">No times published yet</p>
         );
       })}
     </>
@@ -270,7 +270,7 @@ function Row({ label, modules, render }: { label: string; modules: CompareModule
   const headingId = useId();
   return (
     <section aria-labelledby={headingId} className="border-b border-line py-3.5 last:border-b-0">
-      <h3 id={headingId} className="mb-2.5 text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">
+      <h3 id={headingId} className="mb-2.5 text-2xs font-semibold tracking-[0.08em] text-muted uppercase">
         {label}
       </h3>
       <ul className={cx('grid gap-3 sm:gap-4', modules.length === 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2')}>
@@ -294,7 +294,7 @@ function Row({ label, modules, render }: { label: string; modules: CompareModule
 
 function Letter({ index }: { index: number }) {
   return (
-    <span aria-hidden="true" className={`grid size-5 shrink-0 place-items-center rounded-md text-[11px] leading-none font-bold text-on-brand ${COMPARE_DOT[index]}`}>
+    <span aria-hidden="true" className={`grid size-5 shrink-0 place-items-center rounded-md text-2xs leading-none font-bold text-on-brand ${COMPARE_DOT[index]}`}>
       {COMPARE_LETTERS[index]}
     </span>
   );
@@ -315,7 +315,7 @@ function AssessmentBar({ assessment, title }: { assessment: CompareModule['asses
           <span key={p.label} className={p.className} style={{ width: `${p.value}%` }} />
         ))}
       </div>
-      <p aria-hidden="true" className="flex flex-wrap gap-x-2.5 gap-y-0.5 text-[12px]">
+      <p aria-hidden="true" className="flex flex-wrap gap-x-2.5 gap-y-0.5 text-2xs">
         {parts.map((p) => (
           <span key={p.label} className="inline-flex items-center gap-1">
             <span className={`size-2 rounded-full ${p.className}`} />
