@@ -149,6 +149,18 @@ describe('student preview', () => {
     expect(previewFeedback({ draft, weakIndex: 1, moduleId: 'fluids-2', catalogue })).toBeNull();
   });
 
+  it('only claims the chosen question lost the most marks when it did', () => {
+    const draft = draftFromForm(form);
+    expect(previewFeedback({ draft, weakIndex: 1, moduleId: 'fluids-2', catalogue })?.feedback.overall).toContain(
+      'Most of the marks you lost were on Q2',
+    );
+    draft.questions[0]!.maxMarks = '100';
+    draft.questions[1]!.maxMarks = '1';
+    const overall = previewFeedback({ draft, weakIndex: 1, moduleId: 'fluids-2', catalogue })?.feedback.overall;
+    expect(overall).toContain('focuses on the marks you lost on Q2');
+    expect(overall).not.toContain('Most of the marks');
+  });
+
   it('only counts main topics and never lists the module itself', () => {
     const affected = affectedModules('fluids-2', ['mathematics-modelling', 'fluid-mechanics'], catalogue);
     expect(affected.map((a) => a.moduleId)).not.toContain('fluids-2');

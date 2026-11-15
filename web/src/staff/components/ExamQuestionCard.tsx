@@ -111,8 +111,8 @@ export function ExamQuestionCard({
                 invalid={Boolean(marksError)}
                 type="number"
                 inputMode="decimal"
-                min={0.5}
-                step={0.5}
+                min={0}
+                step="any"
                 value={q.maxMarks}
                 placeholder="20"
                 onChange={(e) => set({ maxMarks: e.target.value })}

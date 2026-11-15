@@ -83,12 +83,14 @@ export function ListEditor({
   onChange: (items: string[]) => void;
 }) {
   const refs = useRef<(HTMLInputElement | null)[]>([]);
+  const addRef = useRef<HTMLButtonElement>(null);
   const [focusIndex, setFocusIndex] = useState<number | null>(null);
   const hintId = `${id}-hint`;
 
   useEffect(() => {
     if (focusIndex === null) return;
-    refs.current[focusIndex]?.focus();
+    // An empty list has no line to return to, so focus moves to its Add button.
+    (items.length === 0 ? addRef.current : refs.current[Math.min(focusIndex, items.length - 1)])?.focus();
     setFocusIndex(null);
   }, [focusIndex, items.length]);
 
@@ -147,7 +149,12 @@ export function ListEditor({
         ))}
       </ul>
       <div>
-        <Button variant="ghost" className="-ml-2 text-brand hover:text-brand" onClick={() => insertAt(items.length)}>
+        <Button
+          ref={addRef}
+          variant="ghost"
+          className="-ml-2 text-brand hover:text-brand"
+          onClick={() => insertAt(items.length)}
+        >
           <PlusIcon />
           {addLabel}
         </Button>

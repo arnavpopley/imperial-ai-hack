@@ -202,6 +202,8 @@ export function previewFeedback({
   const total = marks.reduce((s, m) => s + m.mark, 0);
   const outOf = marks.reduce((s, m) => s + m.maxMarks, 0);
   const weakTopics = weak.q.topics;
+  // The sample marks are proportional, so a small question can lose fewer marks than a large one done well.
+  const lostMost = marks.every((m) => m.maxMarks - m.mark <= lostMarks);
 
   const mistakes = cleanList(weak.q.commonMistakes);
   const pointers = cleanList(weak.q.revisionPointers);
@@ -231,9 +233,11 @@ export function previewFeedback({
     feedback: {
       moduleId,
       examLabel: draft.examLabel.trim() || 'This exam',
-      overall: `You scored ${total} of ${outOf}. Most of the marks you lost were on ${weakMark.questionId}${
-        weakTopics.length > 0 ? ` (${listTopics(weakTopics).toLowerCase()})` : ''
-      }, so that is the best place to start.`,
+      overall: `You scored ${total} of ${outOf}. ${
+        lostMost ? 'Most of the marks you lost were on' : 'This feedback focuses on the marks you lost on'
+      } ${weakMark.questionId}${weakTopics.length > 0 ? ` (${listTopics(weakTopics).toLowerCase()})` : ''}${
+        lostMost ? ', so that is the best place to start' : ''
+      }.`,
       strengths,
       weakPoints: [
         {

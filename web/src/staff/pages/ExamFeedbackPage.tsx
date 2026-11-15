@@ -82,6 +82,12 @@ function ExamIntro({ status, children }: { status?: ExamStatus; children: ReactN
   );
 }
 
+/**
+ * Unsaved drafts by module, kept for the browser session so switching tab or module does not lose a long form.
+ * Cleared once the draft matches what the server holds.
+ */
+const unsavedDrafts = new Map<string, ExamDraft>();
+
 type Busy = 'idle' | 'saving' | 'publishing';
 type Notice = { tone: 'success' | 'error'; text: string } | null;
 
@@ -91,7 +97,9 @@ function ExamFormWorkspace({ moduleId, initial }: { moduleId: string; initial: E
   const module = modules.find((m) => m.id === moduleId);
 
   const [saved, setSaved] = useState<ExamFeedbackForm | null>(initial);
-  const [draft, setDraft] = useState<ExamDraft | null>(() => (initial ? draftFromForm(initial) : null));
+  const [draft, setDraft] = useState<ExamDraft | null>(
+    () => unsavedDrafts.get(moduleId) ?? (initial ? draftFromForm(initial) : null),
+  );
   const [busy, setBusy] = useState<Busy>('idle');
   const [notice, setNotice] = useState<Notice>(null);
   const [showIssues, setShowIssues] = useState(false);
@@ -122,6 +130,19 @@ function ExamFormWorkspace({ moduleId, initial }: { moduleId: string; initial: E
   const status = examStatus(saved);
   const dirty = draft !== null && (baseline === null || !sameDraft(draft, baseline));
   const issues = useMemo(() => (draft ? draftIssues(draft) : []), [draft]);
+
+  useEffect(() => {
+    if (dirty && draft) unsavedDrafts.set(moduleId, draft);
+    else unsavedDrafts.delete(moduleId);
+  }, [dirty, draft, moduleId]);
+
+  // A reload or closed tab would lose the in-memory copy too, so ask first.
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [dirty]);
   const issueFor = (field: string) => (showIssues ? issues.find((i) => i.field === field)?.message : undefined);
 
   if (!draft)
@@ -248,6 +269,8 @@ function ExamFormWorkspace({ moduleId, initial }: { moduleId: string; initial: E
         <form
           id="exam-editor"
           aria-label="Exam feedback form"
+          // Checked by draftIssues instead, so Save and Publish accept exactly the same values.
+          noValidate
           className="grid min-w-0 grid-cols-1 gap-6"
           onSubmit={(e) => {
             e.preventDefault();
