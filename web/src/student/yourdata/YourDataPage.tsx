@@ -1,7 +1,7 @@
 // Spec 20.3 as a page of its own: what we know about the student, the words it came from, an edit form and
 // a "Delete everything" danger zone. Interests, goals and preferences, plus marks only when the student shares them
 // with consent (spec 23); never health or background.
-import { confidenceLabel, type Evidence, type StudentProfile, type Weekday } from '@modulematch/shared';
+import { confidenceLabel, type Evidence, type StudentProfile } from '@modulematch/shared';
 import { AnimatePresence, motion } from 'motion/react';
 import { useId, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
@@ -12,7 +12,6 @@ import { cx } from '../../components/cx.ts';
 import { Icon, type IconName } from '../../components/Icon.tsx';
 import { errorMessage } from '../../components/StateViews.tsx';
 import {
-  DAY_NAMES,
   formatEvidenceValue,
   percent,
   slotLabel,
@@ -20,9 +19,9 @@ import {
   STYLE_META,
   styleValueText,
   topicLabel,
-  WEEKDAYS,
 } from '../labels.ts';
 import { clearRevisionChecklists } from '../feedback/plan.ts';
+import { KeepFreeDays } from '../profile/KeepFreeDays.tsx';
 import { ProfileEditor } from '../profile/ProfileEditor.tsx';
 import { useProfileActions } from '../profile/useProfileActions.ts';
 import { errorStatus } from '../results/files.ts';
@@ -447,8 +446,6 @@ function PathwaysCard({ profile, evidence }: { profile: StudentProfile; evidence
 
 function TimetableCard({ profile, evidence }: { profile: StudentProfile; evidence: readonly Evidence[] }) {
   const { avoidDays, earliestStart, avoidHalfDays = [] } = profile.timetablePrefs;
-  const avoid = new Set(avoidDays);
-  const halvesOf = (d: Weekday) => avoidHalfDays.filter((h) => h.startsWith(d)).map((h) => (h.endsWith('-am') ? 'AM' : 'PM'));
   return (
     <DataCard
       icon="calendar"
@@ -459,34 +456,7 @@ function TimetableCard({ profile, evidence }: { profile: StudentProfile; evidenc
       <div className="grid gap-5">
         <div>
           <p className="mb-2.5 text-sm font-medium">Days to keep free</p>
-          <ul className="grid grid-cols-5 gap-2">
-            {WEEKDAYS.map((d) => {
-              const free = avoid.has(d);
-              const halves = free ? [] : halvesOf(d);
-              return (
-                <li
-                  key={d}
-                  className={cx(
-                    'grid place-items-center gap-1 rounded-2xl py-3 text-sm font-medium',
-                    free ? 'bg-art-2 text-on-brand' : halves.length > 0 ? 'bg-art-2/20 text-art-2' : 'bg-surface-2 text-muted',
-                  )}
-                >
-                  <span aria-hidden="true">{DAY_NAMES[d].slice(0, 3)}</span>
-                  <span className="sr-only">
-                    {DAY_NAMES[d]}:{' '}
-                    {free ? 'keep free' : halves.length > 0 ? `keep ${halves.map((h) => (h === 'AM' ? 'morning' : 'afternoon')).join(' and ')} free` : 'available'}
-                  </span>
-                  {halves.length > 0 ? (
-                    <span aria-hidden="true" className="text-2xs font-semibold">
-                      {halves.join(' ')}
-                    </span>
-                  ) : (
-                    <Icon name={free ? 'ban' : 'check'} size={14} />
-                  )}
-                </li>
-              );
-            })}
-          </ul>
+          <KeepFreeDays avoidDays={avoidDays} avoidHalfDays={avoidHalfDays} />
         </div>
         <p className="flex items-center gap-2 text-sm">
           <Icon name="clock" size={16} className="text-muted" />

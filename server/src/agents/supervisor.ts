@@ -12,7 +12,7 @@ import { answerCatalogueQuestion } from './catalogue.ts';
 import { draftComplaint, draftLowConfidence, draftRuleException, draftWellbeing } from './escalation.ts';
 import { extract, mergeUpdates } from './extractor.ts';
 import { classifyIntent, isModuleQuestion, needsClarification, wantsToFinishInterview } from './intent.ts';
-import { answeredSteps, askNext, followUp, nextQuestion, pendingStep, reflect, studentTurn, unfilledSlots, whatIHeard, type PlanStep, type Widget } from './interviewer.ts';
+import { answeredSteps, askNext, followUp, nextQuestion, pendingStep, reflect, studentTurn, unfilledSlots, WHAT_I_HEARD_LINE, type PlanStep, type Widget } from './interviewer.ts';
 import { emitWords, type ChatMessage } from './llm.ts';
 import { alternativesTo, holdPosition, ruleClauses } from './matcher.ts';
 import { matchModules, MAX_SUGGESTIONS } from './module-match.ts';
@@ -110,8 +110,8 @@ async function interviewTurn(turn: Turn, structuredAnswers: SendMessageBody['str
     session.interview = { ...session.interview, finished: true, targetSlots: [] };
     repo.updateSession(session.id, { interview: session.interview });
     tracer.record({ actor: 'interviewer', kind: 'agent', input: `${session.interview.questionsAsked} questions asked`, output: 'finish_interview', verdict: null });
-    const titles = Object.fromEntries(catalogue.pathways().map((p) => [p.id, p.title]));
-    await say(turn, 'interviewer', whatIHeard(session.profile, titles), { kind: 'confirm-profile', fields: [] });
+    // The card shows the profile; the bubble only introduces it (issue 144).
+    await say(turn, 'interviewer', WHAT_I_HEARD_LINE, { kind: 'confirm-profile', fields: [] });
     return;
   }
   const asked = {
@@ -380,9 +380,8 @@ async function correctSummaryTurn(turn: Turn) {
   session.evidence.push(...merged.evidence);
   session.profile = saveProfile(session, merged.profile);
   await turn.emit({ type: 'profile_update', profile: session.profile, evidence: session.evidence });
-  const titles = Object.fromEntries(catalogue.pathways().map((p) => [p.id, p.title]));
-  const lead = merged.evidence.length ? 'Updated.' : 'I could not tell what to change, so here is the summary again. You can also edit it directly.';
-  await say(turn, 'interviewer', `${lead}\n${whatIHeard(session.profile, titles)}`, { kind: 'confirm-profile', fields: [] });
+  const lead = merged.evidence.length ? 'Updated.' : 'I could not tell what to change. You can also edit it directly.';
+  await say(turn, 'interviewer', `${lead} ${WHAT_I_HEARD_LINE}`, { kind: 'confirm-profile', fields: [] });
 }
 
 async function editProfileTurn(turn: Turn) {

@@ -131,8 +131,6 @@ const topicLabel = (id: string) => taxonomy.topics[id as keyof typeof taxonomy.t
 /** A topic label mid-sentence: only the first letter is lowered, so acronyms keep their case ("machine learning and AI"). */
 const inSentence = (label: string) => (/^[A-Z]{2}/.test(label) ? label : label.charAt(0).toLowerCase() + label.slice(1));
 
-const DAY_NAMES: Record<string, string> = { mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday' };
-
 /** A short reflection of what the extractor just heard, used offline and as the live prompt's hint. */
 export function reflect(newEvidence: Evidence[]): string {
   const liked = newEvidence
@@ -210,35 +208,9 @@ export async function askNext(
 /** Wraps the redacted student turn for the interviewer's history, so it is read as data. */
 export const studentTurn = (text: string): ChatMessage => ({ role: 'user', content: asData('student', text) });
 
-/** The "Here is what I heard" card (spec 10.2), written from the profile so it never invents anything. */
-export function whatIHeard(profile: StudentProfile, pathwayTitles: Record<string, string>): string {
-  // "Not answered yet", not "not asked": the question may have been asked without an answer the extractor could read.
-  const pct = (v: number | null) => (v === null ? 'not answered yet' : `${Math.round(v * 100)}%`);
-  const interests = Object.entries(profile.interests)
-    .filter(([, v]) => v >= 0.5)
-    .sort((a, b) => b[1] - a[1])
-    .map(([t]) => topicLabel(t));
-  const avoid = Object.entries(profile.interests)
-    .filter(([, v]) => v < 0.3)
-    .map(([t]) => topicLabel(t));
-  const lean = (v: number | null, low: string, high: string) => (v === null ? 'not answered yet' : v >= 0.6 ? high : v <= 0.4 ? low : 'a mix');
-  const { avoidDays, avoidHalfDays = [], earliestStart } = profile.timetablePrefs;
-  const keepFree = [
-    ...avoidDays.map((d) => DAY_NAMES[d] ?? d),
-    ...avoidHalfDays.map((h) => `${DAY_NAMES[h.slice(0, 3)] ?? h} ${h.endsWith('-am') ? 'morning' : 'afternoon'}`),
-    ...(earliestStart ? [`before ${earliestStart}`] : []),
-  ];
-  return [
-    'Here is what I heard:',
-    `• Interested in: ${interests.join(', ') || 'nothing specific yet'}`,
-    avoid.length ? `• Would rather avoid: ${avoid.join(', ')}` : null,
-    `• After graduating: ${profile.pathways.map((p) => pathwayTitles[p] ?? p).join(', ') || (profile.pathwaysSkipped ? 'not decided yet' : 'not answered yet')}`,
-    `• Assessment: ${lean(profile.style.examPreference, 'coursework and projects', 'exams')}; style: ${lean(profile.style.appliedPreference, 'theory', 'applied')}; working: ${lean(profile.style.groupPreference, 'alone', 'in a team')}`,
-    `• Maths comfort ${pct(profile.style.mathsComfort)}, coding comfort ${pct(profile.style.codingComfort)}, workload ${pct(profile.style.workloadTolerance)}`,
-    `• Outside your degree: ${lean(profile.breadthAppetite, 'rather not', 'keen')}`,
-    keepFree.length ? `• Keep free: ${keepFree.join(', ')}` : null,
-    'Is that right? Confirm it, or tell me what to change.',
-  ]
-    .filter((line): line is string => line !== null)
-    .join('\n');
-}
+/**
+ * The interviewer's line that introduces the "Here is what I heard" card (spec 10.2). The card shows the profile
+ * itself, so the line stays short and the details appear once in the chat (issue 144).
+ */
+export const WHAT_I_HEARD_LINE = "Here's what I heard. Check it below, then confirm it or tell me what to change.";
+

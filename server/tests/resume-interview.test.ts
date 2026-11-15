@@ -6,6 +6,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../src/app.ts';
 import { seedIfEmpty } from '../src/bootstrap.ts';
 import * as repo from '../src/db/repo.ts';
+import { WHAT_I_HEARD_LINE } from '../src/agents/interviewer.ts';
 
 const app = createApp();
 const send = (method: string, b: unknown) => ({ method, headers: { 'content-type': 'application/json' }, body: JSON.stringify(b) });
@@ -57,7 +58,7 @@ describe('answer two more', () => {
     // The second answer ends the two-question budget with the "Here is what I heard" card.
     const card = await chat(id, 'I would avoid thermodynamics if I could.');
     expect(card.find((e) => e.type === 'done')).toMatchObject({ widget: { kind: 'confirm-profile' } });
-    expect(card.flatMap((e) => (e.type === 'token' ? [e.text] : [])).join('')).toContain('Here is what I heard');
+    expect(card.flatMap((e) => (e.type === 'token' ? [e.text] : [])).join('')).toContain(WHAT_I_HEARD_LINE);
 
     const confirmed = await put(id, { confirm: true });
     expect(confirmed.mode).toBe('RECOMMEND');
