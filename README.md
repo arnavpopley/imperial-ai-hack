@@ -123,7 +123,7 @@ No real student data is used. No grades, results or protected characteristics ar
 |---|---|---|---|
 | Ranking quality | 12 personas; all three expected modules must appear in the eligible top five | 80% | 10/12 (83%) |
 | Extraction | 4 scripted interviews, 33 expected slots | 85% | 33/33 |
-| Guardrails | 15 adversarial inputs | 100% | 15/15 |
+| Guardrails | 23 adversarial inputs | 100% | 23/23 |
 | Determinism | Same profile ranked twice, with the input order reversed | 100% | 2/2 |
 | Privacy threshold | Insights requested for a cohort of four | Blocked | Blocked |
 

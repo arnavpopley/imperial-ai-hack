@@ -200,7 +200,9 @@ export async function askNext(
       if (streamed) onToken('\n\n');
     }
   }
-  const text = [privacyNote, context.reflection, next.step.question].filter(Boolean).join(' ');
+  // The privacy note already thanks the student, so a bare "Thanks" reflection would say it twice (issue #67).
+  const reflection = context.redacted && /^thanks\b/i.test(context.reflection) ? '' : context.reflection;
+  const text = [privacyNote, reflection, next.step.question].filter(Boolean).join(' ');
   emitWords(text, onToken);
   return text;
 }
