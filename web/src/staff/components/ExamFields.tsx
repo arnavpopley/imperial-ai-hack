@@ -215,7 +215,7 @@ export function TopicPicker({
         {selected.map((t) => (
           <span
             key={t}
-            className="inline-flex items-center gap-1 rounded-full bg-brand-soft py-1 pr-1 pl-3 text-[13px] font-medium text-brand"
+            className="inline-flex items-center gap-1 rounded-full bg-brand-soft py-1 pr-1 pl-3 text-xs font-medium text-brand"
           >
             {topicLabel(t)}
             <button

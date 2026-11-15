@@ -278,7 +278,7 @@ function InterestsCard({ profile, evidence }: { profile: StudentProfile; evidenc
     <DataCard
       icon="heart"
       title="Interests"
-      tint="bg-module-6/10 text-module-6"
+      tint="bg-art-6/10 text-art-6"
       quotes={quotesFor(evidence, (s) => s.startsWith('interest:'))}
     >
       {interests.length === 0 ? (
@@ -427,7 +427,7 @@ function TimetableCard({ profile, evidence }: { profile: StudentProfile; evidenc
     <DataCard
       icon="calendar"
       title="Timetable preferences"
-      tint="bg-module-2/10 text-module-2"
+      tint="bg-art-2/10 text-art-2"
       quotes={quotesFor(evidence, (s) => s.startsWith('timetablePrefs.'))}
     >
       <div className="grid gap-5">
@@ -442,7 +442,7 @@ function TimetableCard({ profile, evidence }: { profile: StudentProfile; evidenc
                   key={d}
                   className={cx(
                     'grid place-items-center gap-1 rounded-2xl py-3 text-sm font-medium',
-                    free ? 'bg-module-2 text-on-brand' : halves.length > 0 ? 'bg-module-2/20 text-module-2' : 'bg-surface-2 text-muted',
+                    free ? 'bg-art-2 text-on-brand' : halves.length > 0 ? 'bg-art-2/20 text-art-2' : 'bg-surface-2 text-muted',
                   )}
                 >
                   <span aria-hidden="true">{DAY_NAMES[d].slice(0, 3)}</span>
@@ -451,7 +451,7 @@ function TimetableCard({ profile, evidence }: { profile: StudentProfile; evidenc
                     {free ? 'keep free' : halves.length > 0 ? `keep ${halves.map((h) => (h === 'AM' ? 'morning' : 'afternoon')).join(' and ')} free` : 'available'}
                   </span>
                   {halves.length > 0 ? (
-                    <span aria-hidden="true" className="text-[11px] font-semibold">
+                    <span aria-hidden="true" className="text-2xs font-semibold">
                       {halves.join(' ')}
                     </span>
                   ) : (

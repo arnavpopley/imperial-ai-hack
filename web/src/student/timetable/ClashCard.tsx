@@ -123,31 +123,31 @@ export function ClashCard({
         <ModuleName title={b} core={coreIds?.has(clash.moduleB) ?? false} />{' '}
         {clash.label === 'certain' ? 'overlap' : 'may overlap'}.
       </p>
-      <p className="mt-0.5 text-[12px] text-muted">{overlapText(clash)}</p>
-      <p className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-medium text-muted">
+      <p className="mt-0.5 text-2xs text-muted">{overlapText(clash)}</p>
+      <p className="mt-1.5 inline-flex items-center gap-1 text-2xs font-medium text-muted">
         <Icon name="clock" size={11} />
         Based on last year's timetable
       </p>
 
       {swaps.length > 0 ? (
         <div className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-2">
-          <p className="text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">Suggested swaps</p>
+          <p className="text-2xs font-semibold tracking-[0.08em] text-muted uppercase">Suggested swaps</p>
           {swaps.map((swap) => (
             <SwapRow key={`${swap.replaceModuleId}-${swap.withModuleId}`} swap={swap} {...rowProps} />
           ))}
         </div>
       ) : (
         <div className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-2">
-          <p className="text-[13px]">No swap within {SWAP_FIT_TOLERANCE} fit points that keeps your programme rules.</p>
+          <p className="text-xs">No swap within {SWAP_FIT_TOLERANCE} fit points that keeps your programme rules.</p>
           {widerSwaps.length > 0 && (
             <>
-              <p className="text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">Further from your fit</p>
+              <p className="text-2xs font-semibold tracking-[0.08em] text-muted uppercase">Further from your fit</p>
               {widerSwaps.map((swap) => (
                 <SwapRow key={`${swap.replaceModuleId}-${swap.withModuleId}`} swap={swap} beyond {...rowProps} />
               ))}
             </>
           )}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px]">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
             {removeTarget && (
               <Button size="sm" icon="x" onClick={() => void remove(removeTarget)} busy={busy} disabled={confirmingOpen}>
                 Remove {titleFor(removeTarget)}
@@ -173,7 +173,7 @@ export function ClashCard({
         </div>
       )}
       {error && (
-        <p role="alert" className="mt-2 text-[13px] text-fit-low">
+        <p role="alert" className="mt-2 text-xs text-fit-low">
           That did not go through: {error}
         </p>
       )}
@@ -203,17 +203,17 @@ function SwapRow({ swap, beyond = false, titleFor, busy, confirming, onAsk, onCa
     <div className="rounded-xl bg-surface-2 p-3">
       <div className="flex items-center gap-3">
         <FitScore value={swap.fit} variant="compact" className="text-sm" />
-        <p className="min-w-0 flex-1 text-[13px] leading-snug">
+        <p className="min-w-0 flex-1 text-xs leading-snug">
           Replace <span className="font-medium">{from}</span> with <span className="font-medium">{to}</span>
           {beyond ? (
-            <span className="ml-1 inline-flex rounded-full bg-fit-mid/12 px-1.5 text-[11px] font-semibold text-fit-mid tabular-nums">
+            <span className="ml-1 inline-flex rounded-full bg-fit-mid/12 px-1.5 text-2xs font-semibold text-fit-mid tabular-nums">
               {delta}
             </span>
           ) : (
             <span className={cx('ml-1 tabular-nums', swap.fitDelta < 0 ? 'text-muted' : 'text-fit-high')}>({delta})</span>
           )}
           {swap.keepFreeConflicts > 0 && (
-            <span className="mt-0.5 flex w-fit items-center gap-1 rounded-full bg-mode-explain/10 px-1.5 text-[11px] font-medium text-mode-explain">
+            <span className="mt-0.5 flex w-fit items-center gap-1 rounded-full bg-mode-explain/10 px-1.5 text-2xs font-medium text-mode-explain">
               <Icon name="moon" size={10} />
               Uses kept-free time
             </span>
@@ -227,10 +227,10 @@ function SwapRow({ swap, beyond = false, titleFor, busy, confirming, onAsk, onCa
       </div>
       {isConfirming && (
         <div role="group" aria-label="Confirm swap" className="animate-rise mt-3 border-t border-line pt-3">
-          <p className="text-[13px] font-medium">
+          <p className="text-xs font-medium">
             Swap {from} for {to}?
           </p>
-          <p className="text-[12px] text-muted">
+          <p className="text-2xs text-muted">
             {beyond ? `It fits you ${Math.abs(swap.fitDelta)} points less. ` : ''}Your shortlist changes only when you confirm.
           </p>
           <div className="mt-2 flex flex-wrap gap-2">

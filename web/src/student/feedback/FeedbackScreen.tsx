@@ -132,8 +132,8 @@ function AtAGlance({ exams, onJump }: { exams: readonly ExamView[]; onJump: (anc
       className="rounded-panel bg-surface p-2 shadow-soft ring-1 ring-line sm:p-3"
     >
       <h2 id="glance-heading" className="flex flex-wrap items-baseline justify-between gap-x-3 px-3 pt-2 pb-1">
-        <span className="text-[11px] font-semibold tracking-[0.1em] text-muted uppercase">At a glance</span>
-        <span className="text-[12px] text-muted">Most room to improve first</span>
+        <span className="text-2xs font-semibold tracking-[0.1em] text-muted uppercase">At a glance</span>
+        <span className="text-2xs text-muted">Most room to improve first</span>
       </h2>
       <ol className="grid grid-cols-[minmax(0,1fr)]">
         {exams.map((exam) => {
@@ -149,7 +149,7 @@ function AtAGlance({ exams, onJump }: { exams: readonly ExamView[]; onJump: (anc
                 <MarkBadge mark={exam.mark} size="sm" />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-medium">{title}</span>
-                  <span className="block truncate text-[12.5px] text-muted">
+                  <span className="block truncate text-xs text-muted">
                     {focus ? `Focus: ${focus.questionId}${focus.label ? ` ${focus.label}` : ''}` : 'A strong paper all round'}
                   </span>
                 </span>
@@ -200,12 +200,12 @@ function EmptyFeedback() {
           >
             <span className="relative grid size-11 place-items-center rounded-full bg-mode-explain/10 text-mode-explain" aria-hidden="true">
               {step.icon === 'sheet' ? <MarkSheetIcon size={20} /> : <Icon name={step.icon} size={20} />}
-              <span className="absolute -top-1 -right-1 grid size-5 place-items-center rounded-full bg-surface text-[11px] font-semibold text-ink ring-1 ring-line">
+              <span className="absolute -top-1 -right-1 grid size-5 place-items-center rounded-full bg-surface text-2xs font-semibold text-ink ring-1 ring-line">
                 {i + 1}
               </span>
             </span>
-            <p className="text-[14px] font-semibold">{step.title}</p>
-            <p className="text-[13px] leading-snug text-muted">{step.text}</p>
+            <p className="text-sm font-semibold">{step.title}</p>
+            <p className="text-xs leading-snug text-muted">{step.text}</p>
           </motion.li>
         ))}
       </ol>

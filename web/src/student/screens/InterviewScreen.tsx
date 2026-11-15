@@ -114,7 +114,7 @@ export function InterviewScreen() {
                   {confirmed ? 'Go to recommendations' : 'Skip to modules'}
                 </Button>
                 {error && (
-                  <p role="alert" className="text-[12px] text-fit-low">
+                  <p role="alert" className="text-2xs text-fit-low">
                     {error}
                   </p>
                 )}

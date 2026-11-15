@@ -34,7 +34,7 @@ export function AiSummaryCard({ moduleId }: { moduleId: string }) {
             In short
           </h2>
           {data && (
-            <span className="rounded-full bg-surface-2 px-2.5 py-1 text-[11px] font-medium text-muted">
+            <span className="rounded-full bg-surface-2 px-2.5 py-1 text-2xs font-medium text-muted">
               {data.source === 'model' ? 'AI summary of the public description' : 'Summary from the module record'}
             </span>
           )}
@@ -42,7 +42,7 @@ export function AiSummaryCard({ moduleId }: { moduleId: string }) {
 
         {data ? (
           <>
-            <p className="mt-3 text-[16px] leading-relaxed text-pretty sm:text-[17px]">{data.summary}</p>
+            <p className="mt-3 text-base leading-relaxed text-pretty sm:text-base">{data.summary}</p>
             {data.highlights.length > 0 && (
               <ul className="mt-4 flex flex-wrap gap-2" aria-label="Highlights">
                 {data.highlights.slice(0, 4).map((h, i) => (
@@ -51,7 +51,7 @@ export function AiSummaryCard({ moduleId }: { moduleId: string }) {
                     initial={reduce ? false : { opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.08 * i, duration: 0.3 }}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-brand/20 bg-brand-soft/60 px-3 py-1.5 text-[13px] font-medium"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-brand/20 bg-brand-soft/60 px-3 py-1.5 text-xs font-medium"
                   >
                     <Icon name="check" size={13} className="text-brand" />
                     {h}
@@ -71,7 +71,7 @@ export function AiSummaryCard({ moduleId }: { moduleId: string }) {
             )}
           </>
         ) : summary.error ? (
-          <div role="alert" className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-[13px] text-muted">
+          <div role="alert" className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-muted">
             <Icon name="info" size={15} className="shrink-0 text-fit-mid" />
             <span className="min-w-0 flex-1">
               The summary is not available right now. The full description is under “About the module” below.

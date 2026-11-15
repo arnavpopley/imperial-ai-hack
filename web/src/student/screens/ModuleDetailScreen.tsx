@@ -107,7 +107,7 @@ export function ModuleDetailScreen() {
         <PageHeader
           eyebrow={
             <>
-              <Link to={paths.catalogue} className="inline-flex items-center gap-1.5 rounded-md text-[13px] font-medium text-muted hover:text-ink">
+              <Link to={paths.catalogue} className="inline-flex items-center gap-1.5 rounded-md text-xs font-medium text-muted hover:text-ink">
                 <Icon name="arrow-left" size={14} />
                 All modules
               </Link>
@@ -133,7 +133,7 @@ export function ModuleDetailScreen() {
               <span className="flex items-center gap-3">
                 {scored ? <ScoreRing value={rec.fit} dimmed={dimmed} delay={0.15} /> : <NoScoreRing />}
                 {scored && (
-                  <span className="grid text-[12px] leading-tight text-muted">
+                  <span className="grid text-2xs leading-tight text-muted">
                     <span className="font-semibold text-ink">{FIT_BAND_LABELS[fitBand(rec.fit)]}</span>
                     {rec.rank === 1 ? 'your best match' : `ranked #${rec.rank}`}
                   </span>
@@ -154,7 +154,7 @@ export function ModuleDetailScreen() {
                 href={module.sourceUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1 text-[13px] font-medium text-brand underline-offset-2 hover:underline"
+                className="inline-flex items-center gap-1 text-xs font-medium text-brand underline-offset-2 hover:underline"
               >
                 Public description
                 <Icon name="external" size={13} />
@@ -165,12 +165,12 @@ export function ModuleDetailScreen() {
         />
         {demand && <DemandNote signal={demand} />}
         {shortlist.error && (
-          <p role="alert" className="text-[13px] text-fit-low">
+          <p role="alert" className="text-xs text-fit-low">
             {shortlist.error}
           </p>
         )}
         {rec && !rec.eligible && rec.ineligibleReasons.length > 0 && (
-          <ul className="grid gap-1 rounded-xl bg-surface-2 px-4 py-3 text-[13px]">
+          <ul className="grid gap-1 rounded-xl bg-surface-2 px-4 py-3 text-xs">
             {rec.ineligibleReasons.map((reason) => (
               <li key={reason} className="flex gap-2">
                 <Icon name="lock" size={13} className="mt-0.5 shrink-0 text-muted" />
@@ -190,7 +190,7 @@ export function ModuleDetailScreen() {
                 <Link
                   key={`${f.moduleId}-${f.examLabel}`}
                   to={paths.feedback}
-                  className="group flex flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl bg-mode-explain/8 px-4 py-3 text-[14px] ring-1 ring-mode-explain/20 transition ring-inset hover:ring-mode-explain/40"
+                  className="group flex flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl bg-mode-explain/8 px-4 py-3 text-sm ring-1 ring-mode-explain/20 transition ring-inset hover:ring-mode-explain/40"
                 >
                   <Icon name="tutor" size={16} className="shrink-0 text-mode-explain" />
                   <span className="min-w-0 flex-1">
@@ -219,7 +219,7 @@ export function ModuleDetailScreen() {
             </h2>
             {explanation.data ? (
               <>
-                <p className="mt-3 text-[15px] leading-relaxed text-pretty">{explanation.data.explanation.summary}</p>
+                <p className="mt-3 text-sm leading-relaxed text-pretty">{explanation.data.explanation.summary}</p>
                 {explanation.data.explanation.because.length > 0 && (
                   <ul className="mt-4 grid gap-2" aria-label="Reasons">
                     {explanation.data.explanation.because.map((reason) => (
@@ -229,7 +229,7 @@ export function ModuleDetailScreen() {
                 )}
                 {explanation.data.explanation.watchOuts.length > 0 && (
                   <>
-                    <h3 className="mt-5 text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">Watch out for</h3>
+                    <h3 className="mt-5 text-2xs font-semibold tracking-[0.08em] text-muted uppercase">Watch out for</h3>
                     <ul className="mt-2 grid gap-2">
                       {explanation.data.explanation.watchOuts.map((w) => (
                         <ReasonRow key={w} text={w} source={null} tone="watch-out" />
@@ -237,7 +237,7 @@ export function ModuleDetailScreen() {
                     </ul>
                   </>
                 )}
-                <p className="mt-5 text-[12px] text-muted">
+                <p className="mt-5 text-2xs text-muted">
                   Scores are worked out by code from your profile. The advisor explains them but cannot change them, and the
                   choice is yours.
                 </p>
@@ -270,7 +270,7 @@ export function ModuleDetailScreen() {
 
           <motion.div {...rise(0.2)} className="grid gap-3">
             <Accordion title="About the module" icon="info" as="h2">
-              <p className="text-[14px] leading-relaxed text-muted">{module.description}</p>
+              <p className="text-sm leading-relaxed text-muted">{module.description}</p>
             </Accordion>
             <Accordion
               title="Learning outcomes"
@@ -279,7 +279,7 @@ export function ModuleDetailScreen() {
               meta={module.learningOutcomes.length > 0 ? String(module.learningOutcomes.length) : undefined}
             >
               {module.learningOutcomes.length > 0 ? (
-                <ul className="grid gap-2 text-[14px] leading-relaxed">
+                <ul className="grid gap-2 text-sm leading-relaxed">
                   {module.learningOutcomes.map((o) => (
                     <li key={o} className="flex gap-2.5">
                       <span className="mt-2 size-1.5 shrink-0 rounded-full bg-brand" aria-hidden="true" />
@@ -288,7 +288,7 @@ export function ModuleDetailScreen() {
                   ))}
                 </ul>
               ) : (
-                <p className="text-[13px] text-muted">Not listed in the public description.</p>
+                <p className="text-xs text-muted">Not listed in the public description.</p>
               )}
             </Accordion>
             <Accordion
@@ -298,9 +298,9 @@ export function ModuleDetailScreen() {
               meta={module.prerequisites.length === 0 ? 'None' : String(module.prerequisites.length)}
             >
               {module.prerequisites.length === 0 ? (
-                <p className="text-[13px] text-muted">None listed for this module.</p>
+                <p className="text-xs text-muted">None listed for this module.</p>
               ) : (
-                <ul className="grid gap-1.5 text-[14px]">
+                <ul className="grid gap-1.5 text-sm">
                   {module.prerequisites.map((id) => {
                     const done = session.profile.completedModuleIds.includes(id);
                     return (

@@ -65,7 +65,7 @@ export function PathwaysScreen() {
           )}
         </div>
         {error && (
-          <p role="alert" className="mb-3 text-[13px] text-fit-low">
+          <p role="alert" className="mb-3 text-xs text-fit-low">
             Could not save your pathways: {error}
           </p>
         )}
@@ -111,7 +111,7 @@ export function PathwaysScreen() {
                           <span className="font-semibold tracking-tight">{p.title}</span>
                           {on && <Icon name="check" size={16} className="mt-0.5 shrink-0 text-brand" />}
                         </span>
-                        <span className="mt-1 line-clamp-2 text-[12px] leading-snug text-muted">{p.description}</span>
+                        <span className="mt-1 line-clamp-2 text-2xs leading-snug text-muted">{p.description}</span>
                       </span>
                     </button>
                   </motion.li>

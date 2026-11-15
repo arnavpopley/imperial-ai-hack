@@ -80,7 +80,7 @@ function AppHeader({ role }: { role: Role }) {
           >
             <Icon name="compass" size={20} />
           </span>
-          <span className="text-[17px] font-semibold tracking-tight max-sm:sr-only">ModuleMatch</span>
+          <span className="text-base font-semibold tracking-tight max-sm:sr-only">ModuleMatch</span>
         </Link>
         {/* No authentication this weekend (spec 5): the staff console sits behind this role switch. */}
         <nav aria-label="Role" className="ml-auto">
@@ -93,7 +93,7 @@ function AppHeader({ role }: { role: Role }) {
                     to={r.to}
                     aria-current={active ? 'page' : undefined}
                     className={cx(
-                      'relative flex h-9 items-center gap-1.5 rounded-full px-2.5 text-[13px] font-medium whitespace-nowrap transition-colors sm:px-4 sm:text-sm',
+                      'relative flex h-9 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium whitespace-nowrap transition-colors sm:px-4 sm:text-sm',
                       active ? 'text-on-brand' : 'text-muted hover:text-ink',
                     )}
                   >

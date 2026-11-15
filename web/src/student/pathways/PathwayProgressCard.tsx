@@ -62,7 +62,7 @@ export function PathwayProgressCard({ pathwayId, pathway, index, wide = false }:
           </span>
           <div className="min-w-0 flex-1">
             <h3 className="font-semibold tracking-tight">{title}</h3>
-            <p className="text-[12px] text-muted">Completed, core and shortlisted modules</p>
+            <p className="text-2xs text-muted">Completed, core and shortlisted modules</p>
           </div>
           {data && <span className="text-3xl font-semibold tracking-tight tabular-nums">{percent(data.progress)}</span>}
         </div>
@@ -78,18 +78,18 @@ export function PathwayProgressCard({ pathwayId, pathway, index, wide = false }:
               >
                 <Icon name="sparkle" size={16} className="shrink-0 text-brand" />
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">Next best module</span>
+                  <span className="block text-2xs font-semibold tracking-[0.08em] text-muted uppercase">Next best module</span>
                   <span className="block truncate text-sm font-semibold">{moduleTitle(data.nextBest.moduleId)}</span>
-                  <span className="block truncate text-[12px] text-muted">
+                  <span className="block truncate text-2xs text-muted">
                     Adds {skillLabel(data.nextBest.skill).toLowerCase()}
                     {data.nextBest.skill === biggestGap ? ', your biggest gap' : ''}
                   </span>
                 </span>
-                <span className="text-[13px] font-semibold text-brand tabular-nums">+{Math.round(data.nextBest.gain * 100)} pts</span>
+                <span className="text-xs font-semibold text-brand tabular-nums">+{Math.round(data.nextBest.gain * 100)} pts</span>
                 <Icon name="arrow-right" size={15} className="text-brand transition group-hover:translate-x-0.5" />
               </Link>
             ) : (
-              <p className="mt-5 flex items-center gap-2 text-[13px] text-muted">
+              <p className="mt-5 flex items-center gap-2 text-xs text-muted">
                 <Icon name="check" size={14} className="shrink-0 text-fit-high" />
                 Every eligible module that suits this pathway is already in your plan.
               </p>
@@ -113,7 +113,7 @@ export function PathwayProgressCard({ pathwayId, pathway, index, wide = false }:
         {pathway && pathway.sampleOpportunities.length > 0 && (
           <ul className="mt-4 flex flex-wrap gap-1.5" aria-label="Sample opportunities">
             {pathway.sampleOpportunities.map((o) => (
-              <li key={o} className="rounded-full border border-line px-2.5 py-1 text-[12px]">
+              <li key={o} className="rounded-full border border-line px-2.5 py-1 text-2xs">
                 {o}
               </li>
             ))}
@@ -125,14 +125,14 @@ export function PathwayProgressCard({ pathwayId, pathway, index, wide = false }:
             href={linkedIn.url}
             target="_blank"
             rel="noreferrer"
-            className="flex w-full items-center gap-2.5 rounded-xl border border-line-strong bg-surface px-3.5 py-2.5 text-left text-[13px] font-medium transition hover:border-[#0a66c2]/60 hover:bg-surface-2"
+            className="flex w-full items-center gap-2.5 rounded-xl border border-line-strong bg-surface px-3.5 py-2.5 text-left text-xs font-medium transition hover:border-[#0a66c2]/60 hover:bg-surface-2"
           >
             <LinkedInMark />
             <span className="min-w-0 flex-1">{linkedIn.label}</span>
             <Icon name="external" size={14} className="shrink-0 text-muted" />
             <span className="sr-only">(opens LinkedIn in a new tab)</span>
           </a>
-          <p className="mt-2 text-[11px] leading-snug text-muted">
+          <p className="mt-2 text-2xs leading-snug text-muted">
             Opens a public LinkedIn people search. ModuleMatch cannot see your LinkedIn connections.
           </p>
         </div>
@@ -141,12 +141,12 @@ export function PathwayProgressCard({ pathwayId, pathway, index, wide = false }:
         <section aria-label={`Skills for ${title}`} className="min-w-0 lg:border-l lg:border-line lg:pl-8">
           <h4 className="mb-3 flex items-baseline justify-between text-sm font-semibold">
             What makes up {data ? percent(data.progress) : 'your progress'}
-            {data && <span className="text-[12px] font-normal text-muted">{data.perSkill.length} skills</span>}
+            {data && <span className="text-2xs font-normal text-muted">{data.perSkill.length} skills</span>}
           </h4>
           {data ? (
             <SkillBars perSkill={data.perSkill} />
           ) : progress.error ? (
-            <p className="text-[13px] text-muted">The skill breakdown appears once progress loads.</p>
+            <p className="text-xs text-muted">The skill breakdown appears once progress loads.</p>
           ) : (
             <Skeleton className="h-40 w-full" />
           )}
@@ -164,9 +164,9 @@ function SkillBars({ perSkill }: { perSkill: PathwayProgress['perSkill'] }) {
         .sort((a, b) => b.importance - a.importance)
         .map((s, i) => (
           <li key={s.skill}>
-            <div className="flex items-baseline justify-between gap-3 text-[13px]">
+            <div className="flex items-baseline justify-between gap-3 text-xs">
               <span className="font-medium">{skillLabel(s.skill)}</span>
-              <span className="text-[12px] text-muted tabular-nums">
+              <span className="text-2xs text-muted tabular-nums">
                 {percent(s.covered)} covered · weight {percent(s.importance)}
               </span>
             </div>
@@ -187,7 +187,7 @@ function LinkedInMark() {
   return (
     <span
       aria-hidden="true"
-      className="grid size-6 shrink-0 place-items-center rounded-md bg-[#0a66c2] text-[12px] font-bold text-white"
+      className="grid size-6 shrink-0 place-items-center rounded-md bg-[#0a66c2] text-2xs font-bold text-white"
     >
       in
     </span>

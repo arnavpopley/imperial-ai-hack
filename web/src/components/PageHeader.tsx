@@ -31,7 +31,7 @@ export function PageHeader({ title, subtitle, eyebrow, label, glance, actions, t
     <header className={cx('flex flex-wrap items-end justify-between gap-x-8 gap-y-3', className)}>
       <div className="grid min-w-0 flex-[1_1_22rem] gap-1">
         {eyebrow && <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">{eyebrow}</div>}
-        <h1 id={titleId} className="text-2xl leading-tight font-semibold tracking-tight text-balance sm:text-[1.875rem]">
+        <h1 id={titleId} className="text-title text-balance">
           {title}
         </h1>
         {subtitle && <p className="text-sm text-muted text-pretty">{subtitle}</p>}
@@ -65,7 +65,7 @@ export function GlanceStats({ items, label, children, className }: { items: read
       <dl aria-label={label} className="flex min-w-0 items-stretch divide-x divide-line">
         {items.map((item) => (
           <div key={item.label} className="flex min-w-0 flex-col-reverse justify-center px-3.5 py-1.5">
-            <dt className="truncate text-[11px] leading-tight text-muted">{item.label}</dt>
+            <dt className="truncate text-2xs leading-tight text-muted">{item.label}</dt>
             <dd className="text-lg leading-tight font-semibold tabular-nums">
               {item.valueText ? (
                 <>
