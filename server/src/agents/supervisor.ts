@@ -12,7 +12,7 @@ import { answerCatalogueQuestion } from './catalogue.ts';
 import { draftComplaint, draftLowConfidence, draftRuleException, draftWellbeing } from './escalation.ts';
 import { extract, mergeUpdates } from './extractor.ts';
 import { classifyIntent, needsClarification } from './intent.ts';
-import { askNext, nextQuestion, reflect, studentTurn, unfilledSlots, whatIHeard, type Widget } from './interviewer.ts';
+import { askNext, followUp, nextQuestion, reflect, studentTurn, unfilledSlots, whatIHeard, type Widget } from './interviewer.ts';
 import { emitWords, type ChatMessage } from './llm.ts';
 import { alternativesTo, holdPosition } from './matcher.ts';
 import { matchModules, MAX_SUGGESTIONS } from './module-match.ts';
@@ -474,10 +474,37 @@ export function confirmProfile(session: SessionState): { tracer: Tracer; lowConf
   return { tracer, lowConfidence };
 }
 
-/** Student agrees to return to the interview from RECOMMEND (spec 12). */
+/** Questions a resumed interview may ask (spec 8.6: medium confidence "offers two more questions"). */
+export const RESUME_BUDGET = 2;
+
+/**
+ * Student agrees to answer two more questions (spec 8.6 and 12: "low confidence and student agrees"). From PLAN or
+ * ESCALATED the session first returns to RECOMMEND, since only RECOMMEND may enter the interview. The interviewer asks
+ * the first of the two highest-priority unfilled slots straight away, and the second after the student answers; then
+ * the "Here is what I heard" card returns, and confirming it goes back to RECOMMEND with a re-ranked catalogue.
+ */
 export function resumeInterview(session: SessionState): void {
   const tracer = createTracer(session.id, tracerSink);
-  session.interview = { ...session.interview, finished: false, confirmed: false, budget: session.interview.questionsAsked + 2 };
+  if (session.mode === 'PLAN' || session.mode === 'ESCALATED') setMode(session, 'RECOMMEND', tracer, 'returning to the interview for two more questions');
+  if (!setMode(session, 'INTERVIEW', tracer, 'low confidence and student agrees') && session.mode !== 'INTERVIEW') return;
+  session.interview = { ...session.interview, finished: false, confirmed: false, budget: session.interview.questionsAsked + RESUME_BUDGET };
+  const found = nextQuestion(session, session.interview.askedSteps);
+  // The question goes in as a stored message, which cannot carry a widget, so a slider step is asked as its text follow-up.
+  const gaps = unfilledSlots(session.profile, session.evidence);
+  const next = found?.step.widget ? followUp(found.targetSlots.find((slot) => gaps.includes(slot)) ?? found.targetSlots[0]!) : found;
+  if (!next) {
+    // Nothing left to ask: close the interview again so the card shows.
+    session.interview = { ...session.interview, finished: true, targetSlots: [] };
+    repo.updateSession(session.id, { interview: session.interview });
+    return;
+  }
+  tracer.record({ actor: 'interviewer', kind: 'agent', input: `gaps: ${gaps.join(', ') || 'none'}; budget ${RESUME_BUDGET}`, output: `asked ${next.step.id}`, verdict: null });
+  repo.addMessage(message(session.id, 'assistant', next.step.question, 'interviewer'));
+  session.interview = {
+    ...session.interview,
+    questionsAsked: session.interview.questionsAsked + 1,
+    askedSteps: [...session.interview.askedSteps, next.step.id],
+    targetSlots: next.targetSlots,
+  };
   repo.updateSession(session.id, { interview: session.interview });
-  setMode(session, 'INTERVIEW', tracer, 'low confidence and student agrees');
 }
