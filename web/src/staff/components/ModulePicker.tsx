@@ -6,7 +6,7 @@ import { useId, useMemo, useState } from 'react';
 import { NavLink, useMatch } from 'react-router';
 import { capacityStatus, focusRing, percent } from '../lib/format.ts';
 import {
-  STRONG_FIT,
+  GOOD_FIT,
   VIEWS,
   groupRows,
   hasOffers,
@@ -15,8 +15,8 @@ import {
   knownShortlisted,
   shortlistFigure,
   shortlistLabel,
-  strongFitShare,
-  strongFitText,
+  goodFitShare,
+  goodFitText,
 } from '../lib/moduleList.ts';
 import type { ListView } from '../lib/moduleList.ts';
 import { byCohortFigure, isCohortVisible } from '../lib/privacy.ts';
@@ -25,7 +25,7 @@ import { SearchIcon, ShieldIcon } from './icons.tsx';
 import { Segmented } from './ui.tsx';
 
 const SORTS = {
-  strong: { label: `Strong fit (${STRONG_FIT}+)`, compare: byCohortFigure(strongFitShare) },
+  strong: { label: `Good fit or better (${GOOD_FIT}+)`, compare: byCohortFigure(goodFitShare) },
   fit: { label: 'Average fit', compare: byCohortFigure((m) => m.averageFit) },
   shortlisted: { label: 'Shortlisted', compare: byCohortFigure(shortlistFigure) },
   pressure: { label: 'Demand against capacity', compare: byCohortFigure(load) },
@@ -113,7 +113,7 @@ export function ModulePicker({ modules }: { modules: StaffModuleSummary[] }) {
           </select>
         </div>
         <p className="text-xs text-muted">
-          % = share of the cohort with fit {STRONG_FIT}+ · bars = fit spread, 0 to 100
+          % = share of the cohort with a good fit or better ({GOOD_FIT}+) · bars = fit spread, 0 to 100
         </p>
       </div>
       <p className="sr-only" aria-live="polite">
@@ -165,7 +165,7 @@ export function ModulePicker({ modules }: { modules: StaffModuleSummary[] }) {
 }
 
 /**
- * The cohort's fit spread; strong-fit bands are tinted. Decorative beside the figures. Bands the server merged (one
+ * The cohort's fit spread; good-fit bands are tinted. Decorative beside the figures. Bands the server merged (one
  * to four students, spec 20.4) are drawn as wide as they are, at their students per 10 points.
  */
 function FitSpark({ bands }: { bands: StaffModuleSummary['fitBands'] }) {
@@ -177,7 +177,7 @@ function FitSpark({ bands }: { bands: StaffModuleSummary['fitBands'] }) {
       {bands.map((b) => (
         <span
           key={b.from}
-          className={`rounded-t-[2px] ${b.from >= STRONG_FIT ? 'bg-fit-high' : 'bg-line-strong'}`}
+          className={`rounded-t-[2px] ${b.from >= GOOD_FIT ? 'bg-fit-high' : 'bg-line-strong'}`}
           style={{ flexGrow: span(b), flexBasis: 0, height: `${Math.max(b.students > 0 ? 12 : 4, (perTen(b) / max) * 100)}%` }}
         />
       ))}
@@ -187,13 +187,13 @@ function FitSpark({ bands }: { bands: StaffModuleSummary['fitBands'] }) {
 
 function ModuleFigures({ module: m }: { module: StaffModuleSummary }) {
   const status = capacityStatus(knownShortlisted(m), m.capacity);
-  const share = strongFitShare(m);
+  const share = goodFitShare(m);
   // The server withholds the share when one to four students sit on either side of the line: unknown, not weak.
-  const withheldShare = m.strongFitShare === null;
-  const shareText = strongFitText(m, percent);
+  const withheldShare = m.goodFitShare === null;
+  const shareText = goodFitText(m, percent);
   const shareWords = withheldShare
-    ? `Share with a fit of ${STRONG_FIT} or more withheld: fewer than ${MIN_COHORT} students on one side of it`
-    : `${percent(share)} of the cohort with a fit of ${STRONG_FIT} or more`;
+    ? `Share with a fit of ${GOOD_FIT} or more withheld: fewer than ${MIN_COHORT} students on one side of it`
+    : `${percent(share)} of the cohort with a fit of ${GOOD_FIT} or more`;
   const counted = isOption(m) && (m.shortlisted ?? 0) >= MIN_COHORT;
   return (
     <>
@@ -204,7 +204,7 @@ function ModuleFigures({ module: m }: { module: StaffModuleSummary }) {
           className={`grid h-7 min-w-11 shrink-0 place-items-center rounded-full px-2 text-xs font-semibold tabular-nums ring-1 ${
             share > 0 ? 'bg-fit-high/10 text-fit-high ring-fit-high/30' : 'bg-surface text-muted ring-line'
           }`}
-          title={withheldShare ? shareWords : `Share of the cohort with a fit of ${STRONG_FIT} or more`}
+          title={withheldShare ? shareWords : `Share of the cohort with a fit of ${GOOD_FIT} or more`}
         >
           {shareText}
         </span>

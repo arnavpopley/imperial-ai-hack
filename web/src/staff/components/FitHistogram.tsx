@@ -1,7 +1,7 @@
 // Fit distribution across the synthetic cohort, from StaffModuleSummary.fitBands. The server merges any band of one
 // to four students with its neighbours (spec 20.4), so a band can be wider than 10 points: it is drawn as wide as it
 // is, at its students per 10 points, so a merged band never looks taller than it is.
-import { MIN_COHORT, STRONG_FIT_FLOOR } from '@modulematch/shared';
+import { FIT_BAND_FLOORS, MIN_COHORT } from '@modulematch/shared';
 import type { StaffModuleSummary } from '@modulematch/shared';
 import { niceCeiling, percent, plural } from '../lib/format.ts';
 
@@ -19,7 +19,7 @@ interface FitHistogramProps {
   averageFit: number;
   /** Students scored. */
   cohortSize: number;
-  /** Share with a fit of STRONG_FIT_FLOOR or more, from the server's exact counts; null when it is withheld. */
+  /** Share with a strong fit (FIT_BAND_FLOORS.strong or more), from the server's exact counts; null when withheld. */
   strongFitShare: number | null;
 }
 
@@ -30,8 +30,8 @@ export function FitHistogram({ bands, averageFit, cohortSize, strongFitShare }: 
   const anyMerged = bands.some(merged);
   const strong =
     strongFitShare === null
-      ? `The share scoring ${STRONG_FIT_FLOOR} or above is withheld: fewer than ${MIN_COHORT} students sit on one side of it.`
-      : `${percent(strongFitShare)} score ${STRONG_FIT_FLOOR} or above.`;
+      ? `The share scoring ${FIT_BAND_FLOORS.strong} or above (a strong fit) is withheld: fewer than ${MIN_COHORT} students sit on one side of it.`
+      : `${percent(strongFitShare)} score ${FIT_BAND_FLOORS.strong} or above (a strong fit).`;
   const summary =
     cohortSize === 0
       ? 'No students scored yet.'

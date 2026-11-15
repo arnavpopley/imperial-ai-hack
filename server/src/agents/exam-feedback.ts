@@ -4,7 +4,7 @@
 // It is the only agent that ever sees a student's marks.
 import { schemas, TOPIC_IDS, type ExamFeedbackForm, type ExamQuestion, type Module, type TailoredFeedback } from '@modulematch/shared';
 import { z } from 'zod';
-import { affectedNote, templateFeedback, weakAdvice, type ExamFacts } from '../engines/exam-feedback.ts';
+import { affectedNote, questionSubject, templateFeedback, weakAdvice, type ExamFacts } from '../engines/exam-feedback.ts';
 import { MAIN_TOPIC_MIN } from '../engines/performance.ts';
 import { topicLabel } from '../engines/util.ts';
 import { stripInjection } from '../guardrails/g3-injection.ts';
@@ -161,9 +161,11 @@ export async function draftExamForm(notes: string, module: Module, tracer: Trace
 const FEEDBACK_SYSTEM = `You write exam feedback for one student, from facts computed by code: their marks per question,
 the examiner's notes on what good answers did, the common mistakes and the revision pointers for the questions where they
 lost most marks, and the future modules that build on those topics. Write warmly and specifically, as a supportive tutor.
-- overall: two or three sentences on how the exam went and where the marks were lost.
-- strengths: one short line per strong question given (empty if none).
-- weakPoints: for each weak question id given, one or two sentences of advice that use the examiner's mistakes and pointers.
+The student sees their marks in a chart beside your words, so say each thing once and do not repeat marks or numbers.
+- overall: one sentence naming the question or questions where most marks went.
+- strengths: a few words per strong question given, naming its topic (empty if none).
+- weakPoints: for each weak question id given, one or two sentences on the examiner's common mistakes and what good
+  answers did. Do not restate the marks lost.
 - revisionPlan: three to five concrete steps, ordered, drawn from the pointers.
 - affectsModules: for each future module given, one sentence on why these topics matter there.
 Use only the facts given. Never change a number, never invent mistakes or modules, and never promise grades or outcomes.
@@ -244,7 +246,13 @@ export async function tailoredFeedback(f: ExamFacts, tracer: Tracer): Promise<Ta
         ...template,
         overall: checked(live.overall, template.overall, allowed),
         strengths: strengths.length ? strengths : template.strengths,
-        weakPoints: f.weak.map((q) => ({ questionId: q.questionId, topics: q.topics, lostMarks: q.lostMarks, advice: checked(advice.get(q.questionId.toLowerCase()) ?? '', weakAdvice(q), allowed) })),
+        weakPoints: f.weak.map((q) => ({
+          questionId: q.questionId,
+          label: questionSubject(q),
+          topics: q.topics,
+          lostMarks: q.lostMarks,
+          advice: checked(advice.get(q.questionId.toLowerCase()) ?? '', weakAdvice(q), allowed),
+        })),
         revisionPlan: plan.length ? plan.slice(0, 6) : template.revisionPlan,
         affectsModules: f.affects.map((a) => ({ moduleId: a.moduleId, note: checked(notes.get(a.moduleId) ?? '', affectedNote(a, f.moduleTitle), allowed) })),
         source: 'model' as const,

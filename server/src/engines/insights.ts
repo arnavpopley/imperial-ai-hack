@@ -1,6 +1,6 @@
 // Spec 9.3: insights engine for module leads. Every number in an insight card comes from here; the
 // Insights agent only words them. Privacy (spec 20.4): nothing is reported for a cohort under MIN_COHORT.
-import { counterfactualInsightId, MIN_COHORT, STYLE_SLOTS, TOPIC_IDS } from '@modulematch/shared';
+import { FIT_BAND_FLOORS, counterfactualInsightId, MIN_COHORT, STYLE_SLOTS, TOPIC_IDS } from '@modulematch/shared';
 import type {
   Insight,
   InsightDecision,
@@ -35,8 +35,8 @@ export const MAX_COUNTERFACTUALS = 3;
  * points. Smaller changes are merged into one summary card that names the main gap instead.
  */
 export const MEANINGFUL_UPLIFT = 2;
-/** Spec 9.3 impact: students whose fit would rise to at least this... */
-export const STRONG_FIT = 70;
+/** Spec 9.3 impact: students whose fit would rise to at least this (the shared "strong fit" floor)... */
+export const STRONG_FIT = FIT_BAND_FLOORS.strong;
 /** ...and students who would then have the module among their top this-many eligible modules. */
 export const TOP_MODULES = 5;
 const TOP_MODULES_WORDS = 'top five';

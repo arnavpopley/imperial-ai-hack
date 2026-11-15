@@ -48,6 +48,29 @@ describe('matchSocieties', () => {
     );
   });
 
+  it('never picks a wildcard built on a topic the student said to avoid (issue 117)', () => {
+    // A robotics student who would avoid fluid mechanics and thermodynamics.
+    const robotics = makeProfile({
+      interests: { 'control-robotics': 0.9, 'machine-learning-ai': 0.8, 'programming-software': 0.7, 'fluid-mechanics': 0.1, 'thermodynamics-energy': 0.1 },
+    });
+    const pool = [
+      society('robo', { 'control-robotics': 1 }),
+      society('ml', { 'machine-learning-ai': 1 }),
+      society('code', { 'programming-software': 1 }),
+      society('drones', { 'control-robotics': 0.6, 'machine-learning-ai': 0.4 }),
+      society('hack', { 'programming-software': 0.7, 'machine-learning-ai': 0.3 }),
+      society('aero', { 'fluid-mechanics': 1 }),
+      society('engines', { 'thermodynamics-energy': 0.6, languages: 0.4 }),
+      society('light-touch', { 'fluid-mechanics': 0.2, 'history-philosophy': 0.8 }),
+      society('chess', { 'history-philosophy': 0.9, 'control-robotics': 0.1 }),
+    ];
+    const wildcard = matchSocieties(robotics, pool).find((m) => m.wildcard);
+    // aero and engines are built on avoided topics; light-touch only grazes one, so it may be chosen.
+    expect(wildcard?.societyId).toBe('light-touch');
+    const onlyAvoided = [...pool.slice(0, 5), pool[5]!, pool[6]!];
+    expect(matchSocieties(robotics, onlyAvoided).some((m) => m.wildcard)).toBe(false);
+  });
+
   it('omits the wildcard when there are five societies or fewer', () => {
     expect(matchSocieties(profile, societies.slice(0, 5)).some((m) => m.wildcard)).toBe(false);
   });

@@ -68,7 +68,10 @@ export function SocietiesSection() {
         ) : (
           <>
             <div className="grid items-center gap-5 overflow-hidden rounded-[1.25rem] border border-line bg-surface p-4 shadow-soft sm:p-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-              <BubbleCloud featured={featured} others={others} selectedId={selectedId} onSelect={setChosen} detailId={detailId} />
+              <div className="grid min-w-0 gap-3">
+                <BubbleCloud featured={featured} others={others} selectedId={selectedId} onSelect={setChosen} detailId={detailId} />
+                <CloudLegend />
+              </div>
               <SocietyDetail
                 id={detailId}
                 society={selectedId ? byId.get(selectedId) : undefined}
@@ -92,6 +95,29 @@ export function SocietiesSection() {
         </div>
       )}
     </section>
+  );
+}
+
+/** What the bubbles mean (issue 117): size is fit, the dashed ring is the wildcard, and the outer ring is unscored. */
+function CloudLegend() {
+  return (
+    <ul className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-[11px] text-muted" aria-label="Bubble key">
+      <li className="flex items-center gap-1.5">
+        <span aria-hidden="true" className="flex items-end gap-0.5">
+          <span className="size-2.5 rounded-full border border-brand/40 bg-surface" />
+          <span className="size-4 rounded-full border border-brand/40 bg-surface" />
+        </span>
+        Your matches: bigger is a better fit
+      </li>
+      <li className="flex items-center gap-1.5">
+        <span aria-hidden="true" className="size-4 rounded-full border-2 border-dashed border-mode-explain bg-mode-explain/12" />
+        Wildcard
+      </li>
+      <li className="flex items-center gap-1.5">
+        <span aria-hidden="true" className="size-3 rounded-full border border-line bg-surface" />
+        Other societies, not scored
+      </li>
+    </ul>
   );
 }
 

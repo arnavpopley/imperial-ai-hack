@@ -1,9 +1,9 @@
 // Staff routes (spec 13). Aggregate views only, with a minimum cohort of five (spec 20.4).
 import {
   DEFAULT_WEIGHTS,
+  FIT_BAND_FLOORS,
   MIN_COHORT,
   schemas,
-  STRONG_FIT_FLOOR,
   type CohortOffer,
   type Escalation,
   type ExamFeedbackForm,
@@ -85,7 +85,11 @@ export const staffRoutes = new Hono()
       const offer = rules ? offerFor(m, rules) : undefined;
       // Every count of one to four students is withheld here, before it leaves the API (spec 20.4): small fit
       // bands are merged, a small shortlist count is null, and so is any share that would give such a count away.
-      const { bands, strong } = staffFitBands(stats.fitHistogram, STRONG_FIT_FLOOR);
+      const { bands, above } = staffFitBands(stats.fitHistogram, [FIT_BAND_FLOORS.good, FIT_BAND_FLOORS.strong]);
+      const share = (floor: number) => {
+        const count = above.get(floor);
+        return count === null || count === undefined ? null : count / stats.cohortSize;
+      };
       return [
         {
           moduleId: m.id,
@@ -97,7 +101,8 @@ export const staffRoutes = new Hono()
           averageFit: stats.averageFit,
           shortlisted: withheld(stats.shortlisted),
           fitBands: bands,
-          strongFitShare: strong === null ? null : strong / stats.cohortSize,
+          goodFitShare: share(FIT_BAND_FLOORS.good),
+          strongFitShare: share(FIT_BAND_FLOORS.strong),
           ...(offer && { offer }),
         },
       ];

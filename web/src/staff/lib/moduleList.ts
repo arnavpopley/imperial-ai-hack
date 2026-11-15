@@ -1,5 +1,5 @@
 // Grouping, filtering and honest labels for the staff module list (issue #69).
-import { MIN_COHORT, STRONG_FIT_FLOOR } from '@modulematch/shared';
+import { FIT_BAND_FLOORS, MIN_COHORT } from '@modulematch/shared';
 import type { CohortOffer, StaffModuleSummary } from '@modulematch/shared';
 
 export const OFFER_GROUPS: readonly { offer: CohortOffer; label: string }[] = [
@@ -26,19 +26,20 @@ export const inView = (row: StaffModuleSummary, view: ListView) =>
 /** Students choose options, so only options show a shortlist count that means anything. */
 export const isOption = (row: StaffModuleSummary) => row.offer === undefined || row.offer === 'elective' || row.offer === 'i-explore';
 
-/** A fit at or above this counts as strong: the 60 to 100 buckets of the fit histogram. */
-export const STRONG_FIT = STRONG_FIT_FLOOR;
+/** A good fit or better, on the shared scale (issue #105): 50 to 100. */
+export const GOOD_FIT = FIT_BAND_FLOORS.good;
 
 /**
- * Share of the cohort whose fit is strong, from the server's exact counts. It separates modules far better than
- * the mean, which sits at 25 to 42. A withheld share (null: one to four students on either side of the line) is
- * unknown, not small, so it sorts after every known share rather than among the weakest.
+ * Share of the cohort with a good fit or better, from the server's exact counts (the fit bands are merged for
+ * privacy and cannot be summed). It separates modules far better than the mean, which sits at 25 to 42. A
+ * withheld share (null: one to four students on either side of the line, spec 20.4) is unknown, not small, so it
+ * sorts after every known share rather than among the weakest.
  */
-export const strongFitShare = (row: StaffModuleSummary): number => row.strongFitShare ?? -1;
+export const goodFitShare = (row: StaffModuleSummary): number => row.goodFitShare ?? -1;
 
-/** The strong-fit share for display: a percentage, or a neutral mark when it is withheld. */
-export const strongFitText = (row: StaffModuleSummary, percent: (fraction: number) => string): string =>
-  row.strongFitShare === null ? '—' : percent(row.strongFitShare);
+/** The good-fit share for display: a percentage, or a neutral mark when it is withheld. */
+export const goodFitText = (row: StaffModuleSummary, percent: (fraction: number) => string): string =>
+  row.goodFitShare === null ? '—' : percent(row.goodFitShare);
 
 /**
  * The server withholds counts of one to four students (spec 20.4, null), so they are shown as a band, the same

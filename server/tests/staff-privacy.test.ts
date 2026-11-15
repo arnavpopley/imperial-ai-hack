@@ -19,6 +19,7 @@ const NOT_STUDENT_COUNTS = new Set([
   'ects',
   'level',
   'averageFit',
+  'goodFitShare',
   'strongFitShare',
   'upliftPoints',
   'probability',
@@ -65,24 +66,27 @@ describe('partitionCounts', () => {
 });
 
 describe('staffFitBands', () => {
-  it('merges small bands into their neighbours, keeping the strong-fit side apart so its count stays exact', () => {
-    // Lower side 152, upper side 48: both large enough to publish separately.
-    const { bands, strong } = staffFitBands([0, 16, 105, 18, 10, 3, 18, 27, 3, 0], 60);
+  const LINES = [50, 70];
+
+  it('merges small bands into their neighbours without crossing the good- and strong-fit lines', () => {
+    // Below 50: 149, 50 to 69: 21, 70 and up: 30. Every stretch is large enough, so both counts stay exact.
+    const { bands, above } = staffFitBands([0, 16, 105, 18, 10, 3, 18, 27, 3, 0], LINES);
     expect(bands).toEqual([
       { from: 0, to: 9, students: 0 },
       { from: 10, to: 19, students: 16 },
       { from: 20, to: 29, students: 105 },
       { from: 30, to: 39, students: 18 },
-      { from: 40, to: 59, students: 13 },
-      { from: 60, to: 69, students: 18 },
+      { from: 40, to: 49, students: 10 },
+      { from: 50, to: 69, students: 21 },
       { from: 70, to: 100, students: 30 },
     ]);
-    expect(strong).toBe(48);
+    expect([above.get(50), above.get(70)]).toEqual([51, 30]);
   });
 
-  it('withholds the strong-fit count, and merges across the line, when one to four students sit on a side', () => {
-    const { bands, strong } = staffFitBands([0, 18, 76, 36, 30, 38, 1, 1, 0, 0], 60);
-    expect(strong).toBeNull();
+  it('withholds a line’s count, and merges across it, when one to four students sit beyond it', () => {
+    // 70 and up holds 1: that stretch joins 50 to 69, so the strong-fit count is withheld; the good-fit one stays.
+    const { bands, above } = staffFitBands([0, 18, 76, 36, 30, 38, 1, 0, 0, 1], LINES);
+    expect([above.get(50), above.get(70)]).toEqual([40, null]);
     expect(bands.at(-1)).toEqual({ from: 50, to: 100, students: 40 });
   });
 
@@ -93,13 +97,19 @@ describe('staffFitBands', () => {
       const histogram = Array.from({ length: 10 }, () => (random() < 0.4 ? Math.floor(random() * 5) : Math.floor(random() * 40)));
       const total = histogram.reduce((a, b) => a + b, 0);
       if (total < 5) continue;
-      const { bands, strong } = staffFitBands(histogram, 60);
+      const { bands, above } = staffFitBands(histogram, LINES);
       expect(bands.every((b) => b.students === 0 || b.students >= 5), String(histogram)).toBe(true);
       expect(bands.reduce((a, b) => a + b.students, 0)).toBe(total);
       expect(bands[0]!.from).toBe(0);
       expect(bands.at(-1)!.to).toBe(100);
       bands.slice(1).forEach((b, i) => expect(b.from).toBe(bands[i]!.to + 1));
-      if (strong !== null) expect(strong === 0 || strong >= 5).toBe(true);
+      for (const line of LINES) {
+        const count = above.get(line);
+        if (count === null || count === undefined) continue;
+        // A published count adds nothing the bands do not show: no band crosses its line, and it is their sum.
+        expect(bands.some((b) => b.from < line && b.to >= line), `${histogram} @${line}`).toBe(false);
+        expect(count).toBe(bands.filter((b) => b.from >= line).reduce((a, b) => a + b.students, 0));
+      }
     }
   });
 });

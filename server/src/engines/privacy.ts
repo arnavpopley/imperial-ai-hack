@@ -72,17 +72,31 @@ function mergeSegment(counts: readonly number[], first: number): FitBand[] {
   return bands;
 }
 
+const sum = (xs: readonly number[]) => xs.reduce((total, n) => total + n, 0);
+
 /**
  * Spec 20.4 for the staff fit distribution. Merging rather than hiding small bands means every published band is
- * zero or at least MIN_COHORT, and they add up to the cohort, so no band can be worked out by subtraction. The
- * buckets below and from `strongFloor` merge separately, which keeps the strong-fit count exact; when either side
- * holds one to four students that count would give them away, so the sides merge together and it is withheld.
+ * zero or at least MIN_COHORT, and they add up to the cohort, so no band can be worked out by subtraction.
+ *
+ * Bands never cross a line in `floors` (for example the good- and strong-fit floors), which keeps the count above
+ * each line exact and consistent with the bands. A line comes out only when a stretch between lines holds one to
+ * four students: that stretch merges with its neighbour, and the count above the removed line is withheld (null),
+ * since it would give the small stretch away.
  */
-export function staffFitBands(histogram: readonly number[], strongFloor: number): { bands: FitBand[]; strong: number | null } {
-  const split = strongFloor / BUCKET;
-  const sum = (xs: readonly number[]) => xs.reduce((total, n) => total + n, 0);
-  const lower = histogram.slice(0, split);
-  const upper = histogram.slice(split);
-  if (isSmallCount(sum(lower)) || isSmallCount(sum(upper))) return { bands: mergeSegment(histogram, 0), strong: null };
-  return { bands: [...mergeSegment(lower, 0), ...mergeSegment(upper, split)], strong: sum(upper) };
+export function staffFitBands(
+  histogram: readonly number[],
+  floors: readonly number[],
+): { bands: FitBand[]; above: Map<number, number | null> } {
+  let cuts = [...new Set(floors.map((f) => f / BUCKET))].filter((c) => c > 0 && c < histogram.length).sort((a, b) => a - b);
+  const stretches = () => [0, ...cuts, histogram.length].slice(0, -1).map((start, i, starts) => [start, [...cuts, histogram.length][i]!] as const);
+  for (;;) {
+    const small = stretches().findIndex(([from, to]) => isSmallCount(sum(histogram.slice(from, to))));
+    // With no lines left there is one stretch, the whole cohort, which callers only pass at MIN_COHORT or more.
+    if (small < 0 || cuts.length === 0) break;
+    // Join the small stretch to the one above it, or, for the top stretch, to the one below.
+    cuts = cuts.filter((_, i) => i !== (small < cuts.length ? small : small - 1));
+  }
+  const bands = stretches().flatMap(([from, to]) => mergeSegment(histogram.slice(from, to), from));
+  const above = new Map(floors.map((f) => [f, cuts.includes(f / BUCKET) ? sum(histogram.slice(f / BUCKET)) : null]));
+  return { bands, above };
 }

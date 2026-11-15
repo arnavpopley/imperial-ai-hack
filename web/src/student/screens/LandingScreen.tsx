@@ -5,6 +5,7 @@ import { motion, type Variants } from 'motion/react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 import { buttonClass } from '../../components/Button.tsx';
+import { FIT_BAND_LABELS, fitBand } from '../../components/FitScore.tsx';
 import { cx } from '../../components/cx.ts';
 import { Icon, type IconName } from '../../components/Icon.tsx';
 import { AGENTS, countWord } from '../../trace/agents.ts';
@@ -226,6 +227,12 @@ function Hero({ cta }: { cta: { to: string; label: string } }) {
   );
 }
 
+/**
+ * The hero's example score: about what the demo student's best match (Embedded C for Microcontrollers A) really
+ * scores, so the landing page never promises a number the app does not produce (issue #105).
+ */
+const HERO_FIT = 62;
+
 /** Photo card with floating result chips, previewing what the student gets. */
 function HeroVisual() {
   return (
@@ -238,10 +245,14 @@ function HeroVisual() {
         />
       </div>
       <FloatingChip className="-left-4 top-8 sm:-left-10" delay={0.5}>
-        <span className="grid size-10 place-items-center rounded-xl bg-fit-high/15 text-lg font-semibold text-fit-high">92</span>
+        <span className="grid size-10 place-items-center rounded-xl bg-fit-high/15 text-lg font-semibold text-fit-high">
+          {HERO_FIT}
+        </span>
         <span>
-          <span className="block text-sm font-semibold">Mechatronics</span>
-          <span className="block text-xs text-muted">Strong fit for you</span>
+          <span className="block text-sm font-semibold">Embedded C</span>
+          <span className="block text-xs text-muted">
+            {FIT_BAND_LABELS[fitBand(HERO_FIT)]} · your best match (example)
+          </span>
         </span>
       </FloatingChip>
       <FloatingChip className="-right-3 top-1/2 sm:-right-8" delay={0.7}>

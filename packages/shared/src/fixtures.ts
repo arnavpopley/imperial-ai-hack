@@ -292,6 +292,8 @@ export const fixtureTimetable: TimetableView = {
       keepFreeConflicts: 0,
     },
   ],
+  // The clash above has a swap within the fit window, so there is nothing beyond it to offer.
+  widerSwaps: [],
   backups: [],
   // fixtureProfile keeps Fridays free and starts no earlier than 10:00; nothing on the shortlist falls in that time.
   coreModuleIds: [],
@@ -359,7 +361,8 @@ export const fixtureStaffModules: StaffModuleSummary[] = fixtureModules.map((m, 
     { from: 80, to: 89, students: 32 },
     { from: 90, to: 100, students: 14 },
   ],
-  strongFitShare: 0.69,
+  goodFitShare: 0.84,
+  strongFitShare: 0.48,
   cohortSize: 200,
 }));
 

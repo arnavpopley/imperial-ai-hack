@@ -16,6 +16,7 @@ import {
   planTimetable,
   rankModules,
   suggestSwaps,
+  widerSwaps,
   type SwapPlan,
 } from '../src/engines/index.ts';
 import { makeModule, makeProfile, makeRules, makeSlot } from './engines-fixtures.ts';
@@ -211,6 +212,24 @@ describe('suggestSwaps', () => {
     const profile = makeProfile();
     const swaps = suggestSwaps(profile, shortlist, clash, tied, slots, planFor(profile, electives));
     expect(swaps.map((swap) => swap.replaceModuleId)).toEqual(['a', 'b']);
+  });
+
+  it('offers the best alternatives beyond the fit window only when no swap is within it (issue 103)', () => {
+    if (!clash) throw new Error('expected a clash between a and b');
+    const profile = makeProfile();
+    // b (60) is replaced; nothing is within 10 points, so the recommended list is empty and the wider one is not.
+    const far = [rec('a', 70), rec('b', 60), rec('d', 46), rec('clashes-with-c', 45), rec('k', 41), rec('i', 38), rec('j', 30), rec('ineligible', 59, false)];
+    const plan = planFor(profile, electives);
+    expect(suggestSwaps(profile, shortlist, clash, far, slots, plan)).toEqual([]);
+    const wider = widerSwaps(profile, shortlist, clash, far, slots, plan);
+    // Still like for like, eligible and clash-free (clashes-with-c is out), best fit first, top three, with the drop.
+    expect(wider.map(({ withModuleId, fitDelta }) => [withModuleId, fitDelta])).toEqual([
+      ['d', -14],
+      ['k', -19],
+      ['i', -22],
+    ]);
+    // With a swap inside the window, nothing beyond it is offered.
+    expect(widerSwaps(profile, shortlist, clash, ranked, slots, plan)).toEqual([]);
   });
 
   it('offers only modules of the same kind, never a core module', () => {

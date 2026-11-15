@@ -23,8 +23,6 @@ export const LIKELY_CLASH_THRESHOLD = 0.3;
 export const SWAP_FIT_TOLERANCE = 10;
 /** Spec 9.3 / 20.4 minimum cohort behind any staff insight. */
 export const MIN_COHORT = 5;
-/** Staff module views count a fit at or above this as strong (StaffModuleSummary.strongFitShare). */
-export const STRONG_FIT_FLOOR = 60;
 
 /** Share of capacity at which demand counts as near capacity, for staff and students alike. */
 export const NEAR_CAPACITY = 0.85;

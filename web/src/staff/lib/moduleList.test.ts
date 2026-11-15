@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { firstModule } from '../components/ModulePicker.tsx';
-import { groupRows, hasOffers, inView, shortlistFigure, shortlistLabel, strongFitShare, strongFitText } from './moduleList.ts';
+import { goodFitShare, goodFitText, groupRows, hasOffers, inView, shortlistFigure, shortlistLabel } from './moduleList.ts';
 import type { StaffModuleSummary } from '@modulematch/shared';
 
 const row = (moduleId: string, patch: Partial<StaffModuleSummary> = {}): StaffModuleSummary => ({
@@ -16,6 +16,7 @@ const row = (moduleId: string, patch: Partial<StaffModuleSummary> = {}): StaffMo
     { from: 20, to: 59, students: 40 },
     { from: 60, to: 100, students: 10 },
   ],
+  goodFitShare: 20 / 50,
   strongFitShare: 10 / 50,
   cohortSize: 50,
   offer: 'elective',
@@ -23,14 +24,14 @@ const row = (moduleId: string, patch: Partial<StaffModuleSummary> = {}): StaffMo
 });
 
 describe('staff module list', () => {
-  it('takes the strong-fit share from the server, since withheld bands cannot be summed', () => {
-    expect(strongFitShare(row('A'))).toBeCloseTo(10 / 50);
+  it('takes the good-fit (50+) share from the server, since merged bands cannot be summed', () => {
+    expect(goodFitShare(row('A'))).toBeCloseTo(20 / 50);
     // Withheld (one to four students on either side of the line): unknown, so it sorts after every known share,
     // even a share of zero, and reads as a neutral mark rather than a small number.
-    const withheldRow = row('B', { strongFitShare: null });
-    expect(strongFitShare(withheldRow)).toBeLessThan(strongFitShare(row('C', { strongFitShare: 0 })));
-    expect(strongFitText(withheldRow, (f) => `${Math.round(f * 100)}%`)).toBe('—');
-    expect(strongFitText(row('A'), (f) => `${Math.round(f * 100)}%`)).toBe('20%');
+    const withheldRow = row('B', { goodFitShare: null });
+    expect(goodFitShare(withheldRow)).toBeLessThan(goodFitShare(row('C', { goodFitShare: 0 })));
+    expect(goodFitText(withheldRow, (f) => `${Math.round(f * 100)}%`)).toBe('—');
+    expect(goodFitText(row('A'), (f) => `${Math.round(f * 100)}%`)).toBe('40%');
   });
 
   it('labels demand honestly: compulsory, not offered, none yet, and counts under five as a band', () => {
@@ -72,9 +73,9 @@ describe('staff module list', () => {
 
   it('opens on the strongest-fit option, never a module the cohort cannot take', () => {
     const rows = [
-      row('N', { offer: 'not-offered', strongFitShare: 1 }),
-      row('E1', { strongFitShare: 0.2 }),
-      row('E2', { strongFitShare: 0.4 }),
+      row('N', { offer: 'not-offered', goodFitShare: 1 }),
+      row('E1', { goodFitShare: 0.2 }),
+      row('E2', { goodFitShare: 0.4 }),
     ];
     expect(firstModule(rows)?.moduleId).toBe('E2');
   });
