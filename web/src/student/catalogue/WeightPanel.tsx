@@ -3,6 +3,7 @@
 import { motion } from 'motion/react';
 import { Link } from 'react-router';
 import { Button } from '../../components/Button.tsx';
+import { FACTOR_COLOURS } from '../../components/factorColours.ts';
 import { Icon } from '../../components/Icon.tsx';
 import { RangeSlider } from '../../components/RangeSlider.tsx';
 import { Spinner } from '../../components/Spinner.tsx';
@@ -11,12 +12,12 @@ import { paths } from '../routes.ts';
 import { useCatalogue, type SaveState, type WeightKey } from '../state/CatalogueProvider.tsx';
 import { levelWord, weightShares } from './weightShares.ts';
 
-/** Each weight's colour, shared by its slider and its segment of the mix bar. */
+/** Each weight's factor colour, shared by its slider, its segment of the mix bar and every sub-score bar. */
 const SLIDERS: readonly { key: WeightKey; label: string; short: string; fill: string; border: string }[] = [
-  { key: 'interest', label: 'Interest', short: 'Interest', fill: 'bg-module-1', border: 'border-module-1' },
-  { key: 'goal', label: 'Career', short: 'Career', fill: 'bg-module-2', border: 'border-module-2' },
-  { key: 'style', label: 'Learning style', short: 'Style', fill: 'bg-module-4', border: 'border-module-4' },
-  { key: 'breadth', label: 'Breadth', short: 'Breadth', fill: 'bg-module-3', border: 'border-module-3' },
+  { key: 'interest', label: 'Interest', short: 'Interest', ...FACTOR_COLOURS.interest },
+  { key: 'goal', label: 'Career', short: 'Career', ...FACTOR_COLOURS.goal },
+  { key: 'style', label: 'Learning style', short: 'Style', ...FACTOR_COLOURS.style },
+  { key: 'breadth', label: 'Breadth', short: 'Breadth', ...FACTOR_COLOURS.breadth },
 ];
 
 /** The fit score's mix as one stacked bar, with each weight's share beneath it. */

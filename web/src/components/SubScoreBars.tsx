@@ -1,5 +1,6 @@
 import type { Recommendation } from '@modulematch/shared';
 import { cx } from './cx.ts';
+import { FACTOR_COLOURS } from './factorColours.ts';
 
 type Sub = Recommendation['sub'];
 type SubKey = keyof Sub;
@@ -21,7 +22,10 @@ interface SubScoreBarsProps {
   className?: string;
 }
 
-/** The four sub-scores behind a fit (spec 8.1 to 8.4). A null goal means no pathway is chosen yet. */
+/**
+ * The four sub-scores behind a fit (spec 8.1 to 8.4), each in its factor colour, matching the weight sliders. A null
+ * goal means no pathway is chosen yet.
+ */
 export function SubScoreBars({ sub, variant = 'stacked', dimmed = false, className }: SubScoreBarsProps) {
   return (
     <dl
@@ -61,7 +65,7 @@ export function SubScoreBars({ sub, variant = 'stacked', dimmed = false, classNa
               >
                 {pct !== null && (
                   <div
-                    className="h-full rounded-full bg-brand transition-[width] duration-500 ease-out-soft"
+                    className={cx('h-full rounded-full transition-[width] duration-500 ease-out-soft', FACTOR_COLOURS[key].fill)}
                     style={{ width: `${pct}%` }}
                   />
                 )}
