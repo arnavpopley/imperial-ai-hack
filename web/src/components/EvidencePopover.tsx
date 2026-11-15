@@ -2,6 +2,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { cx } from './cx.ts';
 import { Icon } from './Icon.tsx';
+import { PROVENANCE, provenanceClass } from './Provenance.tsx';
 
 interface QuoteProps {
   variant: 'quote';
@@ -37,6 +38,7 @@ export function EvidencePopover(props: EvidencePopoverProps) {
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelId = useId();
   const titleId = `${panelId}-title`;
+  const kind = props.variant === 'quote' ? 'quote' : props.variant === 'module-field' ? 'record' : null;
 
   useEffect(() => {
     if (!open) return;
@@ -65,14 +67,13 @@ export function EvidencePopover(props: EvidencePopoverProps) {
         aria-controls={panelId}
         onClick={() => setOpen((v) => !v)}
         className={cx(
-          'inline-flex h-6 items-center gap-1 rounded-full px-2 align-middle text-2xs font-semibold transition',
-          props.variant === 'quote' && 'bg-brand-soft text-brand hover:bg-brand/15',
-          props.variant === 'module-field' && 'bg-surface-2 text-ink ring-1 ring-line ring-inset hover:bg-line',
-          props.variant === 'missing' && 'bg-surface-2 text-muted',
+          // The same chip as everywhere else (Provenance): Your words or Module record.
+          kind ? provenanceClass(kind) : 'inline-flex items-center gap-1 rounded-full bg-surface-2 px-2 text-2xs font-semibold text-muted',
+          'h-6 align-middle transition hover:brightness-95',
           open && 'ring-2 ring-brand/40',
         )}
       >
-        <Icon name={props.variant === 'quote' ? 'chat' : 'grid'} size={11} />
+        <Icon name={kind ? PROVENANCE[kind].icon : 'info'} size={11} />
         {triggerText[props.variant]}
         <Icon name="chevron-down" size={11} className={cx('transition', open && 'rotate-180')} />
       </button>

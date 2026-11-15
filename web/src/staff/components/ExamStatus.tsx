@@ -1,6 +1,7 @@
 // Status chip, privacy note and the publish confirmation for the exam feedback form (spec 23).
 import { useEffect, useId, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import { Provenance } from '../../components/Provenance.tsx';
 import type { ExamStatus } from '../lib/examForm.ts';
 import { CheckIcon, PencilIcon, SendIcon, ShieldIcon, SparkIcon } from './icons.tsx';
 import { Button } from '../../components/Button.tsx';
@@ -8,11 +9,19 @@ import { Button } from '../../components/Button.tsx';
 const CHIP: Record<ExamStatus, { label: string; className: string; Icon: typeof CheckIcon }> = {
   unsaved: { label: 'Not saved yet', className: 'bg-surface-2 text-muted ring-line-strong', Icon: PencilIcon },
   draft: { label: 'Draft', className: 'bg-fit-mid/12 text-ink ring-fit-mid/40', Icon: PencilIcon },
-  'ai-draft': { label: 'AI draft', className: 'bg-mode-explain/10 text-mode-explain ring-mode-explain/35', Icon: SparkIcon },
+  'ai-draft': { label: 'AI draft', className: '', Icon: SparkIcon },
   published: { label: 'Published', className: 'bg-fit-high/10 text-fit-high ring-fit-high/35', Icon: CheckIcon },
 };
 
 export function ExamStatusChip({ status }: { status: ExamStatus }) {
+  // An AI draft is shown with the app-wide AI chip (issue #138), the one place violet appears on this page.
+  if (status === 'ai-draft')
+    return (
+      <span className="inline-flex">
+        <span className="sr-only">Status: </span>
+        <Provenance kind="ai" label="AI draft" />
+      </span>
+    );
   const { label, className, Icon } = CHIP[status];
   return (
     <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ring-1 ${className}`}>

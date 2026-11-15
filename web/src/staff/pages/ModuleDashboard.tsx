@@ -127,7 +127,7 @@ function InsightsSection({ moduleId }: { moduleId: string }) {
   return (
     <Panel
       title="Insights"
-      description="Written by the Insights agent from engine numbers. Nothing changes until you decide."
+      description="Nothing changes until you decide."
       actions={
         pending > 0 ? (
           <span className="rounded-full bg-fit-mid/15 px-2.5 py-1 text-xs font-medium">

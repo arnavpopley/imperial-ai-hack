@@ -101,15 +101,20 @@ The "How it works" page shows the same twelve agents as cards, grouped as studen
 | `pathways.ts` | 9.4 | Pathway progress and the next-best module |
 | `societies.ts` | Could 14 | Top five societies plus one wildcard |
 | `feedback.ts` | 13 | Staff feedback totals, recent down-votes and the JSONL export |
+| `demand.ts` | 20.4 | Near (85%+) and over-capacity signals for students, from the synthetic cohort's shortlists |
+| `privacy.ts` | 20.4 | Withholds any count of one to four students before it leaves the API ("fewer than 5") |
+| `transcript.ts` | 23 | Parses pasted transcript or mark-sheet text into module results and question marks, matched to the catalogue |
+| `performance.ts` | 23 | Topic strengths from consented marks, and informational nudges that never change fit or ranking |
+| `exam-feedback.ts` | 23 | Feedback facts from a published examiner form and the student's question marks; the offline template |
 
 ## Guardrail pipeline
 
 | # | Stage | Side | How it works | On trigger |
 |---|---|---|---|---|
-| G1 | Scope check | Input | Patterns, plus a `MODEL_FAST` classifier outside the interview | Redirect to what the advisor can help with |
+| G1 | Scope check | Input | Patterns, plus a `MODEL_LIGHT` classifier outside the interview | Redirect to what the advisor can help with |
 | G2 | Sensitive-data redaction | Input | First-person disclosure patterns, plus a `MODEL_FAST` span finder that can only remove text that is really there | Sentence removed before storage; the student is told it was not kept |
-| G3 | Injection scan | Input and ingested text | Patterns, plus a `MODEL_FAST` classifier | Instruction stripped and logged; the rest is treated as data |
-| G4 | Wellbeing check | Input | Patterns, plus a `MODEL_FAST` classifier | Advising stops, support contacts are shown, and a hand-off is offered with consent |
+| G3 | Injection scan | Input and ingested text | Patterns, plus a `MODEL_LIGHT` classifier | Instruction stripped and logged; the rest is treated as data |
+| G4 | Wellbeing check | Input | Patterns, plus a `MODEL_LIGHT` classifier | Advising stops, support contacts are shown, and a hand-off is offered with consent |
 | G5 | Schema validation | Output | zod | Retry once, then a safe deterministic template |
 | G6 | Grounding check | Output | Every cited evidence ID and module field must exist | Unsupported reasons are dropped; blocked if none remain |
 | G7 | Rules validation | Output | Rules engine | Ineligible suggestions are removed and escalation is offered |
@@ -129,6 +134,8 @@ G1–G4 classifier calls run in parallel to keep latency low. Their verdicts are
 | `COMPLAINT` | Explicit complaint | Admin |
 
 The agent drafts a summary, and the student approves or edits it. The escalation is then created and the mode becomes ESCALATED. Staff respond in the console, the reply appears in the student's chat, and the mode returns to RECOMMEND.
+
+A `RULE_EXCEPTION` also takes a decision. The Senior Tutor **approves** or **declines** it (`POST /api/staff/escalations/:id/respond` with a `decision`). An approval waives only the rules that module itself broke (`exceptionFor` in `agents/escalation.ts`), so the module becomes shortlistable in that student's session, and a decline keeps the rule. Either way the decision and the tutor's message appear in the student's chat.
 
 ## Data and state
 
@@ -153,8 +160,8 @@ Staff see totals, up and down by answer type, and recent down-votes at `/staff/f
 
 | Harness | Command | Models | What it checks | Results |
 |---|---|---|---|---|
-| Offline | `npm run eval` (`scripts/run-evals.ts`) | None | Ranking quality (12 personas), extraction (4 scripted interviews, 33 slots), 15 adversarial guardrail inputs, determinism, the privacy threshold | `data/eval-latest.json`, stored in `eval_runs` and shown on the "How it works" page |
-| Live | `npm run eval:live` (`scripts/run-live-evals.ts`) | `MODEL_SMART` and `MODEL_FAST`, with `MODEL_JUDGE` (Fable 5.1) as judge | Module facts from published data, declining questions the data cannot answer, live extraction, 7 subtle guardrail cases, grounded explanations | `data/eval-live-latest.json` (with the model IDs it ran), committed and served read-only at `/api/eval/live`; shown on the "How it works" page as "With the live models", never re-run on a deploy |
+| Offline | `npm run eval` (`scripts/run-evals.ts`) | None | Ranking quality (12 personas), extraction (4 scripted interviews and 9 regression answers, 47 checks), 22 extraction hard cases (33 checks), 23 adversarial guardrail inputs, determinism, the privacy threshold | `data/eval-latest.json`, stored in `eval_runs` and shown on the "How it works" page |
+| Live | `npm run eval:live` (`scripts/run-live-evals.ts`) | `MODEL_SMART` and `MODEL_FAST`, with `MODEL_JUDGE` (Fable 5.1) as judge | Module facts from published data, published module details (lecturers, hours, reading lists, exam dates), declining questions the data cannot answer, live extraction, the extraction hard cases (also alone with `-- --hard-cases`), 7 subtle guardrail cases, grounded explanations, interview routing through the real Supervisor | `data/eval-live-latest.json` (with the model IDs it ran), committed and served read-only at `/api/eval/live`; shown on the "How it works" page as "With the live models", never re-run on a deploy |
 
 The cases live in `scripts/eval-cases.ts`. A live answer that silently fell back to a template never counts as a live pass, and a live run that misses any target exits non-zero. The README lists the latest numbers.
 
