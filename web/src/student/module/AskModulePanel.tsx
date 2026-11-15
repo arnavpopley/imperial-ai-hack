@@ -117,7 +117,7 @@ export function AskModulePanel({ sessionId, moduleId, moduleTitle, className }: 
           <h2 id="ask-heading" className="text-sm font-semibold">
             Ask about this module
           </h2>
-          <p className="mt-0.5 text-[12px] leading-snug text-muted">
+          <p className="mt-0.5 text-2xs leading-snug text-muted">
             Answers come from the module record and public description of {moduleTitle} only.
           </p>
         </div>
@@ -130,7 +130,7 @@ export function AskModulePanel({ sessionId, moduleId, moduleTitle, className }: 
         className="grid max-h-[26rem] min-h-0 content-start gap-3 overflow-y-auto px-5 py-4"
       >
         {turns.length === 0 && (
-          <li className="text-[13px] text-muted">Pick a question to start, or write your own.</li>
+          <li className="text-xs text-muted">Pick a question to start, or write your own.</li>
         )}
         <AnimatePresence initial={false}>
           {turns.map((turn, index) => (
@@ -141,14 +141,14 @@ export function AskModulePanel({ sessionId, moduleId, moduleTitle, className }: 
               transition={{ duration: 0.25 }}
               className="grid gap-2"
             >
-              <p className="ml-auto max-w-[85%] rounded-2xl rounded-br-md bg-brand px-3.5 py-2 text-[13px] text-on-brand">
+              <p className="ml-auto max-w-[85%] rounded-2xl rounded-br-md bg-brand px-3.5 py-2 text-xs text-on-brand">
                 {turn.question}
               </p>
               {turn.notices.map((n) => (
                 <GuardrailNotice key={`${n.stage}-${n.message}`} variant={n.variant} message={n.message} stage={n.stage} />
               ))}
               {(turn.answer || turn.status === 'streaming') && (
-                <p className="max-w-[92%] rounded-2xl rounded-bl-md bg-surface-2 px-3.5 py-2.5 text-[13px] leading-relaxed whitespace-pre-line">
+                <p className="max-w-[92%] rounded-2xl rounded-bl-md bg-surface-2 px-3.5 py-2.5 text-xs leading-relaxed whitespace-pre-line">
                   {turn.answer}
                   {turn.status === 'streaming' && (
                     <span className="animate-caret ml-0.5 inline-block h-3.5 w-1.5 translate-y-0.5 rounded-sm bg-current" aria-hidden="true" />
@@ -172,7 +172,7 @@ export function AskModulePanel({ sessionId, moduleId, moduleTitle, className }: 
                     href={sourceUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex h-7 items-center gap-1 rounded-full border border-line px-2.5 text-[12px] font-medium text-brand hover:border-brand/50 hover:bg-brand-soft/50"
+                    className="inline-flex h-7 items-center gap-1 rounded-full border border-line px-2.5 text-2xs font-medium text-brand hover:border-brand/50 hover:bg-brand-soft/50"
                   >
                     Public module page
                     <Icon name="external" size={12} />
@@ -182,7 +182,7 @@ export function AskModulePanel({ sessionId, moduleId, moduleTitle, className }: 
                 </div>
               )}
               {turn.status === 'error' && (
-                <div role="alert" className="flex flex-wrap items-center gap-2 rounded-xl bg-fit-low/8 px-3 py-2 text-[13px]">
+                <div role="alert" className="flex flex-wrap items-center gap-2 rounded-xl bg-fit-low/8 px-3 py-2 text-xs">
                   <Icon name="info" size={14} className="shrink-0 text-fit-low" />
                   <span className="min-w-0 flex-1">The answer did not come through: {turn.error}</span>
                   <Button size="sm" variant="ghost" icon="reset" onClick={() => retry(turn)} disabled={busy}>
@@ -203,7 +203,7 @@ export function AskModulePanel({ sessionId, moduleId, moduleTitle, className }: 
                 type="button"
                 disabled={busy}
                 onClick={() => void ask(q)}
-                className="rounded-full border border-line-strong px-3 py-1.5 text-[12px] font-medium transition hover:border-brand/50 hover:bg-brand-soft/50 hover:text-brand disabled:opacity-50"
+                className="rounded-full border border-line-strong px-3 py-1.5 text-2xs font-medium transition hover:border-brand/50 hover:bg-brand-soft/50 hover:text-brand disabled:opacity-50"
               >
                 {q}
               </button>

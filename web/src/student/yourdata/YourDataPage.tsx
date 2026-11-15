@@ -153,7 +153,7 @@ function Hero({ profile, quoteCount }: { profile: StudentProfile; quoteCount: nu
           <p className="inline-flex items-center gap-2 text-sm font-medium text-brand">
             <Icon name="lock" size={16} /> Private to you
           </p>
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Your data</h1>
+          <h1 className="text-title">Your data</h1>
           <p className="max-w-xl text-base text-muted text-pretty">
             Your interests, goals and preferences, and marks only if you choose to share them. Never health or
             background. Staff only ever see totals for groups of five or more.
@@ -477,7 +477,7 @@ function TimetableCard({ profile, evidence }: { profile: StudentProfile; evidenc
                     {free ? 'keep free' : halves.length > 0 ? `keep ${halves.map((h) => (h === 'AM' ? 'morning' : 'afternoon')).join(' and ')} free` : 'available'}
                   </span>
                   {halves.length > 0 ? (
-                    <span aria-hidden="true" className="text-[11px] font-semibold">
+                    <span aria-hidden="true" className="text-2xs font-semibold">
                       {halves.join(' ')}
                     </span>
                   ) : (

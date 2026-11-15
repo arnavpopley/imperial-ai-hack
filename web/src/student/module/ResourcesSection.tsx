@@ -25,7 +25,7 @@ export function ResourcesSection({ resources }: { resources: readonly ModuleReso
           <span className="grid size-10 shrink-0 place-items-center rounded-full bg-brand-soft text-brand" aria-hidden="true">
             <Icon name="edit" size={17} />
           </span>
-          <p className="text-[13px] leading-snug text-muted">
+          <p className="text-xs leading-snug text-muted">
             <span className="block font-semibold text-ink">Past papers and reading lists will appear here.</span>
             The department adds them once they are published.
           </p>
@@ -37,7 +37,7 @@ export function ResourcesSection({ resources }: { resources: readonly ModuleReso
             if (items.length === 0) return null;
             return (
               <div key={kind}>
-                <h3 className="flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">
+                <h3 className="flex items-center gap-1.5 text-2xs font-semibold tracking-[0.08em] text-muted uppercase">
                   <Icon name={icon} size={12} />
                   {label}
                 </h3>
@@ -48,7 +48,7 @@ export function ResourcesSection({ resources }: { resources: readonly ModuleReso
                         href={r.url}
                         target="_blank"
                         rel="noreferrer"
-                        className="group flex items-center gap-2 rounded-lg border border-line px-3 py-2 text-[13px] font-medium transition hover:border-brand/40 hover:bg-brand-soft/40"
+                        className="group flex items-center gap-2 rounded-lg border border-line px-3 py-2 text-xs font-medium transition hover:border-brand/40 hover:bg-brand-soft/40"
                       >
                         <span className="min-w-0 flex-1 truncate">{r.label}</span>
                         <Icon name="external" size={13} className="shrink-0 text-muted group-hover:text-brand" />

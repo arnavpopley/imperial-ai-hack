@@ -94,7 +94,7 @@ export function StudentShell() {
                             <Icon name={tab.icon} size={16} />
                             {tab.label}
                             {tab.to === paths.feedback && feedbackCount > 0 && (
-                              <span className="grid h-5 min-w-5 place-items-center rounded-full bg-mode-explain/15 px-1.5 text-[11px] font-semibold text-mode-explain tabular-nums">
+                              <span className="grid h-5 min-w-5 place-items-center rounded-full bg-mode-explain/15 px-1.5 text-2xs font-semibold text-mode-explain tabular-nums">
                                 {feedbackCount}
                                 <span className="sr-only"> {feedbackCount === 1 ? 'exam' : 'exams'}</span>
                               </span>

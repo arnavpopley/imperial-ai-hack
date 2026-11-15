@@ -41,7 +41,7 @@ export function InfoTip({ text, label, className }: { text: string; label: strin
         role="tooltip"
         id={tipId}
         className={cx(
-          'absolute top-full right-0 z-(--z-popover) mt-1.5 w-56 rounded-xl bg-ink px-3 py-2 text-[12.5px] leading-snug text-canvas shadow-lift transition duration-150',
+          'absolute top-full right-0 z-(--z-popover) mt-1.5 w-56 rounded-xl bg-ink px-3 py-2 text-xs leading-snug text-canvas shadow-lift transition duration-150',
           open ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-1 opacity-0',
         )}
       >
@@ -63,7 +63,7 @@ export function NudgeNote({ nudge, variant = 'card', className }: NudgeNoteProps
     return (
       <div
         className={cx(
-          'relative z-10 flex items-start gap-2.5 rounded-xl bg-mode-plan/8 py-2 pr-1.5 pl-3 text-[13px] ring-1 ring-mode-plan/20 ring-inset',
+          'relative z-10 flex items-start gap-2.5 rounded-xl bg-mode-plan/8 py-2 pr-1.5 pl-3 text-xs ring-1 ring-mode-plan/20 ring-inset',
           className,
         )}
       >
@@ -85,18 +85,18 @@ export function NudgeNote({ nudge, variant = 'card', className }: NudgeNoteProps
         <BulbIcon size={18} />
       </span>
       <div className="grid min-w-0 flex-1 gap-2">
-        <p className="text-[12px] font-semibold tracking-[0.08em] text-mode-plan uppercase">Keep in mind</p>
-        <p className="text-[15px] leading-relaxed text-pretty">{nudge.message}</p>
+        <p className="text-2xs font-semibold tracking-[0.08em] text-mode-plan uppercase">Keep in mind</p>
+        <p className="text-sm leading-relaxed text-pretty">{nudge.message}</p>
         {nudge.topics.length > 0 && (
           <ul className="flex flex-wrap gap-1.5" aria-label="Topics">
             {nudge.topics.map((topic) => (
-              <li key={topic} className="rounded-full bg-surface px-2.5 py-0.5 text-[12px] font-medium text-mode-plan ring-1 ring-mode-plan/25">
+              <li key={topic} className="rounded-full bg-surface px-2.5 py-0.5 text-2xs font-medium text-mode-plan ring-1 ring-mode-plan/25">
                 {topicLabel(topic)}
               </li>
             ))}
           </ul>
         )}
-        <p className="flex flex-wrap items-center gap-x-1.5 text-[12.5px] text-muted">
+        <p className="flex flex-wrap items-center gap-x-1.5 text-xs text-muted">
           <Icon name="lock" size={12} className="shrink-0" />
           {NUDGE_EXPLAINER}
           <Link to={yourDataPath} className="font-medium text-mode-plan underline-offset-2 hover:underline">

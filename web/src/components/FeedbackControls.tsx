@@ -108,7 +108,7 @@ export function FeedbackControls({ sessionId, target, answer, question, classNam
           }
         }}
         className={cx(
-          'grid size-8 place-items-center rounded-lg text-[15px] transition disabled:cursor-default',
+          'grid size-8 place-items-center rounded-lg text-sm transition disabled:cursor-default',
           chosen ? 'bg-brand-soft ring-1 ring-brand/40' : 'hover:bg-surface-2 disabled:opacity-40',
         )}
       >
@@ -122,12 +122,12 @@ export function FeedbackControls({ sessionId, target, answer, question, classNam
       <div role="group" aria-label="Rate this answer" className="flex items-center gap-0.5">
         {thumb('up')}
         {thumb('down')}
-        <p role="status" className="ml-1.5 text-[12px] text-muted">
+        <p role="status" className="ml-1.5 text-2xs text-muted">
           {done ? 'Thanks, this helps us improve' : busy ? 'Sending…' : ''}
         </p>
       </div>
       {status === 'error' && error && (
-        <p role="alert" className="text-[12px] text-fit-low">
+        <p role="alert" className="text-2xs text-fit-low">
           Feedback did not send: {error}
         </p>
       )}
@@ -140,7 +140,7 @@ export function FeedbackControls({ sessionId, target, answer, question, classNam
           onKeyDown={onPanelKeyDown}
           className="grid w-full max-w-sm gap-2.5 rounded-xl border border-line bg-surface p-3 shadow-soft"
         >
-          <p className="text-[12px] font-medium">What was wrong?</p>
+          <p className="text-2xs font-medium">What was wrong?</p>
           <div className="flex flex-wrap gap-1.5">
             {REASONS.map((r, i) => (
               <button
@@ -151,7 +151,7 @@ export function FeedbackControls({ sessionId, target, answer, question, classNam
                 disabled={busy}
                 onClick={() => setReason((current) => (current === r.value ? null : r.value))}
                 className={cx(
-                  'rounded-full border px-2.5 py-1 text-[12px] font-medium transition',
+                  'rounded-full border px-2.5 py-1 text-2xs font-medium transition',
                   reason === r.value
                     ? 'border-brand bg-brand text-on-brand'
                     : 'border-line-strong hover:border-brand/50 hover:text-brand',
@@ -172,10 +172,10 @@ export function FeedbackControls({ sessionId, target, answer, question, classNam
             disabled={busy}
             onChange={(event) => setComment(event.target.value)}
             placeholder="Anything to add? (optional, no personal details)"
-            className="resize-none rounded-lg border border-line-strong bg-canvas px-2.5 py-1.5 text-[12px] placeholder:text-muted focus:border-brand focus:outline-none"
+            className="resize-none rounded-lg border border-line-strong bg-canvas px-2.5 py-1.5 text-2xs placeholder:text-muted focus:border-brand focus:outline-none"
           />
           {error && (
-            <p role="alert" className="text-[12px] text-fit-low">
+            <p role="alert" className="text-2xs text-fit-low">
               Feedback did not send: {error}
             </p>
           )}
@@ -184,7 +184,7 @@ export function FeedbackControls({ sessionId, target, answer, question, classNam
               type="button"
               onClick={cancel}
               disabled={busy}
-              className="rounded-lg px-2.5 py-1 text-[12px] font-medium text-muted hover:bg-surface-2 hover:text-ink"
+              className="rounded-lg px-2.5 py-1 text-2xs font-medium text-muted hover:bg-surface-2 hover:text-ink"
             >
               Cancel
             </button>
@@ -192,7 +192,7 @@ export function FeedbackControls({ sessionId, target, answer, question, classNam
               type="button"
               onClick={() => void send('down')}
               disabled={busy}
-              className="rounded-lg bg-brand px-3 py-1 text-[12px] font-medium text-on-brand hover:brightness-110 disabled:opacity-50"
+              className="rounded-lg bg-brand px-3 py-1 text-2xs font-medium text-on-brand hover:brightness-110 disabled:opacity-50"
             >
               Send feedback
             </button>

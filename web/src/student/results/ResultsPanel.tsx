@@ -49,9 +49,9 @@ export function ResultsPanel({ onClose, onSkip }: ResultsPanelProps) {
             <h2 id={headingId} className="text-xl font-semibold tracking-tight">
               Your results
             </h2>
-            <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-semibold text-brand">Optional · recommended</span>
+            <span className="rounded-full bg-brand-soft px-2 py-0.5 text-2xs font-semibold text-brand">Optional · recommended</span>
           </div>
-          <p className="mt-1 text-[14px] leading-snug text-muted">Share last year's marks for more honest advice. About a minute.</p>
+          <p className="mt-1 text-sm leading-snug text-muted">Share last year's marks for more honest advice. About a minute.</p>
         </div>
         <button
           type="button"
@@ -65,7 +65,7 @@ export function ResultsPanel({ onClose, onSkip }: ResultsPanelProps) {
       {!showSummary && (
         <ul className="flex flex-wrap gap-2" aria-label="Why it helps">
           {BENEFITS.map((b) => (
-            <li key={b.text} className="flex items-start gap-2 rounded-full bg-surface-2 px-3 py-1.5 text-[13px] leading-snug">
+            <li key={b.text} className="flex items-start gap-2 rounded-full bg-surface-2 px-3 py-1.5 text-xs leading-snug">
               <Icon name={b.icon} size={14} className="mt-0.5 shrink-0 text-brand" />
               {b.text}
             </li>
@@ -81,7 +81,7 @@ export function ResultsPanel({ onClose, onSkip }: ResultsPanelProps) {
         ) : (
           <motion.div key="form" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
             {adding && hasResults && (
-              <p className="mb-3 rounded-xl bg-surface-2 px-3.5 py-2.5 text-[13px] text-muted">
+              <p className="mb-3 rounded-xl bg-surface-2 px-3.5 py-2.5 text-xs text-muted">
                 Your marks so far stay as they are. Upload a mark sheet with your question marks, for example
                 &ldquo;MECH50008 Dynamics 68&rdquo; then &ldquo;Q1 15/20 Q2 14/25&rdquo;; a module you upload again replaces only
                 its own marks.
@@ -188,7 +188,7 @@ function UploadForm({ onUploaded, onSkip, skipLabel = 'Skip for now' }: { onUplo
       />
 
       {problem && (
-        <p role="alert" className="flex items-start gap-2 rounded-xl bg-fit-mid/10 px-3.5 py-2.5 text-[13px] leading-snug">
+        <p role="alert" className="flex items-start gap-2 rounded-xl bg-fit-mid/10 px-3.5 py-2.5 text-xs leading-snug">
           <Icon name="info" size={14} className="mt-0.5 shrink-0 text-fit-mid" />
           {problem}
         </p>
@@ -202,8 +202,8 @@ function UploadForm({ onUploaded, onSkip, skipLabel = 'Skip for now' }: { onUplo
                 <MarkSheetIcon size={17} />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[14px] font-medium">{file.name}</p>
-                <p className="text-[12px] text-muted">{formatBytes(file.size)}</p>
+                <p className="truncate text-sm font-medium">{file.name}</p>
+                <p className="text-2xs text-muted">{formatBytes(file.size)}</p>
               </div>
               <Button size="sm" variant="ghost" icon="x" onClick={() => setFile(null)} aria-label={`Remove ${file.name}`}>
                 Remove
@@ -225,13 +225,13 @@ function UploadForm({ onUploaded, onSkip, skipLabel = 'Skip for now' }: { onUplo
               <span className="grid size-11 place-items-center rounded-full bg-brand-soft text-brand" aria-hidden="true">
                 <UploadIcon size={20} />
               </span>
-              <span className="text-[15px] font-medium">
+              <span className="text-sm font-medium">
                 <span className="max-sm:hidden">
                   Drop your transcript here, or <span className="text-brand underline underline-offset-2">choose a file</span>
                 </span>
                 <span className="text-brand underline underline-offset-2 sm:hidden">Choose a PDF or photo</span>
               </span>
-              <span id={fileHintId} className="text-[12.5px] text-muted">
+              <span id={fileHintId} className="text-xs text-muted">
                 PDF or photo (PNG or JPEG), up to {formatBytes(MAX_FILE_BYTES)}
               </span>
               <input
@@ -247,7 +247,7 @@ function UploadForm({ onUploaded, onSkip, skipLabel = 'Skip for now' }: { onUplo
             </label>
           )}
           {fileError && (
-            <p role="alert" className="flex items-start gap-2 text-[13px] text-fit-low">
+            <p role="alert" className="flex items-start gap-2 text-xs text-fit-low">
               <Icon name="info" size={14} className="mt-0.5 shrink-0" />
               {fileError}
             </p>
@@ -255,7 +255,7 @@ function UploadForm({ onUploaded, onSkip, skipLabel = 'Skip for now' }: { onUplo
         </div>
       ) : (
         <div className="grid gap-1.5">
-          <label htmlFor={textId} className="text-[14px] font-medium">
+          <label htmlFor={textId} className="text-sm font-medium">
             Paste your marks, one module per line
           </label>
           <textarea
@@ -264,12 +264,12 @@ function UploadForm({ onUploaded, onSkip, skipLabel = 'Skip for now' }: { onUplo
             maxLength={MAX_TEXT}
             onChange={(event) => setText(event.target.value)}
             placeholder={'MECH50010 Fluid Mechanics 2 62\nMECH50004 Mechatronics 2 71'}
-            className="min-h-36 w-full resize-y rounded-2xl border border-line-strong bg-canvas p-4 font-mono text-[14px] leading-relaxed transition outline-none placeholder:text-muted focus:border-brand focus:ring-4 focus:ring-brand/12"
+            className="min-h-36 w-full resize-y rounded-2xl border border-line-strong bg-canvas p-4 font-mono text-sm leading-relaxed transition outline-none placeholder:text-muted focus:border-brand focus:ring-4 focus:ring-brand/12"
           />
         </div>
       )}
 
-      <p className="flex items-start gap-2 text-[12.5px] leading-snug text-muted">
+      <p className="flex items-start gap-2 text-xs leading-snug text-muted">
         <Icon name="sparkle" size={13} className="mt-0.5 shrink-0 text-mode-explain" />
         A mark sheet with marks for each exam question also unlocks tailored exam feedback.
       </p>
@@ -289,7 +289,7 @@ function UploadForm({ onUploaded, onSkip, skipLabel = 'Skip for now' }: { onUplo
           onChange={(event) => setConsent(event.target.checked)}
           className="mt-0.5 size-[18px] shrink-0 accent-brand"
         />
-        <span className="text-[13.5px] leading-snug">
+        <span className="text-xs leading-snug">
           <span className="font-semibold">I agree to share these marks with ModuleMatch.</span>{' '}
           <span className="text-muted">They are used only for gentle notes and exam feedback for me, and I can withdraw at any time.</span>
         </span>
@@ -304,7 +304,7 @@ function UploadForm({ onUploaded, onSkip, skipLabel = 'Skip for now' }: { onUplo
         </Button>
       </div>
       {!consent && (mode === 'file' ? file !== null : text.trim().length > 0) && (
-        <p className="text-right text-[12px] text-muted" aria-live="polite">
+        <p className="text-right text-2xs text-muted" aria-live="polite">
           Tick the consent box to continue.
         </p>
       )}
@@ -344,7 +344,7 @@ function ResultsSummary({ onReplace, onAdd, onClose }: { onReplace: () => void; 
             : `${lastSource ? 'Read' : 'Shared'} ${matchedCount === 1 ? '1 module' : `${matchedCount} modules`}`}
         </p>
         {lastSource && (
-          <span className="text-[11.5px] text-muted">{lastSource === 'model' ? 'Read by AI' : 'Read by the offline parser'}</span>
+          <span className="text-2xs text-muted">{lastSource === 'model' ? 'Read by AI' : 'Read by the offline parser'}</span>
         )}
       </div>
       <MarkChips results={stored} />
@@ -361,7 +361,7 @@ function ResultsSummary({ onReplace, onAdd, onClose }: { onReplace: () => void; 
             exit={{ opacity: 0 }}
             className="grid gap-3 rounded-xl bg-surface p-3.5 ring-1 ring-line"
           >
-            <p className="text-[13.5px]">Remove these marks so you can upload again? Nothing is kept.</p>
+            <p className="text-xs">Remove these marks so you can upload again? Nothing is kept.</p>
             <div className="flex flex-wrap gap-2">
               <Button size="sm" variant="secondary" icon="trash" busy={removing} onClick={() => void remove()}>
                 Remove and re-upload
@@ -371,7 +371,7 @@ function ResultsSummary({ onReplace, onAdd, onClose }: { onReplace: () => void; 
               </Button>
             </div>
             {error && (
-              <p role="alert" className="text-[13px] text-fit-low">
+              <p role="alert" className="text-xs text-fit-low">
                 {error}
               </p>
             )}

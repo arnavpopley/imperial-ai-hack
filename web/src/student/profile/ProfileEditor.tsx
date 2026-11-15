@@ -48,7 +48,7 @@ export function ProfileEditor({ profile, onSave, onCancel, saving, error }: Prof
   return (
     <form onSubmit={submit} className="grid gap-6">
       <fieldset className="grid gap-3">
-        <legend className="mb-2 text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">Interests</legend>
+        <legend className="mb-2 text-2xs font-semibold tracking-[0.08em] text-muted uppercase">Interests</legend>
         {Object.entries(interests).map(([topic, value]) => (
           <div key={topic} className="flex items-end gap-2">
             <RangeSlider
@@ -72,7 +72,7 @@ export function ProfileEditor({ profile, onSave, onCancel, saving, error }: Prof
         {available.length > 0 && (
           <div className="flex items-end gap-2">
             <div className="min-w-0 flex-1">
-              <label htmlFor={addTopicId} className="text-[13px] font-medium">
+              <label htmlFor={addTopicId} className="text-xs font-medium">
                 Add an interest
               </label>
               <select
@@ -105,7 +105,7 @@ export function ProfileEditor({ profile, onSave, onCancel, saving, error }: Prof
       </fieldset>
 
       <fieldset className="grid gap-4">
-        <legend className="mb-2 text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">
+        <legend className="mb-2 text-2xs font-semibold tracking-[0.08em] text-muted uppercase">
           How you like to learn
         </legend>
         {STYLE_KEYS.map((key) => {
@@ -136,8 +136,8 @@ export function ProfileEditor({ profile, onSave, onCancel, saving, error }: Prof
       </fieldset>
 
       <fieldset>
-        <legend className="mb-2 text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">Timetable</legend>
-        <p className="mb-2 text-[13px] font-medium" id={`${startId}-days`}>
+        <legend className="mb-2 text-2xs font-semibold tracking-[0.08em] text-muted uppercase">Timetable</legend>
+        <p className="mb-2 text-xs font-medium" id={`${startId}-days`}>
           Days to keep free
         </p>
         <div className="flex flex-wrap gap-1.5" role="group" aria-labelledby={`${startId}-days`}>
@@ -147,7 +147,7 @@ export function ProfileEditor({ profile, onSave, onCancel, saving, error }: Prof
               <label
                 key={day}
                 className={cx(
-                  'cursor-pointer rounded-full px-3 py-1 text-[13px] font-medium ring-1 transition ring-inset has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand',
+                  'cursor-pointer rounded-full px-3 py-1 text-xs font-medium ring-1 transition ring-inset has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand',
                   on ? 'bg-brand text-on-brand ring-brand' : 'bg-surface text-ink ring-line-strong hover:bg-surface-2',
                 )}
               >
@@ -164,7 +164,7 @@ export function ProfileEditor({ profile, onSave, onCancel, saving, error }: Prof
             );
           })}
         </div>
-        <p className="mt-4 mb-2 text-[13px] font-medium" id={`${startId}-halves`}>
+        <p className="mt-4 mb-2 text-xs font-medium" id={`${startId}-halves`}>
           Half days to keep free
         </p>
         <div className="grid grid-cols-5 gap-1.5" role="group" aria-labelledby={`${startId}-halves`}>
@@ -178,7 +178,7 @@ export function ProfileEditor({ profile, onSave, onCancel, saving, error }: Prof
                   <label
                     key={half}
                     className={cx(
-                      'rounded-lg py-1 text-center text-[12px] font-medium ring-1 transition ring-inset has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand',
+                      'rounded-lg py-1 text-center text-2xs font-medium ring-1 transition ring-inset has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand',
                       whole ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
                       on ? 'bg-brand/15 text-brand ring-brand/40' : 'bg-surface text-muted ring-line-strong hover:bg-surface-2',
                     )}
@@ -202,7 +202,7 @@ export function ProfileEditor({ profile, onSave, onCancel, saving, error }: Prof
             </div>
           ))}
         </div>
-        <label htmlFor={startId} className="mt-4 block text-[13px] font-medium">
+        <label htmlFor={startId} className="mt-4 block text-xs font-medium">
           Earliest start
         </label>
         <select
@@ -221,7 +221,7 @@ export function ProfileEditor({ profile, onSave, onCancel, saving, error }: Prof
       </fieldset>
 
       {error && (
-        <p role="alert" className="text-[13px] text-fit-low">
+        <p role="alert" className="text-xs text-fit-low">
           {error}
         </p>
       )}

@@ -73,11 +73,11 @@ export function MultiSelect({ label, hint, options, selected, onChange, placehol
 
   return (
     <div className="relative">
-      <label htmlFor={id} className="text-[13px] font-medium">
+      <label htmlFor={id} className="text-xs font-medium">
         {label}
       </label>
       {hint && (
-        <p id={hintId} className="mt-0.5 text-[12px] text-muted">
+        <p id={hintId} className="mt-0.5 text-2xs text-muted">
           {hint}
         </p>
       )}
@@ -91,7 +91,7 @@ export function MultiSelect({ label, hint, options, selected, onChange, placehol
         {selected.map((value) => (
           <span
             key={value}
-            className="inline-flex items-center gap-1 rounded-lg bg-brand-soft py-0.5 pr-1 pl-2 text-[13px] font-medium text-brand"
+            className="inline-flex items-center gap-1 rounded-lg bg-brand-soft py-0.5 pr-1 pl-2 text-xs font-medium text-brand"
           >
             {byValue.get(value)?.label ?? value}
             <button
@@ -141,7 +141,7 @@ export function MultiSelect({ label, hint, options, selected, onChange, placehol
         className="absolute inset-x-0 top-full z-20 mt-1.5 max-h-64 overflow-y-auto rounded-xl border border-line bg-surface p-1 shadow-lift"
       >
         {matches.length === 0 ? (
-          <li className="px-3 py-2.5 text-[13px] text-muted">No modules match “{query}”.</li>
+          <li className="px-3 py-2.5 text-xs text-muted">No modules match “{query}”.</li>
         ) : (
           matches.map((option, index) => {
             const isSelected = selected.includes(option.value);
