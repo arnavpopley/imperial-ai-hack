@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-// The "i" note opens on focus, hover and tap, closes on Escape, blur and pointer leave, and is linked to its button
+// The "i" note opens on focus, hover and tap (a tap never closes it), closes on Escape, blur and pointer leave, and is linked to its button
 // with aria-describedby only while it is showing.
 import { MotionGlobalConfig } from 'motion/react';
 import { act } from 'react';
@@ -46,11 +46,19 @@ describe('InfoTip', () => {
     expect(button().hasAttribute('aria-describedby')).toBe(false);
   });
 
-  it('toggles with a tap', async () => {
+  it('stays open after a tap, which focuses then clicks, and closes when focus moves away', async () => {
+    await act(async () => button().focus());
     await fire(button(), new MouseEvent('click', { bubbles: true }));
     expect(note()).not.toBeNull();
-    await fire(button(), new MouseEvent('click', { bubbles: true }));
+    await act(async () => button().blur());
     expect(note()).toBeNull();
+  });
+
+  it('reopens with a tap after Escape', async () => {
+    await act(async () => button().focus());
+    await fire(button(), new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await fire(button(), new MouseEvent('click', { bubbles: true }));
+    expect(note()).not.toBeNull();
   });
 
   it('opens while the pointer is over it', async () => {

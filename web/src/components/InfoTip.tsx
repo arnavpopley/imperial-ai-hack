@@ -1,5 +1,5 @@
 // A small "i" button that keeps explanatory text out of the way until it is wanted. The note opens on hover, on
-// keyboard focus, or with a tap (for touch screens), and closes on Escape, on blur or when the pointer leaves.
+// keyboard focus, or with a tap (for touch screens), and closes on Escape, on blur (tapping elsewhere) or when the pointer leaves.
 // The button names what the note is about; the note is linked to it with aria-describedby while open.
 import { AnimatePresence, motion } from 'motion/react';
 import { useId, useState, type ReactNode } from 'react';
@@ -30,7 +30,8 @@ export function InfoTip({ label, children, align = 'start', className }: InfoTip
         aria-label={label}
         aria-expanded={open}
         aria-describedby={open ? id : undefined}
-        onClick={() => setOpen((o) => !o)}
+        // A tap focuses the button before clicking it, so clicking only ever opens; blur or Escape closes.
+        onClick={() => setOpen(true)}
         onFocus={() => setOpen(true)}
         onBlur={() => setOpen(false)}
         onKeyDown={(event) => {
