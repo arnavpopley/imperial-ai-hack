@@ -12,11 +12,14 @@ export interface LostMarksRow {
   scoredShare: number;
 }
 
+/** Question ids match as the server matches them: ignoring case and surrounding spaces ("q1" is "Q1"). */
+const sameQuestion = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+
 /** One bar per weak point, joining the student's question marks for the same exam when they exist. */
 export function lostMarksRows(weakPoints: TailoredFeedback['weakPoints'], result: ModuleResult | undefined): LostMarksRow[] {
   const largest = Math.max(0, ...weakPoints.map((w) => w.lostMarks));
   return weakPoints.map((w) => {
-    const question = result?.questionMarks.find((q) => q.questionId === w.questionId);
+    const question = result?.questionMarks.find((q) => sameQuestion(q.questionId, w.questionId));
     if (question && question.maxMarks > 0) {
       const lost = Math.min(w.lostMarks, question.maxMarks);
       return {

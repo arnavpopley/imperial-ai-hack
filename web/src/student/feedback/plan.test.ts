@@ -27,6 +27,11 @@ describe('lostMarksRows', () => {
     expect(q3).toMatchObject({ maxMarks: 20, lostShare: 13 / 20, scoredShare: 7 / 20 });
   });
 
+  it('matches question ids ignoring case and spaces, as the server does', () => {
+    const [row] = lostMarksRows([{ questionId: ' q3 ', topics: [], lostMarks: 13, advice: '' }], result);
+    expect(row?.maxMarks).toBe(20);
+  });
+
   it('scales to the largest loss when the maximum is unknown', () => {
     const rows = lostMarksRows(weak, undefined);
     expect(rows.map((r) => r.lostShare)).toEqual([1, 0.5]);
