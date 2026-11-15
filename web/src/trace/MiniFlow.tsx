@@ -1,7 +1,7 @@
 // The "How it works" hero (issue #135): one student message travelling through the system, played once. It
 // passes the input checks, the Supervisor hands it to an agent, the output checks run, and a reply comes back.
 // The full, interactive flowchart is further down the page; this is the one-line version. Static under
-// prefers-reduced-motion. Badges and gradients are the agents' own, from agents.ts.
+// prefers-reduced-motion. Badges and fills are the agents' own, from agents.ts.
 import { motion, useReducedMotion } from 'motion/react';
 import { Fragment } from 'react';
 import { cx } from '../components/cx.ts';
@@ -16,14 +16,14 @@ interface Stop {
   key: string;
   label: string;
   icon: IconName;
-  /** Badge colours: a gradient for agents, a soft tint for checks and the two ends. */
+  /** Badge colours: a solid fill for agents, a soft tint for checks and the two ends. */
   tone: string;
 }
 
 const STOPS: readonly Stop[] = [
   { key: 'message', label: 'Your message', icon: 'chat', tone: 'bg-brand-soft text-brand' },
   { key: 'in', label: '4 checks in', icon: 'shield', tone: 'bg-fit-high/12 text-fit-high' },
-  { key: 'supervisor', label: 'Supervisor', icon: SUPERVISOR?.icon ?? 'compass', tone: cx('bg-gradient-to-br text-on-brand', SUPERVISOR?.gradient) },
+  { key: 'supervisor', label: 'Supervisor', icon: SUPERVISOR?.icon ?? 'compass', tone: cx('text-on-brand', SUPERVISOR?.fill) },
   { key: 'agent', label: 'One agent', icon: 'sparkle', tone: '' },
   { key: 'out', label: '4 checks out', icon: 'shield', tone: 'bg-fit-high/12 text-fit-high' },
   { key: 'reply', label: 'Reply', icon: 'send', tone: 'bg-brand-soft text-brand' },
@@ -103,8 +103,8 @@ function AgentTrio() {
         <span
           key={a.id}
           className={cx(
-            'absolute grid size-6 place-items-center rounded-lg bg-gradient-to-br text-on-brand shadow-soft ring-2 ring-surface sm:size-7',
-            a.gradient,
+            'absolute grid size-6 place-items-center rounded-lg text-on-brand shadow-soft ring-2 ring-surface sm:size-7',
+            a.fill,
           )}
           style={{ transform: `translate(${(i - 1) * 9}px, ${(i % 2) * 5 - 2}px)` }}
         >

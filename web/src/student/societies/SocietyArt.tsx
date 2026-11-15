@@ -1,4 +1,4 @@
-// Each society gets its own artwork: a colour gradient and an icon from its strongest topic, so the cards
+// Each society gets its own artwork: a solid colour and an icon from its strongest topic, so the cards
 // and the detail panel read at a glance without needing a photo per society.
 import type { Society } from '@modulematch/shared';
 import { cx } from '../../components/cx.ts';
@@ -6,35 +6,35 @@ import { Icon, type IconName } from '../../components/Icon.tsx';
 
 interface Art {
   icon: IconName;
-  /** Tailwind gradient stops; literal strings so Tailwind generates them. */
-  gradient: string;
+  /** Solid fill for the banner; a literal class so Tailwind generates it. */
+  fill: string;
 }
 
 const BY_TOPIC: Record<string, Art> = {
-  'design-manufacturing': { icon: 'wrench', gradient: 'from-art-3 to-art-5' },
-  'control-robotics': { icon: 'chip', gradient: 'from-art-7 to-art-2' },
-  'electronics-embedded': { icon: 'chip', gradient: 'from-art-7 to-art-4' },
-  'fluid-mechanics': { icon: 'wave', gradient: 'from-art-7 to-art-1' },
-  'thermodynamics-energy': { icon: 'flame', gradient: 'from-art-3 to-art-6' },
-  'nuclear-energy': { icon: 'flame', gradient: 'from-art-5 to-art-3' },
-  'biomedical-engineering': { icon: 'heart', gradient: 'from-art-6 to-art-4' },
-  'finance-economics': { icon: 'chart', gradient: 'from-art-2 to-art-8' },
-  'entrepreneurship-innovation': { icon: 'sparkle', gradient: 'from-art-5 to-art-6' },
-  'management-leadership': { icon: 'user', gradient: 'from-art-1 to-art-2' },
-  'creative-arts-design': { icon: 'palette', gradient: 'from-art-6 to-art-3' },
-  'global-development': { icon: 'globe', gradient: 'from-art-2 to-art-7' },
-  languages: { icon: 'globe', gradient: 'from-art-4 to-art-1' },
-  'mathematics-modelling': { icon: 'grid', gradient: 'from-art-1 to-art-4' },
-  'statistics-data': { icon: 'chart', gradient: 'from-art-1 to-art-2' },
-  'programming-software': { icon: 'code', gradient: 'from-art-4 to-art-7' },
-  'machine-learning-ai': { icon: 'sparkle', gradient: 'from-art-4 to-art-6' },
-  'communication-writing': { icon: 'edit', gradient: 'from-art-8 to-art-2' },
-  'history-philosophy': { icon: 'bookmark', gradient: 'from-art-5 to-art-8' },
-  'sustainability-climate': { icon: 'globe', gradient: 'from-art-8 to-art-2' },
+  'design-manufacturing': { icon: 'wrench', fill: 'bg-art-3' },
+  'control-robotics': { icon: 'chip', fill: 'bg-art-7' },
+  'electronics-embedded': { icon: 'chip', fill: 'bg-art-7' },
+  'fluid-mechanics': { icon: 'wave', fill: 'bg-art-7' },
+  'thermodynamics-energy': { icon: 'flame', fill: 'bg-art-3' },
+  'nuclear-energy': { icon: 'flame', fill: 'bg-art-5' },
+  'biomedical-engineering': { icon: 'heart', fill: 'bg-art-6' },
+  'finance-economics': { icon: 'chart', fill: 'bg-art-2' },
+  'entrepreneurship-innovation': { icon: 'sparkle', fill: 'bg-art-5' },
+  'management-leadership': { icon: 'user', fill: 'bg-art-1' },
+  'creative-arts-design': { icon: 'palette', fill: 'bg-art-6' },
+  'global-development': { icon: 'globe', fill: 'bg-art-2' },
+  languages: { icon: 'globe', fill: 'bg-art-4' },
+  'mathematics-modelling': { icon: 'grid', fill: 'bg-art-1' },
+  'statistics-data': { icon: 'chart', fill: 'bg-art-1' },
+  'programming-software': { icon: 'code', fill: 'bg-art-4' },
+  'machine-learning-ai': { icon: 'sparkle', fill: 'bg-art-4' },
+  'communication-writing': { icon: 'edit', fill: 'bg-art-8' },
+  'history-philosophy': { icon: 'bookmark', fill: 'bg-art-5' },
+  'sustainability-climate': { icon: 'globe', fill: 'bg-art-8' },
 };
 
 /** For a society with no topics (such as hiking), something outdoorsy rather than a blank. */
-const FALLBACK: Art = { icon: 'mountain', gradient: 'from-art-8 to-art-7' };
+const FALLBACK: Art = { icon: 'mountain', fill: 'bg-art-8' };
 
 /** The artwork for one topic, or the outdoorsy fallback. */
 export function artForTopic(topic: string): Art {
@@ -47,13 +47,13 @@ export function artFor(society: Society | undefined): Art {
   return (top && BY_TOPIC[top]) || FALLBACK;
 }
 
-/** A gradient banner with the society's icon over a soft dot pattern. */
+/** A solid colour banner with the society's icon over a soft dot pattern. */
 export function SocietyBanner({ society, className }: { society: Society | undefined; className?: string }) {
   const art = artFor(society);
   return (
     <div
       aria-hidden="true"
-      className={cx('relative grid place-items-center overflow-hidden bg-gradient-to-br text-white', art.gradient, className)}
+      className={cx('relative grid place-items-center overflow-hidden text-white', art.fill, className)}
     >
       <div className="absolute inset-0 opacity-25 [background-image:radial-gradient(white_1px,transparent_1.5px)] [background-size:14px_14px]" />
       <div className="absolute -right-6 -bottom-8 size-28 rounded-full bg-white/15 blur-xl" />

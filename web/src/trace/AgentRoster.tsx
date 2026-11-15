@@ -70,7 +70,7 @@ function AgentCard({ agent, index, used, live }: { agent: Agent; index: number; 
         used ? 'ring-fit-high/60' : 'ring-line',
       )}
     >
-      <div aria-hidden="true" className={cx('h-1.5 bg-gradient-to-r', agent.gradient)} />
+      <div aria-hidden="true" className={cx('h-1.5', agent.fill)} />
       <div className="flex flex-1 flex-col gap-3 p-card">
         <div className="flex items-center gap-3">
           <Badge agent={agent} size="md" />
@@ -125,9 +125,9 @@ function Badge({ agent, size }: { agent: Agent; size: 'sm' | 'md' }) {
     <span
       aria-hidden="true"
       className={cx(
-        'grid shrink-0 place-items-center bg-gradient-to-br text-on-brand shadow-soft',
+        'grid shrink-0 place-items-center text-on-brand shadow-soft',
         size === 'md' ? 'size-11 rounded-2xl' : 'size-7 rounded-lg',
-        agent.gradient,
+        agent.fill,
       )}
     >
       <Icon name={agent.icon} size={size === 'md' ? 20 : 14} />
