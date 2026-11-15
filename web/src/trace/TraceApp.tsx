@@ -13,6 +13,7 @@ import { AGENTS, countWord } from './agents.ts';
 import { LiveEvalPanel } from './LiveEvalPanel.tsx';
 import { BenchmarkPanel } from './benchmark/BenchmarkPanel.tsx';
 import { nodesInTrace } from './flow.ts';
+import { labelCodes, noun } from './traceText.ts';
 
 const SESSION_KEY = 'modulematch.sessionId';
 
@@ -101,6 +102,13 @@ export function TraceApp() {
   }, [load, sessionId]);
 
   const seen = useMemo(() => nodesInTrace(events), [events]);
+  // Whether the server calls the models, so the agent cards never claim a model that did not run (issue #115).
+  const [live, setLive] = useState<boolean | undefined>(undefined);
+  useEffect(() => {
+    fetch('/api/health')
+      .then((res) => (res.ok ? (res.json() as Promise<{ live?: boolean }>) : null))
+      .then((h) => setLive(h?.live), () => setLive(undefined));
+  }, []);
 
   return (
     <div className="grid gap-section">
@@ -111,7 +119,7 @@ export function TraceApp() {
           Each agent writes words, never numbers. Scores, rules and clashes come from plain code.
           {seen.size > 0 && ' A green outline marks the agents your session has used.'}
         </SectionHeading>
-        <AgentRoster seen={seen} />
+        <AgentRoster seen={seen} live={live} />
       </section>
 
       <section aria-labelledby="flow-heading" className="grid gap-6">
@@ -212,9 +220,7 @@ function EvalPanel() {
   if (run === undefined) return <p className="text-sm text-muted">Loading evaluation…</p>;
   if (run === null)
     return (
-      <p className="text-sm text-muted">
-        No evaluation run yet. Run <code className="font-mono">npm run eval</code>.
-      </p>
+      <p className="text-sm text-muted">The offline evaluation results are not available on this server.</p>
     );
 
   return (
@@ -225,7 +231,8 @@ function EvalPanel() {
         ))}
       </ul>
       <p className="text-xs text-muted">
-        Last run {new Date(run.at).toLocaleString()}. Offline and deterministic, so it gives the same result every time.
+        Run {new Date(run.at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}. Offline and deterministic, so it gives the same
+        result every time.
       </p>
     </div>
   );
@@ -379,12 +386,13 @@ function TracePanel({
       {events.length > 0 && (
         <ul className="flex flex-wrap gap-2 text-sm" aria-label="Summary">
           <li className="rounded-full bg-surface-2 px-3.5 py-1.5">
-            <span className="font-semibold tabular-nums">{events.length}</span> events
+            <span className="font-semibold tabular-nums">{events.length}</span> {noun(events.length, 'event')}
           </li>
           {(Object.keys(VERDICT_META) as Verdict[]).map((v) =>
             verdicts[v] ? (
               <li key={v} className={cx('rounded-full px-3.5 py-1.5', VERDICT_META[v].className)}>
-                <span className="font-semibold tabular-nums">{verdicts[v]}</span> safety checks {VERDICT_META[v].label.toLowerCase()}
+                <span className="font-semibold tabular-nums">{verdicts[v]}</span> {noun(verdicts[v]!, 'safety check')}{' '}
+                {VERDICT_META[v].label.toLowerCase()}
               </li>
             ) : null,
           )}
@@ -441,8 +449,14 @@ function Timeline({ events }: { events: TraceEvent[] }) {
                 </span>
               </div>
               <p className="mt-1.5 text-sm leading-relaxed break-words text-muted">
-                <span className="text-ink">{e.input}</span> <span aria-hidden="true">→</span>
-                <span className="sr-only">, result:</span> {e.output}
+                <span className="text-ink">{labelCodes(e.input)}</span>
+                {e.output && (
+                  <>
+                    {' '}
+                    <span aria-hidden="true">→</span>
+                    <span className="sr-only"> gave </span> {labelCodes(e.output)}
+                  </>
+                )}
               </p>
             </div>
           </motion.li>
