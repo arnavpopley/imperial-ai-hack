@@ -523,9 +523,25 @@ export const STEPS = [
       await pathIs(staff, '/staff/escalations');
       const item = { css: 'a[href^="/staff/escalations/"]', text: 'Nuclear Reactor Physics' };
       await staff.waitForElement(item, { desc: 'the escalation in the queue', timeout: 15_000 });
+      // Issue 107: the queue title names the module and the kind of request.
+      const title = await staff.text({ css: 'section[aria-label="Queue"] a[href^="/staff/escalations/"] span.font-semibold' });
+      if (!/MECH70002 Nuclear Reactor Physics · Rule exception/.test(title)) fail(`The queue item is titled "${title}"`);
+      if (ctx.viewport !== 'phone') {
+        // On a desktop the newest open request opens by itself, with its decision on the first screen (demo step 6).
+        await pathIs(staff, { re: '^/staff/escalations/.+' });
+        await staff.waitForElement({ css: 'form button', text: 'Approve exception' }, { desc: 'the decision buttons' });
+        const fold = await staff.eval(() => {
+          const approve = [...document.querySelectorAll('form button')].find((b) => b.innerText.trim() === 'Approve exception');
+          return { bottom: approve?.getBoundingClientRect().bottom ?? Infinity, height: window.innerHeight, scrolled: window.scrollY };
+        });
+        if (fold.scrolled > 0 || fold.bottom > fold.height) fail(`Approve exception is below the fold (bottom ${Math.round(fold.bottom)} of ${fold.height})`);
+      }
       await ctx.checkpoint(staff, 'staff-queue');
       await staff.click(item);
       await pathIs(staff, { re: '^/staff/escalations/.+' });
+      // Issue 107: plain labels only, never a raw rule code.
+      const raw = await staff.eval(() => /\b(NOT_ALLOWED|PREREQUISITE_MISSING|ABOVE_YEAR_LEVEL|RULES_NOT_LOADED)\b/.exec(document.body.innerText)?.[0] ?? null);
+      if (raw) fail(`The staff screen shows the raw code ${raw}`);
       // The request as data: the broken rule, the student's reason, their fit and completed modules.
       for (const want of ['The request', 'Prerequisite not completed', RULE_REASON, 'Fit for the module', 'Completed modules']) {
         await staff.waitForElement({ css: 'article', text: want }, { desc: `"${want}" in the request details` });

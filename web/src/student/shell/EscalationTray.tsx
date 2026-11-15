@@ -10,6 +10,7 @@ import { cx } from '../../components/cx.ts';
 import { Icon, type IconName } from '../../components/Icon.tsx';
 import { useEscalationDraft } from '../hooks/useEscalationDraft.ts';
 import { paths } from '../routes.ts';
+import { useReferenceData } from '../state/ReferenceDataProvider.tsx';
 import { useReadySession } from '../state/SessionProvider.tsx';
 import { readEscalationTray, writeEscalationTray, type EscalationTrayMemory } from '../state/storage.ts';
 
@@ -28,16 +29,25 @@ const stage = (e: Escalation) => `${e.id}:${answered(e) ? 'reply' : 'sent'}`;
 
 const capitalise = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
-/** A chip's words, icon and tone for one escalation. */
-function chipFor(e: Escalation): { label: string; icon: IconName; tone: string } {
-  const queue = capitalise(ESCALATION_QUEUE[e.type]);
-  if (!answered(e)) return { label: `${queue} · ${e.status === 'claimed' ? 'reading' : 'waiting'}`, icon: 'clock', tone: 'bg-surface-2 text-muted ring-line' };
-  if (e.decision === 'declined') return { label: `${queue} · declined`, icon: 'x', tone: 'bg-surface-2 text-ink ring-line' };
-  return { label: `${queue} · replied`, icon: 'check', tone: 'bg-fit-high/10 text-fit-high ring-fit-high/30' };
+/**
+ * A chip's words, icon and tone for one escalation. A request about a module names it (issue 107), so two requests
+ * to the Senior Tutor can be told apart; any other names the queue.
+ */
+function chipFor(e: Escalation, subject: string | null): { label: string; icon: IconName; tone: string } {
+  const who = subject ?? capitalise(ESCALATION_QUEUE[e.type]);
+  if (!answered(e)) return { label: `${who} · ${e.status === 'claimed' ? 'reading' : 'waiting'}`, icon: 'clock', tone: 'bg-surface-2 text-muted ring-line' };
+  if (e.decision === 'declined') return { label: `${who} · declined`, icon: 'x', tone: 'bg-surface-2 text-ink ring-line' };
+  if (e.decision === 'approved') return { label: `${who} · approved`, icon: 'check', tone: 'bg-fit-high/10 text-fit-high ring-fit-high/30' };
+  return { label: `${who} · replied`, icon: 'check', tone: 'bg-fit-high/10 text-fit-high ring-fit-high/30' };
 }
 
 export function EscalationTray({ scope = 'all', onReviewDraft, className }: EscalationTrayProps) {
   const { session } = useReadySession();
+  const { moduleById } = useReferenceData();
+  const subjectOf = (e: Escalation) => {
+    const id = e.request?.moduleId;
+    return id ? (moduleById.get(id)?.title ?? id) : null;
+  };
   const { draft, approve, discard, sending, error } = useEscalationDraft();
   const onCatalogue = useMatch(paths.catalogue) !== null;
   const [memory, setMemory] = useState<EscalationTrayMemory>(() => readEscalationTray(session.id));
@@ -121,7 +131,7 @@ export function EscalationTray({ scope = 'all', onReviewDraft, className }: Esca
             </li>
           )}
           {escalations.map((e) => {
-            const chip = chipFor(e);
+            const chip = chipFor(e, subjectOf(e));
             const isOpen = expanded?.id === e.id;
             return (
               <li key={e.id} className="flex items-center">
@@ -161,6 +171,7 @@ export function EscalationTray({ scope = 'all', onReviewDraft, className }: Esca
               variant="answered"
               escalationType={expanded.type}
               summary={expanded.summary}
+              subject={subjectOf(expanded)}
               staffResponse={expanded.staffResponse ?? 'This was resolved without a written reply.'}
               createdAt={expanded.createdAt}
               decision={expanded.decision}
@@ -171,6 +182,7 @@ export function EscalationTray({ scope = 'all', onReviewDraft, className }: Esca
               variant="sent"
               escalationType={expanded.type}
               summary={expanded.summary}
+              subject={subjectOf(expanded)}
               status={expanded.status === 'claimed' ? 'claimed' : 'open'}
               createdAt={expanded.createdAt}
             />
