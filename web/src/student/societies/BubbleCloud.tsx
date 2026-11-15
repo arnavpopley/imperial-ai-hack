@@ -97,9 +97,14 @@ export function BubbleCloud({ featured, others, selectedId, onSelect, detailId }
             title={item.name}
             onClick={() => onSelect(item.id)}
             initial={reduce ? false : { opacity: 0, scale: 0.4 }}
-            animate={{ opacity: 1, scale: 1 }}
+            // The stagger delay belongs to the entrance only, so hovering in and out responds at once.
+            animate={{
+              opacity: 1,
+              scale: 1,
+              transition: { type: 'spring', stiffness: 260, damping: 20, delay: reduce ? 0 : 0.05 * index },
+            }}
             whileHover={reduce ? undefined : { scale: 1.05 }}
-            transition={{ type: 'spring', stiffness: 260, damping: 20, delay: reduce ? 0 : 0.05 * index }}
+            transition={{ type: 'spring', stiffness: 260, damping: 20 }}
             className={cx(
               'pointer-events-auto flex size-full flex-col items-center justify-center rounded-full p-[6%] text-center leading-[1.15] shadow-soft transition-colors',
               prominent ? 'font-semibold' : 'font-medium',
