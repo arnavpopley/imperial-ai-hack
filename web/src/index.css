@@ -260,7 +260,8 @@
   @page {
     margin: 12mm;
   }
-  body > #root {
+  /* Only while a printable plan is on the page; printing any other page prints that page as usual. */
+  body:has(> .print-plan) > #root {
     display: none !important;
   }
   body::before {

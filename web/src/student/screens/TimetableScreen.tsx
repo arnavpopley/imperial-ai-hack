@@ -275,7 +275,9 @@ interface ExportActionsProps {
 
 function ExportActions({ view, titleFor, codeFor, stale }: ExportActionsProps) {
   const { session } = useReadySession();
-  const { byId, scored, weights } = useCatalogue();
+  const { byId, scored, weights, recs } = useCatalogue();
+  // The printed fit and top reason come from the recommendations, so printing waits for those to be current too.
+  const printStale = stale || recs.loading || !recs.data || Boolean(recs.error);
   const { moduleById } = useReferenceData();
   const slots = view.grids.flatMap((g) => g.slots);
   const calendar = () =>
@@ -283,7 +285,7 @@ function ExportActions({ view, titleFor, codeFor, stale }: ExportActionsProps) {
   return (
     <div className="mt-4 border-t border-line pt-3">
       <div className="grid grid-cols-2 gap-2">
-        <Button size="sm" icon="arrow-down" onClick={() => window.print()} disabled={stale}>
+        <Button size="sm" icon="arrow-down" onClick={() => window.print()} disabled={printStale}>
           Download plan
         </Button>
         <Button size="sm" icon="calendar" onClick={calendar} disabled={stale || slots.length === 0}>
@@ -292,7 +294,7 @@ function ExportActions({ view, titleFor, codeFor, stale }: ExportActionsProps) {
       </div>
       <p className="mt-1.5 text-[11px] text-muted">Provisional, based on previous years. Saved on your device only.</p>
       {/* Left out while stale, so even the browser's own Print never mixes an old week with a new shortlist. */}
-      {!stale && (
+      {!printStale && (
         <PlanPrint
           view={view}
           shortlist={session.shortlist}
