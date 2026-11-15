@@ -1,6 +1,6 @@
 // Timetabler (spec 10.6): words only. Clashes and swaps come from the timetable engine, and a swap is
 // applied only when the student confirms it.
-import type { Clash, SwapSuggestion } from '@modulematch/shared';
+import { SWAP_FIT_TOLERANCE, type Clash, type SwapSuggestion } from '@modulematch/shared';
 import { asData, emitWords, isLive, streamText } from './llm.ts';
 
 const LABEL: Record<Clash['label'], string> = { certain: 'a certain clash', likely: 'a likely clash', possible: 'a possible clash' };
@@ -17,9 +17,13 @@ export function describeTimetable(
     return `${title(c.moduleA)} and ${title(c.moduleB)} have ${LABEL[c.label]} in ${c.term}${odds}.`;
   });
   const swap = swaps[0];
+  // Swaps that keep the student's kept-free time free come first, so a first swap with conflicts means none could.
+  const keepFree = swap && swap.keepFreeConflicts > 0
+    ? ` No swap keeps all your kept-free time free; this one has ${swap.keepFreeConflicts} session${swap.keepFreeConflicts > 1 ? 's' : ''} in it.`
+    : '';
   const offer = swap
-    ? ` You could swap ${title(swap.replaceModuleId)} for ${title(swap.withModuleId)} (fit ${swap.fit}, ${swap.fitDelta >= 0 ? '+' : ''}${swap.fitDelta}). I will only make the swap if you confirm it on the timetable.`
-    : ' I could not find a swap that keeps your fit within 10 points, so you may want to ask a tutor.';
+    ? ` You could swap ${title(swap.replaceModuleId)} for ${title(swap.withModuleId)} (fit ${swap.fit}, ${swap.fitDelta >= 0 ? '+' : ''}${swap.fitDelta}).${keepFree} I will only make the swap if you confirm it on the timetable.`
+    : ` I could not find a swap that keeps your fit within ${SWAP_FIT_TOLERANCE} points, so you may want to ask a tutor.`;
   return `${lines.join(' ')}${offer}`;
 }
 

@@ -264,8 +264,17 @@ export const fixtureTimetable: TimetableView = {
       withModuleId: 'IEX-SUS',
       fit: fitOf('IEX-SUS'),
       fitDelta: fitOf('IEX-SUS') - fitOf('IEX-ENT'),
+      keepFreeConflicts: 0,
     },
   ],
+  // fixtureProfile keeps Fridays free and starts no earlier than 10:00; nothing on the shortlist falls in that time.
+  coreModuleIds: [],
+  keepFree: [
+    ...(['mon', 'tue', 'wed', 'thu'] as const).map((day) => ({ day, from: '00:00', to: '10:00', reason: 'early' as const })),
+    { day: 'fri', from: '00:00', to: '23:59', reason: 'day' },
+  ],
+  keepFreeConflicts: [],
+  ects: { core: 0, elective: 5, iExplore: 5, max: 60 },
   rules: { ok: true, violations: [], warnings: [] },
 };
 
@@ -286,7 +295,7 @@ export const fixturePathwayProgress: PathwayProgress = {
     { skill: 'modelling-simulation', importance: 0.9, covered: 0.8 },
     { skill: 'quantitative-analysis', importance: 0.8, covered: 0.3 },
   ],
-  nextBest: { moduleId: 'ME3-CFD', gain: 0.12 },
+  nextBest: { moduleId: 'ME3-CFD', gain: 0.12, skill: 'modelling-simulation' },
 };
 
 export const fixtureSocieties: Society[] = [

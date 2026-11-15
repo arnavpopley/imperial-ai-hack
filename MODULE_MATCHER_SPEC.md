@@ -232,7 +232,7 @@ export interface StudentProfile {
     workloadTolerance: number | null;
   };
   breadthAppetite: number | null;               // appetite for modules outside the degree
-  timetablePrefs: { avoidDays: Weekday[]; earliestStart: string | null };
+  timetablePrefs: { avoidDays: Weekday[]; earliestStart: string | null; avoidHalfDays?: HalfDay[] }; // 'wed-pm' etc.
   completeness: number;                         // computed, see 8.5
   updatedAt: string;
 }
@@ -461,13 +461,17 @@ $$P(\mathrm{clash}_{ij}) = 1 - \prod_{(x,y)} \left( 1 - P_{ij}^{(x,y)} \right)$$
 
 Labels: certain clash when $P = 1$, likely clash when $0.3 \le P < 1$, possible clash when $0 < P < 0.3$.
 
-Swap suggestions for a clashing module $m$: alternatives $m'$ that are eligible, of the same kind as $m$ (elective for elective, I-Explore for I-Explore; core modules are never replaced or offered), do not clash with the rest of the shortlist or the core modules, add no programme rules violation that was not there before the swap, and satisfy $\mathrm{Fit}(s,m') \ge \mathrm{Fit}(s,m) - 10$, ranked by fit.
+Swap suggestions for a clashing module $m$: alternatives $m'$ that are eligible, of the same kind as $m$ (elective for elective, I-Explore for I-Explore; core modules are never replaced or offered), do not clash with the rest of the shortlist or the core modules, add no programme rules violation that was not there before the swap, and satisfy $\mathrm{Fit}(s,m') \ge \mathrm{Fit}(s,m) - 10$, ranked by fit, with alternatives that keep the student's kept-free time free listed first.
+
+The plan on the timetable is the shortlist plus the programme's core modules for the student's year (not yet completed). Core modules are drawn locked, and every elective is checked against them for clashes; two core modules are never paired, since the student can change neither.
+
+Kept-free time (interview question 8) is a soft constraint: whole days (`avoidDays`), half days (`avoidHalfDays`, such as `wed-pm` for "Wednesday afternoons", split at 12:00) and the time before `earliestStart` on every weekday. Shortlisted sessions in that time are flagged on the timetable and the grid shades it, but it never blocks a module and never changes fit scores or rankings.
 
 Staff clash priority, where $n_{ij}$ is the number of students who shortlisted both modules:
 
 $$\mathrm{priority}_{ij} = n_{ij} \cdot P(\mathrm{clash}_{ij})$$
 
-Signatures: `buildTimetable(shortlist, slots)`, `findClashes(shortlist, slots)`, `suggestSwaps(profile, shortlist, clash, ranked)`, `clashPriorities(cohortShortlists, slots)`.
+Signatures: `buildTimetable(moduleIds, slots)`, `findClashes(shortlist, slots, core)`, `suggestSwaps(profile, shortlist, clash, ranked)`, `keepFreeWindows(timetablePrefs)`, `keepFreeConflicts(moduleIds, slots, windows)`, `planTimetable(profile, shortlist, ranked, slots, plan)`, `clashPriorities(cohortShortlists, slots)`.
 
 ### 9.3 Insights engine (`engines/insights.ts`)
 
@@ -490,11 +494,13 @@ Privacy rule: no insight is shown when the cohort behind it is smaller than five
 
 ### 9.4 Pathway progress (`engines/pathways.ts`)
 
-With $q_{c,k}$ the importance of skill $k$ for pathway $c$, $u_{m,k}$ the contribution of module $m$ to skill $k$, and $M_s$ the student's completed plus shortlisted modules:
+With $q_{c,k}$ the importance of skill $k$ for pathway $c$, $u_{m,k}$ the contribution of module $m$ to skill $k$, and $M_s$ the student's plan (completed modules, this year's core modules and the shortlist), skill coverage is a soft cap on depth, so it keeps rising with each module instead of saturating after two years of core teaching:
 
-$$\mathrm{Progress}(s,c) = \frac{\sum_{k} q_{c,k}\, \min\left(1,\; \sum_{m \in M_s} u_{m,k}\right)}{\sum_{k} q_{c,k}}$$
+$$\mathrm{covered}_{k} = 1 - \exp\left(-\frac{\sum_{m \in M_s} w_m\, u_{m,k}}{D}\right), \qquad \mathrm{Progress}(s,c) = \frac{\sum_{k} q_{c,k}\, \mathrm{covered}_{k}}{\sum_{k} q_{c,k}}$$
 
-Next-best module for a pathway is the eligible module with the largest marginal gain in $\mathrm{Progress}$.
+$w_m = 0.5$ for a module completed in an earlier year (the foundation every student shares) and 1 for this year's core and shortlisted modules. $D = 3$ module-equivalents of depth covers a skill to 63%; it is tuned so the seeded Year 3 cohort's full plans sit between about 45% and 65%.
+
+Next-best module for a pathway: eligible, not completed, core or shortlisted, with pathway relevance $r_{m,c} \ge 0.5$ and a positive gain in $\mathrm{Progress}$. The most relevant wins, then the best fit, then the larger gain. It reports the skill it adds most to, so the card can say "adds coding, the skill you are missing most".
 
 ---
 

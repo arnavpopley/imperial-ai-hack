@@ -1,4 +1,5 @@
-// Spec 9.2: overlap, clash probabilities and labels, timetables, swaps and staff clash priorities.
+// Spec 9.2: overlap, clash probabilities and labels, timetables with core modules, kept-free time, swaps and staff
+// clash priorities.
 import { DEFAULT_WEIGHTS, type Module, type ProgrammeRules, type Recommendation, type StudentProfile } from '@modulematch/shared';
 import { describe, expect, it } from 'vitest';
 import { DATASET_FILES, ModulesFile, ProgrammeRulesFile, readDataset, SlotsFile } from '../src/db/datasets.ts';
@@ -9,7 +10,10 @@ import {
   clashPriorities,
   clashProbability,
   findClashes,
+  keepFreeConflicts,
+  keepFreeWindows,
   overlap,
+  planTimetable,
   rankModules,
   suggestSwaps,
   type SwapPlan,
@@ -130,6 +134,19 @@ describe('findClashes', () => {
     expect(clashes[0]?.overlaps[0]?.a.moduleId).toBe('a');
   });
 
+  it('checks the shortlist against core modules, but never pairs two core modules', () => {
+    const withCore = [
+      ...slots,
+      makeSlot('core-1', 'mon', '09:00', '10:00'),
+      makeSlot('core-2', 'mon', '09:00', '10:00'),
+    ];
+    const pairsOf = findClashes(['c', 'a'], withCore, ['core-1', 'core-2']).map(({ moduleA, moduleB }) => [moduleA, moduleB]);
+    expect(pairsOf).toEqual([
+      ['a', 'core-1'],
+      ['a', 'core-2'],
+    ]);
+  });
+
   it('labels a low-probability clash as possible', () => {
     const lowSlots = [
       makeSlot('a', 'mon', '09:00', '10:00'),
@@ -182,9 +199,9 @@ describe('suggestSwaps', () => {
     const profile = makeProfile({ completedModuleIds: ['completed'] });
     const swaps = suggestSwaps(profile, shortlist, clash, ranked, slots, planFor(profile, electives));
     expect(swaps).toEqual([
-      { replaceModuleId: 'b', withModuleId: 'd', fit: 55, fitDelta: -5 },
-      { replaceModuleId: 'b', withModuleId: 'k', fit: 53, fitDelta: -7 },
-      { replaceModuleId: 'b', withModuleId: 'i', fit: 52, fitDelta: -8 },
+      { replaceModuleId: 'b', withModuleId: 'd', fit: 55, fitDelta: -5, keepFreeConflicts: 0 },
+      { replaceModuleId: 'b', withModuleId: 'k', fit: 53, fitDelta: -7, keepFreeConflicts: 0 },
+      { replaceModuleId: 'b', withModuleId: 'i', fit: 52, fitDelta: -8, keepFreeConflicts: 0 },
     ]);
   });
 
@@ -212,7 +229,7 @@ describe('suggestSwaps', () => {
     const withE = [...ranked, rec('e', 66)];
     const plan = planFor(profile, withE.map((r) => makeModule(r.moduleId)), { coreModuleIds: ['b'] });
     expect(suggestSwaps(profile, shortlist, clash, withE, slots, plan)).toEqual([
-      { replaceModuleId: 'a', withModuleId: 'e', fit: 66, fitDelta: -4 },
+      { replaceModuleId: 'a', withModuleId: 'e', fit: 66, fitDelta: -4, keepFreeConflicts: 0 },
     ]);
   });
 
@@ -223,6 +240,28 @@ describe('suggestSwaps', () => {
     const modules = [...electives, makeModule('core', { type: 'core' })];
     const swaps = suggestSwaps(profile, shortlist, clash, ranked, withCore, planFor(profile, modules, { coreModuleIds: ['core'] }));
     expect(swaps.map((swap) => swap.withModuleId)).toEqual(['k', 'i', 'j']);
+  });
+
+  it('puts swaps that keep kept-free time free first, and counts the sessions of those that do not', () => {
+    if (!clash) throw new Error('expected a clash between a and b');
+    const profile = makeProfile({ completedModuleIds: ['completed'] });
+    // d, the best fit, teaches on Friday, which the student keeps free; k and i do not.
+    const withFriday = [...slots, makeSlot('d', 'fri', '14:00', '16:00'), makeSlot('d', 'fri', '16:00', '17:00')];
+    const keepFree = keepFreeWindows({ avoidDays: ['fri'], earliestStart: null });
+    const swaps = suggestSwaps(profile, shortlist, clash, ranked, withFriday, { ...planFor(profile, electives), keepFree });
+    expect(swaps.map(({ withModuleId, keepFreeConflicts: n }) => [withModuleId, n])).toEqual([
+      ['k', 0],
+      ['i', 0],
+      ['j', 0],
+    ]);
+    // When every alternative uses kept-free time, they are still offered, best fit first, with the count.
+    const allFriday = [...slots, ...['d', 'k', 'i', 'j'].map((id) => makeSlot(id, 'fri', '10:00', '11:00'))];
+    const forced = suggestSwaps(profile, shortlist, clash, ranked, allFriday, { ...planFor(profile, electives), keepFree });
+    expect(forced.map(({ withModuleId, keepFreeConflicts: n }) => [withModuleId, n])).toEqual([
+      ['d', 1],
+      ['k', 1],
+      ['i', 1],
+    ]);
   });
 
   it('rejects alternatives that add a rules violation or deepen a credit shortfall', () => {
@@ -271,6 +310,82 @@ describe("suggestSwaps on Rosa's shortlist (seed data)", () => {
       const after = shortlist.map((id) => (id === swap.replaceModuleId ? swap.withModuleId : id));
       expect(checkShortlist(after, profile, modules, rules).violations.map((v) => v.code)).toEqual(before);
     }
+  });
+});
+
+describe('keepFreeWindows and keepFreeConflicts', () => {
+  it('turns days, half days and the earliest start into windows, one per moment', () => {
+    const windows = keepFreeWindows({ avoidDays: ['fri'], earliestStart: '10:00', avoidHalfDays: ['wed-pm', 'fri-am', 'tue-am'] });
+    expect(windows).toEqual([
+      { day: 'mon', from: '00:00', to: '10:00', reason: 'early' },
+      { day: 'tue', from: '00:00', to: '12:00', reason: 'half-day' },
+      { day: 'wed', from: '00:00', to: '10:00', reason: 'early' },
+      { day: 'wed', from: '12:00', to: '23:59', reason: 'half-day' },
+      { day: 'thu', from: '00:00', to: '10:00', reason: 'early' },
+      { day: 'fri', from: '00:00', to: '23:59', reason: 'day' },
+    ]);
+    expect(keepFreeWindows({ avoidDays: [], earliestStart: null })).toEqual([]);
+  });
+
+  it('flags sessions in a kept-free afternoon or before the earliest start, and nothing else', () => {
+    const slots = [
+      makeSlot('lab', 'wed', '14:00', '16:00'),
+      makeSlot('lab', 'wed', '10:00', '12:00'),
+      makeSlot('early', 'mon', '09:00', '11:00', { provisional: true, probability: 0.5 }),
+      makeSlot('ten', 'tue', '10:00', '11:00'),
+      makeSlot('other', 'wed', '14:00', '15:00'),
+    ];
+    // "Keep Wednesday afternoons free for sport, and nothing before 10am please."
+    const windows = keepFreeWindows({ avoidDays: [], earliestStart: '10:00', avoidHalfDays: ['wed-pm'] });
+    const conflicts = keepFreeConflicts(['lab', 'early', 'ten'], slots, windows);
+    expect(conflicts.map(({ moduleId, slot, window }) => [moduleId, slot.day, slot.start, window.reason])).toEqual([
+      ['early', 'mon', '09:00', 'early'],
+      ['lab', 'wed', '14:00', 'half-day'],
+    ]);
+  });
+});
+
+describe("planTimetable on Rosa's plan (seed data)", () => {
+  const { modules } = readDataset(DATASET_FILES.modules, ModulesFile);
+  const { slots } = readDataset(DATASET_FILES.slots, SlotsFile);
+  const rules = readDataset(DATASET_FILES.programmeRules, ProgrammeRulesFile).rules.find(
+    (r) => r.programme === 'MEng Mechanical Engineering' && r.year === 3,
+  );
+  if (!rules) throw new Error('expected MEng Mechanical Engineering year 3 rules');
+  const completed = ['MECH40002', 'MECH40003', 'MECH40004', 'MECH40005', 'MECH40006', 'MECH40008', 'MECH50001', 'MECH50002', 'MECH50003', 'MECH50004', 'MECH50005', 'MECH50006', 'MECH50008', 'MECH50010'];
+  const profile = makeProfile({
+    completedModuleIds: completed,
+    interests: { 'control-robotics': 1, 'electronics-embedded': 0.9 },
+    timetablePrefs: { avoidDays: ['fri'], earliestStart: null, avoidHalfDays: ['wed-pm'] },
+  });
+  const plan: SwapPlan = { modules, rules, check: (list) => checkShortlist(list, profile, modules, rules) };
+  const ranked = rankModules(profile, modules, DEFAULT_WEIGHTS, rules);
+
+  it('draws the core modules on the grid and counts them in the ECTS total', () => {
+    const view = planTimetable(profile, ['MECH60009', 'MECH60018', 'IEX-ML'], ranked, slots, plan);
+    expect(view.coreModuleIds).toEqual(['MECH60003', 'MECH60015']);
+    const onGrid = new Set(view.grids.flatMap((grid) => grid.slots.map((slot) => slot.moduleId)));
+    expect(onGrid).toEqual(new Set(['MECH60003', 'MECH60015', 'MECH60009', 'MECH60018', 'IEX-ML']));
+    expect(view.ects).toEqual({ core: 30, elective: 10, iExplore: 5, max: 60 });
+  });
+
+  it('finds a clash with the core Design, Make and Test Project lab', () => {
+    // Robot dynamics and control (a Year 4 module) runs Tuesday 11:00 to 13:00 in spring, over the core lab.
+    const view = planTimetable(profile, ['MECH60009', 'MECH70057'], ranked, slots, plan);
+    const withCore = view.clashes.find((c) => [c.moduleA, c.moduleB].includes('MECH60003'));
+    expect(withCore && [withCore.moduleA, withCore.moduleB, withCore.term]).toEqual(['MECH60003', 'MECH70057', 'spring']);
+    expect(view.swaps.map((swap) => swap.replaceModuleId)).not.toContain('MECH60003');
+  });
+
+  it('flags the Friday labs as kept-free conflicts without touching fit or ranking', () => {
+    const view = planTimetable(profile, ['MECH60001', 'MECH60018'], ranked, slots, plan);
+    expect(view.keepFreeConflicts.map(({ moduleId, slot }) => `${moduleId} ${slot.term} ${slot.day} ${slot.start}`)).toEqual([
+      'MECH60001 autumn fri 11:00',
+      'MECH60001 spring fri 16:00',
+    ]);
+    // Keep-free time is a timetable preference only: the same student without it gets identical fits and order.
+    const without = makeProfile({ ...profile, timetablePrefs: { avoidDays: [], earliestStart: null } });
+    expect(rankModules(without, modules, DEFAULT_WEIGHTS, rules)).toEqual(ranked);
   });
 });
 

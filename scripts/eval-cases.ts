@@ -102,8 +102,16 @@ export const EXTRACTION_TRANSCRIPTS: Transcript[] = [
       { text: 'Projects, definitely, and practical work.', targetSlots: ['style.examPreference', 'style.appliedPreference'] },
       { text: 'Team work please, but a lighter workload this year.', targetSlots: ['style.groupPreference', 'style.workloadTolerance'] },
       { text: 'Yes, I would love to try entrepreneurship or a language.', targetSlots: ['breadthAppetite'] },
+      {
+        text: 'Keep Wednesday afternoons free for sport, and nothing before 10am please.',
+        targetSlots: ['timetablePrefs.avoidDays', 'timetablePrefs.earliestStart'],
+      },
     ],
     expected: {
+      // Half of Wednesday, not the whole day (issue 53).
+      'timetablePrefs.avoidDays': [],
+      'timetablePrefs.avoidHalfDays': ['wed-pm'],
+      'timetablePrefs.earliestStart': '10:00',
       'interest:control-robotics': 0.85,
       'interest:programming-software': 0.85,
       'interest:electronics-embedded': 0.85,

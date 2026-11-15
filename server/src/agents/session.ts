@@ -13,13 +13,12 @@ import {
   type RecommendationsResponse,
   type SessionState,
   type StudentProfile,
-  type SwapSuggestion,
   type TimetableView,
 } from '@modulematch/shared';
 import { randomUUID } from 'node:crypto';
 import { loadModuleResources, loadPathways, loadSocieties, rulesFor } from '../db/catalogue.ts';
 import * as repo from '../db/repo.ts';
-import { buildTimetable, checkShortlist, completeness, findClashes, nudgeFor, performanceView, profileHash, rankModules, suggestSwaps } from '../engines/index.ts';
+import { checkShortlist, completeness, nudgeFor, performanceView, planTimetable, profileHash, rankModules } from '../engines/index.ts';
 import type { Tracer } from '../trace/tracer.ts';
 import { explain } from './matcher.ts';
 import { canTransition } from './modes.ts';
@@ -144,22 +143,9 @@ export function timetableView(session: SessionState, recs = ranked(session)): Ti
   const modules = catalogue.modules();
   const rules = rulesForProfile(session.profile);
   const check = (shortlist: readonly string[]) => checkShortlist(shortlist, session.profile, modules, rules);
-  const clashes = findClashes(session.shortlist, slots);
-  const seen = new Set<string>();
-  const swaps: SwapSuggestion[] = [];
-  for (const clash of clashes) {
-    for (const swap of suggestSwaps(session.profile, session.shortlist, clash, recs, slots, { modules, rules, check })) {
-      const key = `${swap.replaceModuleId}->${swap.withModuleId}`;
-      if (!seen.has(key)) {
-        seen.add(key);
-        swaps.push(swap);
-      }
-    }
-  }
   return {
-    grids: buildTimetable(session.shortlist, slots),
-    clashes,
-    swaps,
+    // Core modules, clashes against them, swaps and kept-free time all come from the timetable engine (spec 9.2).
+    ...planTimetable(session.profile, session.shortlist, recs, slots, { modules, rules, check }),
     rules: check(session.shortlist),
   };
 }

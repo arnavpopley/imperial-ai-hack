@@ -1,12 +1,13 @@
 // Offline agent behaviour: extraction, merge rules, interview planning and explanations (spec 10).
 import { DEFAULT_WEIGHTS, type Evidence, type SessionState } from '@modulematch/shared';
-import { fixtureModules, fixtureProfile, fixtureSession } from '@modulematch/shared/fixtures';
+import { fixtureModules, fixtureProfile, fixtureSession, fixtureTimetable } from '@modulematch/shared/fixtures';
 import { describe, expect, it } from 'vitest';
 import { extract, extractByCues, mergeUpdates } from '../src/agents/extractor.ts';
 import { classifyByRules } from '../src/agents/intent.ts';
 import { nextQuestion, QUICK_PLAN, reflect, unfilledSlots, whatIHeard } from '../src/agents/interviewer.ts';
 import { explainByRules } from '../src/agents/matcher.ts';
 import { canTransition } from '../src/agents/modes.ts';
+import { describeTimetable } from '../src/agents/timetabler.ts';
 
 const PATHWAYS = ['aerospace-motorsport', 'robotics-automation', 'startup-founder'];
 const emptyProfile = {
@@ -57,6 +58,21 @@ describe('extractor', () => {
       'timetablePrefs.avoidDays': ['fri'],
       'timetablePrefs.earliestStart': '10:00',
     });
+  });
+
+  it('keeps half a day free for "Wednesday afternoons", not the whole day', () => {
+    const slots = ['timetablePrefs.avoidDays', 'timetablePrefs.earliestStart'];
+    const updates = extractByCues('Keep Wednesday afternoons free for sport, and nothing before 10am please.', slots, PATHWAYS);
+    const { profile } = mergeUpdates(emptyProfile, updates, { sessionId: 's', turnId: 't' });
+    expect(profile.timetablePrefs).toEqual({ avoidDays: [], avoidHalfDays: ['wed-pm'], earliestStart: '10:00' });
+    const mixed = extractByCues('Fridays and Monday mornings, if you can.', slots, PATHWAYS);
+    expect(mergeUpdates(emptyProfile, mixed, { sessionId: 's', turnId: 't' }).profile.timetablePrefs).toMatchObject({
+      avoidDays: ['fri'],
+      avoidHalfDays: ['mon-am'],
+    });
+    // "No preference" clears both.
+    const cleared = mergeUpdates(profile, extractByCues('No, anytime is fine.', slots, PATHWAYS), { sessionId: 's', turnId: 't' });
+    expect(cleared.profile.timetablePrefs).toMatchObject({ avoidDays: [], avoidHalfDays: [] });
   });
 
   it('writes one evidence row per applied update', () => {
@@ -138,6 +154,18 @@ describe('matcher explanations', () => {
     expect(explanation.because.every((b) => b.evidenceId || b.moduleField)).toBe(true);
     expect(explanation.because[0]?.evidenceId).toBe('ev-1');
     expect(DEFAULT_WEIGHTS.interest).toBeGreaterThan(0);
+  });
+});
+
+describe('timetabler wording', () => {
+  it('says when no swap keeps kept-free time free', () => {
+    const [swap] = fixtureTimetable.swaps;
+    if (!swap) throw new Error('expected a fixture swap');
+    const title = (id: string) => id;
+    expect(describeTimetable(fixtureTimetable.clashes, [swap], title)).not.toContain('kept-free');
+    expect(describeTimetable(fixtureTimetable.clashes, [{ ...swap, keepFreeConflicts: 2 }], title)).toContain(
+      'No swap keeps all your kept-free time free; this one has 2 sessions in it.',
+    );
   });
 });
 

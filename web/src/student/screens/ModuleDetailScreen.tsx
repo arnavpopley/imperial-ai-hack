@@ -146,6 +146,7 @@ export function ModuleDetailScreen() {
               shortlisted={shortlist.isShortlisted(module.id)}
               pending={shortlist.isPending(module.id)}
               onToggle={() => void shortlist.toggle(module.id)}
+              compulsory={module.type === 'core' && rec?.eligible === true}
             />
             <a
               href={module.sourceUrl}

@@ -1,6 +1,6 @@
 {
-  "id": "64c59605-f39e-4df2-bf95-eb810c69476e",
-  "at": "2026-11-14T19:55:18.211Z",
+  "id": "5070b844-9e74-49bc-a66d-3ee3341eb9db",
+  "at": "2026-11-15T00:55:41.672Z",
   "results": [
     {
       "name": "Ranking quality",
@@ -72,8 +72,8 @@
     },
     {
       "name": "Extraction",
-      "passed": 33,
-      "total": 33,
+      "passed": 36,
+      "total": 36,
       "target": 0.85,
       "details": [
         {
@@ -163,6 +163,21 @@
         },
         {
           "case": "undecided theorist: timetablePrefs.earliestStart",
+          "pass": true,
+          "note": "expected \"10:00\", got \"10:00\""
+        },
+        {
+          "case": "robotics founder: timetablePrefs.avoidDays",
+          "pass": true,
+          "note": "expected [], got []"
+        },
+        {
+          "case": "robotics founder: timetablePrefs.avoidHalfDays",
+          "pass": true,
+          "note": "expected [\"wed-pm\"], got [\"wed-pm\"]"
+        },
+        {
+          "case": "robotics founder: timetablePrefs.earliestStart",
           "pass": true,
           "note": "expected \"10:00\", got \"10:00\""
         },

@@ -190,6 +190,12 @@ export function whatIHeard(profile: StudentProfile, pathwayTitles: Record<string
     .filter(([, v]) => v < 0.3)
     .map(([t]) => topicLabel(t));
   const lean = (v: number | null, low: string, high: string) => (v === null ? 'not asked' : v >= 0.6 ? high : v <= 0.4 ? low : 'a mix');
+  const { avoidDays, avoidHalfDays = [], earliestStart } = profile.timetablePrefs;
+  const keepFree = [
+    ...avoidDays.map((d) => DAY_NAMES[d] ?? d),
+    ...avoidHalfDays.map((h) => `${DAY_NAMES[h.slice(0, 3)] ?? h} ${h.endsWith('-am') ? 'morning' : 'afternoon'}`),
+    ...(earliestStart ? [`before ${earliestStart}`] : []),
+  ];
   return [
     'Here is what I heard:',
     `• Interested in: ${interests.join(', ') || 'nothing specific yet'}`,
@@ -198,9 +204,7 @@ export function whatIHeard(profile: StudentProfile, pathwayTitles: Record<string
     `• Assessment: ${lean(profile.style.examPreference, 'coursework and projects', 'exams')}; style: ${lean(profile.style.appliedPreference, 'theory', 'applied')}; working: ${lean(profile.style.groupPreference, 'alone', 'in a team')}`,
     `• Maths comfort ${pct(profile.style.mathsComfort)}, coding comfort ${pct(profile.style.codingComfort)}, workload ${pct(profile.style.workloadTolerance)}`,
     `• Outside your degree: ${lean(profile.breadthAppetite, 'rather not', 'keen')}`,
-    profile.timetablePrefs.avoidDays.length || profile.timetablePrefs.earliestStart
-      ? `• Keep free: ${[...profile.timetablePrefs.avoidDays.map((d) => DAY_NAMES[d] ?? d), profile.timetablePrefs.earliestStart ? `before ${profile.timetablePrefs.earliestStart}` : null].filter(Boolean).join(', ')}`
-      : null,
+    keepFree.length ? `• Keep free: ${keepFree.join(', ')}` : null,
     'Is that right? Confirm it, or tell me what to change.',
   ]
     .filter((line): line is string => line !== null)

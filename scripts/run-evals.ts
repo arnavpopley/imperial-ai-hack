@@ -72,6 +72,7 @@ function readSlot(profile: StudentProfile, slot: string): unknown {
   if (slot.startsWith('interest:')) return profile.interests[slot.slice('interest:'.length)] ?? null;
   if (slot.startsWith('style.')) return profile.style[slot.slice('style.'.length) as keyof StudentProfile['style']];
   if (slot === 'timetablePrefs.avoidDays') return profile.timetablePrefs.avoidDays;
+  if (slot === 'timetablePrefs.avoidHalfDays') return profile.timetablePrefs.avoidHalfDays ?? [];
   if (slot === 'timetablePrefs.earliestStart') return profile.timetablePrefs.earliestStart;
   return profile[slot as keyof StudentProfile] ?? null;
 }

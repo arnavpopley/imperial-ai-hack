@@ -36,6 +36,8 @@ export function ModuleCard({ item, lowConfidence, shortlisted, pending, onToggle
   const { module, eligible } = item;
   const title = module?.title ?? item.moduleId;
   const dimmed = lowConfidence || !eligible;
+  // An eligible core module is one of this year's compulsory modules, so it is already in the plan.
+  const compulsory = eligible && module?.type === 'core';
   const { reduce, transition } = useMotionTokens();
   // From the student's own marks, when shared: a gentle note beside the score, never a change to it.
   const nudge = useNudge(item.moduleId);
@@ -92,6 +94,7 @@ export function ModuleCard({ item, lowConfidence, shortlisted, pending, onToggle
                 shortlisted={shortlisted}
                 pending={pending}
                 onToggle={onToggleShortlist}
+                compulsory={compulsory}
                 className="relative z-10 max-sm:hidden"
               />
             </div>
@@ -125,6 +128,7 @@ export function ModuleCard({ item, lowConfidence, shortlisted, pending, onToggle
               shortlisted={shortlisted}
               pending={pending}
               onToggle={onToggleShortlist}
+              compulsory={compulsory}
               className="relative z-10 mt-4 w-full sm:hidden"
             />
           </div>
