@@ -1,11 +1,14 @@
 // @vitest-environment happy-dom
 // Issue #113: after the first answer the checking plan is a small icon button, which opens the same plan.
+import { MotionGlobalConfig } from 'motion/react';
 import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { describe, expect, it } from 'vitest';
 import { ClaimCheck } from './ClaimCheck.tsx';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+// happy-dom cancels Web Animations on unmount, which motion reports as an unhandled AbortError.
+MotionGlobalConfig.skipAnimations = true;
 
 describe('ClaimCheck compact', () => {
   it('shows an icon button named by its label, opens the full plan, and keeps focus on the same button', async () => {
