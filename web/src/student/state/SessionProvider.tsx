@@ -6,7 +6,15 @@ import { api, isSessionLost, SESSION_LOST_EVENT, setSnapshotSource, type Session
 import { draftIdentity } from '../../components/exceptions.ts';
 import { errorMessage } from '../../components/StateViews.tsx';
 import { sessionSnapshot } from './snapshot.ts';
-import { readDismissedDraft, readStoredSessionId, writeDismissedDraft, writeStoredSessionId } from './storage.ts';
+import { demoSnapshot } from '../demo/demoSession.ts';
+import {
+  readDemoSessionId,
+  readDismissedDraft,
+  readStoredSessionId,
+  writeDemoSessionId,
+  writeDismissedDraft,
+  writeStoredSessionId,
+} from './storage.ts';
 
 export type CreateSessionInput = Parameters<typeof api.createSession>[0];
 /** lost: the server no longer knows the stored session (a demo server restarted); the student starts again. */
@@ -20,6 +28,10 @@ interface SessionContextValue {
   session: SessionState | null;
   error: string | null;
   start: (body: CreateSessionInput) => Promise<SessionState>;
+  /** Open the interactive demo: a new session for Rosa, an example student, with her interview already done. */
+  startDemo: () => Promise<SessionState>;
+  /** True while the open session is the interactive demo's. */
+  isDemo: boolean;
   /** Replace the whole session with a fresher copy from the server. */
   replace: (next: SessionState) => void;
   /** Patch the session locally, for example from an SSE profile_update. */
@@ -120,6 +132,19 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const start = useCallback(async (body: CreateSessionInput) => {
     const created = await api.createSession(body);
+    writeDemoSessionId(null);
+    writeStoredSessionId(created.id);
+    setResumeId(null);
+    setSession(created);
+    setError(null);
+    setStatus('ready');
+    return created;
+  }, []);
+
+  const startDemo = useCallback(async () => {
+    const id = crypto.randomUUID();
+    const created = await api.restoreSession(id, demoSnapshot(() => crypto.randomUUID()));
+    writeDemoSessionId(created.id);
     writeStoredSessionId(created.id);
     setResumeId(null);
     setSession(created);
@@ -139,6 +164,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const forget = useCallback(() => {
     writeStoredSessionId(null);
+    writeDemoSessionId(null);
     writeDismissedDraft('', null);
     setResumeId(null);
     setSession(null);
@@ -166,6 +192,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       session,
       error,
       start,
+      startDemo,
+      isDemo: sessionId !== null && sessionId === readDemoSessionId(),
       replace: setSession,
       update,
       refresh,
@@ -177,7 +205,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       recsVersion,
       invalidateRecs: () => setRecsVersion((n) => n + 1),
     }),
-    [status, session, error, start, update, refresh, forget, draft, dismissDraft, recsVersion],
+    [status, session, sessionId, error, start, startDemo, update, refresh, forget, draft, dismissDraft, recsVersion],
   );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;

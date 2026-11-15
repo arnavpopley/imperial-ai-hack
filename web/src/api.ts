@@ -163,6 +163,8 @@ function s(id: string): string {
 
 export const api = {
   createSession: (body: CreateSessionInput) => call<SessionState>('/sessions', { body }),
+  /** Creates a session from a full snapshot under a new id; used to open the interactive demo. */
+  restoreSession: (id: string, body: RestoreSessionBody) => call<SessionState>(`${s(id)}/restore`, { body }),
   getSession: (id: string) => call<SessionState>(s(id)),
   editProfile: (id: string, body: ProfileEditBody) => call<SessionState>(`${s(id)}/profile`, { method: 'PUT', body }),
   deleteProfile: (id: string) => call<SessionState>(`${s(id)}/profile`, { method: 'DELETE' }),
