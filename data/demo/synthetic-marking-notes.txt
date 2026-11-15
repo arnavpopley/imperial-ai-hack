@@ -1,0 +1,11 @@
+SYNTHETIC DEMO MARKING NOTES for MECH50008 Dynamics. Invented for the ModuleMatch hackathon demo, not a real examiner report.
+
+Overall the paper was answered well. Free-body diagrams were the main thing separating strong and weak scripts.
+
+Q1 (20 marks) Particle kinematics in polar coordinates. Good answers wrote the acceleration components carefully, including the Coriolis term. Many students forgot the 2 r-dot theta-dot term. Revise the derivation of velocity and acceleration in polar coordinates.
+
+Q2 (25 marks) Rigid body dynamics of a rolling wheel. Best answers drew a free-body diagram and took moments about the contact point. Common mistakes: assuming rolling without slip when friction was not large enough; sign errors in the moment equation. Work through the rolling and slipping tutorial sheet.
+
+Q3 (25 marks) Single degree of freedom vibration with damping. Strong answers found the damping ratio first and identified the regime. Many confused the damped and undamped natural frequencies. Practise the logarithmic decrement examples from lecture 9.
+
+Q4 (30 marks) Energy and momentum methods for a collision. Good answers chose conservation of momentum for the impact and energy for the motion after it. Students often applied energy conservation across the impact. Review the coefficient of restitution problems in the notes.

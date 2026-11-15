@@ -181,7 +181,7 @@ describe('module resources', () => {
     const { DATA_DIR } = await import('../src/db/datasets.ts');
     // A copy of data/ with one resource added, so the real file is never touched.
     const dir = mkdtempSync(join(tmpdir(), 'mm-data-'));
-    for (const f of readdirSync(DATA_DIR)) cpSync(resolve(DATA_DIR, f), resolve(dir, f));
+    for (const f of readdirSync(DATA_DIR)) cpSync(resolve(DATA_DIR, f), resolve(dir, f), { recursive: true });
     writeFileSync(
       resolve(dir, 'module-resources.json'),
       JSON.stringify({ _note: 'test', resources: { MECH60006: [{ label: '2025 exam', url: 'https://example.org/2025.pdf', kind: 'past-paper' }] } }),
