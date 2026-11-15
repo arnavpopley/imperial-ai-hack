@@ -52,7 +52,13 @@ const TMP = mkdtempSync(join(tmpdir(), 'modulematch-e2e-'));
 // Processes. Each child runs in its own process group, so stopping the group also stops its helpers
 // (esbuild under Vite, renderers under Chrome) without touching anything this script did not start.
 
+/**
+ * Every process group this script started and has not yet swept. A child stays here after its main process
+ * exits, because helpers in its group may still be running; only stopProcess removes it.
+ */
 const children = new Set();
+/** Every group ever started, for the final check that none is left. */
+const startedGroups = [];
 
 function startProcess(name, command, argv, { cwd, env }) {
   const log = createWriteStream(join(OUT, `${name}.log`));
@@ -61,10 +67,8 @@ function startProcess(name, command, argv, { cwd, env }) {
   child.stdout.pipe(log, { end: false });
   child.stderr.pipe(log, { end: false });
   children.add(child);
-  child.once('exit', () => {
-    children.delete(child);
-    log.end();
-  });
+  startedGroups.push(child.pid);
+  child.once('exit', () => log.end());
   return child;
 }
 
@@ -90,7 +94,6 @@ async function stopProcess(child) {
   children.delete(child);
 }
 
-const startedGroups = [];
 let stopping = null;
 function stopAll() {
   stopping ??= Promise.all([...children].map(stopProcess));
@@ -168,7 +171,6 @@ async function startApi(port) {
     cwd: join(ROOT, 'server'),
     env: apiEnv(port, join(TMP, `modulematch-${apiRun}.db`)),
   });
-  startedGroups.push(child.pid);
   await waitForHttp(`http://127.0.0.1:${port}/api/modules`, 'The API', child);
   return child;
 }
@@ -178,7 +180,6 @@ async function startWeb(port, apiPort) {
     cwd: join(ROOT, 'web'),
     env: { ...process.env, PORT: String(apiPort), BROWSER: 'none' },
   });
-  startedGroups.push(child.pid);
   await waitForHttp(`http://127.0.0.1:${port}/`, 'The web server', child);
   return child;
 }
@@ -207,7 +208,6 @@ async function startChrome() {
     ],
     { cwd: TMP, env: process.env },
   );
-  startedGroups.push(child.pid);
   const url = await new Promise((resolveUrl, reject) => {
     let buffer = '';
     const timer = setTimeout(() => reject(new Error('Chrome did not open a DevTools port within 20 s')), 20_000);

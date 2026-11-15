@@ -15,7 +15,7 @@ How to run the live demo at judging (spec 18.2): about three minutes, with a jud
 |---|---|
 | Automated check passes | `npm run e2e -- --only=desktop-light` (about 40 s, no API spend) |
 | API key works | `.env` has `ANTHROPIC_API_KEY`, `MODEL_SMART` and `MODEL_FAST`. `npm run dev` prints `Live models: …` on start, not `Offline mode`. |
-| Clean database | Stop the server, run `npm run seed`, start again with `npm run dev`. This clears earlier sessions, escalations and insight decisions. |
+| Clean database | Stop the server, delete the database (`rm server/modulematch.db*`), and start again with `npm run dev`. On an empty database the server seeds the modules, timetable and cohort and restores the evaluation results for step 8. This clears earlier sessions, escalations and insight decisions. (`npm run seed` alone does not restore the evaluation results.) |
 | Browser | Chrome, one window, 1440×900 or larger, zoom 100–110%, light mode, bookmarks bar and notifications off. |
 | Tabs | Tab 1: http://localhost:5173 (student). Tab 2: http://localhost:5173/staff/escalations (staff). Tab 3, standby: http://localhost:5173/trace. |
 | Fresh student | In tab 1, if a session exists, open **Your data** and delete it, or open all three tabs in one new private window. Keep them in the same window: the How it works page finds the student's session through the browser's storage. |
