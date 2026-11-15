@@ -15,6 +15,7 @@ import { useInterviewer, type Persona } from '../interview/personas.ts';
 import { humanise } from '../labels.ts';
 import { paths } from '../routes.ts';
 import { EscalationTray } from '../shell/EscalationTray.tsx';
+import { offersResultsStep } from '../results/resultsStep.ts';
 import { useReadySession } from '../state/SessionProvider.tsx';
 import { useChat, type ChatTurn } from './ChatProvider.tsx';
 import { ConfirmProfileCard } from './ConfirmProfileCard.tsx';
@@ -253,7 +254,9 @@ export function ChatPanel({ variant, prefill = '', className, onAddCv }: ChatPan
             </motion.button>
           </div>
           <p className="mt-2 hidden text-[12px] text-muted sm:block">
-            Enter to send. Grades and health details are never stored.
+            {offersResultsStep(session.profile.yearOfStudy)
+              ? 'Enter to send. Grades and health details typed here are never stored. Share marks only in Your results.'
+              : 'Enter to send. Grades and health details typed here are never stored.'}
           </p>
         </form>
       </div>
