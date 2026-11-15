@@ -5,6 +5,7 @@ import { useId, useState, type FormEvent } from 'react';
 import { Button } from '../../components/Button.tsx';
 import { Icon } from '../../components/Icon.tsx';
 import { errorMessage } from '../../components/StateViews.tsx';
+import { useMotionTokens } from '../../motion/tokens.ts';
 import { slotLabel } from '../labels.ts';
 import { BUSY_MESSAGE, useChat } from '../chat/ChatProvider.tsx';
 
@@ -41,6 +42,10 @@ export function CvPanel({ onImported, onClose }: CvPanelProps) {
   const [result, setResult] = useState<CvResult | null>(null);
   const inputId = useId();
   const hintId = useId();
+  const { softEnter, transition } = useMotionTokens();
+  const swap = softEnter('lessonTransition', 10);
+  /** A problem reading the CV arrives softly: a short fade and rise, never a shake or a flash. */
+  const gentle = softEnter('answerFeedback', 4);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -88,9 +93,7 @@ export function CvPanel({ onImported, onClose }: CvPanelProps) {
         {result ? (
           <motion.div
             key="result"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
+            {...swap}
             className="grid gap-4 rounded-2xl border border-fit-high/30 bg-fit-high/6 p-5"
             role="status"
           >
@@ -109,7 +112,7 @@ export function CvPanel({ onImported, onClose }: CvPanelProps) {
                     key={slot}
                     initial={{ opacity: 0, scale: 0.85 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.08 * i, type: 'spring', stiffness: 400, damping: 22 }}
+                    transition={transition('correctCelebration', 0.08 * i)}
                     className="rounded-full bg-surface px-3 py-1.5 text-[13px] font-medium shadow-soft ring-1 ring-line"
                   >
                     {slotLabel(slot)}
@@ -135,9 +138,7 @@ export function CvPanel({ onImported, onClose }: CvPanelProps) {
         ) : (
           <motion.form
             key="form"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
+            {...swap}
             onSubmit={(event) => void submit(event)}
             className="grid gap-3"
           >
@@ -164,13 +165,15 @@ export function CvPanel({ onImported, onClose }: CvPanelProps) {
               </Button>
             </div>
             {error && (
-              <p
+              <motion.p
+                key={error}
                 role="alert"
+                {...gentle}
                 className="flex items-start gap-2 rounded-xl bg-fit-low/8 px-3.5 py-2.5 text-[13px] text-fit-low"
               >
                 <Icon name="info" size={14} className="mt-0.5 shrink-0" />
                 {error}
-              </p>
+              </motion.p>
             )}
           </motion.form>
         )}
