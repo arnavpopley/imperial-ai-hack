@@ -58,10 +58,10 @@ export function StatTile({
   // Valid list markup: each tile is the dl's `div`, holding only its dt and dd. The icon sits inside the dt,
   // positioned in the tile's left gutter, so no extra wrapper comes between the div and its dt and dd.
   return (
-    <div className={`relative min-w-0 rounded-panel bg-surface p-card shadow-soft ring-1 ring-line ${icon ? 'pl-[5.25rem]' : ''}`}>
+    <div className={`relative min-w-0 rounded-panel bg-surface px-card py-5 shadow-soft ring-1 ring-line ${icon ? 'pl-[5.25rem]' : ''}`}>
       <dt className="text-sm font-medium text-muted">
         {icon && (
-          <span aria-hidden="true" className={`absolute top-card left-card grid size-11 place-items-center rounded-2xl ${tone}`}>
+          <span aria-hidden="true" className={`absolute top-5 left-card grid size-11 place-items-center rounded-2xl ${tone}`}>
             {icon}
           </span>
         )}

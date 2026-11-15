@@ -29,7 +29,7 @@ export function ModuleDashboard() {
   const { shortlisted } = summary;
   const status = capacityStatus(shortlisted ?? 0, summary.capacity);
   return (
-    <div className="grid grid-cols-1 gap-8">
+    <div className="grid grid-cols-1 gap-6">
       <dl className="grid gap-4 sm:grid-cols-3">
         <StatTile
           label="Shortlisted"

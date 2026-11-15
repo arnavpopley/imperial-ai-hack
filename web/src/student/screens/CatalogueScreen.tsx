@@ -7,6 +7,7 @@ import { Button } from '../../components/Button.tsx';
 import { cx } from '../../components/cx.ts';
 import { Icon } from '../../components/Icon.tsx';
 import { MODULE_TYPE_LABELS } from '../../components/ModuleTypeChip.tsx';
+import { GlanceStats, PageHeader } from '../../components/PageHeader.tsx';
 import { SampleDataLabel } from '../../components/SampleDataLabel.tsx';
 import { SegmentedControl } from '../../components/SegmentedControl.tsx';
 import { EmptyState, ErrorState, errorMessage, Skeleton } from '../../components/StateViews.tsx';
@@ -16,7 +17,7 @@ import { CompareDrawer } from '../catalogue/CompareDrawer.tsx';
 import { CompareToggle } from '../catalogue/CompareToggle.tsx';
 import { CompareTray } from '../catalogue/CompareTray.tsx';
 import { ModuleCard } from '../catalogue/ModuleCard.tsx';
-import { PhotoBanner } from '../catalogue/PhotoBanner.tsx';
+import { FitSpark } from '../catalogue/FitSpark.tsx';
 import { matchesQuery } from '../catalogue/search.ts';
 import { WeightPanel } from '../catalogue/WeightPanel.tsx';
 import { useChat } from '../chat/ChatProvider.tsx';
@@ -26,7 +27,7 @@ import { TERM_LABELS, TERMS, topicLabel } from '../labels.ts';
 import { paths } from '../routes.ts';
 import { catalogueCount } from '../rulesStatus.ts';
 import { useAdvisor } from '../shell/StudentShell.tsx';
-import { useCatalogue } from '../state/CatalogueProvider.tsx';
+import { useCatalogue, type RankedModule } from '../state/CatalogueProvider.tsx';
 import { useReadySession } from '../state/SessionProvider.tsx';
 
 type TypeFilter = 'all' | Module['type'];
@@ -99,17 +100,15 @@ export function CatalogueScreen() {
 
   return (
     <div className="grid grid-cols-1 gap-6">
-      <PhotoBanner
-        image="catalogue-study-group"
-        alt="A group of students studying together around a table"
+      <PageHeader
         title="Your modules"
         subtitle={
           scored
-            ? 'Ranked by how well each one fits you. Open any module to see why, read a summary or ask about it.'
-            : 'Modules for your year first, then the ones students like you shortlist. Tell us what you enjoy to rank them by fit.'
+            ? 'Ranked by how well each one fits you. Open any module to see why.'
+            : 'Your year’s modules first. Tell us what you enjoy to rank them by fit.'
         }
-        aside={<SampleDataLabel />}
-        focus="center 35%"
+        label={<SampleDataLabel />}
+        glance={recs.data && ranked.length > 0 && <CatalogueGlance ranked={ranked} scored={scored} rulesLoaded={recs.data.rules.loaded} lowConfidence={recs.data.confidence === 'low'} />}
       />
 
       {recs.data && !recs.data.rules.loaded && <RulesNotice note={recs.data.rules.note} />}
@@ -393,5 +392,37 @@ function CardSkeletons() {
         </div>
       ))}
     </div>
+  );
+}
+
+/** The catalogue at a glance: how many modules, how many are open, the best fit and the spread of fits. */
+function CatalogueGlance({
+  ranked,
+  scored,
+  rulesLoaded,
+  lowConfidence,
+}: {
+  ranked: readonly RankedModule[];
+  scored: boolean;
+  rulesLoaded: boolean;
+  /** Low profile confidence greys every score on the cards (spec 8.6), so the glance greys its best fit and spread too. */
+  lowConfidence: boolean;
+}) {
+  const open = ranked.filter((r) => r.eligible).length;
+  const fits = ranked.map((r) => r.fit);
+  // The best fit among modules the student can take, matching the top card; every fit when none is open.
+  const openFits = ranked.filter((r) => r.eligible).map((r) => r.fit);
+  const best = Math.max(...(openFits.length > 0 ? openFits : fits));
+  const items = [
+    { label: 'modules', value: ranked.length },
+    ...(rulesLoaded ? [{ label: 'open to you', value: open }] : []),
+    ...(scored
+      ? [{ label: lowConfidence ? 'best fit, rough' : 'best fit', value: <span className={lowConfidence ? 'text-muted' : undefined}>{best}</span>, valueText: lowConfidence ? `${best}, a rough score while the profile is incomplete` : String(best) }]
+      : []),
+  ];
+  return (
+    <GlanceStats label="Your catalogue at a glance" items={items}>
+      {scored ? <FitSpark fits={fits} muted={lowConfidence} /> : null}
+    </GlanceStats>
   );
 }

@@ -15,16 +15,17 @@ export function PrivacyHidden() {
 export function PrivacyNote() {
   return (
     <details className="group max-w-2xl text-sm">
-      <summary className="inline-flex cursor-pointer list-none items-center gap-2 rounded-full bg-white/15 px-3.5 py-1.5 font-medium text-white ring-1 ring-white/25 backdrop-blur hover:bg-white/25 [&::-webkit-details-marker]:hidden">
-        <ShieldIcon className="size-4" />
+      <summary className="inline-flex cursor-pointer list-none items-center gap-2 rounded-full bg-surface px-3.5 py-1.5 font-medium text-ink shadow-soft ring-1 ring-line hover:bg-surface-2 [&::-webkit-details-marker]:hidden">
+        <ShieldIcon className="size-4 text-brand" />
         Aggregate only, never one student
         <span aria-hidden="true" className="transition-transform group-open:rotate-180">
           ▾
         </span>
       </summary>
-      <p className="mt-3 rounded-2xl bg-white/10 p-4 leading-relaxed text-white/90 ring-1 ring-white/15 backdrop-blur">
+      <p className="mt-3 rounded-2xl bg-surface p-4 leading-relaxed text-muted shadow-soft ring-1 ring-line">
         Module views show cohort totals, never a single student, and any figure drawn from fewer than {MIN_COHORT}{' '}
         students is hidden. Escalations are the exception: a student chose to send them, with a summary they approved.
+        There is no sign-in in this prototype.
       </p>
     </details>
   );

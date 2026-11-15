@@ -94,8 +94,8 @@ export function ModuleLayout() {
 
   const base = `/staff/modules/${encodeURIComponent(summary.moduleId)}`;
   return (
-    <div className="grid grid-cols-1 gap-8">
-      <header className="grid gap-3">
+    <div className="grid grid-cols-1 gap-6">
+      <header className="grid gap-2">
         <div className="flex flex-wrap items-center gap-2 text-sm text-muted">
           <span className="font-mono">{summary.code}</span>
           <span aria-hidden="true">·</span>
@@ -109,7 +109,7 @@ export function ModuleLayout() {
           )}
         </div>
         <h2 className="text-heading text-balance">{summary.title}</h2>
-        <nav aria-label={`${summary.title} views`} className="mt-2 flex gap-6 border-b border-line">
+        <nav aria-label={`${summary.title} views`} className="mt-1 flex gap-6 border-b border-line">
           <NavLink to={base} end className={tab}>
             Dashboard
           </NavLink>

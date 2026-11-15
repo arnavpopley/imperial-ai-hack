@@ -4,9 +4,9 @@ import { motion, useReducedMotion } from 'motion/react';
 import { Button } from '../../components/Button.tsx';
 import { cx } from '../../components/cx.ts';
 import { Icon } from '../../components/Icon.tsx';
+import { GlanceStats, PageHeader } from '../../components/PageHeader.tsx';
 import { SampleDataLabel } from '../../components/SampleDataLabel.tsx';
 import { EmptyState, ErrorState, Skeleton } from '../../components/StateViews.tsx';
-import { PhotoBanner } from '../catalogue/PhotoBanner.tsx';
 import { PathwayIcon } from '../pathways/PathwayIcon.tsx';
 import { PathwayProgressCard } from '../pathways/PathwayProgressCard.tsx';
 import { useProfileActions } from '../profile/useProfileActions.ts';
@@ -30,13 +30,24 @@ export function PathwaysScreen() {
 
   return (
     <div className="grid grid-cols-1 gap-8">
-      <PhotoBanner
-        image="pathways-graduation"
-        alt="Graduates in caps and gowns celebrating"
+      <PageHeader
         title="Pathways"
         subtitle="Pick up to three directions. Your career weighting and next-best modules follow from them."
-        aside={<SampleDataLabel variant="pathways" />}
-        focus="center 30%"
+        label={<SampleDataLabel variant="pathways" />}
+        glance={
+          <GlanceStats
+            label="Your pathways at a glance"
+            items={[{ label: 'chosen', value: `${selected.length} of ${MAX_PATHWAYS}`, valueText: `${selected.length} of ${MAX_PATHWAYS}` }]}
+          >
+            {selected.length > 0 ? (
+              <span className="flex items-center gap-1.5">
+                {selected.map((id) => (
+                  <PathwayIcon key={id} pathwayId={id} size={16} className="text-brand" />
+                ))}
+              </span>
+            ) : null}
+          </GlanceStats>
+        }
       />
 
       <section aria-labelledby="choose-heading">

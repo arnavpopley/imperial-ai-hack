@@ -6,6 +6,7 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Button } from '../../components/Button.tsx';
 import { Icon, type IconName } from '../../components/Icon.tsx';
+import { GlanceStats, PageHeader } from '../../components/PageHeader.tsx';
 import { SampleDataLabel } from '../../components/SampleDataLabel.tsx';
 import { ErrorState, Skeleton } from '../../components/StateViews.tsx';
 import { errorStatus } from '../results/files.ts';
@@ -61,22 +62,28 @@ export function FeedbackScreen() {
 
   return (
     <MotionConfig reducedMotion="user">
-      <div className="mx-auto grid max-w-5xl grid-cols-[minmax(0,1fr)] gap-6">
-        <motion.header
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: EASE }}
-          className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3"
-        >
-          <div className="grid gap-1.5">
-            <p className="inline-flex items-center gap-2 text-sm font-medium text-mode-explain">
-              <Icon name="lock" size={15} /> Only you can see this
-            </p>
-            <h1 className="text-title">Your exam feedback</h1>
-            <p className="text-base text-muted text-pretty">Feedback from your examiner's notes, tailored to your marks.</p>
-          </div>
-          <SampleDataLabel variant="marks" />
-        </motion.header>
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
+        <PageHeader
+          eyebrow={
+            <span className="inline-flex items-center gap-1.5 font-medium text-mode-explain">
+              <Icon name="lock" size={14} /> Only you can see this
+            </span>
+          }
+          title="Your exam feedback"
+          subtitle="Feedback from your examiner's notes, tailored to your marks."
+          label={<SampleDataLabel variant="marks" />}
+          glance={
+            exams.length > 0 && (
+              <GlanceStats
+                label="Your exam feedback at a glance"
+                items={[
+                  { label: exams.length === 1 ? 'exam' : 'exams', value: exams.length },
+                  ...(exams[0]?.feedback.weakPoints[0] ? [{ label: 'top focus', value: exams[0].feedback.weakPoints[0].questionId }] : []),
+                ]}
+              />
+            )
+          }
+        />
 
         {loading && (
           <div className="grid gap-4" role="status" aria-label="Loading your feedback">

@@ -7,9 +7,7 @@ All photos are from [Pexels](https://www.pexels.com) under the [Pexels licence](
 | `hero-students-steps.jpg` | https://www.pexels.com/photo/1438072/ |
 | `interview-conversation.jpg` | https://www.pexels.com/photo/5676678/ |
 | `catalogue-study-group.jpg` | https://www.pexels.com/photo/1595391/ |
-| `staff-meeting.jpg` | https://www.pexels.com/photo/1181622/ |
 | `societies-celebrating.jpg` | https://www.pexels.com/photo/8199562/ |
-| `pathways-graduation.jpg` | https://www.pexels.com/photo/7942462/ |
 | `onboarding-outdoors.jpg` | https://www.pexels.com/photo/6147369/ |
 | `tutor-teamwork.jpg` | https://www.pexels.com/photo/3184360/ |
 | `timetable-whiteboard.jpg` | https://www.pexels.com/photo/8197530/ |

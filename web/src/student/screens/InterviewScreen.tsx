@@ -6,6 +6,7 @@ import { AnimatePresence, motion, MotionConfig } from 'motion/react';
 import { useCallback, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { Button } from '../../components/Button.tsx';
+import { PageHeader } from '../../components/PageHeader.tsx';
 import { cx } from '../../components/cx.ts';
 import { SegmentedControl } from '../../components/SegmentedControl.tsx';
 import { ChatPanel } from '../chat/ChatPanel.tsx';
@@ -102,32 +103,25 @@ export function InterviewScreen() {
   return (
     <MotionConfig reducedMotion="user">
       <div className="grid grid-cols-1 gap-5 lg:gap-7">
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, ease: EASE }}
-          className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4"
-        >
-          <div className="min-w-0">
-            <h1 className="text-title">Your interview</h1>
-            <p className="mt-1 text-sm text-muted">
-              {depth === 'quick' ? 'Quick, about three minutes' : 'Deep, take your time'}
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <AvatarPicker />
-            <div className="grid justify-items-end gap-1">
-              <Button variant="ghost" icon="arrow-right" busy={saving} onClick={() => void skip()}>
-                {confirmed ? 'Go to recommendations' : 'Skip to modules'}
-              </Button>
-              {error && (
-                <p role="alert" className="text-2xs text-fit-low">
-                  {error}
-                </p>
-              )}
-            </div>
-          </div>
-        </motion.div>
+        <PageHeader
+          title="Your interview"
+          subtitle={depth === 'quick' ? 'Quick, about three minutes' : 'Deep, take your time'}
+          actions={
+            <>
+              <AvatarPicker />
+              <div className="grid justify-items-end gap-1">
+                <Button variant="ghost" icon="arrow-right" busy={saving} onClick={() => void skip()}>
+                  {confirmed ? 'Go to recommendations' : 'Skip to modules'}
+                </Button>
+                {error && (
+                  <p role="alert" className="text-2xs text-fit-low">
+                    {error}
+                  </p>
+                )}
+              </div>
+            </>
+          }
+        />
 
         <InterviewProgressBar {...timelineProps} className="lg:hidden" />
 

@@ -7,11 +7,11 @@ import { api } from '../../api.ts';
 import { Badge } from '../../components/Badge.tsx';
 import { buttonClass } from '../../components/Button.tsx';
 import { ConfidenceBadge } from '../../components/ConfidenceBadge.tsx';
-import { cx } from '../../components/cx.ts';
 import { decisionsKey } from '../../components/exceptions.ts';
 import { FIT_BAND_LABELS, FIT_BAND_TONE, fitBand } from '../../components/FitScore.tsx';
 import { Icon } from '../../components/Icon.tsx';
 import { ModuleTypeChip } from '../../components/ModuleTypeChip.tsx';
+import { PageHeader } from '../../components/PageHeader.tsx';
 import { Provenance, ProvenanceLegend } from '../../components/Provenance.tsx';
 import { SampleDataLabel } from '../../components/SampleDataLabel.tsx';
 import { EmptyState, ErrorState, Skeleton } from '../../components/StateViews.tsx';
@@ -105,86 +105,77 @@ export function ModuleDetailScreen() {
 
   return (
     <div className="grid grid-cols-1 gap-6">
-      <div className="flex items-center justify-between gap-3">
-        <Link
-          to={paths.catalogue}
-          className="inline-flex items-center gap-1.5 rounded-md text-xs font-medium text-muted hover:text-ink"
-        >
-          <Icon name="arrow-left" size={14} />
-          All modules
-        </Link>
-        <SampleDataLabel />
-      </div>
-
-      <motion.header
-        {...rise(0)}
-        className="relative overflow-hidden rounded-[1.5rem] border border-line bg-surface p-5 shadow-soft sm:p-8"
-      >
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 right-0 w-2/3 bg-gradient-to-l from-brand-soft/70 to-transparent"
-        />
-        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-7">
-          {rec && (scored ? <ScoreRing value={rec.fit} size="lg" dimmed={dimmed} delay={0.15} /> : <NoScoreRing size="lg" />)}
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <ModuleTypeChip variant={module.type} />
-              {rec && <ConfidenceBadge variant={rec.confidence} />}
-              {rec?.exception && <ExceptionChip decision={rec.exception} />}
-              {rec && scored && (
-                <Badge tone={dimmed ? 'neutral' : FIT_BAND_TONE[fitBand(rec.fit)]}>
-                  {FIT_BAND_LABELS[fitBand(rec.fit)]} · {rec.rank === 1 ? 'your best match' : `ranked #${rec.rank}`}
-                </Badge>
-              )}
-              {/* After the fit band, so it labels the score claim it describes. */}
-              {rec && scored && <Provenance kind="code" />}
-            </div>
-            <h1 className="mt-2 text-title text-balance">
-              {module.title}
-            </h1>
-            {/* Plain facts, not pills (issue #141): code · department · level · credits · terms. */}
-            <ul className="mt-3 flex flex-wrap gap-x-2 gap-y-1 text-xs text-muted" aria-label="Module facts">
-              {facts.map((fact, i) => (
-                <li key={`${i}-${fact}`} className="flex items-center gap-2">
-                  {i > 0 && <span aria-hidden="true">·</span>}
-                  <span className={cx(i === 0 && 'font-mono')}>{fact}</span>
-                </li>
+      <motion.div {...rise(0)} className="grid gap-4">
+        <PageHeader
+          eyebrow={
+            <>
+              <Link to={paths.catalogue} className="inline-flex items-center gap-1.5 rounded-md text-xs font-medium text-muted hover:text-ink">
+                <Icon name="arrow-left" size={14} />
+                All modules
+              </Link>
+              <span className="flex flex-wrap items-center gap-1.5">
+                <ModuleTypeChip variant={module.type} />
+                {rec && <ConfidenceBadge variant={rec.confidence} />}
+                {rec?.exception && <ExceptionChip decision={rec.exception} />}
+              </span>
+            </>
+          }
+          title={module.title}
+          subtitle={
+            <span>
+              <span className="font-mono">{facts[0]}</span>
+              {facts.slice(1).map((fact, i) => (
+                <span key={`${i}-${fact}`}> · {fact}</span>
               ))}
-            </ul>
-            {demand && (
-              <div className="mt-3">
-                <DemandNote signal={demand} />
-              </div>
-            )}
-          </div>
-          <div className="flex flex-wrap items-center gap-3 sm:flex-col sm:items-end">
-            <ShortlistButton
-              size="lg"
-              title={module.title}
-              shortlisted={shortlist.isShortlisted(module.id)}
-              pending={shortlist.isPending(module.id)}
-              onToggle={() => void shortlist.toggle(module.id)}
-              compulsory={rec?.compulsory ?? false}
-            />
-            <a
-              href={module.sourceUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1 text-xs font-medium text-brand underline-offset-2 hover:underline"
-            >
-              Public description
-              <Icon name="external" size={13} />
-              <span className="sr-only">(opens in a new tab)</span>
-            </a>
-          </div>
-        </div>
+            </span>
+          }
+          label={<SampleDataLabel />}
+          glance={
+            rec && (
+              <span className="flex items-center gap-3">
+                {scored ? <ScoreRing value={rec.fit} dimmed={dimmed} delay={0.15} /> : <NoScoreRing />}
+                {scored && (
+                  <span className="grid justify-items-start gap-1">
+                    <Badge tone={dimmed ? 'neutral' : FIT_BAND_TONE[fitBand(rec.fit)]}>
+                      {FIT_BAND_LABELS[fitBand(rec.fit)]} · {rec.rank === 1 ? 'your best match' : `ranked #${rec.rank}`}
+                    </Badge>
+                    {/* After the fit band, so it labels the score claim it describes. */}
+                    <Provenance kind="code" />
+                  </span>
+                )}
+              </span>
+            )
+          }
+          actions={
+            <span className="flex flex-wrap items-center gap-3">
+              <ShortlistButton
+                title={module.title}
+                shortlisted={shortlist.isShortlisted(module.id)}
+                pending={shortlist.isPending(module.id)}
+                onToggle={() => void shortlist.toggle(module.id)}
+                compulsory={rec?.compulsory ?? false}
+              />
+              <a
+                href={module.sourceUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 text-xs font-medium text-brand underline-offset-2 hover:underline"
+              >
+                Public description
+                <Icon name="external" size={13} />
+                <span className="sr-only">(opens in a new tab)</span>
+              </a>
+            </span>
+          }
+        />
+        {demand && <DemandNote signal={demand} />}
         {shortlist.error && (
-          <p role="alert" className="relative mt-3 text-xs text-fit-low">
+          <p role="alert" className="text-xs text-fit-low">
             {shortlist.error}
           </p>
         )}
         {rec && !rec.eligible && rec.ineligibleReasons.length > 0 && (
-          <ul className="relative mt-4 grid gap-1 rounded-xl bg-surface-2 px-4 py-3 text-xs">
+          <ul className="grid gap-1 rounded-xl bg-surface-2 px-4 py-3 text-xs">
             {rec.ineligibleReasons.map((reason) => (
               <li key={reason} className="flex gap-2">
                 <Icon name="lock" size={13} className="mt-0.5 shrink-0 text-muted" />
@@ -193,7 +184,7 @@ export function ModuleDetailScreen() {
             ))}
           </ul>
         )}
-      </motion.header>
+      </motion.div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_23rem] lg:items-start">
         <div className="grid min-w-0 gap-6">
