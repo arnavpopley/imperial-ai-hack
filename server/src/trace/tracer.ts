@@ -12,8 +12,21 @@ export interface Tracer {
   timed<T>(event: Omit<TraceInput, 'output' | 'verdict'>, fn: () => Promise<T>, describe: (r: T) => Pick<TraceEvent, 'output' | 'verdict'>): Promise<T>;
 }
 
-/** Trims a summary for the trace so no long free text ever lands there. */
-export const summarise = (text: string, max = 120) => (text.length > max ? `${text.slice(0, max - 1)}…` : text);
+/**
+ * Trims a summary for the trace so no long free text ever lands there. A cut ends at the last sentence end, if one
+ * keeps at least half the room, or else at the last word, then "…", so a row never stops mid-word (issue #115).
+ */
+export function summarise(text: string, max = 120): string {
+  if (text.length <= max) return text;
+  const head = text.slice(0, max - 1);
+  // A sentence end leaves room for " …", so the cut still fits within max.
+  const room = head.slice(0, max - 2);
+  const sentence = Math.max(room.lastIndexOf('. '), room.lastIndexOf('? '), room.lastIndexOf('! '));
+  if (sentence >= max / 2) return `${head.slice(0, sentence + 1)} …`;
+  const word = head.lastIndexOf(' ');
+  const cut = word > 0 ? head.slice(0, word) : head;
+  return `${cut.replace(/[\s,;:(–-]+$/, '')}…`;
+}
 
 export function createTracer(sessionId: string, sink: TraceSink): Tracer {
   const record = (event: TraceInput): TraceEvent => {
