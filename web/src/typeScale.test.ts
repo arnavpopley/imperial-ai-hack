@@ -19,11 +19,13 @@ const REASON = 'type-scale:';
 
 /**
  * Budgets. They only go down: each codemod PR lowers them to what it leaves, and the end state is no arbitrary
- * size below the floor and at most 20 deliberate ones, each with a reason.
+ * size below the floor, no relative size without a reason, and at most 20 deliberate ones, each with a reason.
  */
 const MAX_BELOW_FLOOR = 68;
 const MAX_UNEXPLAINED = 372;
 const MAX_EXPLAINED = 20;
+/** Relative (em) sizes depend on the parent's size, so the floor cannot be checked; each needs a reason. */
+const MAX_RELATIVE_UNEXPLAINED = 1;
 
 interface Use {
   file: string;
@@ -75,6 +77,11 @@ describe('the type scale', () => {
   it(`has at most ${MAX_UNEXPLAINED} arbitrary sizes without a "${REASON}" reason`, () => {
     const unexplained = uses().filter((u) => !u.explained);
     expect(unexplained.length, unexplained.slice(0, 40).map(where).join('\n')).toBeLessThanOrEqual(MAX_UNEXPLAINED);
+  });
+
+  it(`has at most ${MAX_RELATIVE_UNEXPLAINED} relative (em) sizes without a reason, since their pixel size is unknown`, () => {
+    const relative = uses().filter((u) => u.px === null && !u.explained);
+    expect(relative.length, relative.map(where).join('\n')).toBeLessThanOrEqual(MAX_RELATIVE_UNEXPLAINED);
   });
 
   it(`has at most ${MAX_EXPLAINED} deliberate arbitrary sizes`, () => {
