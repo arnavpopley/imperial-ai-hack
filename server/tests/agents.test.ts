@@ -71,6 +71,21 @@ describe('extractor', () => {
     expect(grounded('The CFD modules were not my favourite.', [u('the CFD modules were my favourite')])).toEqual([]);
   });
 
+  it('reads negated assessment options, workload phrases and a hedged yes (issue #55)', () => {
+    const value = (text: string, slot: string, target: string[]) => extractByCues(text, target, PATHWAYS).find((x) => x.slot === slot)?.value;
+    const assessment = ['style.examPreference', 'style.appliedPreference'];
+    const team = ['style.groupPreference', 'style.workloadTolerance'];
+    expect(value('No exams please.', 'style.examPreference', assessment)).toBe(0.2);
+    expect(value('Coursework and projects, definitely not big exams.', 'style.examPreference', assessment)).toBe(0.2);
+    expect(value('Exams, not coursework.', 'style.examPreference', assessment)).toBe(0.8);
+    expect(value('A moderate workload is fine.', 'style.workloadTolerance', team)).toBe(0.5);
+    expect(value('Heavy is fine, I can handle a lot.', 'style.workloadTolerance', team)).toBe(0.8);
+    expect(value('Light, not too much.', 'style.workloadTolerance', team)).toBe(0.25);
+    expect(value('Yes, maybe one module outside engineering.', 'breadthAppetite', ['breadthAppetite'])).toBe(0.7);
+    // A sentence about assessment is never read as breadth, even when breadth is a target.
+    expect(value('No exams please.', 'breadthAppetite', ['breadthAppetite'])).toBeUndefined();
+  });
+
   it('lets the main clause decide the team preference', () => {
     const group = (text: string) => extractByCues(text, ['style.groupPreference'], PATHWAYS).find((x) => x.slot === 'style.groupPreference')?.value;
     expect(group('I prefer group work though I can work alone.')).toBe(0.7);

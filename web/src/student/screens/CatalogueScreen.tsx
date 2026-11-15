@@ -165,7 +165,7 @@ function RankedRow({ first, children }: { first: boolean; children: ReactNode })
 
 function ConfidenceNotice({ level }: { level: 'medium' | 'low' }) {
   const navigate = useNavigate();
-  const { send, sending } = useChat();
+  const { askTwoMore, sending } = useChat();
   const medium = level === 'medium';
   return (
     <div
@@ -190,8 +190,11 @@ function ConfidenceNotice({ level }: { level: 'medium' | 'low' }) {
         icon="chat"
         disabled={sending}
         onClick={() => {
-          if (medium) void send('I have time for two more questions.');
-          navigate(paths.interview);
+          // Both levels return to the interview for two targeted questions; the first is asked straight away.
+          void askTwoMore().then(
+            () => navigate(paths.interview),
+            () => navigate(paths.interview),
+          );
         }}
       >
         {medium ? 'Answer two more' : 'Back to the interview'}

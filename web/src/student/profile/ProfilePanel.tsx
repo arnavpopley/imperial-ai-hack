@@ -12,6 +12,7 @@ import {
   formatEvidenceValue,
   latestEvidence,
   percent,
+  splitInterests,
   STYLE_KEYS,
   STYLE_META,
   styleValueText,
@@ -41,7 +42,7 @@ function useIsFresh(evidence: readonly Evidence[]): (e: Evidence | undefined) =>
 export function ProfilePanel({ profile, evidence, highlightSlots, className }: ProfilePanelProps) {
   const isFresh = useIsFresh(evidence);
   const { pathwayById } = useReferenceData();
-  const interests = Object.entries(profile.interests).sort(([, a], [, b]) => b - a);
+  const { liked: interests, avoided } = splitInterests(profile.interests);
   const confidence = confidenceLabel(profile.completeness);
   const { avoidDays, earliestStart } = profile.timetablePrefs;
   const glow = (slot: string, ev: Evidence | undefined) => isFresh(ev) || (highlightSlots?.has(slot) ?? false);
@@ -109,6 +110,26 @@ export function ProfilePanel({ profile, evidence, highlightSlots, className }: P
             </ul>
           )}
         </ProfileSection>
+
+        {avoided.length > 0 && (
+          <ProfileSection title="Avoid">
+            <ul className="flex flex-wrap gap-1.5">
+              {avoided.map(([topic]) => {
+                const slot = `interest:${topic}`;
+                const ev = latestEvidence(evidence, slot);
+                return (
+                  <li key={topic}>
+                    <Quoted evidence={ev} glow={glow(slot, ev)}>
+                      <span className="rounded-full bg-surface-2 px-3 py-1.5 text-[13px] font-medium text-muted">
+                        {topicLabel(topic)}
+                      </span>
+                    </Quoted>
+                  </li>
+                );
+              })}
+            </ul>
+          </ProfileSection>
+        )}
 
         <ProfileSection title="How you learn">
           <ul className="grid gap-1">
