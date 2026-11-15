@@ -95,6 +95,17 @@ describe('counterfactuals', () => {
     expect(maths).toMatchObject({ newlyTopModules: 0, alreadyTopModules: 6 });
   });
 
+  it('leaves completed modules out of a student top five, as their own catalogue does', () => {
+    const done = rivals.map((rival) => rival.id);
+    const ctx = { ...context(6), modules: [target, ...rivals] };
+    ctx.cohort = ctx.cohort.map((student) => ({ ...student, completedModuleIds: done }));
+    const [maths] = counterfactuals(target, ctx);
+    expect(maths).toMatchObject({ newlyTopModules: 0, alreadyTopModules: 6 });
+    // A module the student has completed cannot enter their top five.
+    const finished = { ...ctx, cohort: ctx.cohort.map((student) => ({ ...student, completedModuleIds: ['target'] })) };
+    expect(counterfactuals(target, { ...finished, modules: [target, ...rivals] })[0]).toMatchObject({ newlyTopModules: 0, alreadyTopModules: 0 });
+  });
+
   it('counts students whose fit would reach 70', () => {
     // I = 1, L = 0.3: fit 68. Lowering maths to 0.7 gives L = 0.5 and fit 73.
     const focused = makeModule('focused', { topics: { 'fluid-mechanics': 1 }, demand: { ...target.demand } });
@@ -204,6 +215,28 @@ describe('insight cards', () => {
     );
     const ctx = { ...context(0), modules: [examHeavy, ...coursework], cohort: students };
     expect(mainGap(examHeavy, students, ctx).short).toBe('the exam-heavy assessment');
+  });
+
+  it('weighs style gaps by what they cost in fit, counting how many style questions each student answered', () => {
+    const base = { examShare: 0.2, groupShare: 0.5, applied: 0.5, mathsIntensity: 0.2, codingIntensity: 0.5, workload: 0.5 };
+    const topics = { 'fluid-mechanics': 1, languages: 1 };
+    const module = makeModule('mixed', { topics, demand: { ...base, examShare: 0.8, mathsIntensity: 0.6 } });
+    const others = Array.from({ length: 5 }, (_, i) => makeModule(`plain-${i}`, { topics, demand: base }));
+    // Three answered all six questions and mind the exam (0.6 over six answers: 0.1 of style each)...
+    const full = Array.from({ length: 3 }, (_, i) =>
+      makeProfile({
+        studentId: `full-${i}`,
+        interests: { 'fluid-mechanics': 1 },
+        style: { examPreference: 0.2, groupPreference: 0.5, appliedPreference: 0.5, mathsComfort: 0.6, codingComfort: 0.5, workloadTolerance: 0.5 },
+      }),
+    );
+    // ...two answered only maths and mind it (0.4 over one answer: 0.4 of style each).
+    const mathsOnly = Array.from({ length: 2 }, (_, i) =>
+      makeProfile({ studentId: `maths-${i}`, interests: { 'fluid-mechanics': 1 }, style: { ...makeProfile().style, mathsComfort: 0.2 } }),
+    );
+    const group = [...full, ...mathsOnly];
+    // Raw penalties favour the exam (3 × 0.6 against 2 × 0.4); in fit points the maths costs more.
+    expect(mainGap(module, group, { ...context(0), modules: [module, ...others], cohort: group }).short).toBe('the maths load');
   });
 
   it('gives an oversubscribed module demand management, not ways to raise fit', () => {

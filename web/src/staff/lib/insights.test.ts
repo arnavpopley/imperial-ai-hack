@@ -39,7 +39,8 @@ describe('summary cards', () => {
 describe('NO_INSIGHTS', () => {
   it('names the five-student group rule as the reason', () => {
     expect(MIN_COHORT).toBe(5);
-    expect(NO_INSIGHTS.title).toBe('Fewer than 5 students in any group');
+    expect(NO_INSIGHTS.title).toBe('Fewer than 5 interested students in the group');
+    expect(NO_INSIGHTS.body).toContain('fewer than 5 are');
     expect(NO_INSIGHTS.body).not.toMatch(/check back/i);
   });
 });

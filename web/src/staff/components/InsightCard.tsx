@@ -52,22 +52,29 @@ export function InsightCard({
   // Once decided, the actions collapse into what happens next; "Change decision" brings them back.
   const [changing, setChanging] = useState(false);
   const outcome = outcomeOf(insight);
+  const collapsed = outcome !== null && !changing;
   const outcomeRef = useRef<HTMLDivElement>(null);
-  const justDecided = useRef(false);
+  const actionsRef = useRef<HTMLDivElement>(null);
+  const interacted = useRef(false);
   const uplift = insight.kind === 'COUNTERFACTUAL' ? insight.upliftPoints : null;
 
-  // The pressed button disappears with the actions, so keyboard focus moves to the outcome instead.
-  const decided = outcome !== null;
+  // The focused button disappears whenever the actions collapse or reopen (a decision, the same decision
+  // again, "Change decision", or a failed save that undoes the decision), so focus follows what replaced it.
   useEffect(() => {
-    if (!justDecided.current || !decided) return;
-    justDecided.current = false;
-    outcomeRef.current?.focus();
-  }, [decided, insight.decision]);
+    if (!interacted.current) return;
+    if (collapsed) outcomeRef.current?.focus();
+    else (actionsRef.current?.querySelector<HTMLButtonElement>('[aria-pressed="true"]') ?? actionsRef.current?.querySelector('button'))?.focus();
+  }, [collapsed]);
 
   const decide = (decision: StaffDecision) => {
-    justDecided.current = true;
+    interacted.current = true;
     setChanging(false);
     onDecide(decision);
+  };
+
+  const reopen = () => {
+    interacted.current = true;
+    setChanging(true);
   };
 
   return (
@@ -135,16 +142,16 @@ export function InsightCard({
             {saving ? 'Saving…' : state.label}
           </span>
         </div>
-        {outcome && !changing ? (
+        {collapsed ? (
           <button
             type="button"
-            onClick={() => setChanging(true)}
+            onClick={reopen}
             className={`inline-flex min-h-10 items-center rounded-xl px-3 py-2 text-sm font-medium text-brand hover:underline ${focusRing}`}
           >
             Change decision
           </button>
         ) : (
-          <div role="group" aria-label={`Decision on: ${insight.headline}`} className="flex flex-wrap gap-2">
+          <div ref={actionsRef} role="group" aria-label={`Decision on: ${insight.headline}`} className="flex flex-wrap gap-2">
             {ACTIONS.map(({ decision, label, Icon, active }) => {
               const pressed = insight.decision === decision;
               return (
@@ -166,7 +173,7 @@ export function InsightCard({
           </div>
         )}
       </div>
-      {outcome && !changing && (
+      {collapsed && outcome && (
         <div
           ref={outcomeRef}
           tabIndex={-1}

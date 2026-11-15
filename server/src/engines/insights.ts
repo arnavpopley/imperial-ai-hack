@@ -228,37 +228,43 @@ export function interestedButUnconvinced(
 interface StudentRanking {
   /** The student's best TOP_MODULES + 1 modules, so any one module can be left out and five remain. */
   leaders: { moduleId: string; fit: number }[];
-  /** Modules the student may take; null without programme rules, when every module counts. */
-  eligible: ReadonlySet<string> | null;
+  /**
+   * Modules that count towards the student's top five: never ones they have completed (the student's own
+   * catalogue leaves those out), and only ones the programme rules allow when rules are given.
+   */
+  available: ReadonlySet<string>;
 }
 
 /** Rankings depend only on the context, so each is computed once per context and student. */
 const rankings = new WeakMap<InsightContext, Map<StudentProfile, StudentRanking>>();
 
 function rankingFor(student: StudentProfile, ctx: InsightContext): StudentRanking {
-  const byStudent = rankings.get(ctx) ?? new Map<StudentProfile, StudentRanking>();
-  rankings.set(ctx, byStudent);
+  let byStudent = rankings.get(ctx);
+  if (!byStudent) {
+    byStudent = new Map();
+    rankings.set(ctx, byStudent);
+  }
   const cached = byStudent.get(student);
   if (cached) return cached;
   const { rules } = ctx;
-  const eligible = rules
-    ? new Set(ctx.modules.filter((m) => checkModuleEligibility(m.id, student, ctx.modules, rules).length === 0).map((m) => m.id))
-    : null;
-  const leaders = ctx.modules
-    .filter((m) => eligible?.has(m.id) ?? true)
+  const completed = new Set(student.completedModuleIds);
+  const candidates = ctx.modules.filter(
+    (m) => !completed.has(m.id) && (!rules || checkModuleEligibility(m.id, student, ctx.modules, rules).length === 0),
+  );
+  const leaders = candidates
     .map((m) => ({ moduleId: m.id, fit: scoreModule(student, m, ctx.weights, ctx.homeTopics).fit }))
     // Highest fit first, then module id, as rankModules orders a student's recommendations.
     .sort((a, b) => b.fit - a.fit || compareIds(a.moduleId, b.moduleId))
     .slice(0, TOP_MODULES + 1);
-  const ranking = { leaders, eligible };
+  const ranking = { leaders, available: new Set(candidates.map((m) => m.id)) };
   byStudent.set(student, ranking);
   return ranking;
 }
 
 /** True when the module, scoring `fit` for this student, ranks among their top TOP_MODULES modules. */
 function inTopModules(student: StudentProfile, module: Module, fit: number, ctx: InsightContext): boolean {
-  const { leaders, eligible } = rankingFor(student, ctx);
-  if (eligible && !eligible.has(module.id)) return false;
+  const { leaders, available } = rankingFor(student, ctx);
+  if (!available.has(module.id)) return false;
   const last = leaders.filter((leader) => leader.moduleId !== module.id)[TOP_MODULES - 1];
   return last === undefined || fit > last.fit || (fit === last.fit && compareIds(module.id, last.moduleId) < 0);
 }
@@ -381,7 +387,19 @@ function rivalsFor(student: StudentProfile, module: Module, ctx: InsightContext)
     .flatMap((leader) => ctx.modules.filter((m) => m.id === leader.moduleId));
 }
 
-/** The style dimension where this module falls furthest behind the group's higher-ranked modules. */
+/**
+ * Fit points one unit of penalty on one style question costs this student: styleFit averages penalties over
+ * the K questions they answered, and combineFit weighs style against the components that apply to them.
+ */
+function pointsPerStylePenalty(student: StudentProfile, weights: Weights): number {
+  const answered = STYLE_SLOTS.filter((slot) => student.style[slot] !== null).length;
+  // goalAlignment is null, and its weight drops out, when the student has chosen no pathway.
+  const goalWeight = student.pathways.length > 0 ? weights.goal : 0;
+  const total = weights.interest + goalWeight + weights.style + weights.breadth;
+  return answered === 0 || total <= 0 ? 0 : (100 * weights.style) / total / answered;
+}
+
+/** The style dimension where this module falls furthest behind the group's higher-ranked modules, in fit points. */
 function styleGap(module: Module, group: readonly StudentProfile[], ctx: InsightContext): Gap {
   const scored = STYLE_SLOTS.map((slot) => {
     const field = DEMAND_FIELD[slot];
@@ -394,7 +412,7 @@ function styleGap(module: Module, group: readonly StudentProfile[], ctx: Insight
       if (value === null) continue;
       const rivals = rivalsFor(student, module, ctx);
       const rivalPenalty = mean(rivals.map((rival) => penalty(rival.demand[field], value)));
-      cost += penalty(module.demand[field], value) - rivalPenalty;
+      cost += pointsPerStylePenalty(student, ctx.weights) * (penalty(module.demand[field], value) - rivalPenalty);
       signed += module.demand[field] - value;
     }
     return { slot, cost, moduleHasMore: signed >= 0 };
@@ -524,7 +542,7 @@ export function alternatives(module: Module, ctx: InsightContext): { module: Mod
     .filter((m) => m.id !== module.id && m.type === module.type)
     .filter((m) => m.capacity === null || countShortlisted(m.id, ctx.shortlists) < m.capacity)
     .flatMap((m) => {
-      const able = takers.filter((student) => rankingFor(student, ctx).eligible?.has(m.id) ?? true);
+      const able = takers.filter((student) => rankingFor(student, ctx).available.has(m.id));
       return able.length < MIN_COHORT ? [] : [{ module: m, averageFit: Math.round(mean(fitsFor(m, able, ctx.weights, ctx.homeTopics))) }];
     })
     .sort((a, b) => b.averageFit - a.averageFit || compareIds(a.module.id, b.module.id))

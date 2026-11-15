@@ -41,10 +41,10 @@ export const canEditTags = (insight: Pick<Insight, 'kind' | 'upliftPoints' | 'de
 
 /**
  * Why a module has no cards. The engine always writes a counterfactual card (or, over capacity, a demand
- * card) once MIN_COHORT students are interested but unconvinced, so an empty list means every group behind
- * a possible card is under MIN_COHORT.
+ * card) once MIN_COHORT students are interested but unconvinced, so an empty list means that group is under
+ * MIN_COHORT. The other kinds have thresholds of their own, so the text claims only that none applies.
  */
 export const NO_INSIGHTS = {
-  title: `Fewer than ${MIN_COHORT} students in any group`,
-  body: `Every card needs at least ${MIN_COHORT} students behind it, to keep individuals unidentifiable. Fewer than ${MIN_COHORT} students are interested in this module's topics but not yet convinced by it, and no demand or timetable clash involves ${MIN_COHORT} or more.`,
+  title: `Fewer than ${MIN_COHORT} interested students in the group`,
+  body: `Suggestions need at least ${MIN_COHORT} students who are interested in this module's topics but not yet convinced by it, to keep individuals unidentifiable, and fewer than ${MIN_COHORT} are. No demand, overlooked-module or timetable clash card applies either.`,
 } as const;
