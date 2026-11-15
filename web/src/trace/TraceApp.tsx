@@ -8,6 +8,7 @@ import { CountUp } from '../components/CountUp.tsx';
 import { cx } from '../components/cx.ts';
 import { Icon, type IconName } from '../components/Icon.tsx';
 import { AgentFlowchart } from './AgentFlowchart.tsx';
+import { MiniFlow } from './MiniFlow.tsx';
 import { AgentRoster } from './AgentRoster.tsx';
 import { AGENTS, countWord } from './agents.ts';
 import { LiveEvalPanel } from './LiveEvalPanel.tsx';
@@ -162,11 +163,8 @@ function Intro() {
             record of what it did for a session.
           </p>
         </div>
-        <img
-          src="/images/hero-students-steps.jpg"
-          alt="Students talking on the steps outside a university building"
-          className="h-56 w-full object-cover md:h-full"
-        />
+        {/* A message's path through the system, not a photo: the landing page has its own hero (issue #135). */}
+        <MiniFlow className="border-t border-line bg-surface-2/50 px-4 py-6 sm:px-8 md:border-t-0 md:border-l" />
       </div>
       <ul className="grid gap-px border-t border-line bg-line sm:grid-cols-3">
         <Explainer icon="sparkle" title="The agents">
