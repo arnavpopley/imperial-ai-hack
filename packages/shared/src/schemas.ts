@@ -402,7 +402,8 @@ export const TimetableView = z.object({
   keepFree: z.array(KeepFreeWindow),
   keepFreeConflicts: z.array(KeepFreeConflict),
   /** ECTS in the plan: core modules, chosen electives and I-Explore, against the programme cap. */
-  ects: z.object({ core: z.number().min(0), elective: z.number().min(0), iExplore: z.number().min(0), max: z.number().min(0) }),
+  /** `max` is the programme's credit cap, or null when the rules for the student's year are not loaded (issue 51). */
+  ects: z.object({ core: z.number().min(0), elective: z.number().min(0), iExplore: z.number().min(0), max: z.number().min(0).nullable() }),
   rules: RulesResult,
 });
 

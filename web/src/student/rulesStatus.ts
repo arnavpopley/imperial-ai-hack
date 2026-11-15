@@ -20,3 +20,17 @@ export const NO_RULES_DETAIL = 'Rules not loaded yet';
 /** The hint under the year dropdown when the chosen year has no rules. */
 export const noRulesHint = (year: string) =>
   `ModuleMatch doesn't have the rules for Year ${year} yet, so it will rank modules but can't confirm which ones you can take.`;
+
+/**
+ * The timetable's credit labels. With no cap (the year's rules are not loaded) there is no target, so only the total
+ * is shown, rather than a made-up "of 60 ECTS" and "60 to go".
+ */
+export function ectsLabels(total: number, max: number | null): { of: string; remaining: string; over: boolean } {
+  if (max === null) return { of: 'ECTS planned', remaining: 'No credit target for your year yet', over: false };
+  const over = total > max;
+  return {
+    of: `of ${max} ECTS`,
+    remaining: over ? `${total - max} over` : total === max ? 'Full' : `${max - total} to go`,
+    over,
+  };
+}

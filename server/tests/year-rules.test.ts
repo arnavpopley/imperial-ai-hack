@@ -55,6 +55,14 @@ describe('years without rules data', () => {
     expect(after).toMatchObject({ eligible: true, exception: 'approved' });
   });
 
+  it('the timetable invents no credit cap for a year without rules', async () => {
+    const view = S.TimetableView.parse(await (await app.request(`/api/sessions/${await sessionFor(1)}/timetable`)).json());
+    expect(view.ects.max).toBeNull();
+    expect(view.rules.warnings.map((w) => w.code)).toContain('RULES_NOT_LOADED');
+    const year3 = S.TimetableView.parse(await (await app.request(`/api/sessions/${await sessionFor(3)}/timetable`)).json());
+    expect(year3.ects.max).toBe(60);
+  });
+
   it('GET /programmes says which years have rules', async () => {
     const info = S.ProgrammeInfo.array().parse(await (await app.request('/api/programmes')).json());
     const years = info.find((p) => p.programme === PROGRAMME)!.years;
