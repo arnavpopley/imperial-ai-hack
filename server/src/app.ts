@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { isLive } from './agents/llm.ts';
 import { cors } from 'hono/cors';
 import { benchmarkRoutes } from './routes/benchmark.ts';
 import { liveEvalRoutes } from './routes/live-results.ts';
@@ -10,7 +11,8 @@ import { studentRoutes } from './routes/student.ts';
 export function createApp() {
   const app = new Hono().basePath('/api');
   app.use('*', cors());
-  app.get('/health', (c) => c.json({ ok: true }));
+  // `live` tells the "How it works" page whether the agents call the models or use their templates (issue #115).
+  app.get('/health', (c) => c.json({ ok: true, live: isLive() }));
   app.route('/sessions', studentRoutes);
   app.route('/sessions', resultsRoutes);
   app.route('/staff', staffRoutes);

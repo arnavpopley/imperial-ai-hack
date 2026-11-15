@@ -9,11 +9,15 @@ import { AGENTS, AUDIENCES, JUDGE, TIERS, type Agent, type Tier } from './agents
 const EASE = [0.2, 0.8, 0.2, 1] as const;
 const byAudience = (id: Agent['audience']) => AGENTS.filter((a) => a.audience === id);
 
-export function AgentRoster({ seen }: { seen: ReadonlySet<string> }) {
+/**
+ * `live` says whether this server calls the models (from /api/health). Offline, every server agent answers from its
+ * deterministic template, so its card says so instead of naming a model it did not use (issue #115).
+ */
+export function AgentRoster({ seen, live }: { seen: ReadonlySet<string>; live?: boolean }) {
   return (
     <div className="grid gap-6">
       {AUDIENCES.filter((a) => a.id === 'student').map((a) => (
-        <Group key={a.id} label={a.label} agents={byAudience(a.id)} seen={seen} />
+        <Group key={a.id} label={a.label} agents={byAudience(a.id)} seen={seen} live={live} />
       ))}
       {/* Staff-facing and offline agents share a row, three cards wide like the student grid. */}
       <div className="grid gap-x-4 gap-y-6 lg:grid-cols-3">
@@ -21,17 +25,17 @@ export function AgentRoster({ seen }: { seen: ReadonlySet<string> }) {
           const agents = byAudience(a.id);
           return (
             <div key={a.id} className={cx(agents.length > 1 && 'lg:col-span-2')}>
-              <Group label={a.label} agents={agents} seen={seen} />
+              <Group label={a.label} agents={agents} seen={seen} live={live} />
             </div>
           );
         })}
       </div>
-      <TierLegend />
+      <TierLegend live={live} />
     </div>
   );
 }
 
-function Group({ label, agents, seen }: { label: string; agents: readonly Agent[]; seen: ReadonlySet<string> }) {
+function Group({ label, agents, seen, live }: { label: string; agents: readonly Agent[]; seen: ReadonlySet<string>; live?: boolean }) {
   return (
     <section aria-label={`${label} agents`} className="grid content-start gap-3">
       <h3 className="flex items-center gap-2 text-xs font-semibold tracking-[0.1em] text-muted uppercase">
@@ -40,15 +44,17 @@ function Group({ label, agents, seen }: { label: string; agents: readonly Agent[
       </h3>
       <ul className={cx('grid gap-4', agents.length > 2 ? 'sm:grid-cols-2 lg:grid-cols-3' : agents.length === 2 && 'sm:grid-cols-2')}>
         {agents.map((agent, i) => (
-          <AgentCard key={agent.id} agent={agent} index={i} used={seen.has(agent.id)} />
+          <AgentCard key={agent.id} agent={agent} index={i} used={seen.has(agent.id)} live={live} />
         ))}
       </ul>
     </section>
   );
 }
 
-function AgentCard({ agent, index, used }: { agent: Agent; index: number; used: boolean }) {
+function AgentCard({ agent, index, used, live }: { agent: Agent; index: number; used: boolean; live?: boolean }) {
   const tier = TIERS[agent.tier];
+  // The Module Analyst is a batch job, so its model ran whatever mode this server is in.
+  const template = live === false && agent.audience !== 'offline';
   return (
     <motion.li
       initial={{ opacity: 0, y: 20 }}
@@ -68,12 +74,22 @@ function AgentCard({ agent, index, used }: { agent: Agent; index: number; used: 
           <Badge agent={agent} size="md" />
           <div className="min-w-0 flex-1">
             <h4 className="truncate font-semibold tracking-tight">{agent.name}</h4>
-            <span className={cx('mt-0.5 inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold', tier.chip)}>{tier.model}</span>
+            {template ? (
+              <span
+                title={`Runs on ${tier.model} when the models are switched on`}
+                className="mt-0.5 inline-block rounded-full bg-surface-2 px-2 py-0.5 text-[11px] font-semibold text-muted ring-1 ring-line"
+              >
+                {agent.offlineLabel ?? 'Template (offline)'}
+                <span className="sr-only">; runs on {tier.model} when the models are switched on</span>
+              </span>
+            ) : (
+              <span className={cx('mt-0.5 inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold', tier.chip)}>{tier.model}</span>
+            )}
           </div>
           {used && (
             <span className="flex shrink-0 items-center gap-1 self-start rounded-full bg-fit-high/12 px-2 py-0.5 text-[11px] font-semibold text-fit-high">
               <span className="size-1.5 rounded-full bg-fit-high" />
-              Used
+              {template ? 'Used (template)' : 'Used'}
             </span>
           )}
         </div>
@@ -123,10 +139,15 @@ function Badge({ agent, size }: { agent: Agent; size: 'sm' | 'md' }) {
 }
 
 /** Which model each agent runs on, as rows of agent badges per tier. */
-function TierLegend() {
+function TierLegend({ live }: { live?: boolean }) {
   return (
     <section aria-label="Model tiers" className="grid content-start gap-3">
       <h3 className="text-xs font-semibold tracking-[0.1em] text-muted uppercase">Model tiers</h3>
+      {live === false && (
+        <p className="text-sm text-muted">
+          This server is offline: every agent answers from its template. These are the models it uses when they are on.
+        </p>
+      )}
       <ul className="grid gap-3 rounded-panel bg-surface p-card shadow-soft ring-1 ring-line">
         {(Object.keys(TIERS) as Tier[]).map((id) => {
           const tier = TIERS[id];

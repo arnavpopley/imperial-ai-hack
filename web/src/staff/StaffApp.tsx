@@ -7,15 +7,19 @@ import { ClockAlertIcon, GridIcon, InboxIcon, LockIcon, MessageIcon } from './co
 import { PrivacyNote } from './components/PrivacyNote.tsx';
 import { EmptyState } from './components/ui.tsx';
 import { focusRing } from './lib/format.ts';
-import { EscalationDetail } from './pages/EscalationDetail.tsx';
-import { EscalationPlaceholder, EscalationsPage } from './pages/EscalationsPage.tsx';
-import { ExamFeedbackPage } from './pages/ExamFeedbackPage.tsx';
-import { FeedbackPage } from './pages/FeedbackPage.tsx';
+import { Lazy, lazyNamed } from '../components/LazyRoute.tsx';
 import { ModuleDashboard } from './pages/ModuleDashboard.tsx';
 import { FirstModuleRedirect, ModuleLayout, ModulesPage } from './pages/ModulesPage.tsx';
-import { TagEditor } from './pages/TagEditor.tsx';
-import { TimetablePage } from './pages/TimetablePage.tsx';
 import { StaffDataProvider, useStaffData } from './StaffData.tsx';
+
+// The module dashboard is where the console opens; the other tabs, including the exam form editor, load when opened.
+const TagEditor = lazyNamed(() => import('./pages/TagEditor.tsx'), 'TagEditor');
+const ExamFeedbackPage = lazyNamed(() => import('./pages/ExamFeedbackPage.tsx'), 'ExamFeedbackPage');
+const TimetablePage = lazyNamed(() => import('./pages/TimetablePage.tsx'), 'TimetablePage');
+const EscalationsPage = lazyNamed(() => import('./pages/EscalationsPage.tsx'), 'EscalationsPage');
+const EscalationPlaceholder = lazyNamed(() => import('./pages/EscalationsPage.tsx'), 'EscalationPlaceholder');
+const EscalationDetail = lazyNamed(() => import('./pages/EscalationDetail.tsx'), 'EscalationDetail');
+const FeedbackPage = lazyNamed(() => import('./pages/FeedbackPage.tsx'), 'FeedbackPage');
 
 /** Fades each staff section in when the sub-navigation switches between them. */
 function StaffSection({ children }: { children: ReactNode }) {
@@ -40,7 +44,7 @@ export function StaffApp() {
         The app header is sticky (4rem). Every control in the console keeps 6rem clear above it when the browser
         scrolls it into view, by focus or scrollIntoView, so nothing interactive lands under the header.
       */}
-      <div className="grid grid-cols-1 gap-8 [&_:is(a,button,input,select,textarea,summary,[tabindex])]:scroll-mt-24">
+      <StaffLayout>
         <StaffHeader />
         <StaffSection>
         <Routes>
@@ -48,16 +52,16 @@ export function StaffApp() {
             <Route index element={<FirstModuleRedirect />} />
             <Route path="modules/:moduleId" element={<ModuleLayout />}>
               <Route index element={<ModuleDashboard />} />
-              <Route path="tags" element={<TagEditor />} />
-              <Route path="exam" element={<ExamFeedbackPage />} />
+              <Route path="tags" element={<Lazy><TagEditor /></Lazy>} />
+              <Route path="exam" element={<Lazy><ExamFeedbackPage /></Lazy>} />
             </Route>
           </Route>
-          <Route path="timetable" element={<TimetablePage />} />
-          <Route path="escalations" element={<EscalationsPage />}>
-            <Route index element={<EscalationPlaceholder />} />
-            <Route path=":escalationId" element={<EscalationDetail />} />
+          <Route path="timetable" element={<Lazy><TimetablePage /></Lazy>} />
+          <Route path="escalations" element={<Lazy><EscalationsPage /></Lazy>}>
+            <Route index element={<Lazy><EscalationPlaceholder /></Lazy>} />
+            <Route path=":escalationId" element={<Lazy><EscalationDetail /></Lazy>} />
           </Route>
-          <Route path="feedback" element={<FeedbackPage />} />
+          <Route path="feedback" element={<Lazy><FeedbackPage /></Lazy>} />
           <Route
             path="*"
             element={
@@ -66,9 +70,16 @@ export function StaffApp() {
           />
         </Routes>
         </StaffSection>
-      </div>
+      </StaffLayout>
     </StaffDataProvider>
   );
+}
+
+/** The console's column. Escalations uses tighter gaps so the request and its decision fit the first screen. */
+function StaffLayout({ children }: { children: ReactNode }) {
+  const { pathname } = useLocation();
+  const gap = sectionFor(pathname) === 'escalations' ? 'gap-4' : 'gap-8';
+  return <div className={`grid grid-cols-1 ${gap} [&_:is(a,button,input,select,textarea,summary,[tabindex])]:scroll-mt-24`}>{children}</div>;
 }
 
 const SECTIONS = [
@@ -93,8 +104,17 @@ function StaffHeader() {
   const { queue } = useStaffData();
   const current = sectionFor(pathname);
 
+  // On Escalations the request is the point of the page (demo step 6), so the hero shrinks to one line.
+  const slim = current === 'escalations';
+
   return (
-    <div className="grid gap-6">
+    <div className={slim ? 'grid gap-4' : 'grid gap-6'}>
+      {slim ? (
+        <header className="flex flex-wrap items-center justify-between gap-3 rounded-panel bg-slate-950 px-5 py-2 text-white shadow-soft">
+          <h1 className="text-lg font-semibold tracking-tight">Staff console</h1>
+          <PrivacyNote />
+        </header>
+      ) : (
       <header className="relative isolate overflow-hidden rounded-panel bg-slate-950 text-white shadow-lift">
         <img
           src="/images/staff-meeting.jpg"
@@ -113,6 +133,7 @@ function StaffHeader() {
           <PrivacyNote />
         </div>
       </header>
+      )}
       <nav aria-label="Staff sections" className="-mx-1 overflow-x-auto px-1 [scrollbar-width:none]">
         <ul className="flex w-max gap-1 rounded-full bg-surface-2 p-1 ring-1 ring-line">
           {SECTIONS.map(({ key, to, label, Icon }) => {

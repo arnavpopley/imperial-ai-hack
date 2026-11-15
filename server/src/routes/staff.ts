@@ -1,6 +1,7 @@
 // Staff routes (spec 13). Aggregate views only, with a minimum cohort of five (spec 20.4).
 import {
   DEFAULT_WEIGHTS,
+  FIT_BAND_FLOORS,
   MIN_COHORT,
   schemas,
   type CohortOffer,
@@ -20,7 +21,18 @@ import { wordInsight } from '../agents/insights.ts';
 import { clearSummaryCache } from '../agents/knowledge.ts';
 import { catalogue, clearExplanationCache, rulesForProfile, setMode, tracerSink } from '../agents/session.ts';
 import * as repo from '../db/repo.ts';
-import { buildInsights, checkProgrammeRules, clashPriorities, cohortStats, feedbackJsonl, storedDecisions, summariseFeedback, type InsightContext } from '../engines/index.ts';
+import {
+  buildInsights,
+  checkProgrammeRules,
+  clashPriorities,
+  cohortStats,
+  feedbackJsonl,
+  staffFitBands,
+  storedDecisions,
+  summariseFeedback,
+  withheld,
+  type InsightContext,
+} from '../engines/index.ts';
 import { createTracer, type Tracer } from '../trace/tracer.ts';
 import { body } from './validate.ts';
 
@@ -71,7 +83,29 @@ export const staffRoutes = new Hono()
       // Below the minimum cohort nothing is shown for the module (spec 20.4).
       if (!stats) return [];
       const offer = rules ? offerFor(m, rules) : undefined;
-      return [{ moduleId: m.id, code: m.code, title: m.title, type: m.type, capacity: m.capacity, ...stats, ...(offer && { offer }) }];
+      // Every count of one to four students is withheld here, before it leaves the API (spec 20.4): small fit
+      // bands are merged, a small shortlist count is null, and so is any share that would give such a count away.
+      const { bands, above } = staffFitBands(stats.fitHistogram, [FIT_BAND_FLOORS.good, FIT_BAND_FLOORS.strong]);
+      const share = (floor: number) => {
+        const count = above.get(floor);
+        return count === null || count === undefined ? null : count / stats.cohortSize;
+      };
+      return [
+        {
+          moduleId: m.id,
+          code: m.code,
+          title: m.title,
+          type: m.type,
+          capacity: m.capacity,
+          cohortSize: stats.cohortSize,
+          averageFit: stats.averageFit,
+          shortlisted: withheld(stats.shortlisted),
+          fitBands: bands,
+          goodFitShare: share(FIT_BAND_FLOORS.good),
+          strongFitShare: share(FIT_BAND_FLOORS.strong),
+          ...(offer && { offer }),
+        },
+      ];
     });
     return c.json(rows);
   })

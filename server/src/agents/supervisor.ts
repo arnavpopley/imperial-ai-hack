@@ -14,7 +14,7 @@ import { extract, mergeUpdates } from './extractor.ts';
 import { classifyIntent, isModuleQuestion, needsClarification, wantsToFinishInterview } from './intent.ts';
 import { answeredSteps, askNext, followUp, nextQuestion, pendingStep, reflect, studentTurn, unfilledSlots, whatIHeard, type PlanStep, type Widget } from './interviewer.ts';
 import { emitWords, type ChatMessage } from './llm.ts';
-import { alternativesTo, holdPosition } from './matcher.ts';
+import { alternativesTo, holdPosition, ruleClauses } from './matcher.ts';
 import { matchModules, MAX_SUGGESTIONS } from './module-match.ts';
 import { asksForGuarantee, guaranteeReply, NO_GUARANTEE } from './outcomes.ts';
 import { checkModuleEligibility, checkShortlist, hasFitSignal } from '../engines/index.ts';
@@ -171,8 +171,13 @@ async function ruleExceptionTurn(turn: Turn, moduleIds: string[]) {
     return;
   }
   const reasons = recs.find((r) => r.moduleId === target.id)!.ineligibleReasons;
-  const alternatives = alternativesTo(target, modules, recs, session.shortlist);
-  const guarded = keepEligible(alternatives.map((a) => a.moduleId), recs);
+  const violations = checkModuleEligibility(target.id, session.profile, modules, rulesForProfile(session.profile), session.exceptions);
+  // Issue 112: only alternatives that cover the same ground, with an open missing prerequisite first.
+  const alternatives = alternativesTo(target, modules, recs, session.shortlist, {
+    prerequisiteIds: violations.flatMap((v) => (v.code === 'PREREQUISITE_MISSING' && v.prerequisiteId ? [v.prerequisiteId] : [])),
+    fitSignal: hasFitSignal(session.profile),
+  });
+  const guarded = keepEligible(alternatives.open.map((a) => a.moduleId), recs);
   tracer.record({ actor: 'G7 rules', kind: 'guardrail', input: `alternatives to ${target.code}`, output: guarded.removed.length ? `${guarded.removed.length} ineligible removed` : 'all eligible', verdict: guarded.removed.length ? 'redact' : 'pass' });
   tracer.record({ actor: 'matcher', kind: 'tool', input: `check_rules([${target.code}])`, output: `violation: ${reasons.join(' ')}`, verdict: 'block' });
   await tracer.timed(
@@ -180,13 +185,19 @@ async function ruleExceptionTurn(turn: Turn, moduleIds: string[]) {
     () =>
       reply(turn, 'matcher', (onToken) =>
         holdPosition(
-          { module: target, reasons, alternatives: guarded.kept.map((id) => ({ title: moduleTitle(id), fit: recs.find((r) => r.moduleId === id)!.fit })) },
+          {
+            module: target,
+            clauses: ruleClauses(violations, target, session.profile.yearOfStudy, moduleTitle),
+            open: alternatives.open
+              .filter((a) => guarded.kept.includes(a.moduleId))
+              .map((a) => ({ title: moduleTitle(a.moduleId), fit: a.fit, prerequisite: a.prerequisite })),
+            shortlisted: alternatives.shortlisted.map(moduleTitle),
+          },
           onToken,
         ),
       ),
-    () => ({ output: 'held position, offered alternatives and escalation', verdict: 'block' }),
+    () => ({ output: `held position, ${guarded.kept.length} alternative(s) and escalation offered`, verdict: 'block' }),
   );
-  const violations = checkModuleEligibility(target.id, session.profile, modules, rulesForProfile(session.profile), session.exceptions);
   await offerDraft(turn, draftRuleException(session.profile, violations, turn.text, target));
 }
 

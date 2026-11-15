@@ -2,7 +2,7 @@
 // suggestion of a backup. The server picks it with the timetable swap checks (rules, clashes, kind, eligibility)
 // and leaves out anything near capacity itself. Adding keeps both; a swap is applied only after the student
 // confirms it (spec 10.6). Fit scores and ranking are never changed.
-import type { CapacityBackup } from '@modulematch/shared';
+import { CAPACITY_LABELS, type CapacityBackup } from '@modulematch/shared';
 import { useRef, useState } from 'react';
 import { Button } from '../../components/Button.tsx';
 import { cx } from '../../components/cx.ts';
@@ -62,7 +62,7 @@ export function CapacityBackupPanel({ backups, titleFor }: CapacityBackupPanelPr
         Keep a backup in mind
       </h2>
       <p className="mt-0.5 text-[12px] text-muted">
-        From the synthetic cohort’s shortlists. Popular modules can run out of places; your fit scores are unchanged.
+        From the synthetic cohort’s shortlists. Modules over or near capacity can run out of places; your fit scores are unchanged.
       </p>
       {stale && (
         <p role="status" className="mt-1 text-[12px] text-muted">
@@ -139,7 +139,7 @@ function BackupItem({
         {signal ? (
           <DemandChip signal={signal} className="mt-1 flex w-fit" />
         ) : (
-          <span className="text-muted"> is {backup.status === 'over' ? 'oversubscribed' : 'nearly full'}.</span>
+          <span className="text-muted"> is {CAPACITY_LABELS[backup.status].toLowerCase()}.</span>
         )}
       </p>
       <div className="mt-2 flex items-center gap-3">

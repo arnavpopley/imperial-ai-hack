@@ -1,6 +1,21 @@
 import taxonomyJson from '../../../data/taxonomy.json' with { type: 'json' };
 import { slotValueSchema } from './schemas.ts';
-import type { Confidence, Weights } from './types.ts';
+import type { Confidence, RuleViolation, Weights } from './types.ts';
+
+/**
+ * Plain names for the rules-engine codes (spec 9.1). The one map every screen uses, so no raw code such as
+ * NOT_ALLOWED is ever shown (issue 107).
+ */
+export const RULE_CODE_LABELS: Record<RuleViolation['code'], string> = {
+  PREREQUISITE_MISSING: 'Prerequisite not completed',
+  NOT_ALLOWED: 'Not open to the programme',
+  ECTS_CAP_EXCEEDED: 'Over the credit cap',
+  ELECTIVE_ECTS_SHORT: 'Elective credits short',
+  I_EXPLORE_MISSING: 'No I-Explore module',
+  UNKNOWN_MODULE: 'Not in the catalogue',
+  ABOVE_YEAR_LEVEL: 'Taught in a later year',
+  RULES_NOT_LOADED: "Year's rules not loaded",
+};
 
 /** Spec 8.5 default weights. The what-if sliders change these four numbers and nothing else. */
 export const DEFAULT_WEIGHTS: Weights = { interest: 0.45, goal: 0.25, style: 0.2, breadth: 0.1 };
@@ -28,6 +43,14 @@ export const MIN_COHORT = 5;
 export const NEAR_CAPACITY = 0.85;
 
 export type CapacityStatus = 'uncapped' | 'within' | 'near' | 'over';
+
+/** The words for each capacity state, the same on the student chip and the staff console (issue 111). */
+export const CAPACITY_LABELS: Record<CapacityStatus, string> = {
+  uncapped: 'No capacity limit',
+  within: 'Within capacity',
+  near: 'Near capacity',
+  over: 'Over capacity',
+};
 
 /** Demand against capacity: over above 100%, near from NEAR_CAPACITY, otherwise within. */
 export function capacityStatus(shortlisted: number, capacity: number | null): CapacityStatus {

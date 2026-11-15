@@ -553,7 +553,18 @@ export const STEPS = [
         page.type({ css: 'dialog[open] textarea' }, RULE_BREAK, { enter: true, desc: 'the advisor message box' }),
       );
       if (!/can.?t|cannot|not able|unable|isn.?t open|not open|won.?t/i.test(reply)) fail(`The advisor did not hold its position: "${reply.slice(0, 200)}"`);
-      if (!/similar|instead|alternative|you could|consider|you can take|options/i.test(reply)) fail(`The advisor offered no alternatives: "${reply.slice(0, 200)}"`);
+      // Issue 112: alternatives that cover the same ground, or a plain "nothing else" (live wording varies).
+      if (!/similar|instead|alternative|you could|consider|you can take|options|already on your shortlist|nothing else/i.test(reply)) {
+        fail(`The advisor said nothing about alternatives: "${reply.slice(0, 200)}"`);
+      }
+      if (/can.?t make (an )?exception/i.test(reply) && /drafted/i.test(reply)) fail(`The advisor contradicts itself about exceptions: "${reply.slice(0, 200)}"`);
+      if (!ctx.live) {
+        // The offline reply: the prerequisite comes first, no padding, and about 50 words.
+        if (!/Introduction to Nuclear Energy A \(its prerequisite\)/.test(reply)) fail(`The open prerequisite is not suggested: "${reply.slice(0, 200)}"`);
+        if (/Mathematics A/.test(reply)) fail(`An unrelated module is suggested: "${reply.slice(0, 200)}"`);
+        const count = reply.trim().split(/\s+/).length;
+        if (count > 60) fail(`The refusal runs to ${count} words`);
+      }
       ctx.note(`advisor: "${reply.slice(0, 120)}…"`);
       const send = { css: 'dialog[open] section[aria-label^="Escalation to the"] button[type="submit"]', text: 'Send to the' };
       await page.waitForElement(send, { desc: 'the drafted escalation', timeout: ctx.timeout });
@@ -599,9 +610,25 @@ export const STEPS = [
       await pathIs(staff, '/staff/escalations');
       const item = { css: 'a[href^="/staff/escalations/"]', text: 'Nuclear Reactor Physics' };
       await staff.waitForElement(item, { desc: 'the escalation in the queue', timeout: 15_000 });
+      // Issue 107: the queue title names the module and the kind of request.
+      const title = await staff.text({ css: 'section[aria-label="Queue"] a[href^="/staff/escalations/"] span.font-semibold' });
+      if (!/MECH70002 Nuclear Reactor Physics · Rule exception/.test(title)) fail(`The queue item is titled "${title}"`);
+      if (ctx.viewport !== 'phone') {
+        // On a desktop the newest open request opens by itself, with its decision on the first screen (demo step 6).
+        await pathIs(staff, { re: '^/staff/escalations/.+' });
+        await staff.waitForElement({ css: 'form button', text: 'Approve exception' }, { desc: 'the decision buttons' });
+        const fold = await staff.eval(() => {
+          const approve = [...document.querySelectorAll('form button')].find((b) => b.innerText.trim() === 'Approve exception');
+          return { bottom: approve?.getBoundingClientRect().bottom ?? Infinity, height: window.innerHeight, scrolled: window.scrollY };
+        });
+        if (fold.scrolled > 0 || fold.bottom > fold.height) fail(`Approve exception is below the fold (bottom ${Math.round(fold.bottom)} of ${fold.height})`);
+      }
       await ctx.checkpoint(staff, 'staff-queue');
       await staff.click(item);
       await pathIs(staff, { re: '^/staff/escalations/.+' });
+      // Issue 107: plain labels only, never a raw rule code.
+      const raw = await staff.eval(() => /\b(NOT_ALLOWED|PREREQUISITE_MISSING|ABOVE_YEAR_LEVEL|RULES_NOT_LOADED)\b/.exec(document.body.innerText)?.[0] ?? null);
+      if (raw) fail(`The staff screen shows the raw code ${raw}`);
       // The request as data: the broken rule, the student's reason, their fit and completed modules.
       for (const want of ['The request', 'Prerequisite not completed', RULE_REASON, 'Fit for the module', 'Completed modules']) {
         await staff.waitForElement({ css: 'article', text: want }, { desc: `"${want}" in the request details` });
