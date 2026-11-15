@@ -3,7 +3,7 @@
 import { motion } from 'motion/react';
 import type { ReactNode } from 'react';
 import { Link, Route, Routes, useLocation } from 'react-router';
-import { ClockAlertIcon, GridIcon, InboxIcon, LockIcon, MessageIcon } from './components/icons.tsx';
+import { ClockAlertIcon, GridIcon, InboxIcon, MessageIcon } from './components/icons.tsx';
 import { PrivacyNote } from './components/PrivacyNote.tsx';
 import { GlanceStats, PageHeader } from '../components/PageHeader.tsx';
 import { api } from '../api.ts';
@@ -111,13 +111,8 @@ function StaffHeader() {
   return (
     <div className="grid gap-3">
       <PageHeader
-        eyebrow={
-          <span className="inline-flex items-center gap-1.5">
-            <LockIcon className="size-4" /> No sign-in in this prototype
-          </span>
-        }
         title="Staff console"
-        subtitle="See what students want, fix timetable clashes early, and answer the questions the AI hands to you."
+        subtitle="What students want, clashes to fix, and questions the AI hands to you."
         label={<PrivacyNote />}
         glance={<ConsoleGlance unresolved={queue.unresolvedCount} />}
       />

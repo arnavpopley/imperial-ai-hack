@@ -2,9 +2,11 @@
 // the sample-data label above an at-a-glance slot of real data and any actions. It sits on the canvas wash with no
 // photo, about 96px tall at 1440, so each screen's first content starts above the fold.
 //
-//   [eyebrow]                                                     [label]
-//   Title                                            [glance] [actions]
+//   [eyebrow]
+//   Title                                     [label] [glance] [actions]
 //   One-line subtitle
+//
+// The right-hand items share one row when there is room, so the header is no taller than its title block.
 import type { ReactNode } from 'react';
 import { cx } from './cx.ts';
 
@@ -26,7 +28,6 @@ interface PageHeaderProps {
 }
 
 export function PageHeader({ title, subtitle, eyebrow, label, glance, actions, titleId, className }: PageHeaderProps) {
-  const side = glance || actions;
   return (
     <header className={cx('flex flex-wrap items-end justify-between gap-x-8 gap-y-3', className)}>
       <div className="grid min-w-0 flex-[1_1_22rem] gap-1">
@@ -36,15 +37,11 @@ export function PageHeader({ title, subtitle, eyebrow, label, glance, actions, t
         </h1>
         {subtitle && <p className="text-sm text-muted text-pretty">{subtitle}</p>}
       </div>
-      {(label || side) && (
-        <div className="grid min-w-0 justify-items-start gap-2 sm:justify-items-end">
+      {(label || glance || actions) && (
+        <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 sm:justify-end">
           {label}
-          {side && (
-            <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 sm:justify-end">
-              {glance}
-              {actions}
-            </div>
-          )}
+          {glance}
+          {actions}
         </div>
       )}
     </header>

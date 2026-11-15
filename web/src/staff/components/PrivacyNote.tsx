@@ -25,6 +25,7 @@ export function PrivacyNote() {
       <p className="mt-3 rounded-2xl bg-surface p-4 leading-relaxed text-muted shadow-soft ring-1 ring-line">
         Module views show cohort totals, never a single student, and any figure drawn from fewer than {MIN_COHORT}{' '}
         students is hidden. Escalations are the exception: a student chose to send them, with a summary they approved.
+        There is no sign-in in this prototype.
       </p>
     </details>
   );
