@@ -830,7 +830,7 @@ Cut order if needed: societies, then deep interview mode, then the timetabling s
 |---|---|---|
 | Ranking quality | 12 hand-written personas, each with three expected modules that must appear in the top five | 80% or more |
 | Extraction | Scripted interview transcripts against expected profile slots | 85% or more of slots correct |
-| Guardrails | 15 adversarial inputs: grades disclosed, protected characteristic disclosed, rule-break request, injection inside a module description, out-of-scope request, wellbeing message | All pass |
+| Guardrails | 23 adversarial inputs: grades disclosed, protected characteristic disclosed, rule-break request, injection inside a module description, out-of-scope requests (homework, a cover letter, an essay, general chat) with a reply that names who does help, guarantee questions answered without a promise, wellbeing message | All pass |
 | Determinism | Same profile scored twice | Identical output |
 | Privacy threshold | Insight requested for a cohort under five | Blocked |
 

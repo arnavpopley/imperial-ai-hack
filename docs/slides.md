@@ -143,7 +143,7 @@ Run the demo from [`demo-video.md`](demo-video.md) (shots 2 to 10), with a judge
 > ## We measure it
 >
 > **Offline** (`npm run eval`, no model calls)
-> Ranking: 10/12 personas · Extraction: 33/33 slots · Guardrails: 15/15 adversarial inputs · Determinism: 2/2 · Cohort under five: blocked
+> Ranking: 10/12 personas · Extraction: 33/33 slots · Guardrails: 23/23 adversarial inputs · Determinism: 2/2 · Cohort under five: blocked
 >
 > **Live models** (`npm run eval:live`)
 > Module facts: 11/12 exact · Declines what it can't know: 4/4 · Extraction: 33/33 · Subtle guardrail cases: 7/7 · Grounded explanations: 4/5 (Fable 5.1 judge)

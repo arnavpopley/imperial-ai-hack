@@ -16,6 +16,7 @@ import { answeredSteps, askNext, followUp, nextQuestion, pendingStep, reflect, s
 import { emitWords, type ChatMessage } from './llm.ts';
 import { alternativesTo, holdPosition } from './matcher.ts';
 import { matchModules, MAX_SUGGESTIONS } from './module-match.ts';
+import { asksForGuarantee, guaranteeReply, NO_GUARANTEE } from './outcomes.ts';
 import { checkModuleEligibility, checkShortlist, hasFitSignal } from '../engines/index.ts';
 import { applyShortlistEdit, catalogue, enterExplain, explanationFor, leaveExplain, moduleTitle, precomputeTopExplanations, ranked, rulesForProfile, saveProfile, setMode, syncPlanMode, timetableView, tracerSink } from './session.ts';
 import { describeTimetable, explainTimetable } from './timetabler.ts';
@@ -37,6 +38,8 @@ interface Turn {
   redacted: boolean;
   /** G3 stripped an instruction from this turn. */
   injected: boolean;
+  /** Said before whatever agent answers this turn, such as "no outcome is guaranteed" (issue #67). */
+  preface?: string;
 }
 
 function message(sessionId: string, role: Message['role'], content: string, agent: string | null): Message {
@@ -46,7 +49,11 @@ function message(sessionId: string, role: Message['role'], content: string, agen
 /** Streams an assistant reply, stores it, and closes the turn with an optional UI widget. */
 async function reply(turn: Turn, agent: string, write: (onToken: (t: string) => void) => Promise<string>, widget: Widget = null) {
   const pending: Promise<void>[] = [];
-  const text = await write((t) => pending.push(turn.emit({ type: 'token', text: t, agent })));
+  const onToken = (t: string) => pending.push(turn.emit({ type: 'token', text: t, agent }));
+  const preface = turn.preface ? `${turn.preface} ` : '';
+  turn.preface = undefined;
+  if (preface) emitWords(preface, onToken);
+  const text = preface + (await write(onToken));
   await Promise.all(pending);
   const msg = message(turn.session.id, 'assistant', text, agent);
   repo.addMessage(msg);
@@ -404,6 +411,16 @@ async function finishInterviewTurn(turn: Turn) {
   await turn.emit({ type: 'done', messageId: note.id, widget: null });
 }
 
+/** A guarantee question about one module: no promise, then its pathway relevance and fit (outcomes.ts). */
+async function guaranteeTurn(turn: Turn, moduleId: string, resume: PlanStep | null = null) {
+  const { session } = turn;
+  const module = catalogue.modules().find((m) => m.id === moduleId) ?? null;
+  const rec = ranked(session).find((r) => r.moduleId === moduleId) ?? null;
+  const answer = guaranteeReply(module, catalogue.pathways(), rec, hasFitSignal(session.profile));
+  turn.tracer.record({ actor: 'supervisor', kind: 'agent', input: `guarantee question about ${module?.code ?? moduleId}`, output: 'answered without a promise, from module data', verdict: null });
+  await say(turn, 'supervisor', resume ? `${answer}\n\nBack to the interview: ${resume.question}` : answer, resume?.widget ?? null);
+}
+
 // ---------- entry point ----------
 
 /** One turn at a time per session, so concurrent tabs cannot overwrite each other's profile changes. */
@@ -445,7 +462,11 @@ async function runTurn(sessionId: string, body: SendMessageBody, emit: Emit): Pr
   }
   // Mid-interview an off-topic turn uses up nothing: the redirect asks the unanswered question again.
   const pending = session.mode === 'INTERVIEW' ? pendingStep(session) : null;
-  if (guarded.action === 'redirect') return say(turn, 'supervisor', pending ? `${SCOPE_REDIRECT}\n\n${pending.question}` : SCOPE_REDIRECT, pending?.widget ?? null);
+  if (guarded.action === 'redirect') {
+    // G1's notice is specific to the request (a cover letter points to the Careers Service, issue #67).
+    const redirect = guarded.events.find((e) => e.stage === 'G1 scope')?.notice ?? SCOPE_REDIRECT;
+    return say(turn, 'supervisor', pending ? `${redirect}\n\n${pending.question}` : redirect, pending?.widget ?? null);
+  }
   if (session.mode === 'ONBOARD') await changeMode(turn, 'INTERVIEW', 'programme and year entered');
 
   const intent = await tracer.timed(
@@ -462,7 +483,13 @@ async function runTurn(sessionId: string, body: SendMessageBody, emit: Emit): Pr
     return offerDraft(turn, draftWellbeing(session.profile));
   }
   if (intent.intent === 'rule_exception_request') return ruleExceptionTurn(turn, intent.moduleIds);
+  // Spec 10.5: a question asking for a guaranteed job or grade is told plainly that none is promised. With a
+  // module named, the reply is what the module data says; otherwise the routed answer follows the statement.
+  const guarantee = !body.structured && asksForGuarantee(turn.text);
+  const named = intent.moduleIds[0] ?? null;
   if (session.mode === 'INTERVIEW' && !session.interview.finished) {
+    if (guarantee && named && isModuleQuestion(turn.text, intent.moduleIds)) return guaranteeTurn(turn, named, pending);
+    if (guarantee && isModuleQuestion(turn.text, intent.moduleIds)) turn.preface = NO_GUARANTEE;
     // Spec 10.1: intent first, deterministically. Only an answer goes to the interviewer and the extractor, so
     // a request to stop or a question about modules never becomes profile evidence or uses up a question.
     if (!body.structured && wantsToFinishInterview(turn.text)) return finishInterviewTurn(turn);
@@ -471,6 +498,8 @@ async function runTurn(sessionId: string, body: SendMessageBody, emit: Emit): Pr
   }
   if (session.mode === 'INTERVIEW' && !body.structured && wantsToFinishInterview(turn.text)) return finishInterviewTurn(turn);
   if (session.mode === 'INTERVIEW') return correctSummaryTurn(turn);
+  if (guarantee && named) return guaranteeTurn(turn, named);
+  if (guarantee) turn.preface = NO_GUARANTEE;
   if (needsClarification(intent)) {
     return say(turn, 'supervisor', 'Do you want me to explain a module, change what matters most to you, edit your shortlist, or check your timetable?');
   }
