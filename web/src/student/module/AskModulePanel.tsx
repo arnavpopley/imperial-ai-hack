@@ -114,7 +114,7 @@ export function AskModulePanel({ sessionId, moduleId, moduleTitle, className }: 
           <Icon name="chat" size={18} />
         </span>
         <div className="min-w-0">
-          <h2 id="ask-heading" className="text-sm font-semibold">
+          <h2 id="ask-heading" className="text-subheading">
             Ask about this module
           </h2>
           <p className="mt-0.5 text-2xs leading-snug text-muted">

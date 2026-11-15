@@ -222,7 +222,7 @@ export function ModuleDetailScreen() {
             className="rounded-[1.25rem] border border-line bg-surface p-5 shadow-soft sm:p-6"
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 id="why-heading" className="flex items-center gap-2 text-sm font-semibold">
+              <h2 id="why-heading" className="flex items-center gap-2 text-subheading">
                 <span className="grid size-7 place-items-center rounded-full bg-fit-high/12 text-fit-high" aria-hidden="true">
                   <Icon name="heart" size={14} />
                 </span>
@@ -339,7 +339,7 @@ export function ModuleDetailScreen() {
           {rec && scored && (
             <section aria-labelledby="sub-heading" className="rounded-card border border-line bg-surface p-5 shadow-soft">
               <div className="mb-3 flex items-center justify-between gap-2">
-                <h2 id="sub-heading" className="text-sm font-semibold">
+                <h2 id="sub-heading" className="text-subheading">
                   How the score breaks down
                 </h2>
                 <Provenance kind="code" />

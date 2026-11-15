@@ -36,7 +36,7 @@ export function FeedbackPreview({
         <p className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.08em] text-muted uppercase">
           <EyeIcon className="size-4" /> Student preview
         </p>
-        <h2 id={`${selectId}-heading`} className="text-lg font-semibold tracking-tight text-balance">
+        <h2 id={`${selectId}-heading`} className="text-heading text-balance">
           What a student who lost marks on {weakId} would see
         </h2>
         {draft.questions.length > 1 && (
