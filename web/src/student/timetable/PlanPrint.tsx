@@ -53,7 +53,7 @@ export function PlanPrint({ view, shortlist, fitOf, titleFor, codeFor, ectsOf, w
 
       <section className="mb-3">
         <h2 className="mb-1 text-[11pt] font-semibold">
-          Modules · {total} of {ects.max} ECTS ({ects.core} core, {ects.elective} electives, {ects.iExplore} I-Explore)
+          Modules · {ects.max === null ? total : `${total} of ${ects.max}`} ECTS ({ects.core} core, {ects.elective} electives, {ects.iExplore} I-Explore)
         </h2>
         <table className="w-full border-collapse text-left">
           <thead className="text-[9pt] text-[#555]">
@@ -97,7 +97,11 @@ export function PlanPrint({ view, shortlist, fitOf, titleFor, codeFor, ectsOf, w
         <h2 className="text-[11pt] font-semibold">Checks</h2>
         <p>
           Programme rules:{' '}
-          {view.rules.violations.length === 0 ? 'met' : view.rules.violations.map((v) => v.message).join(' ')}
+          {ects.max === null
+            ? 'not loaded for your year, so eligibility is not confirmed'
+            : view.rules.violations.length === 0
+              ? 'met'
+              : view.rules.violations.map((v) => v.message).join(' ')}
         </p>
         {view.rules.warnings.map((w) => (
           <p key={w.code}>{w.message}</p>
