@@ -1,4 +1,4 @@
-import type { ProfileEditBody } from '@modulematch/shared';
+import type { ProfileEditBody, SessionState } from '@modulematch/shared';
 import { useCallback, useState } from 'react';
 import { api } from '../../api.ts';
 import { errorMessage } from '../../components/StateViews.tsx';
@@ -11,18 +11,19 @@ export function useProfileActions() {
   const [error, setError] = useState<string | null>(null);
   const sessionId = session.id;
 
-  /** Resolves true when saved, false when the save failed (the error is then in `error`). */
+  /** Resolves to the saved session, or null when the save failed (the error is then in `error`). */
   const save = useCallback(
-    async (body: ProfileEditBody): Promise<boolean> => {
+    async (body: ProfileEditBody): Promise<SessionState | null> => {
       setSaving(true);
       setError(null);
       try {
-        replace(await api.editProfile(sessionId, body));
+        const saved = await api.editProfile(sessionId, body);
+        replace(saved);
         invalidateRecs();
-        return true;
+        return saved;
       } catch (err) {
         setError(errorMessage(err));
-        return false;
+        return null;
       } finally {
         setSaving(false);
       }

@@ -122,15 +122,16 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     [sessionId, update],
   );
 
-  // Staff replies also arrive as assistant messages (agent "staff") through the session poll.
-  // The transcript is otherwise local, so append only those, once each.
+  // Assistant messages saved outside a chat turn reach the transcript through the session: staff replies
+  // (session poll), and the question a resumed interview posts. Append each once. While a reply streams, only
+  // staff messages are taken, so the reply being streamed is never added twice.
   const { messages } = session;
   useEffect(() => {
-    const staff = messages.filter((m) => m.agent === STAFF_AGENT);
-    if (staff.length === 0) return;
+    const saved = messages.filter((m) => m.role === 'assistant' && (m.agent === STAFF_AGENT || !abortRef.current));
+    if (saved.length === 0) return;
     setTurns((list) => {
-      const known = new Set(list.map((t) => t.id));
-      const fresh = staff.filter((m) => !known.has(m.id));
+      const known = new Set(list.flatMap((t) => [t.id, t.messageId ?? '']));
+      const fresh = saved.filter((m) => !known.has(m.id));
       return fresh.length > 0 ? [...list, ...fresh.map(fromMessage)] : list;
     });
   }, [messages]);

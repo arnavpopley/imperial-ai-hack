@@ -12,7 +12,7 @@ import { answerCatalogueQuestion } from './catalogue.ts';
 import { draftComplaint, draftLowConfidence, draftRuleException, draftWellbeing } from './escalation.ts';
 import { extract, mergeUpdates } from './extractor.ts';
 import { classifyIntent, needsClarification } from './intent.ts';
-import { answeredSteps, askNext, nextQuestion, reflect, studentTurn, unfilledSlots, whatIHeard, type Widget } from './interviewer.ts';
+import { answeredSteps, askNext, followUp, nextQuestion, reflect, studentTurn, unfilledSlots, whatIHeard, type Widget } from './interviewer.ts';
 import { emitWords, type ChatMessage } from './llm.ts';
 import { alternativesTo, holdPosition } from './matcher.ts';
 import { matchModules, MAX_SUGGESTIONS } from './module-match.ts';
@@ -495,7 +495,9 @@ export function resumeInterview(session: SessionState): void {
   const more = hasFitSignal(session.profile) ? MORE_QUESTIONS : STARTER_QUESTIONS;
   const askedSteps = answeredSteps(session);
   const reopened = { ...session.interview, finished: false, confirmed: false, askedSteps, targetSlots: [], budget: session.interview.questionsAsked + more };
-  const next = nextQuestion({ ...session, interview: reopened }, askedSteps);
+  const planned = nextQuestion({ ...session, interview: reopened }, askedSteps);
+  // Saved messages carry no widget, so a slider question is asked as its text follow-up instead.
+  const next = planned?.step.widget ? followUp(planned.targetSlots[0]!) : planned;
   session.interview = next
     ? { ...reopened, questionsAsked: reopened.questionsAsked + 1, askedSteps: [...askedSteps, next.step.id], targetSlots: next.targetSlots }
     : reopened;

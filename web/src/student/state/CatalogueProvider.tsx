@@ -55,6 +55,9 @@ function order(a: Ordered, b: Ordered): number {
   return b.fit - a.fit || a.position - b.position;
 }
 
+/** The starter order (nothing to score yet) is the server's: style or breadth alone must not re-sort it. */
+const serverOrder = (a: Ordered, b: Ordered): number => a.position - b.position;
+
 /** 1-based ranks where equal fits in the same group share a rank (1, 2, 2, 4), so a tie never looks ranked. */
 export function sharedRanks(list: readonly Ordered[]): number[] {
   const ranks: number[] = [];
@@ -130,18 +133,20 @@ export function CatalogueProvider({ children }: { children: ReactNode }) {
 
   const ranked = useMemo(() => {
     const list = (recs.data?.recommendations ?? []).map((r, position) => ({ ...r, position }));
-    const baseline = list
-      .map((r) => ({ ...r, fit: combineFit(r.sub, DEFAULT_WEIGHTS) }))
-      .sort(order)
-      .map((r) => r.moduleId);
-    const live = list.map((r) => ({ ...r, fit: combineFit(r.sub, weights) })).sort(order);
+    const sort = recs.data?.ranking === 'starter' ? serverOrder : order;
+    const at = (w: Weights) => list.map((r) => ({ ...r, fit: combineFit(r.sub, w) })).sort(sort);
+    // Shift is measured in the shared ranks students see, so a tie never shows a move that did not happen.
+    const baseline = at(DEFAULT_WEIGHTS);
+    const baselineRanks = sharedRanks(baseline);
+    const baselineRank = new Map(baseline.map((r, index) => [r.moduleId, baselineRanks[index]!]));
+    const live = at(weights);
     const ranks = sharedRanks(live);
     return live.map(
       ({ position: _position, ...r }, index): RankedModule => ({
         ...r,
         module: moduleById.get(r.moduleId),
         rank: ranks[index]!,
-        rankShift: baseline.indexOf(r.moduleId) - index,
+        rankShift: (baselineRank.get(r.moduleId) ?? ranks[index]!) - ranks[index]!,
       }),
     );
   }, [recs.data, weights, moduleById]);

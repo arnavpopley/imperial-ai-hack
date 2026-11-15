@@ -2,8 +2,8 @@
 // eligibility (spec 8.7), filters and a shortlist toggle on each card.
 import { STARTER_QUESTIONS, type Module, type Term } from '@modulematch/shared';
 import { useState, type ReactNode } from 'react';
-import { useNavigate } from 'react-router';
-import { Button } from '../../components/Button.tsx';
+import { Link, useNavigate } from 'react-router';
+import { Button, buttonClass } from '../../components/Button.tsx';
 import { cx } from '../../components/cx.ts';
 import { Icon } from '../../components/Icon.tsx';
 import { MODULE_TYPE_LABELS } from '../../components/ModuleTypeChip.tsx';
@@ -21,6 +21,8 @@ import { TERM_LABELS, TERMS } from '../labels.ts';
 import { paths } from '../routes.ts';
 import { useAdvisor } from '../shell/StudentShell.tsx';
 import { useCatalogue } from '../state/CatalogueProvider.tsx';
+import { useReadySession } from '../state/SessionProvider.tsx';
+import { yourDataPath } from '../yourdata/paths.ts';
 
 type TypeFilter = 'all' | Module['type'];
 type TermFilter = 'all' | Term;
@@ -176,7 +178,11 @@ function RankedRow({ first, children }: { first: boolean; children: ReactNode })
  */
 function StarterNotice() {
   const navigate = useNavigate();
+  const { session } = useReadySession();
   const { save, saving, error } = useProfileActions();
+  // Spec 12: only RECOMMEND returns to the interview. Elsewhere (planning a timetable, say) the profile
+  // is edited in "Your data" instead.
+  const canResume = session.mode === 'RECOMMEND';
   return (
     <div role="status" className="animate-rise flex flex-wrap items-center gap-x-4 gap-y-3 rounded-card border border-fit-mid/35 bg-fit-mid/8 px-4 py-3">
       <Icon name="info" size={18} className="shrink-0 text-fit-mid" />
@@ -191,15 +197,21 @@ function StarterNotice() {
           </p>
         )}
       </div>
-      <Button
-        size="sm"
-        variant="primary"
-        icon="chat"
-        busy={saving}
-        onClick={() => void save({ resumeInterview: true }).then((saved) => saved && navigate(paths.interview))}
-      >
-        Answer {STARTER_QUESTIONS} quick questions
-      </Button>
+      {canResume ? (
+        <Button
+          size="sm"
+          variant="primary"
+          icon="chat"
+          busy={saving}
+          onClick={() => void save({ resumeInterview: true }).then((saved) => saved?.mode === 'INTERVIEW' && navigate(paths.interview))}
+        >
+          Answer {STARTER_QUESTIONS} quick questions
+        </Button>
+      ) : (
+        <Link to={yourDataPath} className={buttonClass('secondary', 'sm')}>
+          Add your interests
+        </Link>
+      )}
     </div>
   );
 }
