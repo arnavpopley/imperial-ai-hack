@@ -75,6 +75,8 @@ export function SocietiesSection() {
               id={detailId}
               society={selectedId ? byId.get(selectedId) : undefined}
               match={selectedId ? matchById.get(selectedId) : undefined}
+              listError={societies.error}
+              onRetry={societies.reload}
             />
           </div>
         )
@@ -114,20 +116,34 @@ function CloudLegend() {
   );
 }
 
-function SocietyDetail({ id, society, match }: { id: string; society: Society | undefined; match: SocietyMatch | undefined }) {
+interface SocietyDetailProps {
+  id: string;
+  society: Society | undefined;
+  match: SocietyMatch | undefined;
+  /** The society list failed to load: the match's fit and reason still show, with a way to retry the rest. */
+  listError: string | null;
+  onRetry: () => void;
+}
+
+/**
+ * The selected society: banner, fit, reason and Union link. Matches and the society list load separately, so a
+ * match still shows its fit and reason (named by id) when the list is missing.
+ */
+function SocietyDetail({ id, society, match, listError, onRetry }: SocietyDetailProps) {
   const reduce = useReducedMotion();
+  const shownId = society?.id ?? match?.societyId;
   return (
     <div id={id} aria-live="polite" className="min-h-[11rem] overflow-hidden rounded-2xl bg-surface-2 p-5">
       <AnimatePresence mode="wait" initial={false}>
-        {society ? (
+        {shownId ? (
           <motion.div
-            key={society.id}
+            key={shownId}
             initial={reduce ? false : { opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={reduce ? { opacity: 0, transition: { duration: 0 } } : { opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
           >
-            <SocietyBanner society={society} className="-mx-5 -mt-5 mb-4 h-24 rounded-t-2xl" />
+            {society && <SocietyBanner society={society} className="-mx-5 -mt-5 mb-4 h-24 rounded-t-2xl" />}
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 {match?.wildcard && (
@@ -136,21 +152,32 @@ function SocietyDetail({ id, society, match }: { id: string; society: Society | 
                     Wildcard
                   </span>
                 )}
-                <p className="font-semibold tracking-tight">{society.name}</p>
+                <p className="font-semibold tracking-tight">{society?.name ?? shownId}</p>
               </div>
               {match && <FitScore value={match.fit} variant="compact" className="text-sm" />}
             </div>
-            <p className="mt-2 text-[13px] leading-relaxed text-muted">{match?.reason ?? society.description}</p>
-            <a
-              href={society.sourceUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-3 inline-flex items-center gap-1 text-[13px] font-semibold text-brand underline-offset-2 hover:underline"
-            >
-              See it on the Union site
-              <Icon name="external" size={13} />
-              <span className="sr-only">(opens in a new tab)</span>
-            </a>
+            <p className="mt-2 text-[13px] leading-relaxed text-muted">{match?.reason ?? society?.description}</p>
+            {society ? (
+              <a
+                href={society.sourceUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-3 inline-flex items-center gap-1 text-[13px] font-semibold text-brand underline-offset-2 hover:underline"
+              >
+                See it on the Union site
+                <Icon name="external" size={13} />
+                <span className="sr-only">(opens in a new tab)</span>
+              </a>
+            ) : (
+              listError && (
+                <p role="alert" className="mt-3 text-[12px] text-muted">
+                  Society details did not load.{' '}
+                  <button type="button" onClick={onRetry} className="font-semibold text-brand underline-offset-2 hover:underline">
+                    Try again
+                  </button>
+                </p>
+              )
+            )}
           </motion.div>
         ) : (
           <motion.p key="empty" className="text-[13px] text-muted">
