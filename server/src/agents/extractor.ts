@@ -99,10 +99,17 @@ function styleCues(sentence: string, targetSlots: string[]): ExtractedUpdate[] {
   else if (/\bexams?\b/.test(s) && !/\b(coursework|projects?)\b/.test(s)) add('style.examPreference', DISLIKE.test(s) ? 0.15 : 0.85);
   else if (/\b(coursework|projects?|assignments?)\b/.test(s) && !/\bexams?\b/.test(s)) add('style.examPreference', DISLIKE.test(s) ? 0.8 : 0.2);
   // "More productive solo, though I can handle group work": a solo preference with a concession stays solo.
-  const solo = /\b(alone|solo|on my own|independent(ly)?|by myself|individual(ly)?)\b/.test(s);
-  const conceded = /\b(though|although|if (i have to|necessary|needed)|can handle|don'?t mind)\b/.test(s);
-  if (solo && (conceded || !/\b(team|group|together|collaborat\w*)\b/.test(s))) add('style.groupPreference', conceded ? 0.3 : 0.2);
-  else if (/\b(team|group|together|collaborat\w*)\b/.test(s)) add('style.groupPreference', DISLIKE.test(s) ? 0.2 : 0.8);
+  // The main clause says which they prefer; a concession after "though" only softens it, so "more productive solo,
+  // though I can handle group work" is solo and "I prefer group work though I can work alone" is team.
+  const SOLO = /\b(alone|solo|on my own|independent(ly)?|by myself|individual(ly)?)\b/;
+  const TEAM = /\b(team|group|together|collaborat\w*)\b/;
+  const [main = s, concession = ''] = s.split(/\b(?:though|although|but|if (?:i have to|necessary|needed))\b/);
+  const mainSolo = SOLO.test(main);
+  const mainTeam = TEAM.test(main);
+  if (mainSolo && !mainTeam) add('style.groupPreference', TEAM.test(concession) ? 0.3 : 0.2);
+  else if (mainTeam && !mainSolo) add('style.groupPreference', DISLIKE.test(main) ? 0.2 : SOLO.test(concession) ? 0.7 : 0.8);
+  else if (SOLO.test(s) && !TEAM.test(s)) add('style.groupPreference', 0.2);
+  else if (TEAM.test(s) && !SOLO.test(s)) add('style.groupPreference', DISLIKE.test(s) ? 0.2 : 0.8);
   // "Building robots" names a topic; it only reads as a hands-on preference when the question asked about it.
   const applied = asked('style.appliedPreference') ? /\b(hands-on|applied|practical|real[- ]world|build(ing)?|make things)\b/ : /\b(hands-on|practical|real[- ]world)\b/;
   if (applied.test(s)) add('style.appliedPreference', DISLIKE.test(s) ? 0.2 : 0.85);
@@ -240,6 +247,8 @@ export function grounded(text: string, updates: ExtractedUpdate[]): ExtractedUpd
   });
 }
 
+const NEGATION = /\b(not|no|never|nor|hardly|barely|without|least)\b|n't\b|n’t\b/i;
+
 /** The shortest stretch of `text` holding the quote's words in order (case-insensitive), or null. */
 function verbatimSpan(text: string, quote: string): string | null {
   const words = quote.toLowerCase().match(/[a-z0-9']+/g) ?? [];
@@ -247,13 +256,17 @@ function verbatimSpan(text: string, quote: string): string | null {
   const lower = text.toLowerCase();
   let start = -1;
   let at = 0;
+  let skipped = '';
   for (const word of words) {
     const m = new RegExp(`(^|[^a-z0-9'])${escape(word)}(?=$|[^a-z0-9'])`).exec(lower.slice(at));
     if (!m) return null;
     const found = at + m.index + m[1]!.length;
+    if (start >= 0) skipped += ` ${lower.slice(at, found)}`;
     if (start < 0) start = found;
     at = found + word.length;
   }
+  // Skipping a negation or a dislike would flip the meaning ("were not my favourite"), so such a quote is not repaired.
+  if (NEGATION.test(skipped) || DISLIKE.test(skipped)) return null;
   return text.slice(start, at);
 }
 
@@ -279,6 +292,8 @@ export async function extract(
   // The slider widget sends its values as text too ("Maths comfort: 70%. Coding comfort: 40%"). Those phrases are
   // already structured answers, so they are cut before reading the text, or "Maths" would become an interest.
   const typed = text.replace(SLIDER_PHRASE, ' ').replace(/^[\s.]+$/, '');
+  // Typed by hand (no slider values sent), the same phrases are read as the comfort values they state.
+  const typedComfort = structuredAnswers && Object.keys(structuredAnswers).length ? [] : comfortPhrases(text);
   const fromText = typed.trim()
     ? isLive()
       ? await extractLive(typed, targetSlots, pathwayIds).catch(() => {
@@ -287,7 +302,7 @@ export async function extract(
         })
       : extractByCues(typed, targetSlots, pathwayIds)
     : [];
-  return keepValid([...structuredUpdates(structuredAnswers, text || 'slider answer'), ...stated(typed, fromText, targetSlots)], pathwayIds);
+  return keepValid([...structuredUpdates(structuredAnswers, text || 'slider answer'), ...typedComfort, ...stated(typed, fromText, targetSlots)], pathwayIds);
 }
 
 // ---------- plausibility guards (found by the Adaption stress test, docs/adaption.md) ----------
@@ -338,6 +353,16 @@ export function plausible(u: ExtractedUpdate, text: string, targetSlots: string[
 
 /** Drops text-derived updates the student's words do not support. */
 export const stated = (text: string, updates: ExtractedUpdate[], targetSlots: string[]) => updates.filter((u) => plausible(u, text, targetSlots));
+
+/** "Maths comfort: 70%" typed as text, read as style.mathsComfort 0.7 (and the same for coding). */
+function comfortPhrases(text: string): ExtractedUpdate[] {
+  return [...text.matchAll(/\b(maths?|coding) comfort:\s*(\d{1,3})\s*%/gi)].flatMap((m) => {
+    const value = Number(m[2]) / 100;
+    if (value > 1) return [];
+    const slot = m[1]!.toLowerCase().startsWith('math') ? 'style.mathsComfort' : 'style.codingComfort';
+    return [{ slot, value, quote: m[0], confidence: 0.9 }];
+  });
+}
 
 /** Keeps only whitelisted updates whose value matches the slot, with pathways the catalogue has. */
 export const keepValid = (updates: ExtractedUpdate[], pathwayIds: string[]) =>

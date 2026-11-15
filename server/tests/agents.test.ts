@@ -67,6 +67,24 @@ describe('extractor', () => {
     expect(grounded(text, [u('the maths modules were my favourite')])).toEqual([u('the maths modules and the statistics course were my favourite')]);
     expect(grounded(text, [u('the maths modules')])).toEqual([u('the maths modules')]);
     expect(grounded(text, [u('I adore algebra')])).toEqual([]);
+    // A repair that would skip a negation flips the meaning, so it is refused.
+    expect(grounded('The CFD modules were not my favourite.', [u('the CFD modules were my favourite')])).toEqual([]);
+  });
+
+  it('lets the main clause decide the team preference', () => {
+    const group = (text: string) => extractByCues(text, ['style.groupPreference'], PATHWAYS).find((x) => x.slot === 'style.groupPreference')?.value;
+    expect(group('I prefer group work though I can work alone.')).toBe(0.7);
+    expect(group("I'm more productive solo, though I can handle group work if necessary.")).toBe(0.3);
+    expect(group('I work best on my own.')).toBe(0.2);
+    expect(group('Team work please, but a lighter workload this year.')).toBe(0.8);
+  });
+
+  it('reads typed comfort phrases when no slider values were sent', async () => {
+    const updates = await extract('Maths comfort: 70%. Coding comfort: 40%', ['style.mathsComfort', 'style.codingComfort'], PATHWAYS);
+    expect(updates.map((x) => [x.slot, x.value])).toEqual([
+      ['style.mathsComfort', 0.7],
+      ['style.codingComfort', 0.4],
+    ]);
   });
 
   it('drops slots the words do not state, whichever extractor produced them', () => {
