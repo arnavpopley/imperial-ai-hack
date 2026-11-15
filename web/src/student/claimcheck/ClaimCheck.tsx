@@ -15,6 +15,8 @@ interface ClaimCheckProps extends ClaimCheckInput {
   label?: string;
   /** Keeps the student's note across visits in this browser. Without one the note lasts until the page changes. */
   storageKey?: string;
+  /** A small icon button until opened, for a list of answers where the full bar would repeat (issue #113). */
+  compact?: boolean;
   className?: string;
 }
 
@@ -37,7 +39,7 @@ function writeNote(key: string | undefined, value: string): void {
   }
 }
 
-export function ClaimCheck({ label = 'Check this answer', storageKey, className, kind, text, sourceUrl, derivedBy }: ClaimCheckProps) {
+export function ClaimCheck({ label = 'Check this answer', storageKey, compact = false, className, kind, text, sourceUrl, derivedBy }: ClaimCheckProps) {
   const [open, setOpen] = useState(false);
   const [note, setNote] = useState(() => readNote(storageKey));
   const reduce = useReducedMotion();
@@ -53,6 +55,22 @@ export function ClaimCheck({ label = 'Check this answer', storageKey, className,
     setNote(value);
     writeNote(storageKey, value);
   };
+
+  if (compact && !open) {
+    return (
+      <button
+        id={buttonId}
+        type="button"
+        aria-expanded={false}
+        aria-label={label}
+        title={label}
+        onClick={() => setOpen(true)}
+        className={cx('grid size-7 place-items-center rounded-full border border-dashed border-line-strong text-brand transition-colors hover:bg-surface-2/60', className)}
+      >
+        <Icon name="search" size={13} />
+      </button>
+    );
+  }
 
   return (
     <div className={cx('rounded-xl border border-dashed border-line-strong', className)}>
