@@ -82,6 +82,8 @@ const quoteOf = (sentence: string) => sentence.trim().slice(0, 200);
 /** A negator a few words before an assessment option: "no exams", "not big exams", "without coursework". */
 const NEGATOR = String.raw`\b(?:no|not|never|without|fewer|less|avoid(?:ing)?|hate|dislike|don'?t (?:like|want))\s+(?:\w+\s+){0,2}`;
 const NOT_NEGATING = /\b(not (?:averse|against|opposed) to|no (?:problem|issue)s? with|nothing against|don'?t mind|not bad)\b/g;
+/** Words that answer the workload question only loosely, so an unsure phrase around them cancels them. */
+const VAGUE_WORKLOAD = /\b(moderate|medium|average|normal|standard|reasonable|manageable|fine|ok|okay|either|whatever|workloads?)\b/;
 const NEGATED_EXAM = new RegExp(`${NEGATOR}(?:exams?|tests?)\\b`);
 const NEGATED_COURSEWORK = new RegExp(`${NEGATOR}(?:coursework|projects?|assignments?|essays?|portfolios?)\\b`);
 
@@ -173,8 +175,9 @@ function styleCues(sentence: string, targetSlots: string[]): ExtractedUpdate[] {
   } else if (/\b(light|lighter|not too (much|heavy)|nothing too heavy)\b/.test(s)) add('style.workloadTolerance', 0.25);
   // "Moderate" answers the workload question; vaguer words ("normal", "fine") only count when the sentence names the
   // workload, because the team question also asks about working style ("Working alone is fine").
-  // An unsure answer ("I don't know what's normal") states no workload at all.
-  else if (UNSURE.test(s)) {
+  // An unsure answer about the workload ("I don't know what's normal") states none. Only the phrase that carries the
+  // workload word counts, so "not sure about group work, but a moderate workload is fine" still answers it.
+  else if (UNSURE.test(s.split(/[,;]|\b(?:but|and)\b/).find((part) => VAGUE_WORKLOAD.test(part)) ?? '')) {
     // No preference given.
   } else if (/\b(moderate|medium|average)\b/.test(s) && aboutWorkload) add('style.workloadTolerance', 0.5);
   else if ((namesWorkload || workloadOnly) && /\b(normal|standard|reasonable|manageable|fine|ok|okay|either|whatever)\b/.test(s)) add('style.workloadTolerance', 0.5);
