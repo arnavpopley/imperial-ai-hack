@@ -9,7 +9,7 @@ export type Tier = 'smart' | 'fast' | 'light';
 
 export interface Agent {
   /** Matches the trace actor, so the card lights up once the session has used the agent. */
-  id: UsedId | 'analyst';
+  id: UsedId | 'examDrafter' | 'analyst';
   name: string;
   icon: IconName;
   audience: Audience;
@@ -112,6 +112,30 @@ export const AGENTS: readonly Agent[] = [
     tone: 'text-module-3',
   },
   {
+    id: 'resultsReader',
+    name: 'Results reader',
+    icon: 'lock',
+    audience: 'student',
+    tier: 'fast',
+    tools: [],
+    does: 'Reads an uploaded transcript or mark sheet.',
+    never: 'reads your marks without your consent.',
+    gradient: 'from-module-8 to-mode-recommend',
+    tone: 'text-module-8',
+  },
+  {
+    id: 'examFeedback',
+    name: 'Exam feedback',
+    icon: 'mountain',
+    audience: 'student',
+    tier: 'smart',
+    tools: [],
+    does: 'Turns your marks into tailored revision advice.',
+    never: 'states a number your marks do not contain.',
+    gradient: 'from-module-4 to-module-6',
+    tone: 'text-module-4',
+  },
+  {
     id: 'insightsAgent',
     name: 'Insights',
     icon: 'chart',
@@ -122,6 +146,18 @@ export const AGENTS: readonly Agent[] = [
     never: 'changes a number from the engine.',
     gradient: 'from-module-6 to-mode-explain',
     tone: 'text-module-6',
+  },
+  {
+    id: 'examDrafter',
+    name: 'Exam form drafter',
+    icon: 'edit',
+    audience: 'staff',
+    tier: 'smart',
+    tools: [],
+    does: 'Drafts a feedback form from marking notes.',
+    never: 'reaches students before an examiner publishes it.',
+    gradient: 'from-module-1 to-module-4',
+    tone: 'text-module-1',
   },
   {
     id: 'analyst',
@@ -135,8 +171,6 @@ export const AGENTS: readonly Agent[] = [
     gradient: 'from-module-7 to-mode-onboard',
     tone: 'text-module-7',
   },
-  // Exam feedback agents (spec 23, PRs #70 and #71): add the drafter (staff, ai-draft) and the tailored feedback
-  // writer here, with their tiers, once they reach main.
 ];
 
 export const AUDIENCES: readonly { id: Audience; label: string }[] = [
