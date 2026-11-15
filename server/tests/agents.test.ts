@@ -81,6 +81,8 @@ describe('extractor', () => {
     expect(group('I hate group work, I prefer working alone.')).toBe(0.2);
     expect(group("I don't mind group work but I prefer working alone.")).toBe(0.3);
     expect(group("I'd rather not work alone.")).toBe(0.8);
+    expect(group('I hate having to do projects in a group.')).toBe(0.2);
+    expect(group('I hate working alone and prefer groups.')).toBe(0.8);
     expect(group('I prefer working in a team, and a heavy workload is fine.')).toBe(0.8);
   });
 
