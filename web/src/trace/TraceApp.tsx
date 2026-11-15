@@ -10,6 +10,7 @@ import { Icon, type IconName } from '../components/Icon.tsx';
 import { AgentFlowchart } from './AgentFlowchart.tsx';
 import { AgentRoster } from './AgentRoster.tsx';
 import { AGENTS, countWord } from './agents.ts';
+import { LiveEvalPanel } from './LiveEvalPanel.tsx';
 import { BenchmarkPanel } from './benchmark/BenchmarkPanel.tsx';
 import { nodesInTrace } from './flow.ts';
 
@@ -123,10 +124,11 @@ export function TraceApp() {
 
       <section aria-labelledby="eval-heading" className="grid gap-6">
         <SectionHeading id="eval-heading" eyebrow="Evaluation" title="How we test it">
-          A fixed set of test cases runs offline on every build. Each number is the share that passed; the target is
-          the bar it has to clear.
+          A fixed set of test cases runs offline on every build, and the real models were run against cases with known
+          answers. Each number is the share that passed; the tick marks the target.
         </SectionHeading>
         <EvalPanel />
+        <LiveEvalPanel />
         <BenchmarkPanel />
       </section>
 

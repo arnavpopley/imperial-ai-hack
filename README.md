@@ -59,7 +59,7 @@ Open http://localhost:5173. The database seeds itself from `data/` on first star
 |---|---|
 | `npm run dev` | API and web together, with reload |
 | `npm run seed` | Rebuilds the SQLite database from `data/` |
-| `npm test` | Unit, contract and agent tests, run offline (358 server tests and 132 web tests at the time of writing) |
+| `npm test` | Unit, contract and agent tests, run offline (414 server tests and 169 web tests at the time of writing) |
 | `npm run eval` | Offline evaluation harness: prints pass rates and stores them for the evaluation page |
 | `npm run eval:live` | Live evaluation against the real models (needs `ANTHROPIC_API_KEY`, about $1–2 a run) |
 | `npm run typecheck` | Type-checks every workspace |
@@ -131,7 +131,7 @@ The two ranking misses ("startup founder" and "data scientist") each get two of 
 
 ### Live evaluation
 
-`npm run eval:live` runs the real models (about $1–2 a run) against cases with known answers and writes `data/eval-live-latest.json`. Use it to measure prompt and data changes rather than judging them by feel. The "How it works" page shows the offline run only.
+`npm run eval:live` runs the real models (about $1–2 a run) against cases with known answers and writes `data/eval-live-latest.json`. Use it to measure prompt and data changes rather than judging them by feel. The committed run is served at `/api/eval/live` and shown on the "How it works" page as "With the live models", with its date, the models it measured and every miss; it is not re-run on a deploy.
 
 | Test | Method | Target | Latest |
 |---|---|---|---|

@@ -1,6 +1,12 @@
 {
   "id": "f5a2251d-bfc5-4cb7-ad6f-8818a7527962",
   "at": "2026-11-14T23:41:38.858Z",
+  "models": {
+    "smart": "claude-opus-5-5",
+    "fast": "claude-sonnet-5-5",
+    "light": "claude-haiku-4-5",
+    "judge": "claude-fable-5-1"
+  },
   "results": [
     {
       "name": "Live: module facts",

@@ -3,20 +3,21 @@
 // Usage: `npm run eval:live` (needs ANTHROPIC_API_KEY). Results go to data/eval-live-latest.json.
 // `npm run eval:live -- --hard-cases` runs only the extraction hard cases (about 20 Haiku calls, a few cents) and
 // prints them without overwriting the saved run.
-import { DEFAULT_WEIGHTS, schemas, type Evidence, type EvalResult, type EvalRun, type StudentProfile } from '@modulematch/shared';
+import { DEFAULT_WEIGHTS, schemas, type Evidence, type EvalResult, type StudentProfile } from '@modulematch/shared';
 import { randomUUID } from 'node:crypto';
 import { existsSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { z } from 'zod';
 import { extract, mergeUpdates } from '../server/src/agents/extractor.ts';
 import { answerModuleQuestion, moduleFacts } from '../server/src/agents/knowledge.ts';
-import { isLive, structured } from '../server/src/agents/llm.ts';
+import { isLive, modelId, structured } from '../server/src/agents/llm.ts';
 import { explain } from '../server/src/agents/matcher.ts';
 import { emptyProfile } from '../server/src/agents/session.ts';
 import { loadPathways, rawModule, rulesFor } from '../server/src/db/catalogue.ts';
 import { DATASET_FILES, dataPath, ModulesFile, readDataset, REPO_ROOT } from '../server/src/db/datasets.ts';
 import { rankModules } from '../server/src/engines/index.ts';
 import { runInputGuardrails } from '../server/src/guardrails/pipeline.ts';
+import type { LiveEvalRun } from '../server/src/routes/live-results.ts';
 import { createTracer } from '../server/src/trace/tracer.ts';
 import { EXTRACTION_TRANSCRIPTS, PERSONAS } from './eval-cases.ts';
 import { guardedText, HARD_CASES, scoreHardCase } from './eval-hard-cases.ts';
@@ -41,6 +42,8 @@ const titleOf = (id: string) => byId.get(id)?.title ?? id;
 const rules = rulesFor('MEng Mechanical Engineering', 3)!;
 const baseProfile = (): StudentProfile => emptyProfile({ programme: 'MEng Mechanical Engineering', yearOfStudy: 3, completedModuleIds: [], interviewDepth: 'quick' }, 'live-eval');
 const pct = (x: number) => `${Math.round(x * 100)}%`;
+/** The judge is the most capable model available (MODEL_JUDGE overrides), so it is stronger than the models it grades. */
+const JUDGE_MODEL = process.env.MODEL_JUDGE || 'claude-fable-5-1';
 /** Words that identify an assessment item, such as "exam", "project" or "labs" (generic words are ignored). */
 const itemWords = (description: string) =>
   description
@@ -201,10 +204,9 @@ async function moduleDetails(): Promise<EvalResult> {
 const Judgement = z.object({ pass: z.boolean(), reason: z.string() });
 
 async function judge(rubric: string, question: string, answer: string): Promise<{ pass: boolean; reason: string }> {
-  // The judge is the most capable model available (MODEL_JUDGE overrides), so it is stronger than the models it grades.
   const verdict = await structured(Judgement, {
     tier: 'smart',
-    model: process.env.MODEL_JUDGE || 'claude-fable-5-1',
+    model: JUDGE_MODEL,
     effort: 'low',
     system: `You grade one answer from a university module advisor against a rubric. Be strict. Reply with pass and a one-sentence reason.\nRubric: ${rubric}`,
     messages: [{ role: 'user', content: `Question: ${question}\nAnswer: ${answer}` }],
@@ -365,9 +367,11 @@ async function grounding(): Promise<EvalResult> {
 
 const started = Date.now();
 const hardCasesOnly = process.argv.includes('--hard-cases');
-const run: EvalRun = {
+// The models are recorded with the results, so the "How it works" page can say which models this run measured.
+const run: LiveEvalRun = {
   id: randomUUID(),
   at: new Date().toISOString(),
+  models: { smart: modelId('smart'), fast: modelId('fast'), light: modelId('light'), judge: JUDGE_MODEL },
   results: hardCasesOnly
     ? [await liveHardCases()]
     : [await moduleKnowledge(), await moduleDetails(), await honesty(), await liveExtraction(), await liveHardCases(), await liveGuardrails(), await grounding()],
