@@ -1,5 +1,5 @@
 // Editable copy of a module's derived fields, plus the diff and request body the tag editor saves.
-import type { DerivedEditBody, Module, ModuleDemand } from '@modulematch/shared';
+import type { DerivedEditBody, Module, ModuleDemand, SuggestedEdit } from '@modulematch/shared';
 
 export interface DerivedDraft {
   topics: Record<string, number>;
@@ -48,6 +48,14 @@ export function diffDraft(before: DerivedDraft, after: DerivedDraft): DraftDiff 
 }
 
 export const changeCount = (diff: DraftDiff) => Object.values(diff).reduce((n, list) => n + list.length, 0);
+
+/** The draft with one suggested edit applied (from an accepted insight); nothing is saved until staff save it. */
+export function applySuggestedEdit(draft: DerivedDraft, edit: SuggestedEdit | null): DerivedDraft {
+  if (!edit) return draft;
+  return edit.group === 'topics'
+    ? { ...draft, topics: { ...draft.topics, [edit.key]: edit.value } }
+    : { ...draft, demand: { ...draft.demand, [edit.key]: edit.value } };
+}
 
 /** Sends only the groups that changed; the PUT body is a partial update (spec 13). */
 export function editBody(draft: DerivedDraft, diff: DraftDiff): DerivedEditBody {

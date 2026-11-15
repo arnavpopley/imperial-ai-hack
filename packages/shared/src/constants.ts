@@ -70,6 +70,7 @@ export const PROFILE_SLOTS = [
   'pathways',
   'pathwaysSkipped',
   'timetablePrefs.avoidDays',
+  'timetablePrefs.avoidHalfDays',
   'timetablePrefs.earliestStart',
 ] as const;
 

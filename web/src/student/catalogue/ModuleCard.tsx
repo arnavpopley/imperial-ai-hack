@@ -41,6 +41,7 @@ export function ModuleCard({ item, lowConfidence, scored, shortlisted, pending, 
   const { module, eligible } = item;
   const title = module?.title ?? item.moduleId;
   const dimmed = lowConfidence || !eligible;
+  const { compulsory } = item;
   const { reduce, transition } = useMotionTokens();
   // From the student's own marks, when shared: a gentle note beside the score, never a change to it.
   const nudge = useNudge(item.moduleId);
@@ -108,6 +109,7 @@ export function ModuleCard({ item, lowConfidence, scored, shortlisted, pending, 
                 shortlisted={shortlisted}
                 pending={pending}
                 onToggle={onToggleShortlist}
+                compulsory={compulsory}
                 className="relative z-10 max-sm:hidden"
               />
             </div>
@@ -141,6 +143,7 @@ export function ModuleCard({ item, lowConfidence, scored, shortlisted, pending, 
               shortlisted={shortlisted}
               pending={pending}
               onToggle={onToggleShortlist}
+              compulsory={compulsory}
               className="relative z-10 mt-4 w-full sm:hidden"
             />
           </div>

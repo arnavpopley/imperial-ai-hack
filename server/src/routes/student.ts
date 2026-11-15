@@ -15,7 +15,7 @@ import * as repo from '../db/repo.ts';
 import { WELLBEING_NOTICE } from '../guardrails/g4-wellbeing.ts';
 import { runInputGuardrails } from '../guardrails/pipeline.ts';
 import { cleanForStorage } from '../guardrails/stored-text.ts';
-import { checkModuleEligibility, matchSocieties, pathwayProgress } from '../engines/index.ts';
+import { checkModuleEligibility, coreInPlan, matchSocieties, pathwayProgress } from '../engines/index.ts';
 import { createTracer } from '../trace/tracer.ts';
 import { forgetResults } from './results.ts';
 import { body } from './validate.ts';
@@ -40,6 +40,7 @@ function editEvidence(sessionId: string, edits: ProfileEditBody): Evidence[] {
     ...(edits.pathways ? [item('pathways', edits.pathways)] : []),
     ...(edits.pathwaysSkipped !== undefined ? [item('pathwaysSkipped', edits.pathwaysSkipped)] : []),
     ...(edits.timetablePrefs?.avoidDays ? [item('timetablePrefs.avoidDays', edits.timetablePrefs.avoidDays)] : []),
+    ...(edits.timetablePrefs?.avoidHalfDays ? [item('timetablePrefs.avoidHalfDays', edits.timetablePrefs.avoidHalfDays)] : []),
   ];
 }
 
@@ -215,7 +216,8 @@ export const studentRoutes = new Hono()
     if (session instanceof Response) return session;
     const pathway = catalogue.pathways().find((p) => p.id === c.req.param('pathwayId'));
     if (!pathway) return c.json({ error: 'pathway not found' }, 404);
-    return c.json(pathwayProgress(session.profile, pathway, catalogue.modules(), session.shortlist, ranked(session)));
+    const core = coreInPlan(rulesForProfile(session.profile), session.profile);
+    return c.json(pathwayProgress(session.profile, pathway, catalogue.modules(), session.shortlist, ranked(session), core));
   })
   .post('/:id/modules/:moduleId/ask', body(schemas.AskModuleBody), (c) => {
     // The module knowledge agent: answers from one module's record and public page, after the input guardrails.

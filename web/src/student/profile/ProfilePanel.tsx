@@ -10,6 +10,7 @@ import {
   DAY_LABELS,
   DAY_NAMES,
   formatEvidenceValue,
+  halfDayLabel,
   latestEvidence,
   percent,
   splitInterests,
@@ -44,9 +45,11 @@ export function ProfilePanel({ profile, evidence, highlightSlots, className }: P
   const { pathwayById } = useReferenceData();
   const { liked: interests, avoided } = splitInterests(profile.interests);
   const confidence = confidenceLabel(profile.completeness);
-  const { avoidDays, earliestStart } = profile.timetablePrefs;
+  const { avoidDays, earliestStart, avoidHalfDays = [] } = profile.timetablePrefs;
   const glow = (slot: string, ev: Evidence | undefined) => isFresh(ev) || (highlightSlots?.has(slot) ?? false);
-  const avoidDaysEv = latestEvidence(evidence, 'timetablePrefs.avoidDays');
+  const halfDaysEv = latestEvidence(evidence, 'timetablePrefs.avoidHalfDays');
+  const avoidDaysEv = latestEvidence(evidence, 'timetablePrefs.avoidDays') ?? halfDaysEv;
+  const halvesOf = (day: string) => avoidHalfDays.filter((h) => h.startsWith(day));
   const earliestStartEv = latestEvidence(evidence, 'timetablePrefs.earliestStart');
   const pathwaysEv = latestEvidence(evidence, 'pathways');
   const breadthEv = latestEvidence(evidence, 'breadthAppetite');
@@ -194,24 +197,36 @@ export function ProfilePanel({ profile, evidence, highlightSlots, className }: P
 
         <ProfileSection title="Keep free">
           <span className="grid gap-1">
-            <Quoted evidence={avoidDaysEv} glow={glow('timetablePrefs.avoidDays', avoidDaysEv)}>
+            <Quoted
+              evidence={avoidDaysEv}
+              glow={glow('timetablePrefs.avoidDays', avoidDaysEv) || glow('timetablePrefs.avoidHalfDays', halfDaysEv)}
+            >
               <span className="sr-only">
-                {avoidDays.length > 0
-                  ? `Days kept free: ${avoidDays.map((d) => DAY_NAMES[d]).join(', ')}`
+                {avoidDays.length + avoidHalfDays.length > 0
+                  ? `Kept free: ${[...avoidDays.map((d) => DAY_NAMES[d]), ...avoidHalfDays.map(halfDayLabel)].join(', ')}`
                   : 'No days kept free'}
               </span>
               <span className="flex gap-1.5 py-1" aria-hidden="true">
-                {WEEKDAYS.map((day) => (
-                  <span
-                    key={day}
-                    className={cx(
-                      'grid h-9 flex-1 place-items-center rounded-lg text-[12px] font-medium transition-colors',
-                      avoidDays.includes(day) ? 'bg-brand text-on-brand' : 'bg-surface-2 text-muted',
-                    )}
-                  >
-                    {DAY_LABELS[day]}
-                  </span>
-                ))}
+                {WEEKDAYS.map((day) => {
+                  // Both halves kept free read as the whole day.
+                  const halves = halvesOf(day);
+                  const whole = avoidDays.includes(day) || halves.length === 2;
+                  const half = whole ? undefined : halves[0];
+                  return (
+                    <span
+                      key={day}
+                      className={cx(
+                        'grid h-9 flex-1 place-items-center rounded-lg text-[12px] leading-none font-medium transition-colors',
+                        whole ? 'bg-brand text-on-brand' : half ? 'bg-brand/15 text-brand' : 'bg-surface-2 text-muted',
+                      )}
+                    >
+                      <span>
+                        {DAY_LABELS[day]}
+                        {half && <span className="block text-[10px] font-semibold">{half.endsWith('-am') ? 'AM' : 'PM'}</span>}
+                      </span>
+                    </span>
+                  );
+                })}
               </span>
             </Quoted>
             <Quoted evidence={earliestStartEv} glow={glow('timetablePrefs.earliestStart', earliestStartEv)}>

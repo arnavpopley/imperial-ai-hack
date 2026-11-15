@@ -1,9 +1,10 @@
 // "Here is what I heard" (spec 10.2): the interview ends with a visual summary the student confirms or edits.
+import type { Weekday } from '@modulematch/shared';
 import { motion, type Variants } from 'motion/react';
 import { useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { Button } from '../../components/Button.tsx';
-import { DAY_LABELS, DAY_NAMES, splitInterests, STYLE_KEYS, STYLE_META, styleValueText, topicLabel } from '../labels.ts';
+import { DAY_LABELS, DAY_NAMES, halfDayLabel, splitInterests, STYLE_KEYS, STYLE_META, styleValueText, topicLabel } from '../labels.ts';
 import { InterviewerAvatar } from '../interview/InterviewerAvatar.tsx';
 import { useInterviewer } from '../interview/personas.ts';
 import { ProfileEditor } from '../profile/ProfileEditor.tsx';
@@ -34,14 +35,15 @@ export function ConfirmProfileCard() {
     const value = profile.style[key];
     return value === null ? [] : [{ key, value }];
   });
-  const { avoidDays, earliestStart } = profile.timetablePrefs;
+  const { avoidDays, earliestStart, avoidHalfDays = [] } = profile.timetablePrefs;
   const empty =
     interests.length === 0 &&
     avoided.length === 0 &&
     profile.pathways.length === 0 &&
     styles.length === 0 &&
     profile.breadthAppetite === null &&
-    avoidDays.length === 0;
+    avoidDays.length === 0 &&
+    avoidHalfDays.length === 0;
 
   const confirm = async () => {
     if (await save({ confirm: true })) navigate(paths.catalogue);
@@ -162,7 +164,7 @@ export function ConfirmProfileCard() {
                   </motion.p>
                 </Group>
               )}
-              {(avoidDays.length > 0 || earliestStart) && (
+              {(avoidDays.length > 0 || avoidHalfDays.length > 0 || earliestStart) && (
                 <Group title="Keep free">
                   <ul className="flex flex-wrap gap-1.5">
                     {avoidDays.map((d) => (
@@ -173,6 +175,16 @@ export function ConfirmProfileCard() {
                         className="rounded-lg bg-brand px-2.5 py-1 text-[13px] font-medium text-on-brand"
                       >
                         {DAY_LABELS[d]}
+                      </motion.li>
+                    ))}
+                    {avoidHalfDays.map((h) => (
+                      <motion.li
+                        key={h}
+                        variants={ITEM}
+                        aria-label={halfDayLabel(h)}
+                        className="rounded-lg bg-brand/15 px-2.5 py-1 text-[13px] font-medium text-brand"
+                      >
+                        {DAY_LABELS[h.slice(0, 3) as Weekday]} {h.endsWith('-am') ? 'AM' : 'PM'}
                       </motion.li>
                     ))}
                     {earliestStart && (

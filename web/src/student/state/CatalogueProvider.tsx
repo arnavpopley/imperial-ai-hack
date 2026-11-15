@@ -27,6 +27,8 @@ export interface RankedModule extends Recommendation {
   rank: number;
   /** Positions gained (positive) or lost against the default weights. */
   rankShift: number;
+  /** A compulsory core module for this year: already in the student's plan, so not offered as an addition. */
+  compulsory: boolean;
 }
 
 interface CatalogueValue {
@@ -158,10 +160,13 @@ export function CatalogueProvider({ children }: { children: ReactNode }) {
     save(DEFAULT_WEIGHTS);
   }, [save]);
 
-  const ranked = useMemo(
-    () => (recs.data ? rankForView(recs.data, weights).map((r): RankedModule => ({ ...r, module: moduleById.get(r.moduleId) })) : []),
-    [recs.data, weights, moduleById],
-  );
+  const ranked = useMemo(() => {
+    if (!recs.data) return [];
+    const core = new Set(recs.data.coreModuleIds);
+    return rankForView(recs.data, weights).map(
+      (r): RankedModule => ({ ...r, module: moduleById.get(r.moduleId), compulsory: core.has(r.moduleId) }),
+    );
+  }, [recs.data, weights, moduleById]);
 
   const byId = useMemo(() => new Map(ranked.map((r) => [r.moduleId, r])), [ranked]);
 
