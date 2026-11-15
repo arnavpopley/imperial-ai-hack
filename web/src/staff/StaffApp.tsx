@@ -114,6 +114,7 @@ function StaffHeader() {
         title="Staff console"
         subtitle="What students want, clashes to fix, and questions the AI hands to you."
         label={<PrivacyNote />}
+        labelInline
         glance={<ConsoleGlance unresolved={queue.unresolvedCount} />}
       />
       <nav aria-label="Staff sections" className="-mx-1 overflow-x-auto px-1 [scrollbar-width:none]">

@@ -2,11 +2,11 @@
 // the sample-data label above an at-a-glance slot of real data and any actions. It sits on the canvas wash with no
 // photo, about 96px tall at 1440, so each screen's first content starts above the fold.
 //
-//   [eyebrow]
-//   Title                                     [label] [glance] [actions]
+//   [eyebrow]                                                     [label]
+//   Title                                            [glance] [actions]
 //   One-line subtitle
 //
-// The right-hand items share one row when there is room, so the header is no taller than its title block.
+// A short label (labelInline) shares the glance row instead, so the header is no taller than its title block.
 import type { ReactNode } from 'react';
 import { cx } from './cx.ts';
 
@@ -22,12 +22,14 @@ interface PageHeaderProps {
   glance?: ReactNode;
   /** Buttons or links for the page as a whole. */
   actions?: ReactNode;
+  /** Put the label in the glance row rather than above it; for a short label such as a pill. */
+  labelInline?: boolean;
   /** Id for the h1, when something else points at the title. */
   titleId?: string;
   className?: string;
 }
 
-export function PageHeader({ title, subtitle, eyebrow, label, glance, actions, titleId, className }: PageHeaderProps) {
+export function PageHeader({ title, subtitle, eyebrow, label, glance, actions, labelInline = false, titleId, className }: PageHeaderProps) {
   return (
     <header className={cx('flex flex-wrap items-end justify-between gap-x-8 gap-y-3', className)}>
       <div className="grid min-w-0 flex-[1_1_22rem] gap-1">
@@ -37,11 +39,21 @@ export function PageHeader({ title, subtitle, eyebrow, label, glance, actions, t
         </h1>
         {subtitle && <p className="text-sm text-muted text-pretty">{subtitle}</p>}
       </div>
-      {(label || glance || actions) && (
-        <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 sm:justify-end">
+      {labelInline || !(glance || actions) ? (
+        (label || glance || actions) && (
+          <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 sm:justify-end">
+            {label}
+            {glance}
+            {actions}
+          </div>
+        )
+      ) : (
+        <div className="grid min-w-0 justify-items-start gap-2 sm:justify-items-end">
           {label}
-          {glance}
-          {actions}
+          <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 sm:justify-end">
+            {glance}
+            {actions}
+          </div>
         </div>
       )}
     </header>
