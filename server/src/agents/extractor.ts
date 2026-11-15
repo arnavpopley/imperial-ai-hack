@@ -81,6 +81,7 @@ const quoteOf = (sentence: string) => sentence.trim().slice(0, 200);
 /** Words that make a sentence state a preference rather than just name a module, as in "the CFD coursework". */
 /** A negator a few words before an assessment option: "no exams", "not big exams", "without coursework". */
 const NEGATOR = String.raw`\b(?:no|not|never|without|fewer|less|avoid(?:ing)?|hate|dislike|don'?t (?:like|want))\s+(?:\w+\s+){0,2}`;
+const NOT_NEGATING = /\b(not (?:averse|against|opposed) to|no (?:problem|issue)s? with|nothing against|don'?t mind|not bad)\b/g;
 const NEGATED_EXAM = new RegExp(`${NEGATOR}(?:exams?|tests?)\\b`);
 const NEGATED_COURSEWORK = new RegExp(`${NEGATOR}(?:coursework|projects?|assignments?|essays?|portfolios?)\\b`);
 
@@ -137,8 +138,10 @@ function styleCues(sentence: string, targetSlots: string[]): ExtractedUpdate[] {
   // "I'd much rather do a portfolio": the option after "rather" is the preferred one.
   const rather = s.match(/\brather (?:do|have|take|sit)?\s*(?:an? |the )?(exams?|tests?|coursework|projects?|portfolios?|essays?)\b/);
   // "No exams please", "definitely not big exams", "exams, not coursework": a negated option is the one they do not want.
-  const examNo = NEGATED_EXAM.test(s);
-  const courseworkNo = NEGATED_COURSEWORK.test(s);
+  // "Not averse to exams" or "no problem with coursework" accepts the option, so those phrases are not negations.
+  const plain = s.replace(NOT_NEGATING, ' ok ');
+  const examNo = NEGATED_EXAM.test(plain);
+  const courseworkNo = NEGATED_COURSEWORK.test(plain);
   if (ranked?.[1]) add('style.examPreference', ranked[1].startsWith('exam') ? 0.85 : 0.2);
   else if (rather?.[1]) add('style.examPreference', /^(exam|test)/.test(rather[1]) ? 0.85 : 0.2);
   else if (examNo !== courseworkNo) add('style.examPreference', examNo ? 0.2 : 0.8);
@@ -158,12 +161,18 @@ function styleCues(sentence: string, targetSlots: string[]): ExtractedUpdate[] {
   const struggles = DISLIKE.test(s) || /\b(hard(er)?|difficult|challenging|struggle)\b/.test(s);
   if (struggles && /\b(derivations?|proofs?|heavy maths|maths-heavy|math-heavy|calculus|quantitative)\b/.test(s)) add('style.mathsComfort', 0.3);
   // Workload: heavy is fine (0.8), light or not too much (0.25), moderate or normal (0.5).
-  const aboutWorkload = asked('style.workloadTolerance') || /\b(workloads?|work ?load)\b/.test(s);
-  if (/\b(heavy|lots of|a lot of|hard) (work|workload)\b|\bdon'?t mind (hard )?work\b|\bheavy\b.{0,20}\b(is |are )?(fine|ok|okay|good)\b|\bcan (handle|take|cope with) (a lot|lots|plenty|a heavy)\b/.test(s)) {
+  const namesWorkload = /\b(workloads?|work ?load)\b/.test(s);
+  const aboutWorkload = asked('style.workloadTolerance') || namesWorkload;
+  // "Heavy isn't fine for me" rejects a heavy load.
+  const rejectsHeavy = /\bheavy\b.{0,25}\b(isn'?t|is not|not|aren'?t|never|too much)\b/.test(s);
+  if (rejectsHeavy) add('style.workloadTolerance', 0.25);
+  else if (/\b(heavy|lots of|a lot of|hard) (work|workload)\b|\bdon'?t mind (hard )?work\b|\bheavy\b.{0,20}\b(is |are )?(fine|ok|okay|good)\b|\bcan (handle|take|cope with) (a lot|lots|plenty|a heavy)\b/.test(s)) {
     add('style.workloadTolerance', 0.8);
   } else if (/\b(light|lighter|not too (much|heavy)|nothing too heavy)\b/.test(s)) add('style.workloadTolerance', 0.25);
-  else if (/\b(moderate|normal|average|medium|standard|reasonable|manageable)\b/.test(s) && aboutWorkload) add('style.workloadTolerance', 0.5);
-  else if (aboutWorkload && /\b(fine|ok|okay|either|whatever)\b/.test(s) && !/\b(heavy|light)\b/.test(s)) add('style.workloadTolerance', 0.5);
+  // "Moderate" answers the workload question; vaguer words ("normal", "fine") only count when the sentence names the
+  // workload, because the team question also asks about working style ("Working alone is fine").
+  else if (/\b(moderate|medium|average)\b/.test(s) && aboutWorkload) add('style.workloadTolerance', 0.5);
+  else if (namesWorkload && /\b(normal|standard|reasonable|manageable|fine|ok|okay|either|whatever)\b/.test(s)) add('style.workloadTolerance', 0.5);
   return out;
 }
 

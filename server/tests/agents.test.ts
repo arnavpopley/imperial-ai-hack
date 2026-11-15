@@ -82,6 +82,12 @@ describe('extractor', () => {
     expect(value('Heavy is fine, I can handle a lot.', 'style.workloadTolerance', team)).toBe(0.8);
     expect(value('Light, not too much.', 'style.workloadTolerance', team)).toBe(0.25);
     expect(value('Yes, maybe one module outside engineering.', 'breadthAppetite', ['breadthAppetite'])).toBe(0.7);
+    // Phrases where "not" accepts the option, a rejected heavy load, and a style-only answer to the two-part question.
+    expect(value("I'm not averse to exams.", 'style.examPreference', assessment)).not.toBe(0.2);
+    expect(value('No problem with coursework, honestly.', 'style.examPreference', assessment)).not.toBe(0.8);
+    expect(value("Heavy isn't fine for me.", 'style.workloadTolerance', team)).toBe(0.25);
+    expect(value('Working alone is fine.', 'style.workloadTolerance', team)).toBeUndefined();
+    expect(value('Moderate.', 'style.workloadTolerance', team)).toBe(0.5);
     // A sentence about assessment is never read as breadth, even when breadth is a target.
     expect(value('No exams please.', 'breadthAppetite', ['breadthAppetite'])).toBeUndefined();
   });

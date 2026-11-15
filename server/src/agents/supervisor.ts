@@ -456,14 +456,14 @@ export function resumeInterview(session: SessionState): void {
   session.interview = { ...session.interview, finished: false, confirmed: false, budget: session.interview.questionsAsked + RESUME_BUDGET };
   const found = nextQuestion(session, session.interview.askedSteps);
   // The question goes in as a stored message, which cannot carry a widget, so a slider step is asked as its text follow-up.
-  const next = found?.step.widget ? followUp(found.targetSlots[0]!) : found;
+  const gaps = unfilledSlots(session.profile, session.evidence);
+  const next = found?.step.widget ? followUp(found.targetSlots.find((slot) => gaps.includes(slot)) ?? found.targetSlots[0]!) : found;
   if (!next) {
     // Nothing left to ask: close the interview again so the card shows.
     session.interview = { ...session.interview, finished: true, targetSlots: [] };
     repo.updateSession(session.id, { interview: session.interview });
     return;
   }
-  const gaps = unfilledSlots(session.profile, session.evidence);
   tracer.record({ actor: 'interviewer', kind: 'agent', input: `gaps: ${gaps.join(', ') || 'none'}; budget ${RESUME_BUDGET}`, output: `asked ${next.step.id}`, verdict: null });
   repo.addMessage(message(session.id, 'assistant', next.step.question, 'interviewer'));
   session.interview = {

@@ -260,6 +260,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       if (controller.signal.aborted) return;
       replace(fresh);
       invalidateRecs();
+      // The old "Here is what I heard" card must not come back beside the new question.
+      setWidget(null);
       // The server stores the first question as the newest message.
       const question = fresh.messages.at(-1);
       if (question && question.role === 'assistant' && question.agent === 'interviewer') {
