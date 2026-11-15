@@ -7,7 +7,7 @@ Paste each section below into the matching Devpost field. Every claim can be che
 - [ ] The demo video link (see [`demo-video.md`](demo-video.md)).
 - [ ] The Figma file link and the before-and-after screenshots in [`figma/README.md`](figma/README.md).
 - [ ] The Adaption work: [`adaption.md`](adaption.md) was still in progress. If the Adaption run did not happen, delete the Adaption lines below.
-- [ ] The live evaluation numbers: they are the committed run of 14 November. If the `eval-live-refresh` run has merged, copy the new numbers from `data/eval-live-latest.json`. The offline numbers below match `data/eval-latest.json` of 15 November.
+- [ ] The evaluation numbers: offline from `data/eval-latest.json` (15 November) and live from `data/eval-live-latest.json` (15 November). If either is rerun before submitting, copy the new numbers.
 - [ ] Whether `ANTHROPIC_API_KEY` is set on the Vercel project. If not, the live site runs in offline mode, so say so next to the link.
 
 ---
@@ -73,7 +73,7 @@ Every Imperial student chooses modules from the same flat catalogue, where every
 
 - The full journey works end to end, live or offline: interview, ranked catalogue, explanations, what-ifs, timetable and swap, refusal, escalation, staff reply, module-lead insights and trace.
 - **Offline evaluation** (`data/eval-latest.json`): ranking quality 10 of 12 personas (target 80%); extraction 47 of 47; extraction hard cases 33 of 33; guardrails 23 of 23 adversarial inputs; determinism 2 of 2; insights for a cohort of four are blocked.
-- **Live evaluation** (`data/eval-live-latest.json`, run of 14 November; *update if the `eval-live-refresh` run merges*): module facts 11 of 12, with exact assessment weightings and prerequisite codes; questions the data cannot answer declined 4 of 4; live extraction 33 of 33 slots; subtle guardrail cases 7 of 7; grounded explanations 4 of 5, graded by a model judge.
+- **Live evaluation** (`data/eval-live-latest.json`, 15 November, judged by Fable 5.1): all 8 groups meet their target. Module facts 12 of 12, with exact assessment weightings and prerequisite codes; module details 14 of 14; questions the data cannot answer declined 4 of 4; live extraction 46 of 47; extraction hard cases 32 of 33; subtle guardrail cases 7 of 7; grounded explanations 5 of 5; interview routing 3 of 3.
 - 602 server tests and 294 web tests, run in CI on every pull request, including axe-core accessibility checks and a test that keeps every font size on the type scale and at 12px or more.
 - Route-level code splitting cut the first-load JavaScript from 1,022 kB to 552 kB.
 - The staff side is not an afterthought. Every insight waits for a person, every rule exception gets a human decision, no count of one to four students ever leaves the API, and staff can correct the AI's tags.

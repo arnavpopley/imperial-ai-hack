@@ -85,7 +85,7 @@ Open http://localhost:5173. The database seeds itself from `data/` on first star
 | `npm run seed` | Rebuilds the SQLite database from `data/` |
 | `npm test` | Unit, contract and agent tests, run offline (602 server tests and 294 web tests at the time of writing) |
 | `npm run eval` | Offline evaluation harness: prints pass rates and stores them for the evaluation page |
-| `npm run eval:live` | Live evaluation against the real models (needs `ANTHROPIC_API_KEY`, about $1–2 a run) |
+| `npm run eval:live` | Live evaluation against the real models (needs `ANTHROPIC_API_KEY`, about $1 a run) |
 | `npm run typecheck` | Type-checks every workspace |
 | `npm run build` | Builds the web app |
 | `npm run deploy:vercel` | Builds the Vercel bundle and deploys it to production (needs `vercel login`) |
@@ -149,8 +149,8 @@ No real student data is used. Grades typed in the chat are redacted and never st
 | Test | Method | Target | Latest |
 |---|---|---|---|
 | Ranking quality | 12 personas; all three expected modules must appear in the eligible top five | 80% | 10/12 (83%) |
-| Extraction | 4 scripted interviews (36 slots) and 11 phrasings from a regression issue | 85% | 47/47 |
-| Extraction hard cases | 22 reviewed disagreements from the Adaption stress test (33 checks) | 90% | 33/33 |
+| Extraction | 4 scripted interviews and the natural answers from #55, 47 expected slots | 85% | 47/47 |
+| Extraction (hard cases) | Reviewed disagreements from the Adaption stress test, 33 expected slots | 90% | 33/33 |
 | Guardrails | 23 adversarial inputs | 100% | 23/23 |
 | Determinism | Same profile ranked twice, with the input order reversed | 100% | 2/2 |
 | Privacy threshold | Insights requested for a cohort of four | Blocked | Blocked |
@@ -159,19 +159,20 @@ The two ranking misses ("startup founder" and "data scientist") each get two of 
 
 ### Live evaluation
 
-> **Live numbers pending.** The table below is the committed run of 14 November 2026. A refresh (`eval-live-refresh`) had not merged when this was written; update the table and the misses line from `data/eval-live-latest.json` when it does.
-
-`npm run eval:live` runs the real models (about $1–2 a run) against cases with known answers and writes `data/eval-live-latest.json`. `npm run eval:live -- --hard-cases` runs only the extraction hard cases and does not overwrite the saved run. Use it to measure prompt and data changes rather than judging them by feel. The committed run is served at `/api/eval/live` and shown on the "How it works" page as "With the live models", with its date, the models it measured and every miss; it is not re-run on a deploy.
+`npm run eval:live` runs the real models (about $1 a run) against cases with known answers and writes `data/eval-live-latest.json`. `npm run eval:live -- --hard-cases` runs only the extraction hard cases and does not overwrite the saved run. Use it to measure prompt and data changes rather than judging them by feel. The committed run is served at `/api/eval/live` and shown on the "How it works" page as "With the live models", with its date, the models it measured and every miss; it is not re-run on a deploy.
 
 | Test | Method | Target | Latest |
 |---|---|---|---|
-| Module facts | 12 questions generated from published data; answers must quote the exact assessment weightings and prerequisite codes | 90% | 11/12 |
+| Module facts | 12 questions generated from published data; answers must quote the exact assessment weightings and prerequisite codes | 90% | 12/12 |
+| Module details | 14 questions on published details: lecturers (no contact details), study hours, reading lists and requirements | 90% | 14/14 |
 | Declines unknowns | Questions the data cannot answer (lecturer, average mark, failure rate, job guarantee); graded by a model judge | 100% | 4/4 |
-| Live extraction | The 4 scripted interviews through the live extractor | 85% | 33/33 |
+| Live extraction | The offline extraction cases (47 slots) through the live extractor | 85% | 46/47 |
+| Live extraction (hard cases) | The 33 hard-case slots through the live extractor | 85% | 32/33 |
 | Live guardrails | 7 subtle cases for the model classifiers: indirect grade and health disclosures, injection without keywords, distress without keywords | 100% | 7/7 |
-| Grounded explanations | Explanations for 5 personas, graded by a model judge that sees everything the Matcher saw | 80% | 4/5 |
+| Grounded explanations | Explanations for 5 personas, graded by a model judge that sees everything the Matcher saw | 80% | 5/5 |
+| Interview routing | Three mid-interview turns through the real Supervisor: "skip the rest", a job-guarantee question and a catalogue question | 100% | 3/3 |
 
-Models: Opus 5.5 answers and explains, Sonnet 5.5 extracts, Haiku 4.5 runs the simple classifiers, and Fable 5.1 judges. The misses: one assessment answer said "a weighting of 1" instead of "100%", and the judge failed one explanation (Mathematics A) for over-interpreting the breadth sub-score and assuming "no coursework".
+Models: Opus 5.5 answers and explains, Sonnet 5.5 extracts, Haiku 4.5 runs the simple classifiers, and Fable 5.1 judges. The latest run (15 Nov) cost $0.98. The two misses are left visible: "Building robots and programming the electronics is what I love" was not read as an interest in programming, and "I work part-time on Tuesdays and Thursdays from noon until five" did not keep Tuesdays and Thursdays free.
 
 ## Known limits
 

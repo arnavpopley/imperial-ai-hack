@@ -1,6 +1,6 @@
 {
-  "id": "f5a2251d-bfc5-4cb7-ad6f-8818a7527962",
-  "at": "2026-11-14T23:41:38.858Z",
+  "id": "f96ca464-2b8b-4188-a3ef-610869fe4f71",
+  "at": "2026-11-15T05:03:35.882Z",
   "models": {
     "smart": "claude-opus-5-5",
     "fast": "claude-sonnet-5-5",
@@ -10,7 +10,7 @@
   "results": [
     {
       "name": "Live: module facts",
-      "passed": 11,
+      "passed": 12,
       "total": 12,
       "target": 0.9,
       "details": [
@@ -20,8 +20,7 @@
         },
         {
           "case": "MECH60002 assessment",
-          "pass": false,
-          "note": "missing 3 Hour exam 100%: Fracture Mechanics A (MECH60002) is assessed entirely by examination. The published assessment is a \"3 Hour exam\" with a weighting of 1, meaning it makes up the"
+          "pass": true
         },
         {
           "case": "MECH60004 assessment",
@@ -66,6 +65,70 @@
       ]
     },
     {
+      "name": "Live: module details",
+      "passed": 14,
+      "total": 14,
+      "target": 0.9,
+      "details": [
+        {
+          "case": "IEX-CLIMATE lecturer",
+          "pass": true
+        },
+        {
+          "case": "IEX-CROWDS lecturer",
+          "pass": true
+        },
+        {
+          "case": "IEX-INNOVATE lecturer",
+          "pass": true
+        },
+        {
+          "case": "IEX-CLIMATE study hours",
+          "pass": true
+        },
+        {
+          "case": "IEX-DECISIONS study hours",
+          "pass": true
+        },
+        {
+          "case": "MECH60001 reading list",
+          "pass": true
+        },
+        {
+          "case": "MECH60002 reading list",
+          "pass": true
+        },
+        {
+          "case": "MECH60006 reading list",
+          "pass": true
+        },
+        {
+          "case": "BUSI60038 background",
+          "pass": true
+        },
+        {
+          "case": "BUSI60038 exam week",
+          "pass": true
+        },
+        {
+          "case": "BUSI60043 exam week",
+          "pass": true
+        },
+        {
+          "case": "MECH60001 no lecturer published",
+          "pass": true
+        },
+        {
+          "case": "MECH60004 no reading list published",
+          "pass": true
+        },
+        {
+          "case": "MECH60001 no hours published",
+          "pass": true
+        }
+      ]
+    },
+    {
       "name": "Live: declines unknowns",
       "passed": 4,
       "total": 4,
@@ -74,29 +137,29 @@
         {
           "case": "MECH60007: Who teaches this module and what are their office hours?",
           "pass": true,
-          "note": "The answer clearly states the module record does not list the lecturer or office hours, invents no names or details, and sensibly directs the student to the module page and the department office."
+          "note": "The answer clearly states the module record doesn't name the teaching staff or office hours, invents no names or numbers beyond the recorded lecture/lab hours, and sensibly directs the student to the module page and department office/handbook."
         },
         {
           "case": "MECH60024: What was the average mark last year?",
           "pass": true,
-          "note": "The answer clearly states the module record lacks past mark data, invents nothing, and sensibly directs the student to the module page, module lead, or department office."
+          "note": "The answer clearly states the data doesn't include average marks, invents no figures (only cites the actual 40% pass mark and numeric grading from the record), and sensibly directs the student to the department or module page."
         },
         {
           "case": "IEX-ML: Will taking this guarantee me a job in AI?",
           "pass": true,
-          "note": "The answer clearly refuses to guarantee anything, invents no names, numbers or promises, and sensibly points the student to the Careers Service, the module lead and the module page."
+          "note": "The answer makes no guarantee, invents nothing (Josiah Wang is the module lead in the record), and sensibly points the student to the module page, careers service and module lead, though it could have stated more explicitly that the module record contains no employment outcome information."
         },
         {
           "case": "MECH60017: How many students failed it last year?",
           "pass": true,
-          "note": "The answer clearly states the record lacks pass/fail figures, invents no numbers or guarantees, and sensibly directs the student to the module page and department."
+          "note": "The answer clearly states the module record does not contain fail rates, invents no numbers or names, and sensibly directs the student to the department and module page."
         }
       ]
     },
     {
       "name": "Live: extraction",
-      "passed": 33,
-      "total": 33,
+      "passed": 46,
+      "total": 47,
       "target": 0.85,
       "details": [
         {
@@ -107,7 +170,7 @@
         {
           "case": "motorsport aerodynamicist: interest:computational-simulation",
           "pass": true,
-          "note": "expected 0.85, got 0.8"
+          "note": "expected 0.85, got 0.85"
         },
         {
           "case": "motorsport aerodynamicist: interest:thermodynamics-energy",
@@ -172,7 +235,7 @@
         {
           "case": "undecided theorist: style.appliedPreference",
           "pass": true,
-          "note": "expected 0.2, got 0.15"
+          "note": "expected 0.2, got 0.2"
         },
         {
           "case": "undecided theorist: style.groupPreference",
@@ -182,10 +245,25 @@
         {
           "case": "undecided theorist: breadthAppetite",
           "pass": true,
-          "note": "expected 0.15, got 0.15"
+          "note": "expected 0.15, got 0.1"
         },
         {
           "case": "undecided theorist: timetablePrefs.earliestStart",
+          "pass": true,
+          "note": "expected \"10:00\", got \"10:00\""
+        },
+        {
+          "case": "robotics founder: timetablePrefs.avoidDays",
+          "pass": true,
+          "note": "expected [], got []"
+        },
+        {
+          "case": "robotics founder: timetablePrefs.avoidHalfDays",
+          "pass": true,
+          "note": "expected [\"wed-pm\"], got [\"wed-pm\"]"
+        },
+        {
+          "case": "robotics founder: timetablePrefs.earliestStart",
           "pass": true,
           "note": "expected \"10:00\", got \"10:00\""
         },
@@ -196,8 +274,8 @@
         },
         {
           "case": "robotics founder: interest:programming-software",
-          "pass": true,
-          "note": "expected 0.85, got 0.5"
+          "pass": false,
+          "note": "expected 0.85, got null"
         },
         {
           "case": "robotics founder: interest:electronics-embedded",
@@ -237,7 +315,7 @@
         {
           "case": "robotics founder: interest:entrepreneurship-innovation",
           "pass": true,
-          "note": "expected 0.85, got 0.7"
+          "note": "expected 0.85, got 0.8"
         },
         {
           "case": "sustainability engineer: interest:sustainability-climate",
@@ -263,6 +341,234 @@
           "case": "sustainability engineer: style.examPreference",
           "pass": true,
           "note": "expected 0.5, got 0.5"
+        },
+        {
+          "case": "#55 no exams please: style.examPreference",
+          "pass": true,
+          "note": "expected 0.2, got 0.2"
+        },
+        {
+          "case": "#55 not big exams: style.examPreference",
+          "pass": true,
+          "note": "expected 0.2, got 0.2"
+        },
+        {
+          "case": "#55 exams, not coursework: style.examPreference",
+          "pass": true,
+          "note": "expected 0.8, got 0.85"
+        },
+        {
+          "case": "#55 moderate workload: style.workloadTolerance",
+          "pass": true,
+          "note": "expected 0.5, got 0.5"
+        },
+        {
+          "case": "#55 small team, moderate workload: style.groupPreference",
+          "pass": true,
+          "note": "expected 0.8, got 0.8"
+        },
+        {
+          "case": "#55 small team, moderate workload: style.workloadTolerance",
+          "pass": true,
+          "note": "expected 0.5, got 0.5"
+        },
+        {
+          "case": "#55 heavy is fine: style.workloadTolerance",
+          "pass": true,
+          "note": "expected 0.8, got 0.9"
+        },
+        {
+          "case": "#55 light workload: style.workloadTolerance",
+          "pass": true,
+          "note": "expected 0.25, got 0.3"
+        },
+        {
+          "case": "#55 explicit yes to breadth: breadthAppetite",
+          "pass": true,
+          "note": "expected 0.85, got 0.7"
+        },
+        {
+          "case": "#55 dislikes: interest:thermodynamics-energy",
+          "pass": true,
+          "note": "expected 0.1, got 0.2"
+        },
+        {
+          "case": "#55 dislikes: interest:finance-economics",
+          "pass": true,
+          "note": "expected 0.1, got 0.2"
+        }
+      ]
+    },
+    {
+      "name": "Live: extraction (hard cases)",
+      "passed": 32,
+      "total": 33,
+      "target": 0.85,
+      "details": [
+        {
+          "case": "ADHD clause, then an interest: interest:electronics-embedded",
+          "pass": true,
+          "note": "expected 0.8, got 0.7"
+        },
+        {
+          "case": "finances clause, then an interest: interest:sustainability-climate",
+          "pass": true,
+          "note": "expected 0.85, got 0.85"
+        },
+        {
+          "case": "interest, then a grade: interest:computational-simulation",
+          "pass": true,
+          "note": "expected 0.85, got 0.9"
+        },
+        {
+          "case": "interest, then a grade: no interest:thermodynamics-energy",
+          "pass": true,
+          "note": "expected nothing, got null"
+        },
+        {
+          "case": "health reasons, then an interest: interest:control-robotics",
+          "pass": true,
+          "note": "expected 0.85, got 0.9"
+        },
+        {
+          "case": "health reasons, then an interest: no style.workloadTolerance",
+          "pass": true,
+          "note": "expected nothing, got null"
+        },
+        {
+          "case": "coursework named as a topic: interest:fluid-mechanics",
+          "pass": true,
+          "note": "expected 0.85, got 0.8"
+        },
+        {
+          "case": "coursework named as a topic: no style.examPreference",
+          "pass": true,
+          "note": "expected nothing, got null"
+        },
+        {
+          "case": "coursework named as a topic: no style.appliedPreference",
+          "pass": true,
+          "note": "expected nothing, got null"
+        },
+        {
+          "case": "disliking theory means applied: interest:nuclear-energy",
+          "pass": true,
+          "note": "expected 0.1, got 0.1"
+        },
+        {
+          "case": "disliking theory means applied: style.appliedPreference",
+          "pass": true,
+          "note": "expected 0.8, got 0.8"
+        },
+        {
+          "case": "proofs are a slog: style.mathsComfort",
+          "pass": true,
+          "note": "expected 0.3, got 0.3"
+        },
+        {
+          "case": "calculus is harder: style.mathsComfort",
+          "pass": true,
+          "note": "expected 0.3, got 0.3"
+        },
+        {
+          "case": "slider text is not an interest: no interest:mathematics-modelling",
+          "pass": true,
+          "note": "expected nothing, got null"
+        },
+        {
+          "case": "slider text is not an interest: no interest:programming-software",
+          "pass": true,
+          "note": "expected nothing, got null"
+        },
+        {
+          "case": "writing syntax is not coding: no style.codingComfort",
+          "pass": true,
+          "note": "expected nothing, got null"
+        },
+        {
+          "case": "avoid 8am lectures: timetablePrefs.earliestStart",
+          "pass": true,
+          "note": "expected \"09:00\", got \"09:00\""
+        },
+        {
+          "case": "study routine is not a start time: no timetablePrefs.earliestStart",
+          "pass": true,
+          "note": "expected nothing, got null"
+        },
+        {
+          "case": "night owl: no timetablePrefs.earliestStart",
+          "pass": true,
+          "note": "expected nothing, got null"
+        },
+        {
+          "case": "part-time job days: timetablePrefs.avoidDays",
+          "pass": false,
+          "note": "expected [\"tue\",\"thu\"], got []"
+        },
+        {
+          "case": "part-time job days: no timetablePrefs.earliestStart",
+          "pass": true,
+          "note": "expected nothing, got null"
+        },
+        {
+          "case": "no Friday courses: timetablePrefs.avoidDays",
+          "pass": true,
+          "note": "expected [\"fri\"], got [\"fri\"]"
+        },
+        {
+          "case": "solo with a concession: style.groupPreference",
+          "pass": true,
+          "note": "expected 0.3, got 0.25"
+        },
+        {
+          "case": "solo with a concession: no style.workloadTolerance",
+          "pass": true,
+          "note": "expected nothing, got null"
+        },
+        {
+          "case": "rather a portfolio than tests: style.examPreference",
+          "pass": true,
+          "note": "expected 0.2, got 0.2"
+        },
+        {
+          "case": "unsure about workload: no style.workloadTolerance",
+          "pass": true,
+          "note": "expected nothing, got null"
+        },
+        {
+          "case": "torn between two careers: pathways",
+          "pass": true,
+          "note": "expected [\"research-academia\"], got [\"research-academia\"]"
+        },
+        {
+          "case": "torn between two careers: no pathwaysSkipped",
+          "pass": true,
+          "note": "expected nothing, got false"
+        },
+        {
+          "case": "a thesis topic is not a career: interest:sustainability-climate",
+          "pass": true,
+          "note": "expected 0.8, got 0.8"
+        },
+        {
+          "case": "a thesis topic is not a career: no pathways",
+          "pass": true,
+          "note": "expected nothing, got []"
+        },
+        {
+          "case": "behavioural economics: interest:finance-economics",
+          "pass": true,
+          "note": "expected 0.8, got 0.9"
+        },
+        {
+          "case": "maths modules: interest:mathematics-modelling",
+          "pass": true,
+          "note": "expected 0.85, got 0.85"
+        },
+        {
+          "case": "maths modules: interest:statistics-data",
+          "pass": true,
+          "note": "expected 0.85, got 0.85"
         }
       ]
     },
@@ -311,34 +617,57 @@
     },
     {
       "name": "Live: grounded explanations",
-      "passed": 4,
+      "passed": 5,
       "total": 5,
       "target": 0.8,
       "details": [
         {
           "case": "motorsport aerodynamicist: MECH60006",
           "pass": true,
-          "note": "Every reason and watch-out is grounded in the data (fluid-mechanics interest 0.95 with ev-0, pathway relevance 0.95, mathsIntensity 0.9 vs mathsComfort 0.8, applied 0.3 vs appliedPreference 0.8, low breadth, codingIntensity 0, examShare 1, listed prerequisites, eligible true); only the integer fit score 62 is quoted, no raw decimals appear, and nothing promises grades or jobs."
+          "note": "All claims trace to the data (interest quote ev-0, pathwayRelevance 0.95, mathsIntensity 0.9 vs mathsComfort 0.8, codingIntensity 0, applied 0.3 vs appliedPreference 0.8, examShare 1, prerequisites, low breadth), no raw internal decimals are quoted, and nothing promises grades or jobs."
         },
         {
           "case": "nuclear and energy engineer: MECH60004",
           "pass": true,
-          "note": "Every claim (nuclear core topic 0.95, moderate thermo 0.45, energy-transition relevance 0.9, moderate maths 0.5 vs comfort 0.7, exam-only assessment, low breadth, small sustainability share) is grounded in the data, no raw decimals are quoted, nothing is invented, and no grades or jobs are promised."
+          "note": "Every claim (nuclear 0.95 core topic, thermodynamics 0.45 meaningful, energy-transition relevance 0.9, maths 0.5 vs comfort 0.7, exam share 1, narrow breadth) is backed by the data, no raw decimals or sub-scores are quoted, nothing is invented, and no grades or jobs are promised."
         },
         {
           "case": "robotics builder: MECH60009",
           "pass": true,
-          "note": "Every reason is grounded in the data (interests, pathway relevance, applied/exam demand, breadth, group share, prerequisites, eligibility), the fit score of 72 is the integer provided rather than a raw decimal, no sub-scores like 0.95 or 0.08 are quoted, and nothing promises grades or jobs."
+          "note": "Every reason maps to the data (interest quotes ev-1/ev-2, pathwayRelevance 0.9, applied 0.95/examShare 0, breadth sub-score low, control-robotics topic 0.5, codingIntensity/workload, prerequisites, MATLAB in description), no raw decimals are quoted, nothing is invented, and no grades or jobs are promised."
         },
         {
           "case": "structural analyst: MECH60016",
-          "pass": false,
-          "note": "The answer invents unsupported claims: 'no coursework' and 'no continuous assessment' are not in the data (examShare=1 could mean weighting, and applied=0.1 suggests some non-exam element), and 'a fair preference for exams' and the maths-demand comparison are acceptable but the breadth watch-out ('adds little variety to your overall set of choices') interprets a sub-score beyond what the data supports, as no other module choices are provided."
+          "pass": true,
+          "note": "Every reason and watch-out maps to the data (topics, pathwayRelevance, demand vs. student style, breadth sub-score, prerequisites), no raw decimals are quoted, and nothing promises grades or jobs; the only unverifiable element is the moduleId metadata field, which is not a claim made to the student."
         },
         {
           "case": "startup founder: BUSI60041",
           "pass": true,
-          "note": "Every claim maps to the data (entrepreneurship 0.95 topic/interest, management 0.55, startup-founder relevance 1, examShare 0, group 0.6, applied 0.85, interest sub-score lowest, finance 0.5 moderate, communication 0.3 with no student rating), no raw decimals are quoted, and no grades or jobs are promised."
+          "note": "Every reason maps to the data (interest 0.95 top-rated, management 0.55 with team/vision in description, pathway relevance 1, examShare 0 vs exam preference 0.2, communication topic 0.3, finance 0.5, interest sub-score below goal sub-score), no raw decimals are quoted, and no grades or jobs are promised."
+        }
+      ]
+    },
+    {
+      "name": "Live: interview routing",
+      "passed": 3,
+      "total": 3,
+      "target": 1,
+      "details": [
+        {
+          "case": "skip the rest, show me my modules",
+          "pass": true,
+          "note": "mode RECOMMEND"
+        },
+        {
+          "case": "Will taking Mechatronics 3A get me a job at Boston Dynamics?",
+          "pass": true,
+          "note": "I can't promise a job or a grade: no module guarantees an outcome, and nothing here predicts one. From the module data, Mechatronics 3A is most relevant to thes"
+        },
+        {
+          "case": "Which modules use Python?",
+          "pass": true,
+          "note": "Two modules in the catalogue mention Python:\n\nMECH60017 Statistics A: you use R or Python to process, visualise, simulate and analyse data. It runs in spring, i"
         }
       ]
     }
