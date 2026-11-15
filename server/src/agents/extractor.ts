@@ -106,7 +106,12 @@ function styleCues(sentence: string, targetSlots: string[]): ExtractedUpdate[] {
   const [main = s, concession = ''] = s.split(/\b(?:though|although|but|if (?:i have to|necessary|needed))\b/);
   const mainSolo = SOLO.test(main);
   const mainTeam = TEAM.test(main);
-  if (mainSolo && !mainTeam) add('style.groupPreference', TEAM.test(concession) ? 0.3 : 0.2);
+  if (mainSolo && mainTeam) {
+    // Both named in one clause ("group work over working alone"): the first named is preferred, unless it is disliked
+    // ("I hate group work, I prefer working alone").
+    const teamFirst = (main.search(TEAM) < main.search(SOLO)) !== DISLIKE.test(main);
+    add('style.groupPreference', teamFirst ? 0.8 : 0.2);
+  } else if (mainSolo) add('style.groupPreference', TEAM.test(concession) ? 0.3 : 0.2);
   else if (mainTeam && !mainSolo) add('style.groupPreference', DISLIKE.test(main) ? 0.2 : SOLO.test(concession) ? 0.7 : 0.8);
   else if (SOLO.test(s) && !TEAM.test(s)) add('style.groupPreference', 0.2);
   else if (TEAM.test(s) && !SOLO.test(s)) add('style.groupPreference', DISLIKE.test(s) ? 0.2 : 0.8);
@@ -291,9 +296,14 @@ export async function extract(
 ): Promise<ExtractedUpdate[]> {
   // The slider widget sends its values as text too ("Maths comfort: 70%. Coding comfort: 40%"). Those phrases are
   // already structured answers, so they are cut before reading the text, or "Maths" would become an interest.
-  const typed = text.replace(SLIDER_PHRASE, ' ').replace(/^[\s.]+$/, '');
-  // Typed by hand (no slider values sent), the same phrases are read as the comfort values they state.
-  const typedComfort = structuredAnswers && Object.keys(structuredAnswers).length ? [] : comfortPhrases(text);
+  const sliders = Boolean(structuredAnswers && Object.keys(structuredAnswers).length);
+  const stripped = text.replace(SLIDER_PHRASE, ' ').replace(/^[\s.]+$/, '');
+  // The phrases are cut only when they are the slider's own text or the whole answer; inside a longer message ("Maths
+  // comfort: 70% is wrong") they stay, so the extractor can read the correction.
+  const standalone = stripped !== text && stripped.trim() === '';
+  const typed = sliders || standalone ? stripped : text;
+  // A standalone answer typed by hand, with no slider values sent, is read as the comfort values it states.
+  const typedComfort = !sliders && standalone ? comfortPhrases(text) : [];
   const fromText = typed.trim()
     ? isLive()
       ? await extractLive(typed, targetSlots, pathwayIds).catch(() => {

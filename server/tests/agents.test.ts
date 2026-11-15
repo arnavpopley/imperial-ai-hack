@@ -77,6 +77,8 @@ describe('extractor', () => {
     expect(group("I'm more productive solo, though I can handle group work if necessary.")).toBe(0.3);
     expect(group('I work best on my own.')).toBe(0.2);
     expect(group('Team work please, but a lighter workload this year.')).toBe(0.8);
+    expect(group('I prefer group work over working alone.')).toBe(0.8);
+    expect(group('I hate group work, I prefer working alone.')).toBe(0.2);
   });
 
   it('reads typed comfort phrases when no slider values were sent', async () => {
@@ -85,6 +87,9 @@ describe('extractor', () => {
       ['style.mathsComfort', 0.7],
       ['style.codingComfort', 0.4],
     ]);
+    // Inside a longer message the percentage may be a correction, so it is not saved as an answer.
+    const corrected = await extract('Maths comfort: 70% is wrong; please leave it unset.', ['style.mathsComfort'], PATHWAYS);
+    expect(corrected.filter((x) => x.slot === 'style.mathsComfort' && x.value === 0.7)).toEqual([]);
   });
 
   it('drops slots the words do not state, whichever extractor produced them', () => {
