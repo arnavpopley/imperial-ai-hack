@@ -1,10 +1,10 @@
-// Societies matched from the same profile: the top five plus one wildcard, as a revolving bubble cloud
-// with a detail panel, and as cards under a photo header.
+// Societies matched from the same profile: the top five plus one wildcard, as a revolving bubble cloud with a
+// detail panel under a photo header. The panel is the one place a society's fit, reason and link appear, so
+// nothing is shown twice (issue 117).
 import type { Society, SocietyMatch } from '@modulematch/shared';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useId, useState } from 'react';
 import { api } from '../../api.ts';
-import { cx } from '../../components/cx.ts';
 import { FitScore } from '../../components/FitScore.tsx';
 import { Icon } from '../../components/Icon.tsx';
 import { EmptyState, ErrorState, Skeleton } from '../../components/StateViews.tsx';
@@ -66,24 +66,17 @@ export function SocietiesSection() {
             Tell the advisor more about what you enjoy outside your course.
           </EmptyState>
         ) : (
-          <>
-            <div className="grid items-center gap-5 overflow-hidden rounded-[1.25rem] border border-line bg-surface p-4 shadow-soft sm:p-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-              <div className="grid min-w-0 gap-3">
-                <BubbleCloud featured={featured} others={others} selectedId={selectedId} onSelect={setChosen} detailId={detailId} />
-                <CloudLegend />
-              </div>
-              <SocietyDetail
-                id={detailId}
-                society={selectedId ? byId.get(selectedId) : undefined}
-                match={selectedId ? matchById.get(selectedId) : undefined}
-              />
+          <div className="grid items-center gap-5 overflow-hidden rounded-[1.25rem] border border-line bg-surface p-4 shadow-soft sm:p-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+            <div className="grid min-w-0 gap-3">
+              <BubbleCloud featured={featured} others={others} selectedId={selectedId} onSelect={setChosen} detailId={detailId} />
+              <CloudLegend />
             </div>
-            <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" aria-label="Matched societies">
-              {shown.map((m, i) => (
-                <SocietyCard key={m.societyId} match={m} society={byId.get(m.societyId)} index={i} />
-              ))}
-            </ul>
-          </>
+            <SocietyDetail
+              id={detailId}
+              society={selectedId ? byId.get(selectedId) : undefined}
+              match={selectedId ? matchById.get(selectedId) : undefined}
+            />
+          </div>
         )
       ) : matches.error ? (
         <ErrorState message={matches.error} onRetry={matches.reload} />
@@ -166,52 +159,5 @@ function SocietyDetail({ id, society, match }: { id: string; society: Society | 
         )}
       </AnimatePresence>
     </div>
-  );
-}
-
-function SocietyCard({ match, society, index }: { match: SocietyMatch; society: Society | undefined; index: number }) {
-  const reduce = useReducedMotion();
-  return (
-    <motion.li
-      initial={reduce ? false : { opacity: 0, y: 12 }}
-      // The stagger delay belongs to the entrance only, so hovering in and out responds at once.
-      whileInView={{ opacity: 1, y: 0, transition: { duration: 0.35, delay: index * 0.05 } }}
-      viewport={{ once: true, amount: 0.3 }}
-      transition={{ duration: 0.2 }}
-      whileHover={reduce ? undefined : { y: -4 }}
-      className={cx(
-        'flex flex-col overflow-hidden rounded-card border transition-shadow hover:shadow-lift',
-        match.wildcard ? 'border-dashed border-mode-explain/50 bg-mode-explain/6' : 'border-line bg-surface shadow-soft',
-      )}
-    >
-      <SocietyBanner society={society} className="h-28" />
-      <div className="flex flex-1 flex-col gap-2 p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            {match.wildcard && (
-              <span className="mb-1 inline-flex items-center gap-1 text-[11px] font-semibold tracking-[0.08em] text-mode-explain uppercase">
-                <Icon name="sparkle" size={11} />
-                Wildcard
-              </span>
-            )}
-            <p className="font-semibold tracking-tight">{society?.name ?? match.societyId}</p>
-          </div>
-          <FitScore value={match.fit} variant="compact" className="text-sm" />
-        </div>
-        <p className="text-[13px] leading-snug text-muted">{match.reason}</p>
-        {society && (
-          <a
-            href={society.sourceUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-auto inline-flex items-center gap-1.5 self-start rounded-full bg-brand-soft px-3 py-1.5 text-[12px] font-semibold text-brand transition-colors hover:bg-brand hover:text-on-brand"
-          >
-            Visit the society
-            <Icon name="external" size={12} />
-            <span className="sr-only">(opens in a new tab)</span>
-          </a>
-        )}
-      </div>
-    </motion.li>
   );
 }
