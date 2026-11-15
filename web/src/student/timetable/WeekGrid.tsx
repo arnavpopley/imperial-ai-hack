@@ -83,7 +83,18 @@ export function WeekGrid({
   const columns = narrow ? 'grid-cols-[3rem_minmax(0,1fr)]' : 'grid-cols-[3rem_repeat(5,minmax(0,1fr))]';
 
   return (
-    <div className={cx(!narrow && '-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0')}>
+    // A phone shows one day, so nothing scrolls. Wider screens keep the whole week; if it is wider than the screen
+    // it scrolls sideways, and the scroller takes focus so arrow keys can scroll it too.
+    <div
+      {...(narrow
+        ? {}
+        : {
+            tabIndex: 0,
+            role: 'region',
+            'aria-label': `${TERM_LABELS[term]} term week, scrolls sideways`,
+            className: '-mx-4 overflow-x-auto px-4 outline-none focus-visible:ring-2 focus-visible:ring-brand sm:mx-0 sm:px-0',
+          })}
+    >
       {narrow && (
         <div role="group" aria-label="Day" className="mb-3 grid grid-cols-5 gap-1 rounded-xl bg-surface-2 p-1">
           {WEEKDAYS.map((d) => {

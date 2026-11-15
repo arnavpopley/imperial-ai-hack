@@ -352,16 +352,21 @@ function Quoted({ evidence, glow, children }: { evidence: Evidence | undefined; 
 }
 
 /** A two-ended scale with a marker at the student's value, or an empty track while unknown. */
-function ScaleTrack({ value, low, high, label }: { value: number | null; low: string; high: string; label: string }) {
+export function ScaleTrack({ value, low, high, label }: { value: number | null; low: string; high: string; label: string }) {
   return (
     <span className="grid gap-1">
       <span
-        role="meter"
-        aria-label={label}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={value === null ? undefined : Math.round(value * 100)}
-        aria-valuetext={value === null ? 'Not yet known' : `${percent(value)} towards ${high.toLowerCase()}`}
+        // role=meter needs a value (aria-valuenow), so an unanswered scale is an image named "not answered yet".
+        {...(value === null
+          ? { role: 'img', 'aria-label': `${label}: not answered yet` }
+          : {
+              role: 'meter',
+              'aria-label': label,
+              'aria-valuemin': 0,
+              'aria-valuemax': 100,
+              'aria-valuenow': Math.round(value * 100),
+              'aria-valuetext': `${percent(value)} towards ${high.toLowerCase()}`,
+            })}
         className="relative block h-2 rounded-full bg-surface-2"
       >
         {value !== null && (

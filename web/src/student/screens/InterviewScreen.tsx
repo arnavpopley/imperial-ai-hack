@@ -180,8 +180,10 @@ export function InterviewScreen() {
 
           <aside
             aria-label="Live profile"
+            // It scrolls on wide screens and may hold no focusable item yet, so it takes focus itself for keyboard scrolling.
+            tabIndex={0}
             className={cx(
-              'rounded-[1.75rem] border border-line bg-surface p-6 shadow-soft lg:col-start-2 lg:row-start-1 xl:sticky xl:top-20 xl:col-start-3 xl:max-h-[calc(100dvh-16rem)] xl:overflow-y-auto',
+              'rounded-[1.75rem] border border-line bg-surface p-6 shadow-soft outline-none focus-visible:ring-2 focus-visible:ring-brand lg:col-start-2 lg:row-start-1 xl:sticky xl:top-20 xl:col-start-3 xl:max-h-[calc(100dvh-16rem)] xl:overflow-y-auto',
               pane !== 'profile' && 'max-xl:hidden',
             )}
           >

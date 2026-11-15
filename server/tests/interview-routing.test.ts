@@ -7,7 +7,7 @@ import { isModuleQuestion, wantsToFinishInterview } from '../src/agents/intent.t
 import { QUICK_PLAN } from '../src/agents/interviewer.ts';
 import { createApp } from '../src/app.ts';
 import { seedIfEmpty } from '../src/bootstrap.ts';
-import { SCOPE_REDIRECT } from '../src/guardrails/g1-scope.ts';
+import { scopeRedirect } from '../src/guardrails/g1-scope.ts';
 import * as repo from '../src/db/repo.ts';
 
 const app = createApp();
@@ -104,7 +104,7 @@ describe('interview routing (routes)', () => {
   it('asks the pending question again after an off-topic redirect', async () => {
     const session = await interviewing();
     const { text } = await chat(session.id, 'Can you write my essay for the exam?');
-    expect(text).toBe(`${SCOPE_REDIRECT}\n\n${QUICK_PLAN[0]!.question}`);
+    expect(text).toBe(`${scopeRedirect('academic-work')}\n\n${QUICK_PLAN[0]!.question}`);
     expect(repo.getSession(session.id)!.interview.questionsAsked).toBe(session.interview.questionsAsked);
   });
 
