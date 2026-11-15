@@ -26,8 +26,8 @@ export function KeepFreeDays({
             key={d}
             className={cx(
               'grid place-items-center font-medium',
-              size === 'sm' ? 'gap-0.5 rounded-xl py-1.5 text-[12px]' : 'gap-1 rounded-2xl py-3 text-sm',
-              free ? 'bg-module-2 text-on-brand' : halves.length > 0 ? 'bg-module-2/20 text-module-2' : 'bg-surface-2 text-muted',
+              size === 'sm' ? 'gap-0.5 rounded-xl py-1.5 text-2xs' : 'gap-1 rounded-2xl py-3 text-sm',
+              free ? 'bg-art-2 text-on-brand' : halves.length > 0 ? 'bg-art-2/20 text-art-2' : 'bg-surface-2 text-muted',
             )}
           >
             <span aria-hidden="true">{DAY_NAMES[d].slice(0, 3)}</span>
@@ -36,7 +36,7 @@ export function KeepFreeDays({
               {free ? 'keep free' : halves.length > 0 ? `keep ${halves.map((h) => (h === 'AM' ? 'morning' : 'afternoon')).join(' and ')} free` : 'available'}
             </span>
             {halves.length > 0 ? (
-              <span aria-hidden="true" className={cx('font-semibold', size === 'sm' ? 'text-[10px]' : 'text-[11px]')}>
+              <span aria-hidden="true" className="text-2xs font-semibold">
                 {halves.join(' ')}
               </span>
             ) : (

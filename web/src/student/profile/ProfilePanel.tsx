@@ -68,7 +68,7 @@ export function ProfilePanel({ profile, evidence, highlightSlots, className }: P
             </div>
           </div>
         </header>
-        <p className="-mt-3 flex items-center gap-1.5 text-[12px] text-muted">
+        <p className="-mt-3 flex items-center gap-1.5 text-2xs text-muted">
           <Icon name="chat" size={12} className="text-brand" />
           Hover or tap an item to see your words.
         </p>
@@ -100,8 +100,8 @@ export function ProfilePanel({ profile, evidence, highlightSlots, className }: P
                             animate={{ width: `${Math.round(strength * 100)}%` }}
                             transition={{ duration: 0.7, ease: EASE }}
                           />
-                          <span className="relative min-w-0 truncate text-[14px] font-medium">{topicLabel(topic)}</span>
-                          <span className="relative shrink-0 text-[12px] text-muted tabular-nums">
+                          <span className="relative min-w-0 truncate text-sm font-medium">{topicLabel(topic)}</span>
+                          <span className="relative shrink-0 text-2xs text-muted tabular-nums">
                             {percent(strength)}
                           </span>
                         </span>
@@ -123,7 +123,7 @@ export function ProfilePanel({ profile, evidence, highlightSlots, className }: P
                 return (
                   <li key={topic}>
                     <Quoted evidence={ev} glow={glow(slot, ev)}>
-                      <span className="rounded-full bg-surface-2 px-3 py-1.5 text-[13px] font-medium text-muted">
+                      <span className="rounded-full bg-surface-2 px-3 py-1.5 text-xs font-medium text-muted">
                         {topicLabel(topic)}
                       </span>
                     </Quoted>
@@ -146,8 +146,8 @@ export function ProfilePanel({ profile, evidence, highlightSlots, className }: P
                   <Quoted evidence={ev} glow={glow(slot, ev)}>
                     <span className="grid gap-1.5 py-1">
                       <span className="flex items-baseline justify-between gap-3">
-                        <span className="text-[13px] font-medium">{meta.label}</span>
-                        <span className={cx('text-[12px]', value === null ? 'text-muted' : 'font-medium text-brand')}>
+                        <span className="text-xs font-medium">{meta.label}</span>
+                        <span className={cx('text-2xs', value === null ? 'text-muted' : 'font-medium text-brand')}>
                           {value === null ? '–' : styleValueText(key, value)}
                         </span>
                       </span>
@@ -165,7 +165,7 @@ export function ProfilePanel({ profile, evidence, highlightSlots, className }: P
             {profile.pathways.length > 0 ? (
               <span className="flex flex-wrap gap-1.5">
                 {profile.pathways.map((id) => (
-                  <span key={id} className="rounded-full bg-brand-soft px-3 py-1.5 text-[13px] font-medium text-brand">
+                  <span key={id} className="rounded-full bg-brand-soft px-3 py-1.5 text-xs font-medium text-brand">
                     {pathwayById.get(id)?.title ?? id}
                   </span>
                 ))}
@@ -180,8 +180,8 @@ export function ProfilePanel({ profile, evidence, highlightSlots, className }: P
           <Quoted evidence={breadthEv} glow={glow('breadthAppetite', breadthEv)}>
             <span className="grid gap-1.5 py-1">
               <span className="flex items-baseline justify-between gap-3">
-                <span className="text-[13px] font-medium">Outside your degree</span>
-                <span className="text-[12px] text-muted tabular-nums">
+                <span className="text-xs font-medium">Outside your degree</span>
+                <span className="text-2xs text-muted tabular-nums">
                   {profile.breadthAppetite === null ? '–' : percent(profile.breadthAppetite)}
                 </span>
               </span>
@@ -216,13 +216,13 @@ export function ProfilePanel({ profile, evidence, highlightSlots, className }: P
                     <span
                       key={day}
                       className={cx(
-                        'grid h-9 flex-1 place-items-center rounded-lg text-[12px] leading-none font-medium transition-colors',
+                        'grid h-9 flex-1 place-items-center rounded-lg text-2xs leading-none font-medium transition-colors',
                         whole ? 'bg-brand text-on-brand' : half ? 'bg-brand/15 text-brand' : 'bg-surface-2 text-muted',
                       )}
                     >
                       <span>
                         {DAY_LABELS[day]}
-                        {half && <span className="block text-[10px] font-semibold">{half.endsWith('-am') ? 'AM' : 'PM'}</span>}
+                        {half && <span className="block text-2xs font-semibold">{half.endsWith('-am') ? 'AM' : 'PM'}</span>}
                       </span>
                     </span>
                   );
@@ -230,7 +230,7 @@ export function ProfilePanel({ profile, evidence, highlightSlots, className }: P
               </span>
             </Quoted>
             <Quoted evidence={earliestStartEv} glow={glow('timetablePrefs.earliestStart', earliestStartEv)}>
-              <span className="flex items-center gap-1.5 py-1 text-[12px] text-muted">
+              <span className="flex items-center gap-1.5 py-1 text-2xs text-muted">
                 <Icon name="clock" size={12} />
                 {earliestStart ? `Not before ${earliestStart}` : 'Any start time'}
               </span>
@@ -272,7 +272,7 @@ function CompletenessRing({ value }: { value: number }) {
           transition={{ duration: 0.9, ease: EASE }}
         />
       </svg>
-      <span className="text-[13px] font-semibold tabular-nums">{pct}%</span>
+      <span className="text-xs font-semibold tabular-nums">{pct}%</span>
     </span>
   );
 }
@@ -280,7 +280,7 @@ function CompletenessRing({ value }: { value: number }) {
 function ProfileSection({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div>
-      <h3 className="mb-2.5 text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">{title}</h3>
+      <h3 className="mb-2.5 text-2xs font-semibold tracking-[0.08em] text-muted uppercase">{title}</h3>
       {children}
     </div>
   );
@@ -288,7 +288,7 @@ function ProfileSection({ title, children }: { title: string; children: ReactNod
 
 function Placeholder({ children }: { children: ReactNode }) {
   return (
-    <span className="block rounded-xl border border-dashed border-line px-3.5 py-2.5 text-[13px] text-muted">
+    <span className="block rounded-xl border border-dashed border-line px-3.5 py-2.5 text-xs text-muted">
       {children}
     </span>
   );
@@ -337,7 +337,7 @@ function Quoted({ evidence, glow, children }: { evidence: Evidence | undefined; 
             transition={{ duration: 0.22, ease: EASE }}
             className="overflow-hidden"
           >
-            <span className="mt-1.5 mb-1 flex gap-2 rounded-xl bg-brand-soft/70 px-3 py-2 text-[12.5px] leading-snug">
+            <span className="mt-1.5 mb-1 flex gap-2 rounded-xl bg-brand-soft/70 px-3 py-2 text-xs leading-snug">
               <Icon name="chat" size={12} className="mt-0.5 shrink-0 text-brand" />
               <span>
                 <q className="italic">{evidence.quote}</q>
@@ -387,7 +387,7 @@ export function ScaleTrack({ value, low, high, label }: { value: number | null; 
         )}
       </span>
       {value !== null && (
-        <span className="flex justify-between text-[11px] text-muted" aria-hidden="true">
+        <span className="flex justify-between text-2xs text-muted" aria-hidden="true">
           <span>{low}</span>
           <span>{high}</span>
         </span>

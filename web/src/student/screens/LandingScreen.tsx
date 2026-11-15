@@ -5,11 +5,11 @@ import { motion, type Variants } from 'motion/react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 import { buttonClass } from '../../components/Button.tsx';
-import { FIT_BAND_LABELS, fitBand } from '../../components/FitScore.tsx';
 import { cx } from '../../components/cx.ts';
 import { Icon, type IconName } from '../../components/Icon.tsx';
 import { AGENTS, countWord } from '../../trace/agents.ts';
 import '../interview/interview.css';
+import { HeroDemo } from '../landing/HeroDemo.tsx';
 import { paths } from '../routes.ts';
 
 const EASE = [0.2, 0.8, 0.2, 1] as const;
@@ -33,15 +33,15 @@ const STEPS: readonly { icon: IconName; title: string; text: string; image: stri
     icon: 'grid',
     title: 'See every module ranked',
     text: 'A fit score for each module, with the reasons in your own words.',
-    image: '/images/catalogue-study-group.jpg',
-    alt: 'Students studying together',
+    image: '/images/hero-students-steps.jpg',
+    alt: 'Students sitting together on campus steps',
   },
   {
     icon: 'calendar',
     title: 'Plan a week that works',
     text: 'Clashes are flagged, swaps suggested, and pathways tracked.',
-    image: '/images/timetable-whiteboard.jpg',
-    alt: 'A planning whiteboard',
+    image: '/images/advisor-video-call.jpg',
+    alt: 'A student planning on a video call',
   },
 ];
 
@@ -196,7 +196,7 @@ function Hero({ cta }: { cta: { to: string; label: string } }) {
           </motion.p>
           <motion.h1
             variants={RISE}
-            className="mt-6 text-[2.75rem] leading-[1.02] font-semibold tracking-tight text-balance sm:text-[4.25rem]"
+            className="mt-6 text-display text-balance"
           >
             Choose modules{' '}
             <span className="bg-gradient-to-r from-brand via-mode-explain to-mode-plan bg-clip-text text-transparent">
@@ -221,75 +221,11 @@ function Hero({ cta }: { cta: { to: string; label: string } }) {
             </Link>
           </motion.div>
         </div>
-        <HeroVisual />
+        <motion.div variants={RISE} className="min-w-0">
+          <HeroDemo />
+        </motion.div>
       </motion.div>
     </section>
-  );
-}
-
-/**
- * The hero's example score: about what the demo student's best match (Embedded C for Microcontrollers A) really
- * scores, so the landing page never promises a number the app does not produce (issue #105).
- */
-const HERO_FIT = 62;
-
-/** Photo card with floating result chips, previewing what the student gets. */
-function HeroVisual() {
-  return (
-    <motion.div variants={RISE} className="relative mx-auto w-full max-w-lg">
-      <div className="mm-photo overflow-hidden rounded-[2rem] shadow-lift ring-1 ring-line">
-        <img
-          src="/images/hero-students-steps.jpg"
-          alt="Students sitting together on campus steps"
-          className="h-80 w-full object-cover sm:h-[26rem]"
-        />
-      </div>
-      <FloatingChip className="-left-4 top-8 sm:-left-10" delay={0.5}>
-        <span className="grid size-10 place-items-center rounded-xl bg-fit-high/15 text-lg font-semibold text-fit-high">
-          {HERO_FIT}
-        </span>
-        <span>
-          <span className="block text-sm font-semibold">Embedded C</span>
-          <span className="block text-xs text-muted">
-            {FIT_BAND_LABELS[fitBand(HERO_FIT)]} · your best match (example)
-          </span>
-        </span>
-      </FloatingChip>
-      <FloatingChip className="-right-3 top-1/2 sm:-right-8" delay={0.7}>
-        <span className="grid size-10 place-items-center rounded-xl bg-mode-plan/15 text-mode-plan">
-          <Icon name="calendar" size={18} />
-        </span>
-        <span className="text-sm font-semibold">No clashes</span>
-      </FloatingChip>
-      <FloatingChip className="bottom-6 left-6" delay={0.9}>
-        <span className="grid size-10 place-items-center rounded-xl bg-mode-explain/15 text-mode-explain">
-          <Icon name="chat" size={18} />
-        </span>
-        <span className="max-w-[12rem] text-xs text-muted">
-          &ldquo;I loved the control systems lab&rdquo;
-        </span>
-      </FloatingChip>
-    </motion.div>
-  );
-}
-
-function FloatingChip({ className, delay, children }: { className: string; delay: number; children: ReactNode }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 16, scale: 0.94 }}
-      animate={{ opacity: 1, y: [0, -6, 0], scale: 1 }}
-      transition={{
-        opacity: { delay, duration: 0.5 },
-        scale: { delay, duration: 0.5, ease: EASE },
-        y: { delay: delay + 0.5, duration: 5, repeat: Infinity, ease: 'easeInOut' },
-      }}
-      className={cx(
-        'absolute flex items-center gap-3 rounded-2xl bg-surface/95 p-2.5 pr-4 shadow-lift ring-1 ring-line backdrop-blur',
-        className,
-      )}
-    >
-      {children}
-    </motion.div>
   );
 }
 

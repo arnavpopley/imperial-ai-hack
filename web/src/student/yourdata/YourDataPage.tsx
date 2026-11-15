@@ -152,7 +152,7 @@ function Hero({ profile, quoteCount }: { profile: StudentProfile; quoteCount: nu
           <p className="inline-flex items-center gap-2 text-sm font-medium text-brand">
             <Icon name="lock" size={16} /> Private to you
           </p>
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Your data</h1>
+          <h1 className="text-title">Your data</h1>
           <p className="max-w-xl text-base text-muted text-pretty">
             Your interests, goals and preferences, and marks only if you choose to share them. Never health or
             background. Staff only ever see totals for groups of five or more.
@@ -303,7 +303,7 @@ function InterestsCard({ profile, evidence }: { profile: StudentProfile; evidenc
     <DataCard
       icon="heart"
       title="Interests"
-      tint="bg-module-6/10 text-module-6"
+      tint="bg-art-6/10 text-art-6"
       quotes={quotesFor(evidence, (s) => s.startsWith('interest:'))}
     >
       {interests.length === 0 ? (
@@ -450,7 +450,7 @@ function TimetableCard({ profile, evidence }: { profile: StudentProfile; evidenc
     <DataCard
       icon="calendar"
       title="Timetable preferences"
-      tint="bg-module-2/10 text-module-2"
+      tint="bg-art-2/10 text-art-2"
       quotes={quotesFor(evidence, (s) => s.startsWith('timetablePrefs.'))}
     >
       <div className="grid gap-5">

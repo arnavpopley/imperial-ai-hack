@@ -64,12 +64,12 @@ export function ExamFeedbackCard({ exam, sessionId, open, onToggle, index }: Exa
         >
           <MarkBadge mark={mark} />
           <span className="min-w-0 flex-1">
-            <span className="block text-[12px] text-muted">
+            <span className="block text-2xs text-muted">
               {module && <span className="font-mono">{module.code} · </span>}
               {feedback.examLabel}
             </span>
             <span className="mt-0.5 block text-lg leading-snug font-semibold tracking-tight">{title}</span>
-            <span className="mt-1 block text-[13.5px] leading-snug text-muted">{feedback.overall}</span>
+            <span className="mt-1 block text-xs leading-snug text-muted">{feedback.overall}</span>
           </span>
           <MiniBars bars={bars} className="shrink-0 max-sm:hidden" />
           <Icon
@@ -105,7 +105,7 @@ export function ExamFeedbackCard({ exam, sessionId, open, onToggle, index }: Exa
                 <Strengths strengths={feedback.strengths} />
                 <RevisionPlan plan={feedback.revisionPlan} checked={ticks.checked} onToggle={ticks.toggle} />
                 <AffectsModules feedback={feedback} />
-                <p className="flex flex-wrap items-center justify-between gap-2 text-[12px] text-muted">
+                <p className="flex flex-wrap items-center justify-between gap-2 text-2xs text-muted">
                   <SourceTag source={feedback.source} />
                   <Link to={paths.module(feedback.moduleId)} className="font-medium text-brand underline-offset-2 hover:underline">
                     {title} module page
@@ -132,7 +132,7 @@ export function MarkBadge({ mark, size = 'md' }: { mark: number | null; size?: '
       <span className={cx('leading-none font-semibold tabular-nums', size === 'md' ? 'text-xl' : 'text-base')}>
         {mark === null ? '–' : Math.round(mark)}
       </span>
-      <span className="text-[10px] leading-tight font-medium text-brand/70">{mark === null ? 'mark' : '/100'}</span>
+      <span className="text-2xs leading-tight font-medium text-brand/70">{mark === null ? 'mark' : '/100'}</span>
     </span>
   );
 }
@@ -151,7 +151,7 @@ function SourceTag({ source }: { source: TailoredFeedback['source'] }) {
 
 function SectionTitle({ id, children }: { id: string; children: string }) {
   return (
-    <h3 id={id} className="text-[11px] font-semibold tracking-[0.1em] text-muted uppercase">
+    <h3 id={id} className="text-2xs font-semibold tracking-[0.1em] text-muted uppercase">
       {children}
     </h3>
   );
@@ -168,19 +168,19 @@ function FocusPoints({ feedback }: { feedback: TailoredFeedback }) {
         {feedback.weakPoints.map((w) => (
           <li key={w.questionId} className="grid gap-2 rounded-2xl bg-fit-mid/6 p-4 ring-1 ring-fit-mid/20 ring-inset">
             <p className="flex flex-wrap items-baseline gap-x-2 font-semibold leading-snug">
-              <span className="font-mono text-[13px]">{w.questionId}</span>
+              <span className="font-mono text-xs">{w.questionId}</span>
               {w.label && <span>{w.label}</span>}
             </p>
             {w.topics.length > 0 && (
               <ul className="flex flex-wrap gap-1.5" aria-label="Topics">
                 {w.topics.map((t) => (
-                  <li key={t} className="rounded-full bg-surface px-2.5 py-0.5 text-[12px] font-medium text-muted ring-1 ring-line">
+                  <li key={t} className="rounded-full bg-surface px-2.5 py-0.5 text-2xs font-medium text-muted ring-1 ring-line">
                     {topicLabel(t)}
                   </li>
                 ))}
               </ul>
             )}
-            <p className="flex gap-2 text-[14px] leading-relaxed">
+            <p className="flex gap-2 text-sm leading-relaxed">
               <Icon name="tutor" size={15} className="mt-1 shrink-0 text-mode-explain" />
               <span>
                 <span className="sr-only">Examiner's advice: </span>
@@ -202,7 +202,7 @@ function Strengths({ strengths }: { strengths: readonly string[] }) {
       <SectionTitle id={id}>Went well</SectionTitle>
       <ul className="flex flex-wrap gap-2">
         {strengths.map((s) => (
-          <li key={s} className="inline-flex max-w-full items-start gap-1.5 rounded-2xl bg-fit-high/10 px-3 py-1.5 text-[13px] text-ink">
+          <li key={s} className="inline-flex max-w-full items-start gap-1.5 rounded-2xl bg-fit-high/10 px-3 py-1.5 text-xs text-ink">
             <Icon name="check" size={13} className="mt-1 shrink-0 text-fit-high" />
             <span className="min-w-0">{s}</span>
           </li>
@@ -236,7 +236,7 @@ function RevisionPlan({ plan, checked, onToggle }: { plan: readonly string[]; ch
     <section aria-labelledby={id} className="grid gap-3">
       <div className="flex items-baseline justify-between gap-3">
         <SectionTitle id={id}>Your revision plan</SectionTitle>
-        <span className="text-[12px] text-muted tabular-nums" aria-live="polite">
+        <span className="text-2xs text-muted tabular-nums" aria-live="polite">
           {done} of {plan.length} done
         </span>
       </div>
@@ -247,7 +247,7 @@ function RevisionPlan({ plan, checked, onToggle }: { plan: readonly string[]; ch
             <li key={item}>
               <label
                 className={cx(
-                  'flex cursor-pointer items-start gap-3 rounded-xl px-3 py-2.5 text-[14px] leading-snug transition has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand',
+                  'flex cursor-pointer items-start gap-3 rounded-xl px-3 py-2.5 text-sm leading-snug transition has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand',
                   on ? 'bg-fit-high/8' : 'hover:bg-surface-2',
                 )}
               >
@@ -267,7 +267,7 @@ function RevisionPlan({ plan, checked, onToggle }: { plan: readonly string[]; ch
           );
         })}
       </ul>
-      <p className="text-[12px] text-muted">Ticks are saved in this browser only.</p>
+      <p className="text-2xs text-muted">Ticks are saved in this browser only.</p>
     </section>
   );
 }
@@ -296,8 +296,8 @@ function AffectsModules({ feedback }: { feedback: TailoredFeedback }) {
                   <Icon name="arrow-right" size={14} />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[14px] font-medium group-hover:underline">{module?.title ?? m.moduleId}</span>
-                  <span className="block text-[12.5px] leading-snug text-muted">{m.note}</span>
+                  <span className="block text-sm font-medium group-hover:underline">{module?.title ?? m.moduleId}</span>
+                  <span className="block text-xs leading-snug text-muted">{m.note}</span>
                 </span>
               </Link>
             </li>
@@ -310,7 +310,7 @@ function AffectsModules({ feedback }: { feedback: TailoredFeedback }) {
           aria-expanded={all}
           aria-controls={listId}
           onClick={() => setAll((v) => !v)}
-          className="justify-self-start rounded-lg text-[13px] font-medium text-brand hover:underline"
+          className="justify-self-start rounded-lg text-xs font-medium text-brand hover:underline"
         >
           {all ? 'Show fewer' : `Show ${hidden} more`}
         </button>

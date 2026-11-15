@@ -16,7 +16,7 @@ import { EmptyState, ErrorState, Skeleton } from '../../components/StateViews.ts
 import { downloadFile } from '../download.ts';
 import { useAsync } from '../hooks/useAsync.ts';
 import { useShortlist } from '../hooks/useShortlist.ts';
-import { DAY_LABELS, keepFreeLabel, TERM_LABELS } from '../labels.ts';
+import { TERM_LABELS } from '../labels.ts';
 import { PhotoBanner } from '../catalogue/PhotoBanner.tsx';
 import { paths } from '../routes.ts';
 import { ectsLabels } from '../rulesStatus.ts';
@@ -26,6 +26,7 @@ import { useReferenceData } from '../state/ReferenceDataProvider.tsx';
 import { useReadySession } from '../state/SessionProvider.tsx';
 import { CapacityBackupPanel } from '../timetable/CapacityBackupPanel.tsx';
 import { ClashCard } from '../timetable/ClashCard.tsx';
+import { PlanCheck } from '../timetable/PlanCheck.tsx';
 import { buildIcs } from '../timetable/exportPlan.ts';
 import { PlanPrint } from '../timetable/PlanPrint.tsx';
 import { moduleColours } from '../timetable/moduleColours.ts';
@@ -186,30 +187,18 @@ function TimetableBody({ view, onChanged, refreshing, stale }: TimetableBodyProp
             None of your shortlisted modules teach in this term.
           </EmptyState>
         )}
-        {refreshing && <p className="mt-2 text-[12px] text-muted">Updating…</p>}
+        {refreshing && <p className="mt-2 text-2xs text-muted">Updating…</p>}
       </section>
 
       <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4">
+        {/* Issue 143: clashes, kept-free time and the programme rules in one card of progress rows. */}
+        <PlanCheck view={view} titleFor={titleFor} />
+
         <section aria-labelledby="clash-heading">
-          <h2 id="clash-heading" className="mb-2 text-sm font-semibold">
+          {/* With no clash the plan check says so; the heading stays for screen readers and the demo check. */}
+          <h2 id="clash-heading" className={cx('mb-2 text-sm font-semibold', view.clashes.length === 0 && 'sr-only')}>
             {view.clashes.length === 0 ? 'No clashes' : `${view.clashes.length} clash${view.clashes.length > 1 ? 'es' : ''} to resolve`}
           </h2>
-          <AnimatePresence initial={false}>
-            {view.clashes.length === 0 && (
-              <motion.p
-                key="no-clashes"
-                initial={reduce ? false : { opacity: 0, scale: 0.96 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.35, delay: reduce ? 0 : 0.2 }}
-                className="flex items-center gap-2.5 rounded-card border border-fit-high/30 bg-fit-high/6 px-4 py-3 text-[13px]"
-              >
-                <span className="grid size-6 shrink-0 place-items-center rounded-full bg-fit-high text-on-brand" aria-hidden="true">
-                  <Icon name="check" size={13} />
-                </span>
-                Your shortlist fits together in every term, going by last year's timetable.
-              </motion.p>
-            )}
-          </AnimatePresence>
           <ul className="grid grid-cols-[minmax(0,1fr)] gap-3">
             <AnimatePresence initial={false}>
               {view.clashes.map((clash) => (
@@ -231,10 +220,6 @@ function TimetableBody({ view, onChanged, refreshing, stale }: TimetableBodyProp
           </ul>
         </section>
 
-        <KeepFreePanel view={view} titleFor={titleFor} />
-
-        <RulesPanel view={view} />
-
         <CapacityBackupPanel backups={view.backups} titleFor={titleFor} />
 
         <section aria-labelledby="shortlist-heading" className="rounded-card border border-line bg-surface p-4 shadow-soft">
@@ -246,16 +231,16 @@ function TimetableBody({ view, onChanged, refreshing, stale }: TimetableBodyProp
           <EctsBar ects={view.ects} />
           <ul className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-1">
             {view.coreModuleIds.map((id) => (
-              <li key={id} className="flex items-center gap-2.5 rounded-lg py-1 text-[13px]">
+              <li key={id} className="flex items-center gap-2.5 rounded-lg py-1 text-xs">
                 <Icon name="lock" size={12} className="shrink-0 text-muted" />
                 <Link to={paths.module(id)} className="min-w-0 flex-1 truncate font-medium hover:text-brand">
                   {titleFor(id)}
                 </Link>
-                <span className="rounded-md bg-ink/6 px-1.5 py-0.5 text-[11px] font-semibold text-muted">Core</span>
+                <span className="rounded-md bg-ink/6 px-1.5 py-0.5 text-2xs font-semibold text-muted">Core</span>
               </li>
             ))}
             {picked.map((id) => (
-              <li key={id} className="flex items-center gap-2.5 rounded-lg py-1 text-[13px]">
+              <li key={id} className="flex items-center gap-2.5 rounded-lg py-1 text-xs">
                 <span className={cx('size-2.5 shrink-0 rounded-full', colourFor(id).dot)} aria-hidden="true" />
                 <Link to={paths.module(id)} className="min-w-0 flex-1 truncate font-medium hover:text-brand">
                   {titleFor(id)}
@@ -278,7 +263,7 @@ function TimetableBody({ view, onChanged, refreshing, stale }: TimetableBodyProp
             </Link>
           )}
           {shortlist.error && (
-            <p role="alert" className="mt-2 text-[13px] text-fit-low">
+            <p role="alert" className="mt-2 text-xs text-fit-low">
               {shortlist.error}
             </p>
           )}
@@ -321,7 +306,7 @@ function ExportActions({ view, titleFor, codeFor, stale }: ExportActionsProps) {
           Add to calendar
         </Button>
       </div>
-      <p className="mt-1.5 text-[11px] text-muted">Provisional, based on previous years. Saved on your device only.</p>
+      <p className="mt-1.5 text-2xs text-muted">Provisional, based on previous years. Saved on your device only.</p>
       {/* Left out while stale, so even the browser's own Print never mixes an old week with a new shortlist. */}
       {!printStale && (
         <PlanPrint
@@ -343,7 +328,7 @@ function ProvisionalNotice() {
   return (
     <div
       role="note"
-      className="flex items-center gap-2.5 rounded-card border border-dashed border-fit-mid/50 bg-fit-mid/8 px-3.5 py-2.5 text-[13px]"
+      className="flex items-center gap-2.5 rounded-card border border-dashed border-fit-mid/50 bg-fit-mid/8 px-3.5 py-2.5 text-xs"
     >
       <Icon name="clock" size={16} className="shrink-0 text-fit-mid" />
       <p className="min-w-0">
@@ -366,7 +351,7 @@ function EctsBar({ ects }: { ects: TimetableView['ects'] }) {
   ];
   return (
     <div>
-      <p className="flex items-baseline justify-between text-[12px]">
+      <p className="flex items-baseline justify-between text-2xs">
         <span className="font-semibold tabular-nums">
           {total} <span className="font-normal text-muted">{labels.of}</span>
         </span>
@@ -381,7 +366,7 @@ function EctsBar({ ects }: { ects: TimetableView['ects'] }) {
           <span key={p.key} className={p.className} style={{ width: `${(p.value / scale) * 100}%` }} />
         ))}
       </div>
-      <ul className="mt-1.5 flex flex-wrap gap-x-3 text-[11px] text-muted tabular-nums" aria-hidden="true">
+      <ul className="mt-1.5 flex flex-wrap gap-x-3 text-2xs text-muted tabular-nums" aria-hidden="true">
         {parts.map((p) => (
           <li key={p.key} className="flex items-center gap-1">
             <span className={cx('size-2 rounded-full', p.className)} />
@@ -393,42 +378,10 @@ function EctsBar({ ects }: { ects: TimetableView['ects'] }) {
   );
 }
 
-/** Interview question 8: shortlisted sessions in time the student asked to keep free. A soft conflict, never a block. */
-function KeepFreePanel({ view, titleFor }: { view: TimetableView; titleFor: (id: string) => string }) {
-  if (view.keepFree.length === 0) return null;
-  const conflicts = view.keepFreeConflicts;
-  const shown = conflicts.slice(0, 4);
-  return (
-    <section aria-labelledby="keep-free-heading" className="rounded-card border border-mode-explain/30 bg-mode-explain/[0.05] p-4">
-      <h2 id="keep-free-heading" className="flex items-center gap-2 text-sm font-semibold">
-        <Icon name="moon" size={15} className="text-mode-explain" />
-        {conflicts.length === 0
-          ? 'Your kept-free time stays free'
-          : `${conflicts.length} session${conflicts.length > 1 ? 's' : ''} in kept-free time`}
-      </h2>
-      {shown.length > 0 && (
-        <ul className="mt-2 grid gap-1.5">
-          {shown.map(({ slot, window }) => (
-            <li key={`${slot.moduleId}|${slot.sessionKey}|${slot.day}|${slot.start}`} className="text-[13px] leading-snug">
-              <span className="font-semibold tabular-nums">
-                {DAY_LABELS[slot.day]} {slot.start}
-              </span>{' '}
-              <span className="text-muted">· {TERM_LABELS[slot.term]}</span> {titleFor(slot.moduleId)}
-              <span className="block text-[12px] text-muted">{keepFreeLabel(window)}: you asked to keep this free</span>
-            </li>
-          ))}
-        </ul>
-      )}
-      {conflicts.length > shown.length && (
-        <p className="mt-1.5 text-[12px] text-muted">and {conflicts.length - shown.length} more</p>
-      )}
-    </section>
-  );
-}
 
 function Legend() {
   return (
-    <ul className="flex flex-wrap items-center gap-x-3 gap-y-2 text-[11px] text-muted" aria-label="Legend">
+    <ul className="flex flex-wrap items-center gap-x-3 gap-y-2 text-2xs text-muted" aria-label="Legend">
       <li className="flex items-center gap-1.5">
         <span className="h-3.5 w-6 rounded border border-dashed border-ink/50 bg-surface-2" aria-hidden="true" />
         Provisional
@@ -458,38 +411,3 @@ function Legend() {
   );
 }
 
-function RulesPanel({ view }: { view: TimetableView }) {
-  const { ok, violations, warnings } = view.rules;
-  return (
-    <section aria-labelledby="rules-heading" className="rounded-card border border-line bg-surface p-4 shadow-soft">
-      <h2 id="rules-heading" className="flex items-center gap-2 text-sm font-semibold">
-        <Icon name="shield" size={15} className={ok ? 'text-fit-high' : 'text-fit-low'} />
-        Programme rules
-      </h2>
-      {ok && violations.length === 0 && (
-        <p className="mt-1.5 text-[13px] text-muted">Your shortlist meets the rules for your programme and year.</p>
-      )}
-      {violations.length > 0 && (
-        <ul className="mt-2 grid gap-1.5">
-          {violations.map((v) => (
-            <li key={`${v.code}-${v.moduleId ?? ''}`} className="flex gap-2 rounded-lg bg-fit-low/8 px-3 py-2 text-[13px]">
-              <Icon name="ban" size={14} className="mt-0.5 shrink-0 text-fit-low" />
-              {v.message}
-            </li>
-          ))}
-        </ul>
-      )}
-      {warnings.length > 0 && (
-        <ul className="mt-2 grid gap-1.5">
-          {warnings.map((w) => (
-            <li key={w.code} className="flex gap-2 rounded-lg bg-fit-mid/10 px-3 py-2 text-[13px]">
-              <Icon name="info" size={14} className="mt-0.5 shrink-0 text-fit-mid" />
-              {w.message}
-            </li>
-          ))}
-        </ul>
-      )}
-      <p className="mt-2 text-[11px] text-muted">No agent can override a rule. Exceptions go to the Senior Tutor.</p>
-    </section>
-  );
-}

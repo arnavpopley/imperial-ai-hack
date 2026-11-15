@@ -70,7 +70,7 @@ export function InterviewerStage({ persona, speaking, layout, className }: Inter
 
       <div className={cx(hero ? 'mt-4 text-center' : 'min-w-0')}>
         <p className={cx('font-semibold tracking-tight', hero ? 'text-lg' : 'text-base')}>{persona.name}</p>
-        <p className="flex items-center gap-1.5 text-[13px] text-muted">
+        <p className="flex items-center gap-1.5 text-xs text-muted">
           <span
             aria-hidden="true"
             className={cx('size-2 rounded-full', speaking ? 'animate-pulse-dot bg-fit-high' : 'bg-line-strong')}

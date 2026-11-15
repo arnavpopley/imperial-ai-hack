@@ -35,8 +35,8 @@ export function ConfirmProfileCard({ className }: { className?: string }) {
   const navigate = useNavigate();
   const { profile } = session;
 
-  const { liked, avoided } = splitInterests(profile.interests);
-  const interests = liked.slice(0, 5);
+  // Every topic the student named: the body scrolls, and each one still counts towards their fit.
+  const { liked: interests, avoided } = splitInterests(profile.interests);
   const styles = STYLE_KEYS.flatMap((key) => {
     const value = profile.style[key];
     return value === null ? [] : [{ key, value }];
@@ -62,7 +62,7 @@ export function ConfirmProfileCard({ className }: { className?: string }) {
           <h3 id="heard-heading" className="text-base font-semibold tracking-tight">
             Here is what I heard
           </h3>
-          <p className="text-[12px] text-muted">Check it looks like you.</p>
+          <p className="text-2xs text-muted">Check it looks like you.</p>
         </div>
         {/* Edit sits up here, so the footer holds only the confirm button and fits a phone on one line. */}
         {!editing && (
@@ -87,7 +87,7 @@ export function ConfirmProfileCard({ className }: { className?: string }) {
             }}
           />
         ) : empty ? (
-          <p className="text-[14px] text-muted">I did not pick up much yet. You can add details yourself.</p>
+          <p className="text-sm text-muted">I did not pick up much yet. You can add details yourself.</p>
         ) : (
           <motion.div initial="hidden" animate="shown" variants={GROUP} className="grid gap-x-6 gap-y-4 lg:grid-cols-2">
             {left && (
@@ -98,7 +98,7 @@ export function ConfirmProfileCard({ className }: { className?: string }) {
                       {interests.map(([topic, strength]) => {
                         const step = strengthStep(strength);
                         return (
-                          <li key={topic} className="inline-flex items-center gap-2 rounded-full bg-brand-soft px-3 py-1 text-[13px] font-medium text-ink">
+                          <li key={topic} className="inline-flex items-center gap-2 rounded-full bg-brand-soft px-3 py-1 text-xs font-medium text-ink">
                             {topicLabel(topic)}
                             {/* A three-step strength dot row, not a bar every chip fills alike (issue 144). */}
                             <span aria-hidden="true" className="flex gap-0.5">
@@ -117,7 +117,7 @@ export function ConfirmProfileCard({ className }: { className?: string }) {
                   <Group title="Avoid">
                     <ul className="flex flex-wrap gap-1.5">
                       {avoided.map(([topic]) => (
-                        <li key={topic} className="rounded-full bg-surface-2 px-3 py-1 text-[13px] font-medium text-muted line-through decoration-muted/60">
+                        <li key={topic} className="rounded-full bg-surface-2 px-3 py-1 text-xs font-medium text-muted line-through decoration-muted/60">
                           {topicLabel(topic)}
                         </li>
                       ))}
@@ -128,7 +128,7 @@ export function ConfirmProfileCard({ className }: { className?: string }) {
                   <Group title="Heading towards">
                     <ul className="flex flex-wrap gap-1.5">
                       {profile.pathways.map((id) => (
-                        <li key={id} className="rounded-full bg-brand-soft px-3 py-1 text-[13px] font-medium text-brand">
+                        <li key={id} className="rounded-full bg-brand-soft px-3 py-1 text-xs font-medium text-brand">
                           {pathwayById.get(id)?.title ?? id}
                         </li>
                       ))}
@@ -144,7 +144,7 @@ export function ConfirmProfileCard({ className }: { className?: string }) {
                     <ul className="grid gap-y-2">
                       {styles.map(({ key, value }) => (
                         <li key={key} className="grid gap-1">
-                          <span className="flex items-baseline justify-between gap-3 text-[12px]">
+                          <span className="flex items-baseline justify-between gap-3 text-2xs">
                             <span className="shrink-0 text-muted">{STYLE_META[key].label}</span>
                             <span className="min-w-0 truncate text-right font-medium">{styleValueText(key, value)}</span>
                           </span>
@@ -156,7 +156,7 @@ export function ConfirmProfileCard({ className }: { className?: string }) {
                 )}
                 {profile.breadthAppetite !== null && (
                   <Group title="Breadth">
-                    <p className="mb-1.5 text-[13px] font-medium">
+                    <p className="mb-1.5 text-xs font-medium">
                       {profile.breadthAppetite >= 0.5 ? 'Open to modules outside your degree' : 'Staying close to your degree'}
                     </p>
                     <Meter value={profile.breadthAppetite} label="Appetite for modules outside your degree" />
@@ -165,7 +165,7 @@ export function ConfirmProfileCard({ className }: { className?: string }) {
                 {keepsFree && (
                   <Group title="Keep free">
                     <KeepFreeDays avoidDays={avoidDays} avoidHalfDays={avoidHalfDays} size="sm" />
-                    {earliestStart && <p className="mt-1.5 text-[12px] text-muted">Nothing before {earliestStart}</p>}
+                    {earliestStart && <p className="mt-1.5 text-2xs text-muted">Nothing before {earliestStart}</p>}
                   </Group>
                 )}
               </div>
@@ -177,7 +177,7 @@ export function ConfirmProfileCard({ className }: { className?: string }) {
       {!editing && (
         <div className="grid shrink-0 gap-2 border-t border-line px-4 py-3 sm:px-5">
           {error && (
-            <p role="alert" className="text-[13px] text-fit-low">
+            <p role="alert" className="text-xs text-fit-low">
               {error}
             </p>
           )}

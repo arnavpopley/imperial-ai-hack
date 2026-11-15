@@ -8,6 +8,7 @@ import { CountUp } from '../components/CountUp.tsx';
 import { cx } from '../components/cx.ts';
 import { Icon, type IconName } from '../components/Icon.tsx';
 import { AgentFlowchart } from './AgentFlowchart.tsx';
+import { MiniFlow } from './MiniFlow.tsx';
 import { AgentRoster } from './AgentRoster.tsx';
 import { AGENTS, countWord } from './agents.ts';
 import { LiveEvalPanel } from './LiveEvalPanel.tsx';
@@ -153,20 +154,17 @@ export function TraceApp() {
 function Intro() {
   return (
     <motion.header {...rise} className="overflow-hidden rounded-panel bg-surface shadow-soft ring-1 ring-line">
-      <div className="grid md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+      <div className="grid xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
         <div className="grid content-center gap-4 p-card-lg sm:p-10">
           <p className="text-xs font-semibold tracking-[0.12em] text-brand uppercase">How it works</p>
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">A team of small AI helpers, checked at every step</h1>
+          <h1 className="text-title">A team of small AI helpers, checked at every step</h1>
           <p className="max-w-xl text-base text-muted text-pretty">
             Numbers come from code; words come from the AI. This page shows the process, how we test it, and a live
             record of what it did for a session.
           </p>
         </div>
-        <img
-          src="/images/hero-students-steps.jpg"
-          alt="Students talking on the steps outside a university building"
-          className="h-56 w-full object-cover md:h-full"
-        />
+        {/* A message's path through the system, not a photo: the landing page has its own hero (issue #135). */}
+        <MiniFlow className="border-t border-line bg-surface-2/50 px-4 py-6 sm:px-8 xl:border-t-0 xl:border-l" />
       </div>
       <ul className="grid gap-px border-t border-line bg-line sm:grid-cols-3">
         <Explainer icon="sparkle" title="The agents">

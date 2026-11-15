@@ -232,6 +232,7 @@ export const STEPS = [
       if (words > 20) fail(`The interviewer's last line runs to ${words} words: "${heard.lastLine.slice(0, 120)}"`);
       if (heard.blank.length) fail(`Card groups still blank after 700ms: ${heard.blank.join(', ')}`);
       if (!heard.visible) fail('"That is me, show my modules" is not fully on screen without scrolling');
+      if (!heard.composer) fail('The pinned card pushes the answer box below the screen');
       // The live profile shows each item with the quote it came from (spec 14, screen 2).
       if (ctx.viewport === 'phone') await page.click({ css: 'label', text: { re: '^Your profile' } });
       const profile = await page.eval(() => document.querySelector('aside[aria-label="Live profile"]')?.textContent ?? '');
