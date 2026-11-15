@@ -283,17 +283,15 @@ export function suggestSwaps(
     .slice(0, MAX_SWAPS);
 }
 
-/** ECTS in the plan by kind: this year's core modules, chosen electives and I-Explore, against the programme cap. */
-export function planEcts(
-  shortlist: readonly string[],
-  core: readonly string[],
-  modules: readonly Module[],
-  rules: ProgrammeRules,
-): TimetableView['ects'] {
+/**
+ * ECTS in the plan by kind (core, chosen electives, I-Explore) against the programme cap. It counts every core
+ * module, as the spec 9.1 rules check does, so the bar and the rules always agree on how much room is left.
+ */
+export function planEcts(shortlist: readonly string[], modules: readonly Module[], rules: ProgrammeRules): TimetableView['ects'] {
   const byId = new Map(modules.map((module) => [module.id, module]));
-  const coreIds = new Set([...core, ...rules.coreModuleIds]);
+  const coreIds = new Set(rules.coreModuleIds);
   const ects = { core: 0, elective: 0, iExplore: 0, max: rules.maxEcts };
-  for (const module of unique([...core, ...shortlist]).flatMap((id) => byId.get(id) ?? [])) {
+  for (const module of unique([...rules.coreModuleIds, ...shortlist]).flatMap((id) => byId.get(id) ?? [])) {
     if (coreIds.has(module.id) || module.type === 'core') ects.core += module.ects;
     else if (module.type === 'i-explore') ects.iExplore += module.ects;
     else ects.elective += module.ects;
@@ -336,7 +334,7 @@ export function planTimetable(
       slots,
       keepFree,
     ),
-    ects: planEcts(shortlist, core, plan.modules, plan.rules),
+    ects: planEcts(shortlist, plan.modules, plan.rules),
   };
 }
 

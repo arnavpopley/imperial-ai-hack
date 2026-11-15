@@ -185,6 +185,12 @@ describe('extractor', () => {
       avoidDays: ['fri'],
       avoidHalfDays: ['mon-am'],
     });
+    // Both halves of one day are kept, however they are phrased.
+    for (const text of ['Keep Monday mornings and Monday afternoons free.', 'Monday morning and afternoon, please.']) {
+      expect(extractByCues(text, slots, PATHWAYS)).toContainEqual(
+        expect.objectContaining({ slot: 'timetablePrefs.avoidHalfDays', value: ['mon-am', 'mon-pm'] }),
+      );
+    }
     // A later half-day answer narrows an earlier whole day, and a whole day absorbs its half days.
     const narrowed = mergeUpdates(
       emptyProfile,

@@ -376,6 +376,14 @@ describe("planTimetable on Rosa's plan (seed data)", () => {
     expect(view.ects).toEqual({ core: 30, elective: 10, iExplore: 5, max: 60 });
   });
 
+  it('keeps a completed core module off the grid but in the ECTS total, as the rules check counts it', () => {
+    const done = makeProfile({ ...profile, completedModuleIds: [...completed, 'MECH60003'] });
+    const donePlan: SwapPlan = { modules, rules, check: (list) => checkShortlist(list, done, modules, rules) };
+    const view = planTimetable(done, ['MECH60009'], ranked, slots, donePlan);
+    expect(view.coreModuleIds).toEqual(['MECH60015']);
+    expect(view.ects.core).toBe(30);
+  });
+
   it('finds a clash with the core Design, Make and Test Project lab', () => {
     // Robot dynamics and control (a Year 4 module) runs Tuesday 11:00 to 13:00 in spring, over the core lab.
     const view = planTimetable(profile, ['MECH60009', 'MECH70057'], ranked, slots, plan);

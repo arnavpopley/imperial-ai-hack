@@ -184,21 +184,23 @@ function styleCues(sentence: string, targetSlots: string[]): ExtractedUpdate[] {
   return out;
 }
 
-/** "Wednesday afternoons", "Monday morning", "Friday pm": half a day rather than the whole day. */
-const halfDayOf = (name: string, sentence: string): 'am' | 'pm' | null => {
-  const part = sentence.match(new RegExp(`\\b${name}s?\\s+(mornings?|afternoons?|am|pm)\\b`, 'i'))?.[1]?.toLowerCase();
-  if (!part) return null;
-  return part.startsWith('morning') || part === 'am' ? 'am' : 'pm';
+const PART = '(mornings?|afternoons?|am|pm)';
+
+/**
+ * Every half of a day the sentence names: "Wednesday afternoons" is pm, "Monday morning and afternoon" or
+ * "Monday mornings and Monday afternoons" is both. Empty when the day is named on its own.
+ */
+const halvesOf = (name: string, sentence: string): ('am' | 'pm')[] => {
+  const pattern = new RegExp(`\\b${name}s?\\s+${PART}(?:\\s+(?:and|&)\\s+${PART})?\\b`, 'gi');
+  const parts = [...sentence.matchAll(pattern)].flatMap((m) => [m[1], m[2]]).flatMap((p) => (p ? [p.toLowerCase()] : []));
+  return (['am', 'pm'] as const).filter((half) => parts.some((p) => (half === 'am' ? p.startsWith('morning') || p === 'am' : p.startsWith('afternoon') || p === 'pm')));
 };
 
 function timetableCues(sentence: string): ExtractedUpdate[] {
   const out: ExtractedUpdate[] = [];
   const named = Object.entries(DAYS).filter(([name]) => new RegExp(`\\b${name}s?\\b`, 'i').test(sentence));
-  const days = named.filter(([name]) => !halfDayOf(name, sentence)).map(([, day]) => day);
-  const halves = named.flatMap(([name, day]) => {
-    const part = halfDayOf(name, sentence);
-    return part ? [`${day}-${part}`] : [];
-  });
+  const days = named.filter(([name]) => halvesOf(name, sentence).length === 0).map(([, day]) => day);
+  const halves = named.flatMap(([name, day]) => halvesOf(name, sentence).map((part) => `${day}-${part}`));
   if (days.length) out.push({ slot: 'timetablePrefs.avoidDays', value: days, quote: quoteOf(sentence), confidence: 0.8 });
   if (halves.length) out.push({ slot: 'timetablePrefs.avoidHalfDays', value: halves, quote: quoteOf(sentence), confidence: 0.8 });
   const time = sentence.match(/\b(?:before|until|after)\s+(\d{1,2})(?::(\d{2}))?\s*(am)?\b/i);
