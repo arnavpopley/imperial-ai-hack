@@ -19,6 +19,7 @@ import { groundExplanation } from '../server/src/guardrails/g6-grounding.ts';
 import { filterClaims } from '../server/src/guardrails/g8-claims.ts';
 import { createTracer } from '../server/src/trace/tracer.ts';
 import { EXTRACTION_TRANSCRIPTS, PERSONAS } from './eval-cases.ts';
+import { guardedText, HARD_CASES, scoreHardCase } from './eval-hard-cases.ts';
 
 process.env.MODULEMATCH_OFFLINE = '1';
 
@@ -66,6 +67,13 @@ function extraction(): EvalResult {
     }
   }
   return result('Extraction', 0.85, details);
+}
+
+// ---------- extraction hard cases: reviewed disagreements from the Adaption stress test ----------
+
+function extractionHardCases(): EvalResult {
+  const details = HARD_CASES.flatMap((c) => scoreHardCase(c, extractByCues(guardedText(c.text), c.targetSlots, pathwayIds), baseProfile(), 0.25));
+  return result('Extraction (hard cases)', 0.9, details);
 }
 
 function readSlot(profile: StudentProfile, slot: string): unknown {
@@ -142,7 +150,7 @@ function privacy(): EvalResult {
 const run: EvalRun = {
   id: randomUUID(),
   at: new Date().toISOString(),
-  results: [rankingQuality(), extraction(), await guardrails(), determinism(), privacy()],
+  results: [rankingQuality(), extraction(), extractionHardCases(), await guardrails(), determinism(), privacy()],
 };
 repo.saveEvalRun(run);
 // Also kept as a file, so a freshly seeded database (such as a serverless deployment) shows these results.
@@ -151,7 +159,7 @@ writeFileSync(dataPath(EVAL_SNAPSHOT_FILE), `${JSON.stringify(run, null, 2)}\n`)
 for (const r of run.results) {
   const rate = r.total ? r.passed / r.total : 0;
   const status = rate >= r.target ? 'PASS' : 'FAIL';
-  console.log(`${status}  ${r.name.padEnd(18)} ${r.passed}/${r.total} (${Math.round(rate * 100)}%, target ${Math.round(r.target * 100)}%)`);
+  console.log(`${status}  ${r.name.padEnd(24)} ${r.passed}/${r.total} (${Math.round(rate * 100)}%, target ${Math.round(r.target * 100)}%)`);
   for (const d of r.details.filter((x) => !x.pass)) console.log(`      ✗ ${d.case}${d.note ? `: ${d.note}` : ''}`);
 }
 if (run.results.some((r) => r.total === 0 || r.passed / r.total < r.target)) process.exitCode = 1;
