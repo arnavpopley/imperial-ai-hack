@@ -126,6 +126,11 @@ export function useFeedbackCount(): number {
   return useContext(ResultsContext)?.feedback.data?.length ?? 0;
 }
 
+/** Published exams waiting for the student's question marks (issue #108); they also make the feedback tab worth showing. */
+export function useAwaitingCount(): number {
+  return useContext(ResultsContext)?.awaiting.data?.length ?? 0;
+}
+
 /** Exam feedback whose "This affects" list includes a module, for a link from that module's page. */
 export function useFeedbackAffecting(moduleId: string): TailoredFeedback[] {
   const list = useContext(ResultsContext)?.feedback.data;

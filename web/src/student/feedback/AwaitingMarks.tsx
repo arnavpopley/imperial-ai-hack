@@ -4,7 +4,7 @@ import type { ExamAwaitingMarks } from '@modulematch/shared';
 import { useNavigate } from 'react-router';
 import { Button } from '../../components/Button.tsx';
 import { Icon } from '../../components/Icon.tsx';
-import { OPEN_RESULTS_STATE, paths } from '../routes.ts';
+import { ADD_MARKS_STATE, paths } from '../routes.ts';
 import { useReferenceData } from '../state/ReferenceDataProvider.tsx';
 
 /** "Q1, Q2, Q3 and Q4", or a range when the ids are Q1 to Qn in order. */
@@ -33,7 +33,7 @@ export function AwaitingMarks({ exams }: { exams: readonly ExamAwaitingMarks[] }
               <span className="font-semibold">{title} feedback is out.</span> Add your question marks
               {exam.questionIds.length > 0 && ` (${questionList(exam.questionIds)})`} to get it tailored.
             </p>
-            <Button size="sm" icon="plus" onClick={() => navigate(paths.interview, { state: OPEN_RESULTS_STATE })}>
+            <Button size="sm" icon="plus" onClick={() => navigate(paths.interview, { state: ADD_MARKS_STATE })}>
               Add question marks
             </Button>
           </div>

@@ -2,6 +2,7 @@
 // a PDF or photo (or pasted text), and the parsed marks as chips. "Skip for now" is always there.
 import { AnimatePresence, motion } from 'motion/react';
 import { useId, useState, type DragEvent, type FormEvent } from 'react';
+import { useLocation } from 'react-router';
 import { Button } from '../../components/Button.tsx';
 import { cx } from '../../components/cx.ts';
 import { Icon, type IconName } from '../../components/Icon.tsx';
@@ -9,6 +10,7 @@ import { SegmentedControl } from '../../components/SegmentedControl.tsx';
 import { ACCEPT, checkFile, formatBytes, MAX_FILE_BYTES, readAsBase64, uploadProblem } from './files.ts';
 import { MarkSheetIcon, UploadIcon } from './icons.tsx';
 import { MarkChips, UnmatchedCodes } from './MarkChips.tsx';
+import { wantsAddMarks } from '../routes.ts';
 import { useResults, type UploadBody } from './ResultsProvider.tsx';
 
 /** Matches the contract's ResultsUploadBody text limit. */
@@ -30,8 +32,11 @@ const BENEFITS: readonly { icon: IconName; text: string }[] = [
 export function ResultsPanel({ onClose, onSkip }: ResultsPanelProps) {
   const { hasResults, results } = useResults();
   const [replacing, setReplacing] = useState(false);
+  // Adding keeps every mark already shared: an upload only replaces the modules it contains.
+  const location = useLocation();
+  const [adding, setAdding] = useState(() => wantsAddMarks(location.state));
   const headingId = useId();
-  const showSummary = hasResults && !replacing;
+  const showSummary = hasResults && !replacing && !adding;
 
   return (
     <section aria-labelledby={headingId} className="mx-auto grid max-w-2xl gap-5">
@@ -71,11 +76,25 @@ export function ResultsPanel({ onClose, onSkip }: ResultsPanelProps) {
       <AnimatePresence mode="wait" initial={false}>
         {showSummary && results.data ? (
           <motion.div key="summary" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-            <ResultsSummary onReplace={() => setReplacing(true)} onClose={onClose} />
+            <ResultsSummary onReplace={() => setReplacing(true)} onAdd={() => setAdding(true)} onClose={onClose} />
           </motion.div>
         ) : (
           <motion.div key="form" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-            <UploadForm onUploaded={() => setReplacing(false)} onSkip={onSkip} />
+            {adding && hasResults && (
+              <p className="mb-3 rounded-xl bg-surface-2 px-3.5 py-2.5 text-[13px] text-muted">
+                Your marks so far stay as they are. Upload a mark sheet with your question marks, for example
+                &ldquo;MECH50008 Dynamics 68&rdquo; then &ldquo;Q1 15/20 Q2 14/25&rdquo;; a module you upload again replaces only
+                its own marks.
+              </p>
+            )}
+            <UploadForm
+              onUploaded={() => {
+                setReplacing(false);
+                setAdding(false);
+              }}
+              onSkip={adding && hasResults ? () => setAdding(false) : onSkip}
+              skipLabel={adding && hasResults ? 'Cancel' : undefined}
+            />
           </motion.div>
         )}
       </AnimatePresence>
@@ -83,7 +102,7 @@ export function ResultsPanel({ onClose, onSkip }: ResultsPanelProps) {
   );
 }
 
-function UploadForm({ onUploaded, onSkip }: { onUploaded: () => void; onSkip: () => void }) {
+function UploadForm({ onUploaded, onSkip, skipLabel = 'Skip for now' }: { onUploaded: () => void; onSkip: () => void; skipLabel?: string }) {
   const { upload } = useResults();
   const [mode, setMode] = useState<InputMode>('file');
   const [file, setFile] = useState<File | null>(null);
@@ -278,7 +297,7 @@ function UploadForm({ onUploaded, onSkip }: { onUploaded: () => void; onSkip: ()
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Button variant="ghost" onClick={onSkip}>
-          Skip for now
+          {skipLabel}
         </Button>
         <Button type="submit" variant="primary" icon="sparkle" busy={busy} disabled={!ready}>
           {busy ? 'Reading your marks' : 'Read my results'}
@@ -293,7 +312,7 @@ function UploadForm({ onUploaded, onSkip }: { onUploaded: () => void; onSkip: ()
   );
 }
 
-function ResultsSummary({ onReplace, onClose }: { onReplace: () => void; onClose: () => void }) {
+function ResultsSummary({ onReplace, onAdd, onClose }: { onReplace: () => void; onAdd: () => void; onClose: () => void }) {
   const { results, unmatched, lastSource, withdraw } = useResults();
   const [confirming, setConfirming] = useState(false);
   const [removing, setRemoving] = useState(false);
@@ -361,6 +380,9 @@ function ResultsSummary({ onReplace, onClose }: { onReplace: () => void; onClose
           <motion.div key="actions" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-wrap items-center gap-2">
             <Button variant="primary" icon="chat" onClick={onClose}>
               Back to the conversation
+            </Button>
+            <Button variant="secondary" icon="plus" onClick={onAdd}>
+              Add more marks
             </Button>
             <Button variant="ghost" icon="edit" onClick={() => setConfirming(true)}>
               Looks wrong? Edit or remove

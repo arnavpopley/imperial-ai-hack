@@ -57,6 +57,15 @@ export function FeedbackScreen() {
         )}
         {failed && <ErrorState title="Your feedback did not load" message={feedback.error ?? ''} onRetry={feedback.reload} />}
         {!loading && <AwaitingMarks exams={awaiting.data ?? []} />}
+        {/* A failed check for waiting feedback says so, rather than hiding it; a 404 means the route is not deployed. */}
+        {!loading && awaiting.error !== null && errorStatus(awaiting.error) !== 404 && (
+          <p role="alert" className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
+            We could not check for feedback waiting on your question marks.
+            <button type="button" onClick={awaiting.reload} className="font-semibold text-brand underline-offset-2 hover:underline">
+              Try again
+            </button>
+          </p>
+        )}
         {!loading && !failed && list.length === 0 && <EmptyFeedback />}
         {list.map((item, index) => (
           <ExamFeedbackCard
