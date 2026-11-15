@@ -320,7 +320,9 @@ function ResultsSummary({ onReplace, onClose }: { onReplace: () => void; onClose
           <span className="grid size-7 place-items-center rounded-full bg-fit-high text-on-brand" aria-hidden="true">
             <Icon name="check" size={14} />
           </span>
-          {lastSource ? 'Read' : 'Shared'} {matchedCount === 1 ? '1 module' : `${matchedCount} modules`}
+          {matchedCount === 0
+            ? 'None of these codes are in our catalogue'
+            : `${lastSource ? 'Read' : 'Shared'} ${matchedCount === 1 ? '1 module' : `${matchedCount} modules`}`}
         </p>
         {lastSource && (
           <span className="text-[11.5px] text-muted">{lastSource === 'model' ? 'Read by AI' : 'Read by the offline parser'}</span>

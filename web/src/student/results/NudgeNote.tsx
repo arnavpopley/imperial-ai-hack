@@ -27,8 +27,9 @@ export function InfoTip({ text, label, className }: { text: string; label: strin
         type="button"
         aria-label={label}
         aria-describedby={tipId}
-        aria-expanded={open}
-        onClick={() => setOpen((v) => !v)}
+        // Opens only: a tap focuses and clicks, and a toggle here would close what focus just opened.
+        // Escape, moving away or tapping elsewhere closes it.
+        onClick={() => setOpen(true)}
         onFocus={() => setOpen(true)}
         onBlur={() => setOpen(false)}
         onKeyDown={onKeyDown}

@@ -22,6 +22,7 @@ import {
   topicLabel,
   WEEKDAYS,
 } from '../labels.ts';
+import { clearRevisionChecklists } from '../feedback/plan.ts';
 import { ProfileEditor } from '../profile/ProfileEditor.tsx';
 import { useProfileActions } from '../profile/useProfileActions.ts';
 import { ResultsDataSection } from '../results/ResultsDataSection.tsx';
@@ -488,6 +489,7 @@ function DangerZone() {
     setError(null);
     try {
       await api.deleteProfile(session.id);
+      clearRevisionChecklists(session.id);
       navigate(paths.start, { state: DELETED_STATE });
       forget();
     } catch (err) {

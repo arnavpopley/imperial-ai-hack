@@ -10,6 +10,7 @@ import type {
 } from '@modulematch/shared';
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 import { api } from '../../api.ts';
+import { clearRevisionChecklists } from '../feedback/plan.ts';
 import { useAsync, type AsyncResult } from '../hooks/useAsync.ts';
 import { useReadySession } from '../state/SessionProvider.tsx';
 
@@ -33,19 +34,26 @@ interface ResultsValue {
 
 const ResultsContext = createContext<ResultsValue | null>(null);
 
+const NO_PERFORMANCE: PerformanceView = { consent: false, overallAverage: null, topics: [], nudges: [] };
+
 export function ResultsProvider({ children }: { children: ReactNode }) {
   const { session } = useReadySession();
   const sessionId = session.id;
-  /** Bumped after an upload or a withdrawal, so nudges and feedback are worked out again. */
+  /**
+   * Bumped after an upload or a withdrawal, so marks, nudges and feedback are read again. Changing it also
+   * invalidates any read still in flight, so an older response can never replace a newer one.
+   */
   const [version, setVersion] = useState(0);
   const [unmatched, setUnmatched] = useState<readonly string[]>([]);
   const [lastSource, setLastSource] = useState<ResultsUploadResponse['source'] | null>(null);
 
-  const results = useAsync(() => api.results(sessionId), [sessionId]);
+  const results = useAsync(() => api.results(sessionId), [sessionId, version]);
   // Nudges mention the student's interests, so they follow profile edits too.
   const performance = useAsync(() => api.performance(sessionId), [sessionId, version, session.profile.updatedAt]);
   const feedback = useAsync(() => api.examFeedback(sessionId), [sessionId, version]);
   const { setData: setResults } = results;
+  const { setData: setPerformance } = performance;
+  const { setData: setFeedback } = feedback;
 
   const nudges = useMemo(() => {
     const view = performance.data;
@@ -69,10 +77,14 @@ export function ResultsProvider({ children }: { children: ReactNode }) {
 
   const withdraw = useCallback(async () => {
     setResults(await api.deleteResults(sessionId));
+    // Nothing made from the deleted marks may linger, even if the follow-up reads fail.
+    setPerformance(NO_PERFORMANCE);
+    setFeedback([]);
+    clearRevisionChecklists(sessionId);
     setUnmatched([]);
     setLastSource(null);
     setVersion((v) => v + 1);
-  }, [sessionId, setResults]);
+  }, [sessionId, setResults, setPerformance, setFeedback]);
 
   const value = useMemo<ResultsValue>(
     () => ({

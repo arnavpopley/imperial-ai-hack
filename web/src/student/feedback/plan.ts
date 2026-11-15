@@ -66,6 +66,21 @@ export function writeChecked(key: string, checked: readonly string[]): void {
   }
 }
 
+/** Forget every revision checklist for a session, when its marks or the whole profile are deleted. */
+export function clearRevisionChecklists(sessionId: string): void {
+  try {
+    const prefix = `modulematch.revision.${sessionId}.`;
+    const keys: string[] = [];
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const key = window.localStorage.key(i);
+      if (key?.startsWith(prefix)) keys.push(key);
+    }
+    for (const key of keys) window.localStorage.removeItem(key);
+  } catch {
+    // Storage is blocked, so nothing was saved either.
+  }
+}
+
 /** Toggle an item, keeping only items still on the plan. */
 export function toggleItem(checked: readonly string[], item: string, plan: readonly string[]): string[] {
   const next = checked.includes(item) ? checked.filter((c) => c !== item) : [...checked, item];

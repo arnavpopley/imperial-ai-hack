@@ -1,7 +1,7 @@
 // Guards the exam feedback page's lost-mark bars and revision checklist logic.
 import type { ModuleResult } from '@modulematch/shared';
-import { describe, expect, it } from 'vitest';
-import { lostMarksRows, questionLabel, toggleItem } from './plan.ts';
+import { describe, expect, it, vi } from 'vitest';
+import { clearRevisionChecklists, lostMarksRows, questionLabel, readChecked, revisionKey, toggleItem, writeChecked } from './plan.ts';
 
 const result: ModuleResult = {
   moduleId: 'MECH50010',
@@ -44,6 +44,30 @@ describe('revision checklist', () => {
     const plan = ['Rework Q3', 'Past paper 2024'];
     expect(toggleItem([], 'Rework Q3', plan)).toEqual(['Rework Q3']);
     expect(toggleItem(['Rework Q3', 'Old item'], 'Rework Q3', plan)).toEqual([]);
+  });
+
+  it("forgets a session's saved checklists when its marks are deleted, and only that session's", () => {
+    const store = new Map<string, string>();
+    const localStorage = {
+      get length() {
+        return store.size;
+      },
+      key: (i: number) => [...store.keys()][i] ?? null,
+      getItem: (k: string) => store.get(k) ?? null,
+      setItem: (k: string, v: string) => void store.set(k, v),
+      removeItem: (k: string) => void store.delete(k),
+    };
+    vi.stubGlobal('window', { localStorage });
+    try {
+      writeChecked(revisionKey('s1', 'MECH50008', 'June 2026 exam'), ['Rework Q3']);
+      writeChecked(revisionKey('s1', 'MECH50002', 'June 2026 exam'), ['Failure criteria']);
+      writeChecked(revisionKey('s2', 'MECH50008', 'June 2026 exam'), ['Rework Q3']);
+      clearRevisionChecklists('s1');
+      expect([...store.keys()]).toEqual([revisionKey('s2', 'MECH50008', 'June 2026 exam')]);
+      expect(readChecked(revisionKey('s1', 'MECH50008', 'June 2026 exam'))).toEqual([]);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it('labels question ids for reading', () => {
