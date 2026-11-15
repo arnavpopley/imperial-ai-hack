@@ -300,17 +300,20 @@ function Letter({ index }: { index: number }) {
   );
 }
 
-/** Exam, coursework and practical as one stacked bar with a legend; "estimated" when the page publishes no split. */
+/**
+ * Exam, coursework and practical as one stacked bar with a legend; "estimated" when the page publishes no split. The
+ * slate assessment ramp keeps them apart from the module letters A, B and C in the same column (issue 137).
+ */
 function AssessmentBar({ assessment, title }: { assessment: CompareModule['assessment']; title: string }) {
   const parts = [
-    { label: 'Exam', value: assessment.exam, className: 'bg-brand' },
-    { label: 'Coursework', value: assessment.coursework, className: 'bg-module-2' },
-    { label: 'Practical', value: assessment.practical, className: 'bg-module-3' },
+    { label: 'Exam', value: assessment.exam, className: 'bg-assess-exam' },
+    { label: 'Coursework', value: assessment.coursework, className: 'bg-assess-coursework' },
+    { label: 'Practical', value: assessment.practical, className: 'bg-assess-practical' },
   ].filter((p) => p.value > 0);
   const summary = parts.map((p) => `${p.label} ${p.value}%`).join(', ');
   return (
     <div className="grid gap-1.5">
-      <div role="img" aria-label={`Assessment for ${title}: ${summary}${assessment.source === 'estimated' ? ', estimated' : ''}`} className="flex h-2.5 overflow-hidden rounded-full bg-surface-2">
+      <div role="img" aria-label={`Assessment for ${title}: ${summary}${assessment.source === 'estimated' ? ', estimated' : ''}`} className="flex h-2.5 gap-0.5 overflow-hidden rounded-full bg-surface-2">
         {parts.map((p) => (
           <span key={p.label} className={p.className} style={{ width: `${p.value}%` }} />
         ))}

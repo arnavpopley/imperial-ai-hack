@@ -130,4 +130,13 @@ describe.each(['light', 'dark'] as const)('text contrast in the %s theme', (them
   it.each(['ink', 'muted', 'brand'])('%s text meets 4.5:1 on every background', (fg) => {
     for (const bg of ['surface', 'surface-2', 'canvas']) expect(contrast(t[fg]!, t[bg]!), `${fg} on ${bg}`).toBeGreaterThanOrEqual(4.5);
   });
+
+  // Issue 137: factor and assessment colours are bar fills and legend dots, so they need the 3:1 non-text contrast.
+  it.each(['factor-interest', 'factor-goal', 'factor-style', 'factor-breadth', 'assess-exam', 'assess-coursework', 'assess-practical'])(
+    '%s graphics meet 3:1 on surfaces',
+    (fill) => {
+      expect(t[fill], fill).toMatch(/^#[0-9a-f]{6}$/);
+      for (const bg of ['surface', 'surface-2']) expect(contrast(t[fill]!, t[bg]!), `${fill} on ${bg}`).toBeGreaterThanOrEqual(3);
+    },
+  );
 });
