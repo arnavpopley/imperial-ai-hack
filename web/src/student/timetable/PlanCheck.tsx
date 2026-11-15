@@ -67,7 +67,7 @@ export function PlanCheck({ view, titleFor }: { view: TimetableView; titleFor: (
                 {row.id === 'keep-free' && view.keepFreeConflicts.length > 0 && (
                   <ul className="mt-1 grid gap-0.5 text-[12px] text-muted">
                     {view.keepFreeConflicts.slice(0, 3).map(({ slot, window }) => (
-                      <li key={`${slot.moduleId}|${slot.sessionKey}|${slot.day}|${slot.start}`} className="truncate">
+                      <li key={`${slot.moduleId}|${slot.sessionKey}|${slot.day}|${slot.start}`} className="leading-snug break-words">
                         <span className="font-medium text-ink tabular-nums">
                           {DAY_LABELS[slot.day]} {slot.start}
                         </span>{' '}
