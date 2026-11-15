@@ -7,7 +7,7 @@ import { clearSummaryCache } from '../agents/knowledge.ts';
 import { catalogue, clearExplanationCache, rulesForProfile, setMode, tracerSink } from '../agents/session.ts';
 import { rulesFor } from '../db/catalogue.ts';
 import * as repo from '../db/repo.ts';
-import { buildInsights, clashPriorities, cohortStats, feedbackJsonl, summariseFeedback, type InsightContext } from '../engines/index.ts';
+import { buildInsights, clashPriorities, cohortStats, feedbackJsonl, storedDecisions, summariseFeedback, type InsightContext } from '../engines/index.ts';
 import { createTracer } from '../trace/tracer.ts';
 import { body } from './validate.ts';
 
@@ -47,9 +47,11 @@ export const staffRoutes = new Hono()
     const ctx = insightContext();
     const module = ctx.modules.find((m) => m.id === c.req.param('id'));
     if (!module) return c.json({ error: 'module not found' }, 404);
-    const decided = new Map(repo.listInsights(module.id).map((i) => [i.id, i.decision]));
+    const built = buildInsights(module, ctx);
+    // Stored decisions carry over by id, including those recorded under the older rank-based counterfactual ids.
+    const decided = storedDecisions(built, repo.listInsights(module.id));
     const cards: Insight[] = await Promise.all(
-      buildInsights(module, ctx).map(async (i) => ({ ...(await wordInsight(i)), decision: decided.get(i.id) ?? 'pending' })),
+      built.map(async (i) => ({ ...(await wordInsight(i)), decision: decided.get(i.id) ?? 'pending' })),
     );
     const current = cards.filter((i) => i.cohortSize >= MIN_COHORT);
     repo.upsertInsights(current);

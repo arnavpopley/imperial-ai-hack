@@ -15,6 +15,7 @@ import {
   MEANINGFUL_UPLIFT,
   overlooked,
   shareInWords,
+  storedDecisions,
   suggestedEditFor,
   type InsightContext,
 } from '../src/engines/index.ts';
@@ -318,6 +319,29 @@ describe('suggested edits', () => {
   it('record the value a demand change ends at, kept within 0 to 1', () => {
     const low = { ...target, demand: { ...target.demand, examShare: 0.1 } };
     expect(suggestedEditFor(low, { kind: 'shift-demand', field: 'examShare', delta: -0.2 })).toEqual({ group: 'demand', key: 'examShare', value: 0 });
+  });
+});
+
+describe('storedDecisions', () => {
+  const cards = buildInsights(target, context(6)).filter((card) => card.kind === 'COUNTERFACTUAL');
+  const [maths, thermo] = cards;
+
+  it('keeps decisions by id', () => {
+    const decided = storedDecisions(cards, [{ ...maths!, decision: 'noted' }]);
+    expect(decided.get(maths!.id)).toBe('noted');
+  });
+
+  it('carries a decision from an older rank-based id when the rank and the uplift match', () => {
+    const legacy = { ...thermo!, id: 'target:COUNTERFACTUAL:2', decision: 'accepted' as const };
+    expect(storedDecisions(cards, [legacy]).get(thermo!.id)).toBe('accepted');
+  });
+
+  it('carries nothing when the uplift differs, so a decision never lands on a different change', () => {
+    const legacy = { ...thermo!, id: 'target:COUNTERFACTUAL:2', upliftPoints: 1.4, decision: 'accepted' as const };
+    expect(storedDecisions(cards, [legacy]).has(thermo!.id)).toBe(false);
+    // A decision already stored under the new id wins over a legacy one.
+    const both = [legacy, { ...thermo!, decision: 'dismissed' as const }, { ...legacy, upliftPoints: thermo!.upliftPoints }];
+    expect(storedDecisions(cards, both).get(thermo!.id)).toBe('dismissed');
   });
 });
 

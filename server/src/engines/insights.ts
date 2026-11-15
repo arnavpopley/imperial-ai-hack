@@ -3,6 +3,7 @@
 import { counterfactualInsightId, MIN_COHORT, STYLE_SLOTS, TOPIC_IDS } from '@modulematch/shared';
 import type {
   Insight,
+  InsightDecision,
   InsightKind,
   Module,
   ModuleDemand,
@@ -637,19 +638,46 @@ export function clashInsights(module: Module, ctx: InsightContext): Insight[] {
     });
 }
 
-/** Every insight card for one module, each awaiting a staff decision (spec 10.7). */
 /**
- * Cards most worth a module lead's time first: changes that would raise fit, then demand (including what
- * to do when a module is full), then overlooked, then timetable clashes, and the summary card last, since
- * it says no single change is worth making.
+ * Every insight card for one module, each awaiting a staff decision (spec 10.7). Cards most worth a module
+ * lead's time come first: changes that would raise fit, then demand (including what to do when a module is
+ * full), then overlooked, then timetable clashes, and the summary card last, since it says no single change
+ * is worth making.
  */
 export function buildInsights(module: Module, ctx: InsightContext): Insight[] {
   const counterfactualCards = counterfactualInsights(module, ctx);
-  const isSummary = (insight: Insight) => insight.upliftPoints === null;
   return [
-    ...counterfactualCards.filter((insight) => !isSummary(insight)),
+    ...counterfactualCards.filter((insight) => !isCounterfactualSummary(insight)),
     ...[demand(module, ctx), overlooked(module, ctx)].filter((insight) => insight !== null),
     ...clashInsights(module, ctx),
-    ...counterfactualCards.filter(isSummary),
+    ...counterfactualCards.filter(isCounterfactualSummary),
   ];
+}
+
+const isCounterfactualSummary = (insight: Insight): boolean =>
+  insight.kind === 'COUNTERFACTUAL' && insight.upliftPoints === null;
+
+/** Ids counterfactual cards had before they carried their change: `<module>:COUNTERFACTUAL:<rank>`. */
+const RANKED_COUNTERFACTUAL_ID = /:COUNTERFACTUAL:(\d+)$/;
+
+/**
+ * The staff decision for each card, by id. Counterfactual cards used to be numbered by rank; a decision
+ * recorded under such an id carries over to the change-based id only when it is safe: the rank matches the
+ * card's position among the current change cards and the stored uplift is the same, so it is the same change.
+ */
+export function storedDecisions(cards: readonly Insight[], stored: readonly Insight[]): Map<string, InsightDecision> {
+  const decided = new Map(stored.map((insight) => [insight.id, insight.decision]));
+  const ranked = new Map(
+    stored.flatMap((insight) => {
+      const rank = RANKED_COUNTERFACTUAL_ID.exec(insight.id)?.[1];
+      return rank === undefined || insight.decision === 'pending' ? [] : [[Number(rank), insight] as const];
+    }),
+  );
+  cards
+    .filter((card) => card.kind === 'COUNTERFACTUAL' && !isCounterfactualSummary(card))
+    .forEach((card, i) => {
+      const legacy = ranked.get(i + 1);
+      if (!decided.has(card.id) && legacy && legacy.upliftPoints === card.upliftPoints) decided.set(card.id, legacy.decision);
+    });
+  return decided;
 }

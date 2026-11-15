@@ -1,7 +1,7 @@
 // Screen 9: staff correct a module's derived fields beside the analyst's rationale (spec 10.4).
 import { parseSuggestedEdit, SKILL_IDS, TOPIC_IDS } from '@modulematch/shared';
 import type { Module, ModuleDemand, Pathway, SuggestedEdit } from '@modulematch/shared';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { api } from '../../api.ts';
 import { DiffSummary } from '../components/DiffSummary.tsx';
@@ -39,7 +39,21 @@ export function TagEditor() {
   const { summary } = useModuleOutlet();
   const { catalogue, reloadCatalogue } = useStaffData();
   // "Make this change in the tag editor" on an accepted insight card passes its change here.
-  const editParam = useSearchParams()[0].get(EDIT_PARAM) ?? '';
+  const [params, setParams] = useSearchParams();
+  const editParam = params.get(EDIT_PARAM) ?? '';
+  // Once the suggestion is saved or discarded it leaves the URL, so a refresh does not bring it back.
+  const settleSuggestion = useCallback(
+    () =>
+      setParams(
+        (current) => {
+          const next = new URLSearchParams(current);
+          next.delete(EDIT_PARAM);
+          return next;
+        },
+        { replace: true },
+      ),
+    [setParams],
+  );
 
   if (catalogue.status === 'loading') return <LoadingState label="Loading module tags" rows={4} />;
   if (catalogue.status === 'error')
@@ -53,13 +67,29 @@ export function TagEditor() {
         onRetry={reloadCatalogue}
       />
     );
-  // Keyed so switching modules, or arriving with another suggested edit, starts a fresh draft.
-  return <TagEditorForm key={`${module.id}?${editParam}`} module={module} suggested={parseSuggestedEdit(editParam)} />;
+  // Keyed so switching modules starts a fresh draft. The suggestion is read when the form mounts, so clearing
+  // it from the URL later leaves the draft as it is.
+  return (
+    <TagEditorForm
+      key={module.id}
+      module={module}
+      suggested={parseSuggestedEdit(editParam)}
+      onSuggestionSettled={settleSuggestion}
+    />
+  );
 }
 
 type SaveState = { status: 'idle' } | { status: 'saving' } | { status: 'saved' } | { status: 'error'; message: string };
 
-function TagEditorForm({ module, suggested }: { module: Module; suggested: SuggestedEdit | null }) {
+function TagEditorForm({
+  module,
+  suggested,
+  onSuggestionSettled,
+}: {
+  module: Module;
+  suggested: SuggestedEdit | null;
+  onSuggestionSettled: () => void;
+}) {
   const { replaceModule } = useStaffData();
   const pathways = useResource('pathways', api.pathways);
   const [saved, setSaved] = useState<Module>(module);
@@ -100,6 +130,7 @@ function TagEditorForm({ module, suggested }: { module: Module; suggested: Sugge
       setDraft(draftFrom(updated));
       replaceModule(updated);
       setSave({ status: 'saved' });
+      if (suggested) onSuggestionSettled();
     } catch (e) {
       setSave({ status: 'error', message: errorMessage(e) });
     }
@@ -204,6 +235,7 @@ function TagEditorForm({ module, suggested }: { module: Module; suggested: Sugge
               disabled={changes === 0 || saving}
               onClick={() => {
                 setDraft(baseline);
+                if (suggested) onSuggestionSettled();
                 setSave({ status: 'idle' });
               }}
             >
