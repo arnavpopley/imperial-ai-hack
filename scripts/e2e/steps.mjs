@@ -494,6 +494,13 @@ export const STEPS = [
       const rates = await page.eval(() => [...document.querySelectorAll('[aria-label*="percent passed"]')].map((e) => e.getAttribute('aria-label')));
       ctx.note(`evaluation: ${rates.join('; ')}`);
       await ctx.checkpoint(page, 'trace-top');
+      // The live-model panel's misses hold long one-line reasons: audit the page for overflow with every one open.
+      await page.waitFor(() => document.getElementById('live-eval-heading'), [], { desc: 'the live-model evaluation', timeout: ctx.timeout });
+      await page.eval(() => {
+        for (const d of document.querySelectorAll('section[aria-labelledby="live-eval-heading"] details')) d.open = true;
+      });
+      await page.scrollIntoView({ css: 'section[aria-labelledby="live-eval-heading"]' });
+      await ctx.checkpoint(page, 'trace-live-eval');
       const summary = await page.waitFor(
         () => {
           const t = document.querySelector('ul[aria-label="Summary"]')?.innerText ?? '';

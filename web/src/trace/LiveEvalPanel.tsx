@@ -104,7 +104,8 @@ export function LiveEvalPanel() {
       {misses.length > 0 && (
         <div className="grid gap-1.5">
           <p className="text-xs font-semibold tracking-[0.1em] text-muted uppercase">Misses, left visible</p>
-          <ul className="grid gap-1.5 text-sm">
+          {/* minmax(0, 1fr): a one-line reason never widens the page; it truncates instead. */}
+          <ul className="grid grid-cols-1 gap-1.5 text-sm">
             {misses.map((m) => (
               // One line each; tapping, clicking or pressing Enter on the row opens the full reason.
               <li key={`${m.group}-${m.case}`}>
