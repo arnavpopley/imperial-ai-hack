@@ -125,9 +125,23 @@ export function PathwaysScreen() {
           <h2 id="progress-heading" className="text-sm font-semibold">
             Your progress
           </h2>
-          <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2 xl:grid-cols-3">
+          {/* The row is always filled (issue 117): one pathway takes it all with its skills open beside it, two
+              share it, and three sit side by side on wide screens. */}
+          <div
+            className={cx(
+              'grid grid-cols-1 items-start gap-4',
+              selected.length === 2 && 'lg:grid-cols-2',
+              selected.length >= 3 && 'lg:grid-cols-2 xl:grid-cols-3',
+            )}
+          >
             {selected.map((id, i) => (
-              <PathwayProgressCard key={id} pathwayId={id} pathway={pathways.data?.find((p) => p.id === id)} index={i} />
+              <PathwayProgressCard
+                key={id}
+                pathwayId={id}
+                pathway={pathways.data?.find((p) => p.id === id)}
+                index={i}
+                wide={selected.length === 1}
+              />
             ))}
           </div>
         </section>

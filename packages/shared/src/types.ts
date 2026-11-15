@@ -107,3 +107,4 @@ export type ExamFeedbackForm = z.infer<typeof S.ExamFeedbackForm>;
 export type ExamFormSaveBody = z.infer<typeof S.ExamFormSaveBody>;
 export type ExamFormDraftBody = z.infer<typeof S.ExamFormDraftBody>;
 export type TailoredFeedback = z.infer<typeof S.TailoredFeedback>;
+export type ExamAwaitingMarks = z.infer<typeof S.ExamAwaitingMarks>;

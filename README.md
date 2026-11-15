@@ -113,7 +113,7 @@ Hono, `@hono/node-server`, `@hono/zod-validator`, zod, `@anthropic-ai/sdk`, bett
 | Evaluation cases (`scripts/eval-cases.ts`) | Hand-written: 12 personas and 4 scripted interviews | Synthetic |
 | Photos (`web/public/images`) | Pexels, under the Pexels licence; credits in `web/public/images/CREDITS.md` | Stock photos, not Imperial students |
 
-No real student data is used. No grades, results or protected characteristics are requested, stored or inferred.
+No real student data is used. Grades typed in the chat are redacted and never stored; marks are kept only if a student uploads them with explicit consent (from Year 2), are visible only to them and can be deleted at any time. Health and protected characteristics are never requested, stored or inferred.
 
 ## Evaluation
 

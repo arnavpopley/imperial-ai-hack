@@ -63,6 +63,9 @@ function Harness() {
       <button type="button" onClick={() => void shortlist.swap('MECH60018', 'MECH60001').catch(() => undefined)}>
         Swap
       </button>
+      <button type="button" onClick={() => void shortlist.remove('MECH60018').catch(() => undefined)}>
+        Remove Mechatronics 3A
+      </button>
       <p data-testid="shortlist">{current.shortlist.join(',')}</p>
     </>
   );
@@ -116,6 +119,21 @@ describe('useShortlist and the mode chip', () => {
     expect(chip('shell')).toContain('Planning timetable');
     expect(chip('drawer')).toContain('Planning timetable');
     expect(api.timetable).not.toHaveBeenCalled();
+  });
+
+  it('removes, and a second click never adds the module back (issue 103)', async () => {
+    vi.mocked(api.getSession).mockResolvedValue(session('PLAN', ['MECH60009', 'MECH60018', 'MECH60017']));
+    vi.mocked(api.shortlist).mockResolvedValue(session('PLAN', ['MECH60009', 'MECH60017']));
+    await mount();
+
+    await click('Remove Mechatronics 3A');
+    await click('Remove Mechatronics 3A');
+
+    expect(vi.mocked(api.shortlist).mock.calls).toEqual([
+      ['s1', { moduleId: 'MECH60018', action: 'remove' }],
+      ['s1', { moduleId: 'MECH60018', action: 'remove' }],
+    ]);
+    expect(saved()).toBe('MECH60009,MECH60017');
   });
 
   it('applies a swap by adding the alternative first, so the shortlist never drops below two', async () => {

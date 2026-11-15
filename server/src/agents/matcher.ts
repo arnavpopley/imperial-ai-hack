@@ -1,6 +1,6 @@
 // Matcher (spec 10.5): explains scores and holds the line on programme rules. It never changes a number:
 // scores come from the scoring engine, and every reason cites an evidence ID or a module field (G6).
-import { schemas, taxonomy, type Evidence, type Explanation, type Module, type Recommendation, type RuleViolation, type StudentProfile } from '@modulematch/shared';
+import { FIT_BAND_FLOORS, FIT_BAND_LABELS, fitBand, schemas, taxonomy, type Evidence, type Explanation, type Module, type Recommendation, type RuleViolation, type StudentProfile } from '@modulematch/shared';
 import { z } from 'zod';
 import { filterClaims } from '../guardrails/g8-claims.ts';
 import { stripInjection } from '../guardrails/g3-injection.ts';
@@ -23,6 +23,9 @@ const STYLE_TO_DEMAND = {
   appliedPreference: { field: 'applied', high: 'applied and hands-on', low: 'theory-led' },
 } as const;
 
+/** An interest at or above this is one the student said they enjoy. */
+const INTEREST_MATCH = 0.5;
+
 const CAPABILITY_TO_DEMAND = {
   mathsComfort: { field: 'mathsIntensity', label: 'Maths intensity' },
   codingComfort: { field: 'codingIntensity', label: 'Coding load' },
@@ -42,7 +45,7 @@ export function explainByRules(
   const because: Explanation['because'] = [];
   const overlaps = Object.entries(module.topics)
     .map(([topic, weight]) => ({ topic, weight, interest: profile.interests[topic] ?? 0 }))
-    .filter((t) => t.weight >= 0.3 && t.interest >= 0.5)
+    .filter((t) => t.weight >= 0.3 && t.interest >= INTEREST_MATCH)
     .sort((a, b) => b.weight * b.interest - a.weight * a.interest)
     .slice(0, 2);
   for (const t of overlaps) {
@@ -65,10 +68,6 @@ export function explainByRules(
       const ev = latestEvidence(evidence, `style.${dimension}`);
       because.push({ text: `It is ${has >= 0.5 ? map.high : map.low}, which matches how you said you like to work.`, ...(ev ? { evidenceId: ev.id } : { moduleField: `demand.${map.field}` }) });
     }
-  }
-  if (because.length === 0) {
-    const top = Object.entries(module.topics).sort((a, b) => b[1] - a[1])[0];
-    if (top) because.push({ text: `It is mainly about ${topicLabel(top[0]).toLowerCase()}.`, moduleField: `topics.${top[0]}` });
   }
 
   const watchOuts: string[] = [...rec.ineligibleReasons];
@@ -94,7 +93,7 @@ export function explainByRules(
     const summary = 'There is no fit score yet: answer a few questions about what you enjoy and I can say how well this module suits you.';
     return { moduleId: module.id, summary, because: because.slice(0, 4), watchOuts };
   }
-  const band = rec.fit >= 70 ? 'A strong fit' : rec.fit >= 50 ? 'A good fit' : rec.fit >= 35 ? 'A partial fit' : 'A weak fit';
+  const band = `A ${FIT_BAND_LABELS[fitBand(rec.fit)].toLowerCase()}`;
   const styleGiven = Object.values(profile.style).some((value) => value !== null);
   const driver = overlaps[0]
     ? `mostly because of ${topicLabel(overlaps[0].topic).toLowerCase()}`
@@ -116,8 +115,10 @@ const SYSTEM = `You explain module fit scores to a student. The scores are compu
 are given to you. You cannot change them and must not invent facts.
 
 For each explanation:
-- Summarise the fit in at most two sentences.
-- Give two to four reasons. Each reason must cite either an evidence ID from the
+- Summarise the fit in at most two sentences. Name how good the fit is only with the band given in scores.band
+  (for example "a good fit"), the same words the student sees beside the score.
+- Give up to four reasons, each a real match with something the student said or chose; if nothing matches, give
+  none and say so in the summary. Each reason must cite either an evidence ID from the
   student's own words or a field of the module record (a dotted path such as topics.fluid-mechanics or demand.examShare).
 - List honest watch-outs where a sub-score is low.
 - Only say the module matches how the student likes to work when their value for that preference is given;
@@ -143,7 +144,7 @@ export async function explain(
   // With no fit signal there is no score to explain, so the honest template stands without a model call.
   if (isLive() && hasFitSignal(profile)) {
     const brief = {
-      scores: { fit: rec.fit, sub: rec.sub, eligible: rec.eligible, ineligibleReasons: rec.ineligibleReasons },
+      scores: { fit: rec.fit, band: FIT_BAND_LABELS[fitBand(rec.fit)], sub: rec.sub, eligible: rec.eligible, ineligibleReasons: rec.ineligibleReasons },
       module: { id: module.id, title: module.title, type: module.type, topics: module.topics, demand: module.demand, pathwayRelevance: module.pathwayRelevance, prerequisites: module.prerequisites },
       studentEvidence: evidence.map((e) => ({ id: e.id, slot: e.slot, value: e.value, quote: e.quote })),
       // null means the student never said; the model must not claim a match on an unstated preference.
@@ -171,13 +172,20 @@ export async function explain(
     );
   }
 
-  const grounded = groundExplanation(result, module, evidence);
+  // Reasons are only ever matches with the student; a module that matches nothing honestly has none to ground.
+  const matched = { ...result, because: result.because.filter((b) => matchesStudent(b, profile)) };
+  const grounded = matched.because.length === 0 ? { explanation: matched, dropped: 0 } : groundExplanation(matched, module, evidence);
   tracer.record({
     actor: 'G6 grounding',
     kind: 'guardrail',
     input: `explanation ${module.id}`,
-    output: grounded.explanation ? `${grounded.dropped} unsupported reason(s) dropped` : 'no grounded reasons, template used',
-    verdict: grounded.explanation ? (grounded.dropped ? 'redact' : 'pass') : 'block',
+    output:
+      matched.because.length === 0
+        ? 'no reasons: nothing the student said matches this module'
+        : grounded.explanation
+          ? `${grounded.dropped + result.because.length - matched.because.length} unsupported reason(s) dropped`
+          : 'no grounded reasons, template used',
+    verdict: !grounded.explanation ? 'block' : grounded.dropped || result.because.length !== matched.because.length ? 'redact' : 'pass',
   });
   const final = grounded.explanation ?? groundExplanation(template, module, evidence).explanation ?? template;
 
@@ -187,6 +195,15 @@ export async function explain(
   const removed = summary.removed + (final.because.length - because.length) + (final.watchOuts.length - watchOuts.length);
   tracer.record({ actor: 'G8 claims', kind: 'guardrail', input: `explanation ${module.id}`, output: removed ? `${removed} claim(s) removed` : 'no outcome claims', verdict: removed ? 'redact' : 'pass' });
   return { ...final, summary: summary.text || template.summary, because: because.length ? because : template.because, watchOuts };
+}
+
+/**
+ * A reason that cites a module topic, with no quote from the student, counts only when the student said they enjoy
+ * that topic. Nothing the student never mentioned is shown as a reason a module fits (issue #105).
+ */
+function matchesStudent(reason: Explanation['because'][number], profile: StudentProfile): boolean {
+  if (reason.evidenceId || !reason.moduleField?.startsWith('topics.')) return true;
+  return (profile.interests[reason.moduleField.slice('topics.'.length)] ?? 0) >= INTEREST_MATCH;
 }
 
 /** Topic-vector cosine similarity, used to offer alternatives close to a module the student cannot take. */
@@ -207,10 +224,11 @@ function similarity(a: Module, b: Module): number {
 
 /**
  * Issue 112: an alternative must cover the same ground (topic cosine at least this, so a module that merely shares
- * maths does not count) and, when the student's fit means something, fit them reasonably well.
+ * maths does not count) and, when the student's fit means something, be at least a partial fit on the shared scale
+ * (#105), not a weak one.
  */
 export const MIN_ALTERNATIVE_SIMILARITY = 0.6;
-export const MIN_ALTERNATIVE_FIT = 40;
+export const MIN_ALTERNATIVE_FIT = FIT_BAND_FLOORS.partial;
 
 export interface Alternatives {
   /** Eligible modules not on the shortlist: missing prerequisites first, then the closest by topic and fit. */
@@ -309,7 +327,8 @@ export function holdTemplate(args: {
   const lead =
     `I can't approve ${args.module.title} myself: ${rule}. ` +
     "The Senior Tutor can make exceptions, so I've drafted a request below; it's only sent if you approve it.";
-  const open = args.open.map((a) => (a.prerequisite ? `${a.title} (its prerequisite)` : `${a.title} (fit ${a.fit})`));
+  // Fit in words, on the shared scale (#105).
+  const open = args.open.map((a) => (a.prerequisite ? `${a.title} (its prerequisite)` : `${a.title} (${FIT_BAND_LABELS[fitBand(a.fit)].toLowerCase()})`));
   const alternatives = open.length
     ? ` Open to you instead: ${andList(open)}.`
     : args.shortlisted.length

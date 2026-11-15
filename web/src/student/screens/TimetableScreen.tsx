@@ -120,6 +120,28 @@ function TimetableBody({ view, onChanged, refreshing, stale }: TimetableBodyProp
     onChanged();
   };
 
+  // Issue 103: a clash with no swap in the fit window can still be resolved in one click by removing the module a
+  // swap would replace: the one the alternatives replace, else the lower-fit module that is not core.
+  const { byId } = useCatalogue();
+  // While the view reloads after a change it may still show a clash the student has just resolved, so no target is
+  // offered until it catches up, and a target must still be on the shortlist.
+  const removeTargetFor = (clash: Clash): string | null => {
+    if (refreshing) return null;
+    const onShortlist = (id: string) => !coreIds.has(id) && session.shortlist.includes(id);
+    const wider = view.widerSwaps.find(
+      (s) => (s.replaceModuleId === clash.moduleA || s.replaceModuleId === clash.moduleB) && onShortlist(s.replaceModuleId),
+    );
+    if (wider) return wider.replaceModuleId;
+    const [lower] = [clash.moduleA, clash.moduleB]
+      .filter(onShortlist)
+      .sort((x, y) => (byId.get(x)?.fit ?? 0) - (byId.get(y)?.fit ?? 0));
+    return lower ?? null;
+  };
+  const remove = async (moduleId: string) => {
+    await shortlist.remove(moduleId);
+    onChanged();
+  };
+
   // Spec 12: a clash with no valid swap can go to a personal tutor. The student reviews the draft in the
   // escalation tray above the screen and sends it, which moves the session from PLAN to ESCALATED.
   const escalate = (clash: Clash) => {
@@ -195,6 +217,9 @@ function TimetableBody({ view, onChanged, refreshing, stale }: TimetableBodyProp
                   key={`${clash.moduleA}-${clash.moduleB}-${clash.term}`}
                   clash={clash}
                   swaps={view.swaps.filter((s) => s.replaceModuleId === clash.moduleA || s.replaceModuleId === clash.moduleB)}
+                  widerSwaps={view.widerSwaps.filter((s) => s.replaceModuleId === clash.moduleA || s.replaceModuleId === clash.moduleB)}
+                  removeTarget={removeTargetFor(clash)}
+                  onRemove={remove}
                   titleFor={titleFor}
                   coreIds={coreIds}
                   onSwap={swap}

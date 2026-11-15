@@ -1,7 +1,8 @@
-// One exam's tailored feedback (spec 23): the summary, what went well, where marks went with the examiner's
-// advice, a revision checklist kept in this browser, and the future modules that build on the same topics.
-import type { ModuleResult, TailoredFeedback } from '@modulematch/shared';
-import { motion, useReducedMotion } from 'motion/react';
+// One exam's tailored feedback (spec 23), said once each: a headline naming where most marks went, the paper as a
+// per-question chart, the examiner's advice on the focus questions, a revision checklist kept in this browser, and
+// the future modules that build on the same topics. Collapsed, it is just the headline and the mini chart.
+import type { TailoredFeedback } from '@modulematch/shared';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useId, useState } from 'react';
 import { Link } from 'react-router';
 import { cx } from '../../components/cx.ts';
@@ -10,76 +11,129 @@ import { AnimatedTick } from '../interview/InterviewTimeline.tsx';
 import { topicLabel } from '../labels.ts';
 import { paths } from '../routes.ts';
 import { useReferenceData } from '../state/ReferenceDataProvider.tsx';
-import { formatMarks, lostMarksRows, questionLabel, readChecked, revisionKey, toggleItem, writeChecked } from './plan.ts';
+import { readChecked, revisionKey, toggleItem, writeChecked, type QuestionBar } from './plan.ts';
+import { MiniBars, QuestionChart } from './QuestionChart.tsx';
 
 const EASE = [0.2, 0.8, 0.2, 1] as const;
 
 /** "This affects" shows this many modules at first, so a long list does not crowd the card. */
 const AFFECTS_SHOWN = 3;
 
-interface ExamFeedbackCardProps {
+export interface ExamView {
   feedback: TailoredFeedback;
-  /** The student's own result for this module, for question maximums on the bars. */
-  result: ModuleResult | undefined;
+  bars: QuestionBar[];
+  mark: number | null;
+  /** Share of the paper's marks lost, 0 to 1; the page lists the biggest gap first. */
+  gap: number;
+  anchor: string;
+}
+
+interface ExamFeedbackCardProps {
+  exam: ExamView;
   sessionId: string;
+  open: boolean;
+  onToggle: () => void;
   index: number;
 }
 
-export function ExamFeedbackCard({ feedback, result, sessionId, index }: ExamFeedbackCardProps) {
+export function ExamFeedbackCard({ exam, sessionId, open, onToggle, index }: ExamFeedbackCardProps) {
+  const { feedback, bars, mark, anchor } = exam;
   const { moduleById } = useReferenceData();
   const reduce = useReducedMotion();
-  const headingId = useId();
+  const bodyId = useId();
+  const chartId = useId();
+  const ticks = useRevisionTicks(feedback, sessionId);
   const module = moduleById.get(feedback.moduleId);
-  const title = module?.title ?? result?.title ?? feedback.moduleId;
+  const title = module?.title ?? feedback.moduleId;
 
   return (
     <motion.article
-      aria-labelledby={headingId}
+      id={anchor}
       initial={reduce ? false : { opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45, delay: Math.min(index, 4) * 0.08, ease: EASE }}
-      className="overflow-hidden rounded-panel bg-surface shadow-soft ring-1 ring-line"
+      transition={{ duration: 0.45, delay: Math.min(index, 4) * 0.06, ease: EASE }}
+      className="scroll-mt-24 overflow-hidden rounded-panel bg-surface shadow-soft ring-1 ring-line"
     >
-      <header className="relative grid gap-4 border-b border-line p-card sm:p-card-lg">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-mode-explain/10 to-transparent"
-        />
-        <div className="relative flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
-          <div className="min-w-0">
-            <p className="flex flex-wrap items-center gap-x-2 text-[13px] text-muted">
-              {module && <span className="font-mono text-[12px]">{module.code}</span>}
-              <span>{feedback.examLabel}</span>
-            </p>
-            <h2 id={headingId} className="mt-1 text-xl font-semibold tracking-tight sm:text-2xl">
-              <Link to={paths.module(feedback.moduleId)} className="rounded-sm hover:underline">
-                {title}
-              </Link>
-            </h2>
-          </div>
-          <SourceTag source={feedback.source} />
-        </div>
-        <p className="relative max-w-3xl text-[15px] leading-relaxed text-pretty">{feedback.overall}</p>
-        {feedback.strengths.length > 0 && (
-          <ul className="relative flex flex-wrap gap-2" aria-label="What went well">
-            {feedback.strengths.map((s) => (
-              <li key={s} className="inline-flex max-w-full items-start gap-1.5 rounded-2xl bg-fit-high/10 px-3 py-1.5 text-[13px] text-ink">
-                <Icon name="check" size={13} className="mt-1 shrink-0 text-fit-high" />
-                <span className="min-w-0">{s}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </header>
+      <h2>
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-controls={bodyId}
+          onClick={onToggle}
+          className="group flex w-full items-center gap-4 p-5 text-left transition hover:bg-surface-2/50 sm:gap-5 sm:p-6"
+        >
+          <MarkBadge mark={mark} />
+          <span className="min-w-0 flex-1">
+            <span className="block text-[12px] text-muted">
+              {module && <span className="font-mono">{module.code} · </span>}
+              {feedback.examLabel}
+            </span>
+            <span className="mt-0.5 block text-lg leading-snug font-semibold tracking-tight">{title}</span>
+            <span className="mt-1 block text-[13.5px] leading-snug text-muted">{feedback.overall}</span>
+          </span>
+          <MiniBars bars={bars} className="shrink-0 max-sm:hidden" />
+          <Icon
+            name="chevron-down"
+            size={18}
+            className={cx('shrink-0 text-muted transition-transform duration-200', open && 'rotate-180')}
+          />
+        </button>
+      </h2>
 
-      <div className="grid gap-x-8 gap-y-8 p-card sm:p-card-lg lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
-        <WeakPoints feedback={feedback} result={result} />
-        <div className="grid content-start gap-8">
-          <RevisionPlan feedback={feedback} sessionId={sessionId} />
-          <AffectsModules feedback={feedback} />
-        </div>
-      </div>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            id={bodyId}
+            key="body"
+            initial={reduce ? { opacity: 0 } : { height: 0, opacity: 0 }}
+            animate={reduce ? { opacity: 1 } : { height: 'auto', opacity: 1 }}
+            exit={reduce ? { opacity: 0 } : { height: 0, opacity: 0 }}
+            transition={{ duration: reduce ? 0.15 : 0.3, ease: EASE }}
+            className="overflow-hidden"
+          >
+            <div className="grid gap-x-8 gap-y-7 border-t border-line p-5 sm:p-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+              <div className="grid content-start gap-7">
+                {bars.length > 0 && (
+                  <section className="grid gap-3">
+                    <SectionTitle id={chartId}>Your paper</SectionTitle>
+                    <QuestionChart bars={bars} headingId={chartId} />
+                  </section>
+                )}
+                <FocusPoints feedback={feedback} />
+              </div>
+              <div className="grid content-start gap-7">
+                <Strengths strengths={feedback.strengths} />
+                <RevisionPlan plan={feedback.revisionPlan} checked={ticks.checked} onToggle={ticks.toggle} />
+                <AffectsModules feedback={feedback} />
+                <p className="flex flex-wrap items-center justify-between gap-2 text-[12px] text-muted">
+                  <SourceTag source={feedback.source} />
+                  <Link to={paths.module(feedback.moduleId)} className="font-medium text-brand underline-offset-2 hover:underline">
+                    {title} module page
+                  </Link>
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.article>
+  );
+}
+
+/** The overall mark, calm and neutral: a fact about the student, not a verdict. */
+export function MarkBadge({ mark, size = 'md' }: { mark: number | null; size?: 'sm' | 'md' }) {
+  return (
+    <span
+      className={cx(
+        'grid shrink-0 place-content-center rounded-2xl bg-brand-soft text-center text-brand',
+        size === 'md' ? 'size-14' : 'size-11',
+      )}
+    >
+      <span className={cx('leading-none font-semibold tabular-nums', size === 'md' ? 'text-xl' : 'text-base')}>
+        {mark === null ? '–' : Math.round(mark)}
+      </span>
+      <span className="text-[10px] leading-tight font-medium text-brand/70">{mark === null ? 'mark' : '/100'}</span>
+    </span>
   );
 }
 
@@ -87,10 +141,10 @@ function SourceTag({ source }: { source: TailoredFeedback['source'] }) {
   return (
     <span
       title={source === 'model' ? 'Written by AI from facts worked out by code' : 'Built from a template, from facts worked out by code'}
-      className="relative inline-flex items-center gap-1 text-[11.5px] text-muted"
+      className="inline-flex items-center gap-1"
     >
       <Icon name={source === 'model' ? 'sparkle' : 'grid'} size={12} />
-      {source === 'model' ? 'AI-written' : 'Template'}
+      {source === 'model' ? 'AI-written from the examiner’s notes' : 'From the examiner’s notes'}
     </span>
   );
 }
@@ -103,95 +157,80 @@ function SectionTitle({ id, children }: { id: string; children: string }) {
   );
 }
 
-function WeakPoints({ feedback, result }: { feedback: TailoredFeedback; result: ModuleResult | undefined }) {
+/** The focus questions: their subject and topics, and the examiner's advice. The marks are in the chart above. */
+function FocusPoints({ feedback }: { feedback: TailoredFeedback }) {
   const id = useId();
-  const reduce = useReducedMotion();
-  const rows = lostMarksRows(feedback.weakPoints, result);
-  if (rows.length === 0)
-    return (
-      <section aria-labelledby={id} className="grid content-start gap-3">
-        <SectionTitle id={id}>Where marks went</SectionTitle>
-        <p className="text-[14px] text-muted">No question stood out. Keep doing what you did.</p>
-      </section>
-    );
+  if (feedback.weakPoints.length === 0) return null;
   return (
     <section aria-labelledby={id} className="grid content-start gap-3">
-      <SectionTitle id={id}>Where marks went</SectionTitle>
-      <ol className="grid gap-3">
-        {feedback.weakPoints.map((w, i) => {
-          const row = rows[i];
-          if (!row) return null;
-          return (
-            <li key={w.questionId} className="grid gap-2.5 rounded-2xl bg-surface-2/70 p-4 ring-1 ring-line ring-inset">
-              <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                <p className="font-semibold">{questionLabel(w.questionId)}</p>
-                <p className="text-[13px] text-muted tabular-nums">
-                  {row.maxMarks !== null
-                    ? `${formatMarks(row.lost)} of ${formatMarks(row.maxMarks)} marks lost`
-                    : `${formatMarks(row.lost)} marks lost`}
-                </p>
-              </div>
-              <div
-                role="img"
-                aria-label={
-                  row.maxMarks !== null
-                    ? `${formatMarks(row.lost)} of ${formatMarks(row.maxMarks)} marks lost`
-                    : `${formatMarks(row.lost)} marks lost`
-                }
-                className="flex h-2.5 overflow-hidden rounded-full bg-surface ring-1 ring-line ring-inset"
-              >
-                {row.scoredShare > 0 && (
-                  <motion.span
-                    className="h-full bg-brand/70"
-                    initial={reduce ? false : { width: 0 }}
-                    animate={{ width: `${row.scoredShare * 100}%` }}
-                    transition={{ duration: 0.7, ease: EASE, delay: 0.1 + i * 0.06 }}
-                  />
-                )}
-                <motion.span
-                  className={cx('hatch h-full bg-fit-mid/20 text-fit-mid', row.maxMarks === null && 'rounded-full')}
-                  initial={reduce ? false : { width: 0 }}
-                  animate={{ width: `${row.lostShare * 100}%` }}
-                  transition={{ duration: 0.7, ease: EASE, delay: 0.25 + i * 0.06 }}
-                />
-              </div>
-              {w.topics.length > 0 && (
-                <ul className="flex flex-wrap gap-1.5" aria-label="Topics">
-                  {w.topics.map((t) => (
-                    <li key={t} className="rounded-full bg-surface px-2.5 py-0.5 text-[12px] font-medium text-muted ring-1 ring-line">
-                      {topicLabel(t)}
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <p className="flex gap-2 text-[14px] leading-relaxed">
-                <Icon name="tutor" size={15} className="mt-1 shrink-0 text-mode-explain" />
-                <span>
-                  <span className="sr-only">Examiner's advice: </span>
-                  {w.advice}
-                </span>
-              </p>
-            </li>
-          );
-        })}
+      <SectionTitle id={id}>Where to focus</SectionTitle>
+      <ol className="grid gap-2.5">
+        {feedback.weakPoints.map((w) => (
+          <li key={w.questionId} className="grid gap-2 rounded-2xl bg-fit-mid/6 p-4 ring-1 ring-fit-mid/20 ring-inset">
+            <p className="flex flex-wrap items-baseline gap-x-2 font-semibold leading-snug">
+              <span className="font-mono text-[13px]">{w.questionId}</span>
+              {w.label && <span>{w.label}</span>}
+            </p>
+            {w.topics.length > 0 && (
+              <ul className="flex flex-wrap gap-1.5" aria-label="Topics">
+                {w.topics.map((t) => (
+                  <li key={t} className="rounded-full bg-surface px-2.5 py-0.5 text-[12px] font-medium text-muted ring-1 ring-line">
+                    {topicLabel(t)}
+                  </li>
+                ))}
+              </ul>
+            )}
+            <p className="flex gap-2 text-[14px] leading-relaxed">
+              <Icon name="tutor" size={15} className="mt-1 shrink-0 text-mode-explain" />
+              <span>
+                <span className="sr-only">Examiner's advice: </span>
+                {w.advice}
+              </span>
+            </p>
+          </li>
+        ))}
       </ol>
     </section>
   );
 }
 
-function RevisionPlan({ feedback, sessionId }: { feedback: TailoredFeedback; sessionId: string }) {
+function Strengths({ strengths }: { strengths: readonly string[] }) {
   const id = useId();
+  if (strengths.length === 0) return null;
+  return (
+    <section aria-labelledby={id} className="grid gap-2.5">
+      <SectionTitle id={id}>Went well</SectionTitle>
+      <ul className="flex flex-wrap gap-2">
+        {strengths.map((s) => (
+          <li key={s} className="inline-flex max-w-full items-start gap-1.5 rounded-2xl bg-fit-high/10 px-3 py-1.5 text-[13px] text-ink">
+            <Icon name="check" size={13} className="mt-1 shrink-0 text-fit-high" />
+            <span className="min-w-0">{s}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+/**
+ * The checklist's ticks, held by the card rather than the collapsible body, so closing and reopening a card keeps
+ * them even when browser storage is blocked and the saved copy cannot be read back.
+ */
+function useRevisionTicks(feedback: TailoredFeedback, sessionId: string) {
   const key = revisionKey(sessionId, feedback.moduleId, feedback.examLabel);
   const [checked, setChecked] = useState(() => readChecked(key));
-  const plan = feedback.revisionPlan;
-  const done = plan.filter((item) => checked.includes(item)).length;
-  if (plan.length === 0) return null;
-
   const toggle = (item: string) => {
-    const next = toggleItem(checked, item, plan);
+    const next = toggleItem(checked, item, feedback.revisionPlan);
     setChecked(next);
     writeChecked(key, next);
   };
+  return { checked, toggle };
+}
+
+function RevisionPlan({ plan, checked, onToggle }: { plan: readonly string[]; checked: readonly string[]; onToggle: (item: string) => void }) {
+  const id = useId();
+  const done = plan.filter((item) => checked.includes(item)).length;
+  if (plan.length === 0) return null;
 
   return (
     <section aria-labelledby={id} className="grid gap-3">
@@ -212,7 +251,7 @@ function RevisionPlan({ feedback, sessionId }: { feedback: TailoredFeedback; ses
                   on ? 'bg-fit-high/8' : 'hover:bg-surface-2',
                 )}
               >
-                <input type="checkbox" checked={on} onChange={() => toggle(item)} className="sr-only" />
+                <input type="checkbox" checked={on} onChange={() => onToggle(item)} className="sr-only" />
                 <span
                   aria-hidden="true"
                   className={cx(

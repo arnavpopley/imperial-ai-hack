@@ -21,6 +21,7 @@ MECH50005 Materials 2 69%
 MECH50006 Thermodynamics 2 71%
   Q1 19/25  Q2 18/25  Q3 17/25  Q4 17/25
 MECH50008 Dynamics 68%
+  Q1 15/20  Q2 14/25  Q3 19/25  Q4 20/30
 MECH50010 Fluid Mechanics 2 57%
   Q1 15/20  Q2 13/20  Q3 6/20  Q4 12/20  Q5 11/20
 DESE50002 Design Engineering Elective 64%
