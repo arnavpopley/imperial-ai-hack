@@ -131,12 +131,18 @@ describe.each(['light', 'dark'] as const)('text contrast in the %s theme', (them
     for (const bg of ['surface', 'surface-2', 'canvas']) expect(contrast(t[fg]!, t[bg]!), `${fg} on ${bg}`).toBeGreaterThanOrEqual(4.5);
   });
 
-  // Issue 137: factor and assessment colours are bar fills and legend dots, so they need the 3:1 non-text contrast.
-  it.each(['factor-interest', 'factor-goal', 'factor-style', 'factor-breadth', 'assess-exam', 'assess-coursework', 'assess-practical'])(
-    '%s graphics meet 3:1 on surfaces',
-    (fill) => {
-      expect(t[fill], fill).toMatch(/^#[0-9a-f]{6}$/);
-      for (const bg of ['surface', 'surface-2']) expect(contrast(t[fill]!, t[bg]!), `${fill} on ${bg}`).toBeGreaterThanOrEqual(3);
-    },
-  );
+  // Issue 137, as docs/figma/tokens.md promises: factor colours clear 4.5:1 on surfaces, so they could carry small
+  // text too; the assessment ramp is bar fills and legend dots only, so it needs the 3:1 non-text contrast.
+  it.each([
+    ['factor-interest', 4.5],
+    ['factor-goal', 4.5],
+    ['factor-style', 4.5],
+    ['factor-breadth', 4.5],
+    ['assess-exam', 3],
+    ['assess-coursework', 3],
+    ['assess-practical', 3],
+  ] as const)('%s meets %s:1 on surfaces', (fill, minimum) => {
+    expect(t[fill], fill).toMatch(/^#[0-9a-f]{6}$/);
+    for (const bg of ['surface', 'surface-2']) expect(contrast(t[fill]!, t[bg]!), `${fill} on ${bg}`).toBeGreaterThanOrEqual(minimum);
+  });
 });

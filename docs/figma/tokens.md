@@ -42,7 +42,7 @@ staff escalation) and nothing else. Each clears 4.5:1 on surface and surface-2.
 | factor-interest | #3b4fd8 | #7c8cff | Interest |
 | factor-goal | #0e7490 | #4cc0dc | Career goal |
 | factor-style | #7a4fd8 | #b08cff | Learning style |
-| factor-breadth | #9a6b00 | #e3b341 | Breadth |
+| factor-breadth | #8a5f00 | #e3b341 | Breadth |
 
 ## Assessment types
 

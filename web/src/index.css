@@ -91,7 +91,7 @@
   --color-factor-interest: #3b4fd8;
   --color-factor-goal: #0e7490;
   --color-factor-style: #7a4fd8;
-  --color-factor-breadth: #9a6b00;
+  --color-factor-breadth: #8a5f00;
 
   /* Assessment types: one slate ramp, darkest for exams, so they never read as modules or factors. */
   --color-assess-exam: #1f2937;
