@@ -40,8 +40,11 @@ function useActivitySignature(): string {
 
 /** Past this many pixels of scroll the labelled pill shrinks to its round icon, so it covers less of the page. */
 const COLLAPSE_AFTER_PX = 80;
-/** The labelled pill's footprint from sm up: 72px tall, about 220px wide, 24px in from the corner. */
-const PILL = { width: 224, height: 72, inset: 24 } as const;
+/**
+ * The labelled pill's footprint from sm up (h-20): 80px tall, 24px in from the corner, and about 250px wide
+ * (16px padding, a 48px icon, a 14px gap, the bold 18px label and 32px padding), rounded up to 264 for safety.
+ */
+const PILL = { width: 264, height: 80, inset: 24 } as const;
 const INTERACTIVE = 'a[href], button, input, select, textarea, summary, [role="button"], [tabindex]:not([tabindex="-1"])';
 
 /** True when a control on the page sits where the labelled pill would be drawn. */
