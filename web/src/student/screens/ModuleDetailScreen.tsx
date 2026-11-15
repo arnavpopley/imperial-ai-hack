@@ -26,6 +26,8 @@ import { AiSummaryCard } from '../module/AiSummaryCard.tsx';
 import { AskModulePanel } from '../module/AskModulePanel.tsx';
 import { ReasonRow } from '../module/ReasonRow.tsx';
 import { ResourcesSection } from '../module/ResourcesSection.tsx';
+import { NudgeNote } from '../results/NudgeNote.tsx';
+import { useFeedbackAffecting, useNudge } from '../results/ResultsProvider.tsx';
 import { paths } from '../routes.ts';
 import { useCatalogue } from '../state/CatalogueProvider.tsx';
 import { useReferenceData } from '../state/ReferenceDataProvider.tsx';
@@ -40,6 +42,8 @@ export function ModuleDetailScreen() {
   const { byId } = useCatalogue();
   const shortlist = useShortlist();
   const reduce = useReducedMotion();
+  const nudge = useNudge(moduleId);
+  const relatedFeedback = useFeedbackAffecting(moduleId);
   const sessionId = session.id;
   const explanation = useAsync(
     () => api.explanation(sessionId, moduleId),
@@ -174,6 +178,25 @@ export function ModuleDetailScreen() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_23rem] lg:items-start">
         <div className="grid min-w-0 gap-6">
+          {(nudge || relatedFeedback.length > 0) && (
+            <motion.div {...rise(0.05)} className="grid gap-3">
+              {nudge && <NudgeNote nudge={nudge} variant="page" />}
+              {relatedFeedback.map((f) => (
+                <Link
+                  key={`${f.moduleId}-${f.examLabel}`}
+                  to={paths.feedback}
+                  className="group flex flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl bg-mode-explain/8 px-4 py-3 text-[14px] ring-1 ring-mode-explain/20 transition ring-inset hover:ring-mode-explain/40"
+                >
+                  <Icon name="tutor" size={16} className="shrink-0 text-mode-explain" />
+                  <span className="min-w-0 flex-1">
+                    Your feedback on <span className="font-medium">{moduleById.get(f.moduleId)?.title ?? f.moduleId}</span> links to
+                    this module.
+                  </span>
+                  <span className="shrink-0 font-medium text-mode-explain group-hover:underline">See feedback</span>
+                </Link>
+              ))}
+            </motion.div>
+          )}
           <motion.div {...rise(0.08)}>
             <AiSummaryCard moduleId={module.id} />
           </motion.div>
