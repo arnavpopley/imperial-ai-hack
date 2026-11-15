@@ -36,7 +36,11 @@ function StaffSection({ children }: { children: ReactNode }) {
 export function StaffApp() {
   return (
     <StaffDataProvider>
-      <div className="grid grid-cols-1 gap-8">
+      {/*
+        The app header is sticky (4rem). Every control in the console keeps 6rem clear above it when the browser
+        scrolls it into view, by focus or scrollIntoView, so nothing interactive lands under the header.
+      */}
+      <div className="grid grid-cols-1 gap-8 [&_:is(a,button,input,select,textarea,summary,[tabindex])]:scroll-mt-24">
         <StaffHeader />
         <StaffSection>
         <Routes>

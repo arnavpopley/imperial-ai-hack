@@ -93,6 +93,16 @@ describe('every route returns a valid response', () => {
     await check(`/api/staff/escalations/${escalationId}/respond`, json({ response: 'Approved.' }), S.Escalation);
   });
 
+  it('says how the cohort year offers each staff module', async () => {
+    const rows = (await (await app.request('/api/staff/modules')).json()) as { moduleId: string; offer?: string }[];
+    const offer = (id: string) => rows.find((r) => r.moduleId === id)?.offer;
+    expect(offer('MECH60003')).toBe('core');
+    expect(offer('MECH60006')).toBe('elective');
+    expect(offer('IEX-CLIMATE')).toBe('i-explore');
+    expect(offer('MECH40002')).toBe('not-offered');
+    expect(offer('MECH70007')).toBe('not-offered');
+  });
+
   it('shared routes', async () => {
     await check('/api/modules', undefined, S.Module.array());
     await check('/api/pathways', undefined, S.Pathway.array());

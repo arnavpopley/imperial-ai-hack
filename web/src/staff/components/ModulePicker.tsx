@@ -1,41 +1,71 @@
-// Searchable, sortable module list for the module-lead dashboard.
+// Searchable, sortable module list for the module-lead dashboard. It leads with the modules the cohort can
+// choose, grouped by how its programme year offers them (issue #69).
 import { MIN_COHORT } from '@modulematch/shared';
 import type { StaffModuleSummary } from '@modulematch/shared';
 import { useId, useMemo, useState } from 'react';
-import { NavLink } from 'react-router';
-import { capacityStatus, focusRing } from '../lib/format.ts';
+import { NavLink, useMatch } from 'react-router';
+import { capacityStatus, focusRing, percent } from '../lib/format.ts';
+import {
+  STRONG_FIT,
+  VIEWS,
+  groupRows,
+  hasOffers,
+  inView,
+  isOption,
+  shortlistFigure,
+  shortlistLabel,
+  strongFitShare,
+} from '../lib/moduleList.ts';
+import type { ListView, StaffModuleRow } from '../lib/moduleList.ts';
 import { byCohortFigure, isCohortVisible } from '../lib/privacy.ts';
 import { DemandMiniBar } from './DemandGauge.tsx';
 import { SearchIcon, ShieldIcon } from './icons.tsx';
+import { Segmented } from './ui.tsx';
 
 const SORTS = {
+  strong: { label: `Strong fit (${STRONG_FIT}+)`, compare: byCohortFigure(strongFitShare) },
   fit: { label: 'Average fit', compare: byCohortFigure((m) => m.averageFit) },
-  shortlisted: { label: 'Shortlisted', compare: byCohortFigure((m) => m.shortlisted) },
+  shortlisted: { label: 'Shortlisted', compare: byCohortFigure(shortlistFigure) },
   pressure: { label: 'Demand against capacity', compare: byCohortFigure(load) },
   code: { label: 'Module code', compare: (a, b) => a.code.localeCompare(b.code) },
 } satisfies Record<string, { label: string; compare: (a: StaffModuleSummary, b: StaffModuleSummary) => number }>;
 
 type SortKey = keyof typeof SORTS;
 
-/** Share of capacity taken; uncapped modules sort last. */
+/** Share of capacity taken; uncapped modules, and counts under MIN_COHORT, sort last. */
 function load(m: StaffModuleSummary): number {
-  return m.capacity === null ? -1 : m.shortlisted / m.capacity;
+  return m.capacity === null ? -1 : shortlistFigure(m) / m.capacity;
 }
 
 const isSortKey = (v: string): v is SortKey => Object.hasOwn(SORTS, v);
 
-export function ModulePicker({ modules }: { modules: StaffModuleSummary[] }) {
+/** The module the console opens on: the strongest fit among the options the cohort can choose. */
+export function firstModule(modules: readonly StaffModuleRow[]): StaffModuleRow | undefined {
+  const options = modules.filter(isOption);
+  return [...(options.length > 0 ? options : modules)].sort(SORTS.strong.compare)[0];
+}
+
+export function ModulePicker({ modules }: { modules: StaffModuleRow[] }) {
   const [query, setQuery] = useState('');
-  const [sort, setSort] = useState<SortKey>('fit');
+  const [sort, setSort] = useState<SortKey>('strong');
+  // Start on the options, unless the open module is not one: then show everything so it stays in the list.
+  const openId = useMatch('/staff/modules/:moduleId/*')?.params.moduleId;
+  const [view, setView] = useState<ListView>(() => {
+    const open = modules.find((m) => m.moduleId === openId);
+    return open && !inView(open, 'options') ? 'all' : 'options';
+  });
   const searchId = useId();
   const sortId = useId();
+  const grouped = hasOffers(modules);
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
     return modules
       .filter((m) => !q || m.title.toLowerCase().includes(q) || m.code.toLowerCase().includes(q))
+      .filter((m) => inView(m, view))
       .sort(SORTS[sort].compare);
-  }, [modules, query, sort]);
+  }, [modules, query, sort, view]);
+  const groups = groupRows(visible);
 
   return (
     <nav aria-label="Modules" className="flex min-h-0 flex-col overflow-hidden rounded-panel bg-surface shadow-soft ring-1 ring-line">
@@ -54,6 +84,15 @@ export function ModulePicker({ modules }: { modules: StaffModuleSummary[] }) {
             className={`w-full rounded-xl border border-line bg-canvas py-2.5 pr-3 pl-9 text-sm placeholder:text-muted ${focusRing}`}
           />
         </div>
+        {grouped && (
+          <Segmented
+            legend="Show"
+            name={`${searchId}-view`}
+            value={view}
+            onChange={setView}
+            options={VIEWS.map((v) => ({ value: v.value, label: v.label, count: modules.filter((m) => inView(m, v.value)).length }))}
+          />
+        )}
         <div className="flex items-center gap-2 text-sm">
           <label htmlFor={sortId} className="text-muted">
             Sort by
@@ -71,59 +110,120 @@ export function ModulePicker({ modules }: { modules: StaffModuleSummary[] }) {
             ))}
           </select>
         </div>
+        <p className="text-xs text-muted">
+          % = share of the cohort with fit {STRONG_FIT}+ · bars = fit spread, 0 to 100
+        </p>
       </div>
       <p className="sr-only" aria-live="polite">
         {visible.length} of {modules.length} modules shown
       </p>
       {visible.length === 0 ? (
-        <p className="p-4 text-sm text-muted">No modules match “{query}”.</p>
+        <p className="p-4 text-sm text-muted">
+          {query.trim() ? `No modules match “${query}” in this view.` : 'No modules in this view.'}
+        </p>
       ) : (
-        <ul className="grid max-h-80 gap-1 overflow-x-hidden overflow-y-auto overscroll-contain p-2 lg:max-h-[calc(100dvh-14rem)]">
-          {visible.map((m) => (
-            <li key={m.moduleId}>
-              <NavLink
-                to={`/staff/modules/${encodeURIComponent(m.moduleId)}`}
-                className={({ isActive }) =>
-                  `grid min-w-0 gap-2 rounded-2xl px-3.5 py-3 transition-colors ${
-                    isActive ? 'bg-brand-soft ring-1 ring-brand/30' : 'hover:bg-canvas'
-                  } ${focusRing}`
-                }
-              >
-                {isCohortVisible(m) ? <ModuleFigures module={m} /> : <HiddenFigures module={m} />}
-              </NavLink>
-            </li>
+        // scroll-pt keeps a row scrolled into view clear of its sticky group heading.
+        <div className="max-h-80 scroll-pt-10 overflow-x-hidden overflow-y-auto overscroll-contain p-2 lg:max-h-[calc(100dvh-18rem)]">
+          {groups.map((group) => (
+            <section key={group.label} aria-label={group.label} className="grid gap-1">
+              {(grouped || groups.length > 1) && (
+                <h3 className="sticky top-0 z-[1] flex items-baseline justify-between bg-surface/95 px-3.5 pt-3 pb-1 text-xs font-semibold tracking-[0.08em] text-muted uppercase backdrop-blur">
+                  {group.label}
+                  <span className="font-normal tabular-nums">{group.rows.length}</span>
+                </h3>
+              )}
+              <ul className="grid gap-1">
+                {group.rows.map((m) => (
+                  <li key={m.moduleId}>
+                    <NavLink
+                      to={`/staff/modules/${encodeURIComponent(m.moduleId)}`}
+                      className={({ isActive }) =>
+                        `grid min-w-0 gap-2 rounded-2xl px-3.5 py-3 transition-colors ${
+                          isActive ? 'bg-brand-soft ring-1 ring-brand/30' : 'hover:bg-canvas'
+                        } ${focusRing}`
+                      }
+                    >
+                      {!isCohortVisible(m) ? (
+                        <HiddenFigures module={m} />
+                      ) : m.offer === 'not-offered' ? (
+                        <NotOffered module={m} />
+                      ) : (
+                        <ModuleFigures module={m} />
+                      )}
+                    </NavLink>
+                  </li>
+                ))}
+              </ul>
+            </section>
           ))}
-        </ul>
+        </div>
       )}
     </nav>
   );
 }
 
-function ModuleFigures({ module: m }: { module: StaffModuleSummary }) {
+/** The cohort's fit spread in ten buckets; strong-fit buckets are tinted. Decorative beside the figures. */
+function FitSpark({ histogram }: { histogram: readonly number[] }) {
+  const max = Math.max(1, ...histogram);
+  return (
+    <span aria-hidden="true" className="flex h-5 w-20 shrink-0 items-end gap-px" title="Fit spread, 0 to 100">
+      {histogram.map((n, i) => (
+        <span
+          key={i}
+          className={`flex-1 rounded-t-[2px] ${i * 10 >= STRONG_FIT ? 'bg-fit-high' : 'bg-line-strong'}`}
+          style={{ height: `${Math.max(n > 0 ? 12 : 4, (n / max) * 100)}%` }}
+        />
+      ))}
+    </span>
+  );
+}
+
+function ModuleFigures({ module: m }: { module: StaffModuleRow }) {
   const status = capacityStatus(m.shortlisted, m.capacity);
+  const share = strongFitShare(m);
+  const counted = isOption(m) && m.shortlisted >= MIN_COHORT;
   return (
     <>
       <span className="flex items-start justify-between gap-3">
         <span className="min-w-0 text-sm leading-snug font-medium break-words text-pretty">{m.title}</span>
         <span
           aria-hidden="true"
-          className="grid h-7 min-w-9 shrink-0 place-items-center rounded-full bg-surface px-2 text-sm font-semibold tabular-nums ring-1 ring-line"
-          title="Average fit"
+          className={`grid h-7 min-w-11 shrink-0 place-items-center rounded-full px-2 text-xs font-semibold tabular-nums ring-1 ${
+            share > 0 ? 'bg-fit-high/10 text-fit-high ring-fit-high/30' : 'bg-surface text-muted ring-line'
+          }`}
+          title={`Share of the cohort with a fit of ${STRONG_FIT} or more`}
         >
-          {Math.round(m.averageFit)}
+          {percent(share)}
         </span>
       </span>
+      <span className="flex flex-wrap items-end justify-between gap-x-3 gap-y-1 text-xs text-muted">
+        <span className="flex items-end gap-2.5">
+          <span className="font-mono">{m.code}</span>
+          <FitSpark histogram={m.fitHistogram} />
+        </span>
+        <span className="tabular-nums">
+          {shortlistLabel(m)}
+          {counted && status === 'over' && <span className="ml-1 font-medium text-fit-low">over</span>}
+          {counted && status === 'near' && <span className="ml-1 font-medium text-fit-mid">near cap</span>}
+        </span>
+      </span>
+      {counted && <DemandMiniBar shortlisted={m.shortlisted} capacity={m.capacity} />}
+      <span className="sr-only">
+        {percent(share)} of the cohort with a fit of {STRONG_FIT} or more; average fit {Math.round(m.averageFit)}.
+      </span>
+    </>
+  );
+}
+
+/** Students in this cohort cannot take the module, so its fit and demand would only mislead. */
+function NotOffered({ module: m }: { module: StaffModuleRow }) {
+  return (
+    <>
+      <span className="min-w-0 text-sm leading-snug font-medium break-words text-pretty text-muted">{m.title}</span>
       <span className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 text-xs text-muted">
         <span className="font-mono">{m.code}</span>
-        <span className="tabular-nums">
-          {m.shortlisted}
-          {m.capacity !== null && ` / ${m.capacity}`} shortlisted
-          {status === 'over' && <span className="ml-1 font-medium text-fit-low">over</span>}
-          {status === 'near' && <span className="ml-1 font-medium text-fit-mid">near cap</span>}
-        </span>
+        <span>{shortlistLabel(m)}</span>
       </span>
-      <DemandMiniBar shortlisted={m.shortlisted} capacity={m.capacity} />
-      <span className="sr-only">Average fit {Math.round(m.averageFit)}</span>
     </>
   );
 }
