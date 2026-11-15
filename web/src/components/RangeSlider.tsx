@@ -20,6 +20,8 @@ interface RangeSliderProps {
   /** Draws the slider muted, for example while a value has not been answered yet. */
   unset?: boolean;
   hint?: string;
+  /** A previous value to mark on the track, for example the saved weight while an edit is unsaved. */
+  marker?: number;
   className?: string;
 }
 
@@ -36,6 +38,7 @@ export function RangeSlider({
   disabled = false,
   unset = false,
   hint,
+  marker,
   className,
 }: RangeSliderProps) {
   const id = useId();
@@ -69,6 +72,13 @@ export function RangeSlider({
             style={{ width: `${fraction * 100}%` }}
           />
         </div>
+        {marker !== undefined && (
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute top-1/2 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-muted/60 bg-surface"
+            style={{ left: `calc(9px + (100% - 18px) * ${Math.min(1, Math.max(0, marker))})` }}
+          />
+        )}
         <div
           className={cx(
             'pointer-events-none absolute top-1/2 size-[18px] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 bg-surface shadow-soft transition-[left,box-shadow] duration-75',
