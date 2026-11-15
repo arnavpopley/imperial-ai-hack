@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { firstModule } from '../components/ModulePicker.tsx';
-import { groupRows, hasOffers, inView, shortlistFigure, shortlistLabel, goodFitShare } from './moduleList.ts';
+import { goodFitShare, goodFitText, groupRows, hasOffers, inView, shortlistFigure, shortlistLabel } from './moduleList.ts';
 import type { StaffModuleSummary } from '@modulematch/shared';
 
 const row = (moduleId: string, patch: Partial<StaffModuleSummary> = {}): StaffModuleSummary => ({
@@ -11,16 +11,27 @@ const row = (moduleId: string, patch: Partial<StaffModuleSummary> = {}): StaffMo
   capacity: 60,
   shortlisted: 20,
   averageFit: 40,
-  fitHistogram: [0, 0, 10, 10, 10, 10, 5, 3, 2, 0],
+  fitBands: [
+    { from: 0, to: 19, students: 0 },
+    { from: 20, to: 59, students: 40 },
+    { from: 60, to: 100, students: 10 },
+  ],
+  goodFitShare: 20 / 50,
+  strongFitShare: 10 / 50,
   cohortSize: 50,
   offer: 'elective',
   ...patch,
 });
 
 describe('staff module list', () => {
-  it('measures the share of the cohort with a good fit or better (50+) from the histogram', () => {
+  it('takes the good-fit (50+) share from the server, since merged bands cannot be summed', () => {
     expect(goodFitShare(row('A'))).toBeCloseTo(20 / 50);
-    expect(goodFitShare(row('B', { fitHistogram: Array(10).fill(0) }))).toBe(0);
+    // Withheld (one to four students on either side of the line): unknown, so it sorts after every known share,
+    // even a share of zero, and reads as a neutral mark rather than a small number.
+    const withheldRow = row('B', { goodFitShare: null });
+    expect(goodFitShare(withheldRow)).toBeLessThan(goodFitShare(row('C', { goodFitShare: 0 })));
+    expect(goodFitText(withheldRow, (f) => `${Math.round(f * 100)}%`)).toBe('—');
+    expect(goodFitText(row('A'), (f) => `${Math.round(f * 100)}%`)).toBe('40%');
   });
 
   it('labels demand honestly: compulsory, not offered, none yet, and counts under five as a band', () => {
@@ -31,6 +42,9 @@ describe('staff module list', () => {
     expect(shortlistLabel(row('A', { shortlisted: 12 }))).toBe('12 / 60 shortlisted');
     expect(shortlistLabel(row('A', { shortlisted: 12, capacity: null }))).toBe('12 shortlisted');
     expect(shortlistFigure(row('A', { shortlisted: 4 }))).toBe(0);
+    // The server sends null for one to four students (spec 20.4).
+    expect(shortlistLabel(row('A', { shortlisted: null }))).toBe('Under 5 shortlisted');
+    expect(shortlistFigure(row('A', { shortlisted: null }))).toBe(0);
   });
 
   it('shows options by default and groups every view by offer', () => {
@@ -59,9 +73,9 @@ describe('staff module list', () => {
 
   it('opens on the strongest-fit option, never a module the cohort cannot take', () => {
     const rows = [
-      row('N', { offer: 'not-offered', fitHistogram: [0, 0, 0, 0, 0, 0, 0, 0, 50, 0] }),
-      row('E1', { fitHistogram: [0, 0, 40, 0, 0, 0, 0, 10, 0, 0] }),
-      row('E2', { fitHistogram: [0, 0, 30, 0, 0, 0, 0, 20, 0, 0] }),
+      row('N', { offer: 'not-offered', goodFitShare: 1 }),
+      row('E1', { goodFitShare: 0.2 }),
+      row('E2', { goodFitShare: 0.4 }),
     ];
     expect(firstModule(rows)?.moduleId).toBe('E2');
   });

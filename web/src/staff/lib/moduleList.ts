@@ -26,32 +26,39 @@ export const inView = (row: StaffModuleSummary, view: ListView) =>
 /** Students choose options, so only options show a shortlist count that means anything. */
 export const isOption = (row: StaffModuleSummary) => row.offer === undefined || row.offer === 'elective' || row.offer === 'i-explore';
 
-/** A good fit or better, on the shared scale (issue #105): the 50 to 100 buckets of the fit histogram. */
+/** A good fit or better, on the shared scale (issue #105): 50 to 100. */
 export const GOOD_FIT = FIT_BAND_FLOORS.good;
-const BUCKET_WIDTH = 10;
-
-/** Share of the cohort with a good fit or better. It separates modules far better than the mean, which sits at 25 to 42. */
-export function goodFitShare(row: StaffModuleSummary): number {
-  const total = row.fitHistogram.reduce((sum, n) => sum + n, 0);
-  if (total === 0) return 0;
-  const good = row.fitHistogram.slice(GOOD_FIT / BUCKET_WIDTH).reduce((sum, n) => sum + n, 0);
-  return good / total;
-}
 
 /**
- * Shortlist counts under MIN_COHORT are reported as a band, the same five-student rule as every other staff
- * figure, so a count of one or two never points at individual students.
+ * Share of the cohort with a good fit or better, from the server's exact counts (the fit bands are merged for
+ * privacy and cannot be summed). It separates modules far better than the mean, which sits at 25 to 42. A
+ * withheld share (null: one to four students on either side of the line, spec 20.4) is unknown, not small, so it
+ * sorts after every known share rather than among the weakest.
+ */
+export const goodFitShare = (row: StaffModuleSummary): number => row.goodFitShare ?? -1;
+
+/** The good-fit share for display: a percentage, or a neutral mark when it is withheld. */
+export const goodFitText = (row: StaffModuleSummary, percent: (fraction: number) => string): string =>
+  row.goodFitShare === null ? '—' : percent(row.goodFitShare);
+
+/**
+ * The server withholds counts of one to four students (spec 20.4, null), so they are shown as a band, the same
+ * five-student rule as every other staff figure, and a count of one or two never points at individual students.
  */
 export function shortlistLabel(row: StaffModuleSummary): string {
   if (row.offer === 'core') return 'Compulsory for this cohort';
   if (row.offer === 'not-offered') return 'Not offered to this cohort';
   if (row.shortlisted === 0) return 'No shortlists yet';
-  if (row.shortlisted < MIN_COHORT) return `Under ${MIN_COHORT} shortlisted`;
+  if (row.shortlisted === null || row.shortlisted < MIN_COHORT) return `Under ${MIN_COHORT} shortlisted`;
   return `${row.shortlisted}${row.capacity === null ? '' : ` / ${row.capacity}`} shortlisted`;
 }
 
 /** The shortlist count for sorting, with counts under MIN_COHORT banded together so their order reveals nothing. */
-export const shortlistFigure = (row: StaffModuleSummary) => (row.shortlisted < MIN_COHORT ? 0 : row.shortlisted);
+export const shortlistFigure = (row: StaffModuleSummary) =>
+  row.shortlisted === null || row.shortlisted < MIN_COHORT ? 0 : row.shortlisted;
+
+/** A shortlist count to compare against capacity: a withheld count (one to four) is too few to be near it. */
+export const knownShortlisted = (row: Pick<StaffModuleSummary, 'shortlisted'>) => row.shortlisted ?? 0;
 
 export interface ModuleGroup {
   offer: CohortOffer | null;
