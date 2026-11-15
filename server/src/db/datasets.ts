@@ -113,6 +113,9 @@ export const ModuleResourcesFile = z.object({ _note: Note, resources: z.record(z
 export const CohortStudent = z.object({ profile: S.StudentProfile, shortlist: z.array(z.string()).min(1) });
 export const CohortFile = z.object({ _note: Note, students: z.array(CohortStudent) });
 
+/** Synthetic examiner feedback forms for a few Year 2 exams (spec 23), so the demo has published forms to use. */
+export const ExamFormsFile = z.object({ _note: Note, forms: z.array(S.ExamFeedbackForm) });
+
 export type RawModule = z.infer<typeof RawModule>;
 export type PublishedDetails = z.infer<typeof PublishedDetails>;
 export type PublishedFact = z.infer<typeof PublishedFact>;
@@ -128,6 +131,7 @@ export const DATASET_FILES = {
   societies: 'societies.json',
   cohort: 'cohort.json',
   moduleResources: 'module-resources.json',
+  examForms: 'exam-forms.json',
 } as const;
 
 /**

@@ -132,6 +132,29 @@ CREATE TABLE IF NOT EXISTS feedback (
   created_at TEXT NOT NULL,
   CONSTRAINT feedback_session_target UNIQUE (session_id, target_kind, target_id)
 );
+CREATE TABLE IF NOT EXISTS results_consent (
+  session_id TEXT PRIMARY KEY REFERENCES sessions(id) ON DELETE CASCADE,
+  granted_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS module_results (
+  seq INTEGER PRIMARY KEY AUTOINCREMENT,
+  session_id TEXT NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+  module_id TEXT NOT NULL,
+  code TEXT NOT NULL,
+  title TEXT,
+  mark REAL NOT NULL,
+  question_marks TEXT NOT NULL,
+  matched INTEGER NOT NULL,
+  source TEXT NOT NULL,
+  CONSTRAINT module_results_session_module UNIQUE (session_id, module_id)
+);
+CREATE TABLE IF NOT EXISTS exam_forms (
+  module_id TEXT PRIMARY KEY,
+  data TEXT NOT NULL,
+  status TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
 CREATE INDEX IF NOT EXISTS messages_session ON messages(session_id);
 CREATE INDEX IF NOT EXISTS evidence_session ON evidence(session_id);
 CREATE INDEX IF NOT EXISTS escalations_session ON escalations(session_id);

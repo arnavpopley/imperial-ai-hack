@@ -16,8 +16,8 @@ describe('database schema', () => {
     },
   );
 
-  it('creates the twelve spec tables plus feedback', () => {
-    expect(Object.keys(tables)).toHaveLength(13);
+  it('creates the twelve spec tables plus feedback, results consent, module results and exam forms', () => {
+    expect(Object.keys(tables)).toHaveLength(16);
   });
 });
 
