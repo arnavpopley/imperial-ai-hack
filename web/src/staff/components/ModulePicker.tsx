@@ -4,7 +4,7 @@ import { MIN_COHORT } from '@modulematch/shared';
 import type { StaffModuleSummary } from '@modulematch/shared';
 import { useId, useMemo, useState } from 'react';
 import { NavLink, useMatch } from 'react-router';
-import { capacityStatus, focusRing, percent } from '../lib/format.ts';
+import { CAPACITY_LABEL, capacityStatus, focusRing, percent } from '../lib/format.ts';
 import {
   STRONG_FIT,
   VIEWS,
@@ -203,12 +203,19 @@ function ModuleFigures({ module: m }: { module: StaffModuleSummary }) {
         </span>
         <span className="tabular-nums">
           {shortlistLabel(m)}
-          {counted && status === 'over' && <span className="ml-1 font-medium text-fit-low">over</span>}
-          {counted && status === 'near' && <span className="ml-1 font-medium text-fit-mid">near cap</span>}
+          {/* The student chip's words; the separator keeps them apart from the count for screen readers too. */}
+          {counted && (status === 'over' || status === 'near') && (
+            <span className={`font-medium ${status === 'over' ? 'text-fit-low' : 'text-fit-mid'}`}>
+              {' · '}
+              {CAPACITY_LABEL[status].toLowerCase()}
+            </span>
+          )}
         </span>
       </span>
       {counted && <DemandMiniBar shortlisted={m.shortlisted} capacity={m.capacity} />}
       <span className="sr-only">
+        {/* Starts a new sentence, so it never runs on from the shortlist words before it. */}
+        {'. '}
         {percent(share)} of the cohort with a fit of {STRONG_FIT} or more; average fit {Math.round(m.averageFit)}.
       </span>
     </>
