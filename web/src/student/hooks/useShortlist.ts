@@ -38,6 +38,22 @@ export function useShortlist() {
   );
 
   /**
+   * Takes a module off the shortlist, and only that: unlike toggle, a repeated click never adds it back. Throws so
+   * the caller can show the error.
+   */
+  const remove = useCallback(
+    async (moduleId: string) => {
+      mark([moduleId], true);
+      try {
+        replace(await api.shortlist(sessionId, { moduleId, action: 'remove' }));
+      } finally {
+        mark([moduleId], false);
+      }
+    },
+    [sessionId, replace],
+  );
+
+  /**
    * Spec 10.6: a swap is applied only after the student confirms it. Throws so the caller can show the error.
    * The alternative is added before the old module is removed, so the shortlist never dips below two and the
    * session stays in PLAN (spec 12) instead of flapping to RECOMMEND and back.
@@ -75,6 +91,7 @@ export function useShortlist() {
     isShortlisted: (moduleId: string) => shortlist.includes(moduleId),
     isPending: (moduleId: string) => pending.has(moduleId),
     toggle,
+    remove,
     swap,
     error,
   };
