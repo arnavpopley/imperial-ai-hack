@@ -101,7 +101,7 @@ function DownloadData() {
         <Icon name="arrow-down" size={22} />
       </span>
       <div className="min-w-0 flex-1">
-        <h2 id="download-heading" className="text-lg font-semibold tracking-tight">
+        <h2 id="download-heading" className="text-heading">
           Download my data
         </h2>
         <p className="text-sm text-muted">Profile, your quotes, shortlist and tutor requests, as a JSON file on your device.</p>
@@ -194,7 +194,7 @@ function SectionHeading({ id, eyebrow, title, children }: { id: string; eyebrow:
   return (
     <div className="grid gap-1.5">
       <p className="text-xs font-semibold tracking-[0.12em] text-brand uppercase">{eyebrow}</p>
-      <h2 id={id} className="text-2xl font-semibold tracking-tight">
+      <h2 id={id} className="text-heading">
         {title}
       </h2>
       {children && <p className="max-w-2xl text-sm text-muted">{children}</p>}
@@ -557,7 +557,7 @@ function DangerZone() {
           <Icon name="trash" size={22} />
         </span>
         <div className="grid gap-1">
-          <h2 id="danger-heading" className="text-lg font-semibold tracking-tight">
+          <h2 id="danger-heading" className="text-heading">
             Delete everything
           </h2>
           <p className="text-sm text-muted">

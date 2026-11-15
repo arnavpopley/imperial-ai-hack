@@ -8,7 +8,7 @@ import { PrivacyNote } from './components/PrivacyNote.tsx';
 import { GlanceStats, PageHeader } from '../components/PageHeader.tsx';
 import { api } from '../api.ts';
 import { useResource } from './hooks/useResource.ts';
-import { EmptyState } from './components/ui.tsx';
+import { EmptyState } from '../components/StateViews.tsx';
 import { focusRing } from './lib/format.ts';
 import { Lazy, lazyNamed } from '../components/LazyRoute.tsx';
 import { ModuleDashboard } from './pages/ModuleDashboard.tsx';
@@ -68,7 +68,7 @@ export function StaffApp() {
           <Route
             path="*"
             element={
-              <EmptyState title="Page not found">That staff page does not exist. Use the tabs above.</EmptyState>
+              <EmptyState icon="search" title="Page not found">That staff page does not exist. Use the tabs above.</EmptyState>
             }
           />
         </Routes>
@@ -82,7 +82,7 @@ export function StaffApp() {
 function StaffLayout({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
   const gap = sectionFor(pathname) === 'escalations' ? 'gap-4' : 'gap-6';
-  return <div className={`grid grid-cols-1 ${gap} [&_:is(a,button,input,select,textarea,summary,[tabindex])]:scroll-mt-24`}>{children}</div>;
+  return <div className={`grid grid-cols-1 ${gap} [&_:is(a,button,input,select,textarea,summary,[tabindex])]:scroll-mt-24 [&_:is(a,button,input,select,textarea,summary,[tabindex])]:scroll-mb-28`}>{children}</div>;
 }
 
 const SECTIONS = [

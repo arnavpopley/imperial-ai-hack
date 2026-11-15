@@ -1,13 +1,16 @@
 // Optional step: societies and clubs that match the interests heard so far.
+import type { Society } from '@modulematch/shared';
 import { motion } from 'motion/react';
 import { useEffect, useId } from 'react';
 import { api } from '../../api.ts';
+import { cx } from '../../components/cx.ts';
 import { Icon } from '../../components/Icon.tsx';
 import { Meter } from '../../components/Meter.tsx';
 import { SampleDataLabel } from '../../components/SampleDataLabel.tsx';
 import { Spinner } from '../../components/Spinner.tsx';
 import { useMotionTokens } from '../../motion/tokens.ts';
 import { useAsync } from '../hooks/useAsync.ts';
+import { artFor, artForTopic } from '../societies/SocietyArt.tsx';
 import { useReadySession } from '../state/SessionProvider.tsx';
 
 interface SocietiesPanelProps {
@@ -23,6 +26,7 @@ export function SocietiesPanel({ onSeen, onClose }: SocietiesPanelProps) {
   // Any profile change (a new answer, an edit) can move the matches, so reload whenever the profile is saved.
   const matches = useAsync(() => api.societyMatches(session.id), [session.id, session.profile.updatedAt]);
   const societies = useAsync(() => api.societies(), []);
+  const byId = new Map((societies.data ?? []).map((s) => [s.id, s]));
   const names = new Map((societies.data ?? []).map((s) => [s.id, s.name]));
   const top = (matches.data ?? []).slice(0, SHOWN);
   const loaded = matches.data !== undefined;
@@ -36,13 +40,10 @@ export function SocietiesPanel({ onSeen, onClose }: SocietiesPanelProps) {
 
   return (
     <section aria-labelledby={headingId} className="grid gap-5">
-      <div className="mm-photo relative h-36 overflow-hidden rounded-2xl sm:h-44">
-        <img
-          src="/images/societies-celebrating.jpg"
-          alt="Students celebrating together at a society event"
-          className="size-full object-cover"
-          loading="lazy"
-        />
+      {/* The pathways page has the societies photo; this panel shows the student's top matches' own artwork, so no
+          photo appears twice (issue #135). */}
+      <div className="relative h-36 overflow-hidden rounded-2xl bg-gradient-to-br from-art-1 via-art-4 to-art-6 sm:h-44">
+        <MatchArt societies={top.map((m) => byId.get(m.societyId))} />
         <button
           type="button"
           onClick={onClose}
@@ -52,7 +53,7 @@ export function SocietiesPanel({ onSeen, onClose }: SocietiesPanelProps) {
         </button>
       </div>
       <div>
-        <h2 id={headingId} className="text-xl font-semibold tracking-tight">
+        <h2 id={headingId} className="text-heading">
           Societies and clubs
         </h2>
         <p className="mt-1 text-sm text-muted">Picked from the interests you have shared so far.</p>
@@ -102,5 +103,38 @@ export function SocietiesPanel({ onSeen, onClose }: SocietiesPanelProps) {
       )}
       <SampleDataLabel variant="pathways" />
     </section>
+  );
+}
+
+/** Three topics of a varied society scene, used when the matches share an icon or have not loaded yet. */
+const SCENE = ['creative-arts-design', 'control-robotics', 'global-development', 'thermodynamics-energy'] as const;
+
+/**
+ * Three different icons on their own gradients (SocietyArt): the top matches' first, then a varied scene, so the
+ * banner never shows the same icon twice. Over a soft dot pattern, like the society banners.
+ */
+function MatchArt({ societies }: { societies: readonly (Society | undefined)[] }) {
+  const arts = [...societies.filter((s): s is Society => s !== undefined).map(artFor), ...SCENE.map(artForTopic)]
+    .filter((art, i, all) => all.findIndex((a) => a.icon === art.icon) === i)
+    .slice(0, 3);
+  return (
+    <div aria-hidden="true" className="absolute inset-0 grid place-items-center">
+      <div className="absolute inset-0 opacity-25 [background-image:radial-gradient(white_1px,transparent_1.5px)] [background-size:14px_14px]" />
+      <div className="absolute -right-6 -bottom-8 size-32 rounded-full bg-white/15 blur-xl" />
+      <div className="relative flex items-center gap-3">
+        {arts.map((art, i) => (
+          <span
+            key={art.icon}
+            className={cx(
+              'grid place-items-center rounded-2xl bg-gradient-to-br text-white shadow-soft ring-1 ring-white/40',
+              art.gradient,
+              i === 1 ? 'size-16' : 'size-14',
+            )}
+          >
+            <Icon name={art.icon} size={i === 1 ? 30 : 26} />
+          </span>
+        ))}
+      </div>
+    </div>
   );
 }

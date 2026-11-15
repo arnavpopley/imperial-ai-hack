@@ -11,7 +11,6 @@ import { useState } from 'react';
 import { cx } from '../../components/cx.ts';
 import { Icon } from '../../components/Icon.tsx';
 import { ACHIEVEMENT_BOUNCE, DURATION, EASE, FADE_ONLY, INSTANT, MOTION, useMotionTokens } from '../../motion/tokens.ts';
-import { MarkSheetIcon } from '../results/icons.tsx';
 import type { ResultsStepStatus } from '../results/resultsStep.ts';
 import { buildTimeline, type StepStatus, type TimelineExtra, type TimelineStep } from './timeline.ts';
 import './interview.css';
@@ -169,7 +168,7 @@ function ResultsTimelineItem({ step }: { step: ResultsStep }) {
             step.status === 'todo' && 'bg-surface text-brand ring-2 ring-brand/50 ring-offset-0 group-hover:ring-brand',
           )}
         >
-          {done ? <AnimatedTick /> : <MarkSheetIcon size={14} />}
+          {done ? <AnimatedTick /> : <Icon name="sheet" size={14} />}
         </span>
         <span className="min-w-0 pt-0.5">
           <span className="block text-sm leading-tight text-ink">Your results</span>
@@ -403,7 +402,7 @@ export function InterviewProgressBar({ session, extras, activeExtra, onOpenExtra
             {results.status === 'done' ? (
               <Icon name="check" size={13} className="text-fit-high" />
             ) : (
-              <MarkSheetIcon size={13} className="text-brand" />
+              <Icon name="sheet" size={13} className="text-brand" />
             )}
             Your results
             <span className="sr-only">, {RESULTS_STATUS_TEXT[results.status]}</span>

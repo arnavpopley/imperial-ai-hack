@@ -47,7 +47,7 @@ export function Drawer({ open, onClose, title, subtitle, headerExtra, size = 'md
         <div className="flex h-full flex-col">
           <header className="flex items-start gap-3 border-b border-line px-5 py-4">
             <div className="min-w-0 flex-1">
-              <h2 id={titleId} className="text-base font-semibold tracking-tight">
+              <h2 id={titleId} className="text-subheading">
                 {title}
               </h2>
               {subtitle && <div className="mt-0.5 text-xs text-muted">{subtitle}</div>}

@@ -8,7 +8,6 @@ import { cx } from '../../components/cx.ts';
 import { Icon, type IconName } from '../../components/Icon.tsx';
 import { SegmentedControl } from '../../components/SegmentedControl.tsx';
 import { ACCEPT, checkFile, formatBytes, MAX_FILE_BYTES, readAsBase64, uploadProblem } from './files.ts';
-import { MarkSheetIcon, UploadIcon } from './icons.tsx';
 import { MarkChips, UnmatchedCodes } from './MarkChips.tsx';
 import { wantsAddMarks } from '../routes.ts';
 import { useResults, type UploadBody } from './ResultsProvider.tsx';
@@ -42,11 +41,11 @@ export function ResultsPanel({ onClose, onSkip }: ResultsPanelProps) {
     <section aria-labelledby={headingId} className="mx-auto grid max-w-2xl gap-5">
       <div className="flex items-start gap-4">
         <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-brand-soft text-brand max-sm:hidden">
-          <MarkSheetIcon size={22} />
+          <Icon name="sheet" size={22} />
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 id={headingId} className="text-xl font-semibold tracking-tight">
+            <h2 id={headingId} className="text-heading">
               Your results
             </h2>
             <span className="rounded-full bg-brand-soft px-2 py-0.5 text-2xs font-semibold text-brand">Optional · recommended</span>
@@ -199,7 +198,7 @@ function UploadForm({ onUploaded, onSkip, skipLabel = 'Skip for now' }: { onUplo
           {file ? (
             <div className="flex items-center gap-3 rounded-2xl border border-line bg-canvas px-4 py-3">
               <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-brand-soft text-brand" aria-hidden="true">
-                <MarkSheetIcon size={17} />
+                <Icon name="sheet" size={17} />
               </span>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{file.name}</p>
@@ -223,7 +222,7 @@ function UploadForm({ onUploaded, onSkip, skipLabel = 'Skip for now' }: { onUplo
               )}
             >
               <span className="grid size-11 place-items-center rounded-full bg-brand-soft text-brand" aria-hidden="true">
-                <UploadIcon size={20} />
+                <Icon name="upload" size={20} />
               </span>
               <span className="text-sm font-medium">
                 <span className="max-sm:hidden">

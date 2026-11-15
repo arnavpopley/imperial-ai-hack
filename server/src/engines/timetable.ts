@@ -376,7 +376,14 @@ export function planEcts(shortlist: readonly string[], modules: readonly Module[
   const byId = new Map(modules.map((module) => [module.id, module]));
   const coreIds = new Set(rules.coreModuleIds);
   // Without the year's rules there is no cap to plan towards, so none is invented (issue 51).
-  const ects = { core: 0, elective: 0, iExplore: 0, max: rules.loaded ? rules.maxEcts : null };
+  const ects = {
+    core: 0,
+    elective: 0,
+    iExplore: 0,
+    max: rules.loaded ? rules.maxEcts : null,
+    electiveRequired: rules.loaded ? rules.electiveEctsRequired : null,
+    iExploreRequired: rules.loaded && rules.iExploreRequired,
+  };
   for (const module of unique([...rules.coreModuleIds, ...shortlist]).flatMap((id) => byId.get(id) ?? [])) {
     if (coreIds.has(module.id) || module.type === 'core') ects.core += module.ects;
     else if (module.type === 'i-explore') ects.iExplore += module.ects;

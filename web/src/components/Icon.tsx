@@ -2,6 +2,71 @@
 import type { ReactNode } from 'react';
 
 const paths = {
+  // Results glyphs, folded in from student/results/icons.tsx so the app has one icon set.
+  bulb: <path d="M9 18h6M10 21.5h4M12 2.5a6.5 6.5 0 0 0-4 11.6c.6.5 1 1.3 1 2.1V18h6v-1.8c0-.8.4-1.6 1-2.1a6.5 6.5 0 0 0-4-11.6z" />,
+  sheet: (
+    <>
+      <path d="M14 2.5H6.5a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V8z" />
+      <path d="M14 2.5V8h5.5M8.5 17v-2.5M12 17v-5M15.5 17v-3.5" />
+    </>
+  ),
+  upload: <path d="M12 15.5V3.5M7 8.5l5-5 5 5M3.5 15v3.5a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2V15" />,
+  // Staff console glyphs (issue #142), drawn on the same 24px grid and stroke as the rest.
+  alert: (
+    <>
+      <path d="M12 3.5 21 19.5H3z" />
+      <path d="M12 10v4M12 17v.01" />
+    </>
+  ),
+  eye: (
+    <>
+      <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" />
+      <circle cx="12" cy="12" r="3" />
+    </>
+  ),
+  exam: (
+    <>
+      <rect x="5" y="3" width="14" height="18" rx="2.5" />
+      <path d="M8.5 8h7M8.5 11.5h7M8.5 15H12M13.8 16.2l1.5 1.5 2.7-3" />
+    </>
+  ),
+  gauge: (
+    <>
+      <path d="M4 17a8 8 0 1 1 16 0" />
+      <path d="m12 17 3.5-5.5" />
+    </>
+  ),
+  gavel: <path d="M13 4l7 7M10 7l7 7M11.5 5.5l-4.2 4.2M18.5 12.5l-4.2 4.2M11 12l-7.5 7.5" />,
+  inbox: (
+    <>
+      <path d="M3.5 13 6 5h12l2.5 8v6h-17z" />
+      <path d="M3.5 13H8l1.2 2.4h5.6L16 13h4.5" />
+    </>
+  ),
+  note: (
+    <>
+      <path d="M6 4h8.5L18 7.5V20H6z" />
+      <path d="M9.5 11.5h5M9.5 15h5" />
+    </>
+  ),
+  'trend-up': (
+    <>
+      <path d="m3 17 6-6 4 4 8-8" />
+      <path d="M15 7h6v6" />
+    </>
+  ),
+  undo: (
+    <>
+      <path d="M8.5 5.5 4.5 9.5l4 4" />
+      <path d="M4.5 9.5H14a5.5 5.5 0 0 1 0 11h-3" />
+    </>
+  ),
+  users: (
+    <>
+      <circle cx="9" cy="8.5" r="3.25" />
+      <path d="M3 19c.6-3.3 3-5 6-5s5.4 1.7 6 5M15.5 5.5a3 3 0 0 1 0 6M17.5 14.3c1.9.6 3.2 2.3 3.5 4.7" />
+    </>
+  ),
   'arrow-down': <path d="M12 5v14m7-7-7 7-7-7" />,
   'arrow-left': <path d="m12 19-7-7 7-7M19 12H5" />,
   'arrow-right': <path d="M5 12h14m-7-7 7 7-7 7" />,

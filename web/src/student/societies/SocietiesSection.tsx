@@ -51,7 +51,7 @@ export function SocietiesSection() {
         />
         <div aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-r from-[rgb(14_16_22/0.78)] to-[rgb(14_16_22/0.15)]" />
         <div className="max-w-lg px-5 py-6 text-white sm:px-7 sm:py-8">
-          <h2 id="societies-heading" className="text-xl font-semibold tracking-tight">
+          <h2 id="societies-heading" className="text-heading">
             Societies that match you
           </h2>
           <p className="mt-1 text-sm text-white/85">
