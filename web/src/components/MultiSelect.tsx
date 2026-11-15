@@ -169,7 +169,7 @@ export function MultiSelect({ label, hint, options, selected, onChange, placehol
                   {isSelected && <Icon name="check" size={11} />}
                 </span>
                 <span className="min-w-0 flex-1 truncate">{option.label}</span>
-                {option.detail && <span className="font-mono text-[11px] text-muted">{option.detail}</span>}
+                {option.detail && <span className="font-mono text-2xs text-muted">{option.detail}</span>}
               </li>
             );
           })
