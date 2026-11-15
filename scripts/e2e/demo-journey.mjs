@@ -338,15 +338,18 @@ async function runCombo(cdp, comboName, ports) {
     latency: (entry) => current.latencies.push(entry),
     /** Screenshot plus overflow and overlap checks for the screen the page is on. */
     async checkpoint(page, label) {
-      // Issue #46: the advisor launcher must not sit on any control's centre at any scroll position.
-      for (const hit of await page.eval(() => window.__e2e.launcherSweep())) {
-        current.overlap.push(`${label}: the advisor launcher covers ${hit}`);
+      // Video mode skips the layout checks below: they scroll through the page, which a recording would show as jumps.
+      if (!VIDEO) {
+        // Issue #46: the advisor launcher must not sit on any control's centre at any scroll position.
+        for (const hit of await page.eval(() => window.__e2e.launcherSweep())) {
+          current.overlap.push(`${label}: the advisor launcher covers ${hit}`);
+        }
+        const audit = await page.audit();
+        if (audit.overflow) {
+          current.overflow.push(`${label}: page is ${audit.overflow.scrollWidth}px wide in a ${audit.overflow.viewport}px viewport; ${audit.overflow.offenders.join('; ') || 'no single element found'}`);
+        }
+        for (const o of audit.overlaps) current.overlap.push(`${label} (${o.where}): ${o.control} is covered by ${o.coveredBy}`);
       }
-      const audit = await page.audit();
-      if (audit.overflow) {
-        current.overflow.push(`${label}: page is ${audit.overflow.scrollWidth}px wide in a ${audit.overflow.viewport}px viewport; ${audit.overflow.offenders.join('; ') || 'no single element found'}`);
-      }
-      for (const o of audit.overlaps) current.overlap.push(`${label} (${o.where}): ${o.control} is covered by ${o.coveredBy}`);
       shot += 1;
       const file = `${String(shot).padStart(2, '0')}-${label}.png`;
       await page.screenshot(join(dir, file));
