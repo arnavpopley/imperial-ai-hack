@@ -1,23 +1,43 @@
-// Fit distribution across the synthetic cohort: ten 10-point buckets from StaffModuleSummary.fitHistogram.
-import { FIT_BAND_FLOORS } from '@modulematch/shared';
+// Fit distribution across the synthetic cohort, from StaffModuleSummary.fitBands. The server merges any band of one
+// to four students with its neighbours (spec 20.4), so a band can be wider than 10 points: it is drawn as wide as it
+// is, at its students per 10 points, so a merged band never looks taller than it is.
+import { FIT_BAND_FLOORS, MIN_COHORT } from '@modulematch/shared';
+import type { StaffModuleSummary } from '@modulematch/shared';
 import { niceCeiling, percent, plural } from '../lib/format.ts';
 
-const bucketLabel = (i: number) => (i === 9 ? '90–100' : `${i * 10}–${i * 10 + 9}`);
+type Band = StaffModuleSummary['fitBands'][number];
 
-/** Fit at or above the shared strong floor counts as a strong fit in the summary line. */
-const STRONG_FIT_BUCKET = FIT_BAND_FLOORS.strong / 10;
+const BAND_POINTS = 10;
+const width = (b: Band) => b.to - b.from + 1;
+const merged = (b: Band) => width(b) > BAND_POINTS + 1;
+/** Students per 10 points of fit: a band's own count when it is 10 points wide. */
+const density = (b: Band) => (b.students * BAND_POINTS) / Math.max(BAND_POINTS, width(b) - (b.to === 100 ? 1 : 0));
+export const bandLabel = (b: Band) => `${b.from}–${b.to}`;
 
-export function FitHistogram({ buckets, averageFit }: { buckets: readonly number[]; averageFit: number }) {
-  const total = buckets.reduce((sum, n) => sum + n, 0);
-  const top = niceCeiling(Math.max(...buckets, 1));
+interface FitHistogramProps {
+  bands: readonly Band[];
+  averageFit: number;
+  /** Students scored. */
+  cohortSize: number;
+  /** Share with a strong fit (FIT_BAND_FLOORS.strong or more), from the server's exact counts; null when withheld. */
+  strongFitShare: number | null;
+}
+
+export function FitHistogram({ bands, averageFit, cohortSize, strongFitShare }: FitHistogramProps) {
+  const top = niceCeiling(Math.max(...bands.map(density), 1));
   const ticks = [top, top / 2, 0];
-  const strong = buckets.slice(STRONG_FIT_BUCKET).reduce((sum, n) => sum + n, 0);
-  const peak = buckets.indexOf(Math.max(...buckets));
+  const peak = bands.reduce((best, b) => (density(b) > density(best) ? b : best), bands[0]!);
+  const anyMerged = bands.some(merged);
+  const strong =
+    strongFitShare === null
+      ? `The share scoring ${FIT_BAND_FLOORS.strong} or above (a strong fit) is withheld: fewer than ${MIN_COHORT} students sit on one side of it.`
+      : `${percent(strongFitShare)} score ${FIT_BAND_FLOORS.strong} or above (a strong fit).`;
   const summary =
-    total === 0
+    cohortSize === 0
       ? 'No students scored yet.'
-      : `${plural(total, 'student')} scored. Most common fit ${bucketLabel(peak)}. ` +
-        `${percent(strong / total)} score ${FIT_BAND_FLOORS.strong} or above (a strong fit). Average fit ${Math.round(averageFit)}.`;
+      : `${plural(cohortSize, 'student')} scored. Most common fit ${bandLabel(peak)}. ` +
+        `${strong} Average fit ${Math.round(averageFit)}.` +
+        (anyMerged ? ` Bands with fewer than ${MIN_COHORT} students are merged with their neighbours.` : '');
 
   return (
     <figure>
@@ -42,18 +62,23 @@ export function FitHistogram({ buckets, averageFit }: { buckets: readonly number
               ))}
             </div>
             <div className="absolute inset-0 flex items-end gap-0.5 sm:gap-1">
-              {buckets.map((n, i) => (
-                <div key={i} className="group relative flex h-full flex-1 items-end">
+              {bands.map((b) => (
+                <div key={b.from} className="group relative flex h-full items-end" style={{ flexGrow: width(b), flexBasis: 0 }}>
                   <div
-                    className="w-full rounded-t-[4px] bg-brand/80 transition-colors group-hover:bg-brand"
-                    style={{ height: `${(n / top) * 100}%`, minHeight: n > 0 ? 2 : 0 }}
+                    className={`w-full rounded-t-[4px] transition-colors ${
+                      merged(b) ? 'bg-brand/55 group-hover:bg-brand/75' : 'bg-brand/80 group-hover:bg-brand'
+                    }`}
+                    style={{ height: `${(density(b) / top) * 100}%`, minHeight: b.students > 0 ? 2 : 0 }}
                   />
                   <div
                     aria-hidden="true"
                     className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 hidden -translate-x-1/2 whitespace-nowrap rounded-md border border-line bg-surface px-2 py-1 text-xs shadow-sm group-hover:block"
                   >
-                    <span className="font-medium tabular-nums">{n}</span>{' '}
-                    <span className="text-muted">at fit {bucketLabel(i)}</span>
+                    <span className="font-medium tabular-nums">{b.students}</span>{' '}
+                    <span className="text-muted">
+                      at fit {bandLabel(b)}
+                      {merged(b) ? ' (merged)' : ''}
+                    </span>
                   </div>
                 </div>
               ))}
@@ -76,7 +101,9 @@ export function FitHistogram({ buckets, averageFit }: { buckets: readonly number
           </div>
         </div>
       </div>
-      <figcaption className="mt-3 text-xs text-muted">Students per fit band (0–100). {summary}</figcaption>
+      <figcaption className="mt-3 text-xs text-muted">
+        Students per 10 points of fit (0–100). {summary}
+      </figcaption>
       <details className="mt-2 text-xs">
         <summary className="cursor-pointer py-1 text-muted hover:text-ink">Show as table</summary>
         <table className="mt-2 w-full max-w-xs text-left tabular-nums">
@@ -92,16 +119,23 @@ export function FitHistogram({ buckets, averageFit }: { buckets: readonly number
             </tr>
           </thead>
           <tbody>
-            {buckets.map((n, i) => (
-              <tr key={i} className="border-t border-line">
+            {bands.map((b) => (
+              <tr key={b.from} className="border-t border-line">
                 <th scope="row" className="py-1 font-normal">
-                  {bucketLabel(i)}
+                  {bandLabel(b)}
+                  {merged(b) && <span className="text-muted"> (merged)</span>}
                 </th>
-                <td className="py-1 text-right">{n}</td>
+                <td className="py-1 text-right">{b.students}</td>
               </tr>
             ))}
           </tbody>
         </table>
+        {anyMerged && (
+          <p className="mt-1.5 text-muted">
+            Merged: neighbouring bands with fewer than {MIN_COHORT} students are combined until each holds {MIN_COHORT}{' '}
+            or more, to keep individuals unidentifiable.
+          </p>
+        )}
       </details>
     </figure>
   );

@@ -14,6 +14,7 @@ import type {
   TopicId,
   Weights,
 } from '@modulematch/shared';
+import { isSmallCount, partitionCounts } from './privacy.ts';
 import { checkModuleEligibility } from './rules.ts';
 import { CAPABILITY_SLOTS, DEMAND_FIELD, scoreModule, type StyleSlot, type TopicWeights } from './scoring.ts';
 import { clashLabel, clashPriorities } from './timetable.ts';
@@ -466,15 +467,21 @@ function counterfactualCard(module: Module, ctx: InsightContext, counterfactual:
   const { groupSize: size, newlyTopModules: newly, alreadyTopModules: already, crossStrongFit: crossing } = counterfactual;
   const points = counterfactual.uplift.toFixed(1);
   const top = ctx.rules ? `${TOP_MODULES_WORDS} eligible modules` : `${TOP_MODULES_WORDS} modules`;
-  const topSentence = `${newly > 0 ? `${newly} more of them` : 'none of them'} would newly have it in their ${top}${already > 0 ? ` (${already} already do)` : ''}`;
-  const crossSentence = crossing > 0 ? `${crossing} would rise to fit ${STRONG_FIT} or more` : `none would rise to fit ${STRONG_FIT}`;
+  // Spec 20.4: these counts split the published group, so with its size known one small part would give the others
+  // away. Each split is shown exactly only when every part is zero or five or more; otherwise its parts read "some".
+  const [newlyShown = null, alreadyShown = null] = partitionCounts([newly, already, size - newly - already]);
+  const [crossingShown = null] = partitionCounts([crossing, size - crossing]);
+  const words = (shown: number | null) => (shown === null ? 'some' : String(shown));
+  const [newlyText, alreadyText, crossingText] = [newlyShown, alreadyShown, crossingShown].map(words);
+  const topSentence = `${newly > 0 ? (newlyShown === null ? 'some of them' : `${newlyText} more of them`) : 'none of them'} would newly have it in their ${top}${already > 0 ? ` (${alreadyText} already do)` : ''}`;
+  const crossSentence = crossing > 0 ? `${crossingText} would rise to fit ${STRONG_FIT} or more` : `none would rise to fit ${STRONG_FIT}`;
   const impact =
     newly > 0 && crossing > 0
-      ? `${TOP_MODULES_WORDS} for ${newly} of the ${size} interested students, and ${crossing} would reach fit ${STRONG_FIT}`
+      ? `${TOP_MODULES_WORDS} for ${newlyText} of the ${size} interested students, and ${crossingText} would reach fit ${STRONG_FIT}`
       : newly > 0
-        ? `would move the module into the ${TOP_MODULES_WORDS} for ${newly} of the ${size} interested students`
+        ? `would move the module into the ${TOP_MODULES_WORDS} for ${newlyText} of the ${size} interested students`
         : crossing > 0
-          ? `${crossing} of the ${size} interested students would reach fit ${STRONG_FIT}`
+          ? `${crossingText} of the ${size} interested students would reach fit ${STRONG_FIT}`
           : `+${points} fit points on average for ${size} interested students`;
   return {
     id: counterfactualInsightId(module.id, suggestedEditFor(module, counterfactual.change)),
@@ -531,14 +538,24 @@ export function overlooked(module: Module, ctx: InsightContext): Insight | null 
   const stats = cohortStats(module, ctx.cohort, ctx.shortlists, ctx.weights, ctx.homeTopics);
   if (stats === null || module.capacity === null) return null;
   const catalogueMedian = median(ctx.modules.map((m) => averageOf(fitsFor(m, ctx.cohort, ctx.weights, ctx.homeTopics))));
-  const capacityShare = stats.shortlisted / module.capacity;
+  const { shortlisted } = stats;
+  const capacityShare = shortlisted / module.capacity;
   if (stats.averageFit <= catalogueMedian || capacityShare >= OVERLOOKED_CAPACITY_SHARE) return null;
+  // One to four shortlists are not counted out loud (spec 20.4), nor as a share of the places, which would give
+  // the count away.
+  const few = shortlisted === 0 ? 'no shortlists' : isSmallCount(shortlisted) ? `fewer than ${MIN_COHORT} shortlists` : `only ${shortlisted} shortlists`;
+  const taken =
+    shortlisted === 0
+      ? `No students have shortlisted it yet, out of its ${module.capacity} places.`
+      : isSmallCount(shortlisted)
+        ? `Fewer than ${MIN_COHORT} students shortlisted it, out of its ${module.capacity} places.`
+        : `Only ${shortlisted} students shortlisted it, ${Math.round(100 * capacityShare)}% of its ${module.capacity} places.`;
   return {
     id: insightId(module.id, 'OVERLOOKED', 1),
     moduleId: module.id,
     kind: 'OVERLOOKED',
-    headline: `Overlooked: average fit ${stats.averageFit.toFixed(1)} against a catalogue median of ${catalogueMedian.toFixed(1)}, but only ${stats.shortlisted} shortlists`,
-    detail: `Across ${stats.cohortSize} students, ${moduleName(module)} has an average fit of ${stats.averageFit.toFixed(1)}, above the catalogue median of ${catalogueMedian.toFixed(1)}. Only ${stats.shortlisted} students shortlisted it, ${Math.round(100 * capacityShare)}% of its ${module.capacity} places.`,
+    headline: `Overlooked: average fit ${stats.averageFit.toFixed(1)} against a catalogue median of ${catalogueMedian.toFixed(1)}, but ${few}`,
+    detail: `Across ${stats.cohortSize} students, ${moduleName(module)} has an average fit of ${stats.averageFit.toFixed(1)}, above the catalogue median of ${catalogueMedian.toFixed(1)}. ${taken}`,
     cohortSize: stats.cohortSize,
     upliftPoints: null,
     decision: 'pending',

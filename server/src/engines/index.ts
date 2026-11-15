@@ -10,3 +10,4 @@ export * from './transcript.ts';
 export * from './performance.ts';
 export * from './exam-feedback.ts';
 export * from './demand.ts';
+export * from './privacy.ts';
