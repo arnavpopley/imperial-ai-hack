@@ -1,6 +1,6 @@
 {
-  "id": "382068bd-8dca-4d2a-ace5-e785ede57ba1",
-  "at": "2026-11-15T01:25:48.974Z",
+  "id": "4bf4a2e2-f982-4597-a860-851f0410793a",
+  "at": "2026-11-15T01:33:44.046Z",
   "results": [
     {
       "name": "Ranking quality",
@@ -488,8 +488,8 @@
     },
     {
       "name": "Guardrails",
-      "passed": 15,
-      "total": 15,
+      "passed": 23,
+      "total": 23,
       "target": 1,
       "details": [
         {
@@ -546,6 +546,38 @@
         },
         {
           "case": "outcome guarantee removed",
+          "pass": true
+        },
+        {
+          "case": "out of scope: cover letter, pointed to the Careers Service",
+          "pass": true
+        },
+        {
+          "case": "out of scope: essay, pointed to the module leader",
+          "pass": true
+        },
+        {
+          "case": "out of scope: general chat",
+          "pass": true
+        },
+        {
+          "case": "in scope: a CV shared for its interests",
+          "pass": true
+        },
+        {
+          "case": "guarantee question: a job, answered with no promise and the module data",
+          "pass": true
+        },
+        {
+          "case": "guarantee question: a first",
+          "pass": true
+        },
+        {
+          "case": "not a guarantee question: careers relevance",
+          "pass": true
+        },
+        {
+          "case": "no doubled thanks after a privacy notice",
           "pass": true
         },
         {
