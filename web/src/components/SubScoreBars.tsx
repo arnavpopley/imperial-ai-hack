@@ -27,7 +27,7 @@ export function SubScoreBars({ sub, variant = 'stacked', dimmed = false, classNa
     <dl
       className={cx(
         variant === 'compact' ? 'grid grid-cols-4 gap-x-3' : 'grid gap-2.5',
-        dimmed && 'opacity-60 grayscale',
+        dimmed && 'grayscale',
         className,
       )}
     >
@@ -36,7 +36,7 @@ export function SubScoreBars({ sub, variant = 'stacked', dimmed = false, classNa
         const pct = value === null ? null : Math.round(value * 100);
         return (
           <div key={key} className={variant === 'compact' ? 'min-w-0' : 'grid grid-cols-[7.5rem_1fr_2.5rem] items-center gap-3'}>
-            <dt className={cx('text-muted', variant === 'compact' ? 'truncate text-[11px]' : 'text-[13px]')}>
+            <dt className={cx('text-muted', variant === 'compact' ? 'truncate text-2xs' : 'text-[13px]')}>
               {SUB_SCORE_LABELS[key]}
             </dt>
             <dd className={variant === 'compact' ? undefined : 'contents'}>
@@ -51,6 +51,7 @@ export function SubScoreBars({ sub, variant = 'stacked', dimmed = false, classNa
                   'relative h-1.5 overflow-hidden rounded-full bg-surface-2',
                   variant === 'compact' && 'mt-1',
                   pct === null && 'hatch text-line-strong',
+                  dimmed && 'opacity-60',
                 )}
               >
                 {pct !== null && (
@@ -64,7 +65,7 @@ export function SubScoreBars({ sub, variant = 'stacked', dimmed = false, classNa
                 aria-hidden="true"
                 className={cx(
                   'tabular-nums',
-                  variant === 'compact' ? 'mt-0.5 block text-[11px] font-semibold' : 'text-right text-[13px] font-semibold',
+                  variant === 'compact' ? 'mt-0.5 block text-2xs font-semibold' : 'text-right text-[13px] font-semibold',
                   pct === null && 'font-normal text-muted',
                 )}
               >

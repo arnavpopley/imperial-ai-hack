@@ -24,7 +24,7 @@ export function FitHistogram({ buckets, averageFit }: { buckets: readonly number
         {/* y axis */}
         <div
           aria-hidden="true"
-          className="flex h-44 flex-col justify-between text-right text-[11px] text-muted tabular-nums"
+          className="flex h-44 flex-col justify-between text-right text-2xs text-muted tabular-nums"
         >
           {ticks.map((t) => (
             <span key={t} className="leading-none">
@@ -63,12 +63,12 @@ export function FitHistogram({ buckets, averageFit }: { buckets: readonly number
               className="pointer-events-none absolute -top-6 bottom-0 border-l-2 border-dotted border-ink/70"
               style={{ left: `${Math.min(100, Math.max(0, averageFit))}%` }}
             >
-              <span className="absolute top-0 left-1 px-1 text-[11px] leading-4 font-medium whitespace-nowrap">
+              <span className="absolute top-0 left-1 px-1 text-2xs leading-4 font-medium whitespace-nowrap">
                 avg {Math.round(averageFit)}
               </span>
             </div>
           </div>
-          <div aria-hidden="true" className="mt-1.5 flex justify-between text-[11px] text-muted tabular-nums">
+          <div aria-hidden="true" className="mt-1.5 flex justify-between text-2xs text-muted tabular-nums">
             {[0, 20, 40, 60, 80, 100].map((x) => (
               <span key={x}>{x}</span>
             ))}
@@ -77,7 +77,7 @@ export function FitHistogram({ buckets, averageFit }: { buckets: readonly number
       </div>
       <figcaption className="mt-3 text-xs text-muted">Students per fit band (0–100). {summary}</figcaption>
       <details className="mt-2 text-xs">
-        <summary className="cursor-pointer text-muted hover:text-ink">Show as table</summary>
+        <summary className="cursor-pointer py-1 text-muted hover:text-ink">Show as table</summary>
         <table className="mt-2 w-full max-w-xs text-left tabular-nums">
           <caption className="sr-only">Students per fit band</caption>
           <thead className="text-muted">

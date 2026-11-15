@@ -57,7 +57,7 @@ export function GuardrailNotice({ variant, message, stage, children, className }
         <p className="flex flex-wrap items-center gap-x-2 font-semibold">
           {m.title}
           {stage && (
-            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-muted">
+            <span className="inline-flex items-center gap-1 text-2xs font-medium text-muted">
               <Icon name="shield" size={11} />
               {stage}
             </span>

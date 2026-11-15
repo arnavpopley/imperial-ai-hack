@@ -65,7 +65,7 @@ export function EvidencePopover(props: EvidencePopoverProps) {
         aria-controls={panelId}
         onClick={() => setOpen((v) => !v)}
         className={cx(
-          'inline-flex h-6 items-center gap-1 rounded-full px-2 align-middle text-[11px] font-semibold transition',
+          'inline-flex h-6 items-center gap-1 rounded-full px-2 align-middle text-2xs font-semibold transition',
           props.variant === 'quote' && 'bg-brand-soft text-brand hover:bg-brand/15',
           props.variant === 'module-field' && 'bg-surface-2 text-ink ring-1 ring-line ring-inset hover:bg-line',
           props.variant === 'missing' && 'bg-surface-2 text-muted',
@@ -93,13 +93,13 @@ function PanelBody(props: EvidencePopoverProps & { titleId: string }) {
   if (props.variant === 'quote') {
     return (
       <>
-        <span id={props.titleId} className="block text-[11px] font-semibold tracking-wide text-muted uppercase">
+        <span id={props.titleId} className="block text-2xs font-semibold tracking-wide text-muted uppercase">
           In your words
         </span>
         <q className="mt-1.5 block text-[15px] leading-snug font-medium text-ink before:text-brand after:text-brand">
           {props.quote}
         </q>
-        <span className="mt-3 flex items-center justify-between gap-3 text-[11px] text-muted">
+        <span className="mt-3 flex items-center justify-between gap-3 text-2xs text-muted">
           <span>{props.slotLabel}</span>
           <span className="tabular-nums">Extractor confidence {Math.round(props.confidence * 100)}%</span>
         </span>
@@ -109,7 +109,7 @@ function PanelBody(props: EvidencePopoverProps & { titleId: string }) {
   if (props.variant === 'module-field') {
     return (
       <>
-        <span id={props.titleId} className="block text-[11px] font-semibold tracking-wide text-muted uppercase">
+        <span id={props.titleId} className="block text-2xs font-semibold tracking-wide text-muted uppercase">
           From the module record
         </span>
         <span className="mt-1.5 block text-sm font-medium">{props.fieldLabel}</span>

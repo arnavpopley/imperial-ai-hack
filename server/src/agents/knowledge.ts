@@ -11,6 +11,38 @@ import { asData, emitWords, isLive, streamText, structured } from './llm.ts';
 
 const topicLabel = (id: string) => taxonomy.topics[id as keyof typeof taxonomy.topics]?.label ?? id;
 const pct = (x: number) => `${Math.round(x * 100)}%`;
+/** Page text is untrusted: G3 strips injected instructions before any of it reaches a model or a student. */
+const clean = (text: string) => stripInjection(text).text;
+/** Runs G3 over every string in a published field (names, authors, notes...), leaving the source URLs as they are. */
+function cleanAll<T>(value: T): T {
+  if (typeof value === 'string') return clean(value) as T;
+  if (Array.isArray(value)) return value.map(cleanAll) as T;
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, k === 'sourceUrl' ? v : cleanAll(v)])) as T;
+  }
+  return value;
+}
+/** Reading-list entries passed to the model; the total is passed too, so it never claims the list is complete. */
+const READING_LIST_CAP = 15;
+
+/**
+ * The published details beyond the description (docs/knowledge-base.md), as the agents see them, with every string
+ * scanned by G3. A field is null when the public page does not publish it, so the model can say so instead of guessing.
+ */
+function publishedDetails(raw: RawModule | undefined) {
+  const reading = raw?.readingList;
+  const assessment = raw?.assessmentDetails;
+  return cleanAll({
+    syllabus: raw?.syllabus ?? null,
+    teaching: raw?.teaching ?? null,
+    hours: raw?.hours ?? null,
+    readingList: reading ? { items: reading.items.slice(0, READING_LIST_CAP), totalItems: reading.items.length, sourceUrl: reading.sourceUrl } : null,
+    moduleLeads: raw?.moduleLeads ?? null,
+    requirements: raw?.requirements ?? [],
+    assessmentDetails: assessment ? { ...assessment, notes: assessment.notes ?? [] } : null,
+    programmeNotes: raw?.programmeNotes ?? [],
+  });
+}
 
 /** Everything the agent may say about a module, as one data object. Module text is scanned by G3 first. */
 export function moduleFacts(module: Module, raw: RawModule | undefined, titleOf: (id: string) => string) {
@@ -23,8 +55,11 @@ export function moduleFacts(module: Module, raw: RawModule | undefined, titleOf:
     type: module.type,
     terms: module.terms,
     description: stripInjection(module.description).text,
-    learningOutcomes: module.learningOutcomes.map((o) => stripInjection(o).text),
-    publishedAssessment: raw?.assessment ?? [],
+    // The public pages are the source; the derived record only lags them until the Module Analyst next runs.
+    learningOutcomes: (module.learningOutcomes.length ? module.learningOutcomes : (raw?.learningOutcomes ?? [])).map(clean),
+    // Weightings as the page prints them ("80%"), so the model never quotes a raw fraction such as 1 or 0.8.
+    publishedAssessment: cleanAll((raw?.assessment ?? []).map((a) => ({ ...a, weighting: `${Number((a.weighting * 100).toFixed(2))}%` }))),
+    ...publishedDetails(raw),
     prerequisites: module.prerequisites.map((id) => `${id} ${titleOf(id)}`),
     topics: Object.entries(module.topics)
       .sort((a, b) => b[1] - a[1])
@@ -91,17 +126,68 @@ export async function moduleSummary(module: Module, raw: RawModule | undefined, 
 
 // ---------- questions ----------
 
-const QUESTION_RULES: [RegExp, (f: ReturnType<typeof moduleFacts>) => string][] = [
+type Facts = ReturnType<typeof moduleFacts>;
+/** A rule's answer: published text, or a decline that says what the public page does not publish. */
+type RuleAnswer = string | { decline: string };
+
+const titles = (items: { title: string; author?: string }[]) => items.map((i) => (i.author ? `${i.title} (${i.author})` : i.title)).join('; ');
+/** Requirement text that describes expected background, rather than credit rules or I-Explore attendance. */
+const backgroundFacts = (f: Facts) => f.requirements.filter((r) => r.label === 'Pre-requisites' || r.label === 'Additional Information' || !r.label);
+
+const QUESTION_RULES: [RegExp, (f: Facts) => RuleAnswer][] = [
+  [
+    /\b(who\b.*\b(teach\w*|lectur\w*|runs?|leads?|convene\w*)|lecturers?|module lead\w*|convenor|professor|tutor)\b/i,
+    (f) =>
+      f.moduleLeads
+        ? `The public page lists ${f.moduleLeads.names.join(' and ')} as the module's ${f.moduleLeads.role}${f.moduleLeads.names.length > 1 ? 's' : ''}.`
+        : {
+            decline: `The public page for ${f.code} does not name a lecturer or module leader, and its description and record do not cover that. The full page is at ${f.sourceUrl}.`,
+          },
+  ],
+  [
+    /\b(hours?|contact time|time commitment|independent study|self[- ]study|private study|how much time)\b/i,
+    (f) =>
+      f.hours
+        ? `The public page says: ${f.hours.statements.join(' ')}`
+        : { decline: `The public page for ${f.code} does not state contact or study hours. The full page is at ${f.sourceUrl}.` },
+  ],
+  [
+    /\b(reading( list)?|textbooks?|books?|key texts?|set texts?)\b/i,
+    (f) =>
+      f.readingList
+        ? `The published reading list has ${f.readingList.totalItems} entr${f.readingList.totalItems === 1 ? 'y' : 'ies'}, including: ${titles(f.readingList.items.slice(0, 3))}.`
+        : {
+            decline: `The public page for ${f.code} does not publish a reading list.${f.resources.length ? ` Staff have added: ${f.resources.map((r) => r.label).join(', ')}.` : ''} The full page is at ${f.sourceUrl}.`,
+          },
+  ],
+  [
+    /\b(taught|teaching( methods?)?|delivered|format|lectures|tutorials|labs?)\b/i,
+    (f) => (f.teaching ? `On teaching, the public page says: ${sentences(f.teaching.paragraphs.join(' ')).slice(0, 2).join('').trim()}` : { decline: `The public page for ${f.code} does not describe how it is taught.` }),
+  ],
+  // Deadlines come before the broader assessment rule, so "When is the exam?" leads with the date or its decline.
+  [
+    /\b(deadlines?|due|exam (date|week)|when is the exam)\b/i,
+    (f) => {
+      const dated = (f.assessmentDetails?.notes ?? []).filter((n) => /\b(due|week|deadline|term|within)\b/i.test(n.text)).map((n) => n.text);
+      return dated.length
+        ? `The public page says: ${dated.slice(0, 3).join(' ')}`
+        : { decline: `The public page for ${f.code} does not publish assessment deadlines or exam dates. The full page is at ${f.sourceUrl}.` };
+    },
+  ],
   [
     /\b(assess\w*|exam\w*|coursework|graded|marked|weighting)\b/i,
     (f) =>
       f.publishedAssessment.length
-        ? `It is assessed by ${f.publishedAssessment.map((a) => `${a.description} (${pct(a.weighting)}, ${a.type})`).join(', ')}.`
+        ? `It is assessed by ${f.publishedAssessment.map((a) => `${a.description} (${a.weighting}, ${a.type})`).join(', ')}.${f.assessmentDetails?.passMark ? ` The published pass mark is ${f.assessmentDetails.passMark}.` : ''}`
         : `The public page does not list the assessment. From the module record, about ${pct(f.demandProfile.examShare)} of it is exam-based.`,
   ],
   [
     /\b(prereq\w*|beforehand|need to know|background|requires?|required)\b/i,
-    (f) => (f.prerequisites.length ? `It builds on ${f.prerequisites.join(', ')}.` : 'No prerequisite modules are listed for it.'),
+    (f) => {
+      const modules = f.prerequisites.length ? `It builds on ${f.prerequisites.join(', ')}.` : 'No prerequisite modules are listed for it.';
+      const published = backgroundFacts(f).map((r) => r.text);
+      return published.length ? `${modules} The public page says: ${published.slice(0, 4).join(' ')}` : modules;
+    },
   ],
   [/\b(when|term|autumn|spring|summer|semester)\b/i, (f) => `It runs in the ${f.terms.join(' and ')} term${f.terms.length > 1 ? 's' : ''}.`],
   [/\b(credits?|ects|how big|size)\b/i, (f) => `It is worth ${f.ects} ECTS.`],
@@ -112,21 +198,30 @@ const QUESTION_RULES: [RegExp, (f: ReturnType<typeof moduleFacts>) => string][] 
         ? `By the end you should be able to: ${f.learningOutcomes.slice(0, 3).join('; ')}`
         : `It covers ${f.topics.slice(0, 3).join(', ')}.`,
   ],
-  [/\b(past papers?|papers|reading|resources?|recordings?|videos?)\b/i, (f) => (f.resources.length ? `Resources: ${f.resources.map((r) => r.label).join(', ')}.` : 'No past papers or reading lists have been added for it yet.')],
+  [/\b(past papers?|papers|resources?|recordings?|videos?)\b/i, (f) => (f.resources.length ? `Resources: ${f.resources.map((r) => r.label).join(', ')}.` : 'No past papers or other resources have been added for it yet.')],
   [/\b(workload|hard|difficult|maths|coding|programming)\b/i, (f) => `From the module record: maths intensity ${pct(f.demandProfile.mathsIntensity)}, coding ${pct(f.demandProfile.codingIntensity)}, workload ${pct(f.demandProfile.workload)}.`],
 ];
 
-/** Offline answer: the rule that matches the question, or a pointer to the public page. */
-export function answerByRules(question: string, facts: ReturnType<typeof moduleFacts>): string {
-  const answers = QUESTION_RULES.filter(([re]) => re.test(question)).map(([, answer]) => answer(facts));
-  if (answers.length) return `${answers.slice(0, 2).join(' ')} Source: the public module page.`;
-  return `I can only answer from ${facts.code}'s public description and record, and they do not cover that. The full page is at ${facts.sourceUrl}.`;
+/**
+ * Offline answer: the first two matching rules in priority order (specific questions before broad keywords), with a
+ * plain decline wherever the page does not publish the answer, or a pointer to the page when no rule matches.
+ */
+export function answerByRules(question: string, facts: Facts): string {
+  const answers = QUESTION_RULES.filter(([re]) => re.test(question))
+    .slice(0, 2)
+    .map(([, answer]) => answer(facts));
+  if (!answers.length) return `I can only answer from ${facts.code}'s public description and record, and they do not cover that. The full page is at ${facts.sourceUrl}.`;
+  const text = answers.map((a) => (typeof a === 'string' ? a : a.decline)).join(' ');
+  return answers.some((a) => typeof a === 'string') ? `${text} Source: the public module page.` : text;
 }
 
 const ASK_SYSTEM = `You answer a student's questions about one university module, using only the module record and public page
 given as data. Rules:
 - If the answer is not in the data, say so plainly and point to the module page (sourceUrl). Never guess.
 - Quote published assessment weightings exactly when asked about assessment.
+- Name a lecturer only if they are in moduleLeads, and never give contact details. Quote hours, reading-list titles,
+  requirements and dates as published. When one is null or empty, say the public page does not publish it and point
+  to the module page; do not talk about fields or records.
 - Keep answers short (under 90 words) and friendly. Plain text only: no markdown, bold, headings or bullet lists.
 - Never promise grades, jobs or outcomes. If asked for a guarantee, say plainly that nobody can promise that and the
   module record does not cover outcomes, then point to where to find out more (the module page, the careers service or
