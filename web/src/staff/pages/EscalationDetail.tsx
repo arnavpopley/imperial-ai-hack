@@ -9,6 +9,7 @@ import { Button } from '../../components/Button.tsx';
 import { EmptyState } from '../../components/StateViews.tsx';
 import { AlertIcon, ArrowLeftIcon, CheckIcon, HeartIcon, XIcon } from '../components/icons.tsx';
 import { Avatar } from '../../components/Avatar.tsx';
+import { SubScoreBars } from '../../components/SubScoreBars.tsx';
 import { escalationTitle } from '../../components/escalationTitle.ts';
 import { useModuleLookup } from '../hooks/useModuleLookup.ts';
 import {
@@ -17,7 +18,6 @@ import {
   MAX_REPLY,
   respondBody,
   ruleRows,
-  subScoreText,
   type StaffAction,
 } from '../lib/exceptionCase.ts';
 import { focusRing, formatDateTime } from '../lib/format.ts';
@@ -235,11 +235,14 @@ function ExceptionDetails({ headingId, request }: { headingId: string; request: 
         <dt className="text-muted">Fit for the module</dt>
         <dd>
           {request.fit ? (
-            <span>
-              <span className="font-semibold tabular-nums">{request.fit.fit}</span>
-              <span className="text-muted"> / 100 · </span>
-              <span className="text-xs text-muted tabular-nums">{subScoreText(request.fit.sub)}</span>
-            </span>
+            <div className="grid max-w-sm gap-1.5">
+              <span>
+                <span className="font-semibold tabular-nums">{request.fit.fit}</span>
+                <span className="text-muted"> / 100</span>
+              </span>
+              {/* The same four factor colours the student sees on their catalogue cards (issue 137). */}
+              <SubScoreBars sub={request.fit.sub} variant="compact" />
+            </div>
           ) : (
             <span className="text-muted">Not scored</span>
           )}

@@ -109,8 +109,8 @@ export function InterviewScreen() {
           className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4"
         >
           <div className="min-w-0">
-            <h1 className="text-[1.75rem] font-semibold tracking-tight sm:text-[2rem]">Your interview</h1>
-            <p className="mt-1 text-[15px] text-muted">
+            <h1 className="text-title">Your interview</h1>
+            <p className="mt-1 text-sm text-muted">
               {depth === 'quick' ? 'Quick, about three minutes' : 'Deep, take your time'}
             </p>
           </div>
@@ -121,7 +121,7 @@ export function InterviewScreen() {
                 {confirmed ? 'Go to recommendations' : 'Skip to modules'}
               </Button>
               {error && (
-                <p role="alert" className="text-[12px] text-fit-low">
+                <p role="alert" className="text-2xs text-fit-low">
                   {error}
                 </p>
               )}

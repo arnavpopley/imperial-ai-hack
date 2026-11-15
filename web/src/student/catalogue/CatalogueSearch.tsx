@@ -37,7 +37,7 @@ export function CatalogueSearch({ value, onChange, controls, className }: Catalo
         aria-describedby={hintId}
         autoComplete="off"
         spellCheck={false}
-        className="h-11 w-full rounded-xl border border-line bg-surface pr-10 pl-10 text-[15px] shadow-soft outline-none placeholder:text-muted focus-visible:border-brand focus-visible:ring-2 focus-visible:ring-brand/30 [&::-webkit-search-cancel-button]:hidden"
+        className="h-11 w-full rounded-xl border border-line bg-surface pr-10 pl-10 text-sm shadow-soft outline-none placeholder:text-muted focus-visible:border-brand focus-visible:ring-2 focus-visible:ring-brand/30 [&::-webkit-search-cancel-button]:hidden"
       />
       <span id={hintId} className="sr-only">
         Filters the list below and keeps it in fit order. Small typos are forgiven.

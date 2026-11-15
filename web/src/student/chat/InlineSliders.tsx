@@ -55,12 +55,12 @@ export function InlineSliders({ fields, disabled, onSubmit }: InlineSlidersProps
               <div className="flex items-center gap-3">
                 <span
                   aria-hidden="true"
-                  className="grid size-11 shrink-0 place-items-center rounded-2xl bg-brand-soft font-mono text-[15px] font-semibold text-brand"
+                  className="grid size-11 shrink-0 place-items-center rounded-2xl bg-brand-soft font-mono text-sm font-semibold text-brand"
                 >
                   {GLYPHS[meta.key] ?? meta.label.charAt(0)}
                 </span>
                 <div className="min-w-0">
-                  <label htmlFor={inputId} className="block text-[13px] text-muted">
+                  <label htmlFor={inputId} className="block text-xs text-muted">
                     {meta.label}
                   </label>
                   <AnimatePresence mode="wait" initial={false}>
@@ -140,7 +140,7 @@ function BigSlider({
           style={{ left: `calc(12px + (100% - 24px) * ${value})` }}
         />
       </div>
-      <div className="mt-1 flex justify-between gap-3 text-[12px] text-muted" aria-hidden="true">
+      <div className="mt-1 flex justify-between gap-3 text-2xs text-muted" aria-hidden="true">
         <span>{low}</span>
         <span className="text-right">{high}</span>
       </div>

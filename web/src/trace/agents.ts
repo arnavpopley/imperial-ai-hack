@@ -98,8 +98,8 @@ export const AGENTS: readonly Agent[] = [
     tools: ['search_modules', 'get_module', 'compare_modules'],
     does: 'Searches the whole catalogue in a tool loop.',
     never: 'names a module code that is not in the catalogue.',
-    gradient: 'from-module-2 to-mode-plan',
-    tone: 'text-module-2',
+    gradient: 'from-art-2 to-mode-plan',
+    tone: 'text-art-2',
   },
   {
     id: 'knowledge',
@@ -110,8 +110,8 @@ export const AGENTS: readonly Agent[] = [
     tools: [],
     does: 'Summarises a module and answers questions on it.',
     never: "goes beyond the module's own page.",
-    gradient: 'from-module-5 to-module-3',
-    tone: 'text-module-3',
+    gradient: 'from-art-5 to-art-3',
+    tone: 'text-art-3',
   },
   {
     id: 'resultsReader',
@@ -122,8 +122,8 @@ export const AGENTS: readonly Agent[] = [
     tools: [],
     does: 'Reads an uploaded transcript or mark sheet.',
     never: 'reads your marks without your consent.',
-    gradient: 'from-module-8 to-mode-recommend',
-    tone: 'text-module-8',
+    gradient: 'from-art-8 to-mode-recommend',
+    tone: 'text-art-8',
     // Reading a PDF or photo needs the model; offline, students paste the text and a parser reads it.
     offlineLabel: 'Off (offline)',
   },
@@ -136,8 +136,8 @@ export const AGENTS: readonly Agent[] = [
     tools: [],
     does: 'Turns your marks into tailored revision advice.',
     never: 'states a number the exam facts do not contain.',
-    gradient: 'from-module-4 to-module-6',
-    tone: 'text-module-4',
+    gradient: 'from-art-4 to-art-6',
+    tone: 'text-art-4',
   },
   {
     id: 'insightsAgent',
@@ -148,8 +148,8 @@ export const AGENTS: readonly Agent[] = [
     tools: [],
     does: 'Words cohort insight cards for module leads.',
     never: 'changes a number from the engine.',
-    gradient: 'from-module-6 to-mode-explain',
-    tone: 'text-module-6',
+    gradient: 'from-art-6 to-mode-explain',
+    tone: 'text-art-6',
   },
   {
     id: 'examDrafter',
@@ -160,8 +160,8 @@ export const AGENTS: readonly Agent[] = [
     tools: [],
     does: 'Drafts a feedback form from marking notes.',
     never: 'reaches students before an examiner publishes it.',
-    gradient: 'from-module-1 to-module-4',
-    tone: 'text-module-1',
+    gradient: 'from-art-1 to-art-4',
+    tone: 'text-art-1',
   },
   {
     id: 'analyst',
@@ -172,8 +172,8 @@ export const AGENTS: readonly Agent[] = [
     tools: ['record_module_analysis'],
     does: 'Tags each module with topics, skills and demand.',
     never: 'weights a topic highly without a quote.',
-    gradient: 'from-module-7 to-mode-onboard',
-    tone: 'text-module-7',
+    gradient: 'from-art-7 to-mode-onboard',
+    tone: 'text-art-7',
   },
 ];
 

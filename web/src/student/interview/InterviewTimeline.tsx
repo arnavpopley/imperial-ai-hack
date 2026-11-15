@@ -66,7 +66,7 @@ export function InterviewTimeline({ session, extras, activeExtra, onOpenExtra, r
             <div className="min-w-0 pt-1">
               <p
                 className={cx(
-                  'text-[14px] leading-tight transition-colors',
+                  'text-sm leading-tight transition-colors',
                   step.status === 'current'
                     ? 'font-semibold text-ink'
                     : step.status === 'done'
@@ -80,7 +80,7 @@ export function InterviewTimeline({ session, extras, activeExtra, onOpenExtra, r
               {step.children && (
                 <ul className="mt-2 grid gap-1.5">
                   {step.children.map((child) => (
-                    <li key={child.id} className="flex items-center gap-2 text-[12.5px]">
+                    <li key={child.id} className="flex items-center gap-2 text-xs">
                       <SubDot status={child.status} />
                       <span
                         className={cx(
@@ -102,7 +102,7 @@ export function InterviewTimeline({ session, extras, activeExtra, onOpenExtra, r
 
       <ProfileReady ready={isProfileReady(session)} className="mb-4" />
 
-      <p className="mt-1 mb-2.5 pl-[2.75rem] text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">
+      <p className="mt-1 mb-2.5 pl-[2.75rem] text-2xs font-semibold tracking-[0.08em] text-muted uppercase">
         Optional
       </p>
       <ul className="grid gap-1">
@@ -127,7 +127,7 @@ export function InterviewTimeline({ session, extras, activeExtra, onOpenExtra, r
               >
                 {extra.done ? <AnimatedTick /> : <Icon name={extra.icon} size={14} />}
               </span>
-              <span className="text-[14px]">
+              <span className="text-sm">
                 {extra.label}
                 {extra.done && <span className="sr-only">, done</span>}
               </span>
@@ -172,11 +172,11 @@ function ResultsTimelineItem({ step }: { step: ResultsStep }) {
           {done ? <AnimatedTick /> : <MarkSheetIcon size={14} />}
         </span>
         <span className="min-w-0 pt-0.5">
-          <span className="block text-[14px] leading-tight text-ink">Your results</span>
+          <span className="block text-sm leading-tight text-ink">Your results</span>
           <span
             aria-hidden="true"
             className={cx(
-              'mt-1 inline-block rounded-full text-[11px] font-semibold',
+              'mt-1 inline-block rounded-full text-2xs font-semibold',
               step.status === 'todo' ? 'bg-brand-soft px-1.5 py-px text-brand' : 'text-muted',
             )}
           >
@@ -331,7 +331,7 @@ function ProfileReady({ ready, className }: { ready: boolean; className?: string
             <span aria-hidden="true" className="grid size-8 shrink-0 place-items-center rounded-full bg-fit-high text-on-brand">
               <Icon name="sparkle" size={15} />
             </span>
-            <span className="min-w-0 text-[13px] leading-snug">
+            <span className="min-w-0 text-xs leading-snug">
               <span className="block font-semibold text-ink">Profile ready: your matches are waiting</span>
               <span className="block text-muted">Check your profile, then see what fits.</span>
             </span>
@@ -350,7 +350,7 @@ export function InterviewProgressBar({ session, extras, activeExtra, onOpenExtra
   const { transition } = useMotionTokens();
   return (
     <div className={cx('grid gap-2.5', className)}>
-      <div className="flex items-baseline justify-between gap-3 text-[13px]">
+      <div className="flex items-baseline justify-between gap-3 text-xs">
         <span className="min-w-0 truncate">
           <span className="text-muted">Now: </span>
           <span className="font-semibold">
@@ -396,7 +396,7 @@ export function InterviewProgressBar({ session, extras, activeExtra, onOpenExtra
             onClick={results.onOpen}
             aria-pressed={results.active}
             className={cx(
-              'flex h-9 items-center gap-1.5 rounded-full border px-3 text-[13px] transition',
+              'flex h-9 items-center gap-1.5 rounded-full border px-3 text-xs transition',
               results.active ? 'border-brand bg-brand-soft text-brand' : 'border-line-strong text-ink',
             )}
           >
@@ -416,7 +416,7 @@ export function InterviewProgressBar({ session, extras, activeExtra, onOpenExtra
             onClick={() => onOpenExtra(extra.id)}
             aria-pressed={activeExtra === extra.id}
             className={cx(
-              'flex h-9 items-center gap-1.5 rounded-full border px-3 text-[13px] transition',
+              'flex h-9 items-center gap-1.5 rounded-full border px-3 text-xs transition',
               activeExtra === extra.id ? 'border-brand bg-brand-soft text-brand' : 'border-line-strong text-ink',
             )}
           >

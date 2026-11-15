@@ -156,7 +156,7 @@ function Intro() {
       <div className="grid md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
         <div className="grid content-center gap-4 p-card-lg sm:p-10">
           <p className="text-xs font-semibold tracking-[0.12em] text-brand uppercase">How it works</p>
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">A team of small AI helpers, checked at every step</h1>
+          <h1 className="text-title">A team of small AI helpers, checked at every step</h1>
           <p className="max-w-xl text-base text-muted text-pretty">
             Numbers come from code; words come from the AI. This page shows the process, how we test it, and a live
             record of what it did for a session.

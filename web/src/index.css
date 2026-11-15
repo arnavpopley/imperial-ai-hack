@@ -53,6 +53,36 @@
   --text-base: 1rem;
   --text-base--line-height: 1.65rem;
 
+  /*
+   * Role scale (issue #139): one size per role, so every screen's title, section heading and caption match.
+   * Use these instead of arbitrary text-[Npx] sizes; web/src/typeScale.test.ts enforces the 12px floor.
+   *   display     landing hero only          title       each page's h1
+   *   heading     section h2                 subheading  card and group h3
+   *   body        running text (= base)      small       secondary text (= sm)
+   *   caption     chips, badges, micro labels (= 2xs, the floor)
+   * Display and title step down on phones with clamp(), so a long title still fits at 390px.
+   */
+  --text-display: clamp(2.25rem, 1.6rem + 2.8vw, 3.25rem);
+  --text-display--line-height: 1.05;
+  --text-display--letter-spacing: -0.02em;
+  --text-display--font-weight: 600;
+  --text-title: clamp(1.75rem, 1.5rem + 1.1vw, 2rem);
+  --text-title--line-height: 1.15;
+  --text-title--letter-spacing: -0.015em;
+  --text-title--font-weight: 600;
+  --text-heading: 1.25rem;
+  --text-heading--line-height: 1.3;
+  --text-heading--font-weight: 600;
+  --text-subheading: 1rem;
+  --text-subheading--line-height: 1.4;
+  --text-subheading--font-weight: 600;
+  --text-body: 1rem;
+  --text-body--line-height: 1.65rem;
+  --text-small: 0.9375rem;
+  --text-small--line-height: 1.5rem;
+  --text-caption: 0.75rem;
+  --text-caption--line-height: 1rem;
+
   /* Generous spacing for cards and page sections (use as p-card, gap-section, and so on). */
   --spacing-card: 1.5rem;
   --spacing-card-lg: 2rem;
@@ -83,6 +113,30 @@
   --color-module-6: #c0336f;
   --color-module-7: #2f7fbf;
   --color-module-8: #5b7a1f;
+
+  /*
+   * The four parts of a fit score (spec 8.1 to 8.4), one colour each wherever a factor appears: weight sliders, the
+   * mix bar, sub-score bars and compare. Separate from the module palette, so a colour never means two things.
+   */
+  --color-factor-interest: #3b4fd8;
+  --color-factor-goal: #0e7490;
+  --color-factor-style: #7a4fd8;
+  --color-factor-breadth: #8a5f00;
+
+  /* Assessment types: one slate ramp, darkest for exams, so they never read as modules or factors. */
+  --color-assess-exam: #1f2937;
+  --color-assess-coursework: #4b5563;
+  --color-assess-practical: #7d8594;
+
+  /* Decorative art (society banners, agent tiles, card icons): the module hues by another name, meaning nothing. */
+  --color-art-1: var(--color-module-1);
+  --color-art-2: var(--color-module-2);
+  --color-art-3: var(--color-module-3);
+  --color-art-4: var(--color-module-4);
+  --color-art-5: var(--color-module-5);
+  --color-art-6: var(--color-module-6);
+  --color-art-7: var(--color-module-7);
+  --color-art-8: var(--color-module-8);
 
   --shadow-soft: 0 1px 2px rgb(22 24 29 / 0.04), 0 4px 16px -4px rgb(22 24 29 / 0.08);
   --shadow-lift: 0 2px 4px rgb(22 24 29 / 0.06), 0 18px 40px -12px rgb(22 24 29 / 0.22);
@@ -232,6 +286,16 @@
     --color-module-6: #f07fae;
     --color-module-7: #6cb6f0;
     --color-module-8: #a3c95a;
+
+    /* Each clears the 3:1 non-text contrast on surface and surface-2 in both themes; art follows the module values. */
+    --color-factor-interest: #7c8cff;
+    --color-factor-goal: #4cc0dc;
+    --color-factor-style: #b08cff;
+    --color-factor-breadth: #e3b341;
+
+    --color-assess-exam: #eceef2;
+    --color-assess-coursework: #b4bac6;
+    --color-assess-practical: #7d8594;
 
     --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 16px -4px rgb(0 0 0 / 0.4);
     --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.3), 0 18px 40px -12px rgb(0 0 0 / 0.6);
