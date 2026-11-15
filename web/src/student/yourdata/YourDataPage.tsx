@@ -25,6 +25,7 @@ import {
 import { clearRevisionChecklists } from '../feedback/plan.ts';
 import { ProfileEditor } from '../profile/ProfileEditor.tsx';
 import { useProfileActions } from '../profile/useProfileActions.ts';
+import { errorStatus } from '../results/files.ts';
 import { ResultsDataSection } from '../results/ResultsDataSection.tsx';
 import { useResults } from '../results/ResultsProvider.tsx';
 import { offersResultsStep } from '../results/resultsStep.ts';
@@ -117,8 +118,12 @@ function DownloadData() {
  */
 function ResultsSection() {
   const { session } = useReadySession();
-  const { hasResults } = useResults();
-  const nothingToShare = !offersResultsStep(session.profile.yearOfStudy) && !hasResults;
+  const { results, hasResults } = useResults();
+  // Only once the read has settled as empty (a 404 means the route is off, which is empty too): while it loads, or
+  // when it fails, the card shows its skeleton or its error instead of a note that would hide the problem.
+  const settledEmpty =
+    !hasResults && !results.loading && (results.error === null ? results.data !== undefined : errorStatus(results.error) === 404);
+  const nothingToShare = !offersResultsStep(session.profile.yearOfStudy) && settledEmpty;
   return (
     <section aria-labelledby="results-heading" className="grid min-w-0 grid-cols-1 gap-6">
       {nothingToShare ? (
