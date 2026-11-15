@@ -55,7 +55,7 @@ Every Imperial student chooses modules from the same flat catalogue, where every
   | Staff (2) | Insights (its rewrite is rejected if any number changes), exam form drafter |
   | Offline (1) | Module Analyst (`scripts/analyse-modules.ts`): public descriptions into taxonomy tags |
 
-  The Supervisor routes each chat turn; module-page questions, transcripts and exam feedback take their own routes after the input guardrails.
+  The Supervisor routes each chat turn. Module-page questions take their own route after the input guardrails. The results routes have their own checks: a pasted transcript gets the G3 injection patterns, an uploaded PDF or photo goes to the results reader, which only extracts rows and has instructions stripped from the titles it reads, and exam feedback uses only saved marks and a published examiner form, with the examiner's text stripped of instructions before any model sees it.
 - **Eight guardrails** (`server/src/guardrails`): scope, sensitive-data redaction, injection and wellbeing checks on input; schema, grounding, programme-rules and claims checks on output. Every verdict is traced. Grades, health and protected characteristics are removed before anything is stored, while stated interests are kept.
 - **Stack:** React, Vite and Tailwind on the front; Hono on Node with SQLite (better-sqlite3 and Drizzle) on the back; zod contracts shared between the two (`packages/shared`). Deployed on Vercel as static files plus one Node function.
 - **Offline mode:** every agent has a deterministic path, so the whole journey runs with no API key. The tests and the offline evaluation always run this way.
