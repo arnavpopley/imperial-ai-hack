@@ -1,12 +1,19 @@
 // The fit ring with a fill that sweeps in on mount and glides when the score changes. Same bands and
 // accessible name as the shared FitScore ring; reduced motion shows the final value at once.
-import { animate, motion, useMotionValue, useReducedMotion, useTransform } from 'motion/react';
+//
+// Motion follows the education skill's tokens: the first sweep is a content reveal (lessonTransition,
+// 350ms ease-in-out), and a re-score is a progress update (300ms ease-out) whose number then settles
+// with a small follow-through nudge in the direction it moved.
+import { animate, motion, useMotionValue, useTransform } from 'motion/react';
 import { useEffect, useRef } from 'react';
 import { cx } from '../../components/cx.ts';
 import { FIT_BAND_LABELS, fitBand } from '../../components/FitScore.tsx';
+import { MOTION, useMotionTokens } from '../../motion/tokens.ts';
 
 const RADIUS = 20;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+/** How far, in pixels, the number lifts or dips before it settles. */
+const SETTLE_NUDGE = 3;
 
 const toneClass = { high: 'text-fit-high', mid: 'text-fit-mid', low: 'text-fit-low' } as const;
 
@@ -20,23 +27,38 @@ interface ScoreRingProps {
 }
 
 export function ScoreRing({ value, size = 'md', dimmed = false, delay = 0, className }: ScoreRingProps) {
-  const reduce = useReducedMotion();
+  const { reduce } = useMotionTokens();
   const progress = useMotionValue(reduce ? value : 0);
+  const numberY = useMotionValue(0);
   const offset = useTransform(progress, (v) => CIRCUMFERENCE * (1 - v / 100));
   const shown = useTransform(progress, (v) => Math.round(v));
   /** The stagger delay applies to the first sweep only, so a re-rank glides at once. */
   const firstSweep = useRef(true);
+  const previous = useRef(value);
 
   useEffect(() => {
+    const from = previous.current;
+    previous.current = value;
     if (reduce) {
       progress.set(value);
+      numberY.set(0);
+      firstSweep.current = false;
       return;
     }
-    const wait = firstSweep.current ? delay : 0;
-    firstSweep.current = false;
-    const controls = animate(progress, value, { duration: 0.9, delay: wait, ease: [0.2, 0.8, 0.2, 1] });
-    return () => controls.stop();
-  }, [value, reduce, progress, delay]);
+    if (firstSweep.current) {
+      firstSweep.current = false;
+      const controls = animate(progress, value, { ...MOTION.lessonTransition, delay });
+      return () => controls.stop();
+    }
+    const ring = animate(progress, value, MOTION.progressUpdate);
+    // Follow-through: the number rides up (or down) with the change, then springs back into place.
+    numberY.set(value > from ? -SETTLE_NUDGE : value < from ? SETTLE_NUDGE : 0);
+    const settle = animate(numberY, 0, MOTION.settle);
+    return () => {
+      ring.stop();
+      settle.stop();
+    };
+  }, [value, reduce, progress, numberY, delay]);
 
   const band = fitBand(value);
   const tone = dimmed ? 'text-muted' : toneClass[band];
@@ -57,11 +79,12 @@ export function ScoreRing({ value, size = 'md', dimmed = false, delay = 0, class
           strokeLinecap="round"
           strokeDasharray={CIRCUMFERENCE}
           style={{ strokeDashoffset: offset }}
-          className={cx('transition-colors duration-500', tone)}
+          className={cx('transition-colors duration-300 ease-out', tone)}
         />
       </svg>
       <motion.span
         aria-hidden="true"
+        style={{ y: numberY }}
         className={cx(
           'absolute font-semibold tracking-tight tabular-nums',
           size === 'lg' ? 'text-3xl' : 'text-lg',

@@ -96,7 +96,7 @@ export function InsightCard({
               {uplift >= 0 ? '+' : ''}
               {uplift} fit
             </p>
-            <p className="mt-1 text-[11px] text-muted">avg. points</p>
+            <p className="mt-1 text-2xs text-muted">avg. points</p>
           </div>
         )}
       </div>

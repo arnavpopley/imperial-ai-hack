@@ -16,6 +16,8 @@ import { SubScoreBars } from '../../components/SubScoreBars.tsx';
 import { reasonSource } from '../catalogue/reasonSource.ts';
 import { ScoreRing } from '../catalogue/ScoreRing.tsx';
 import { ShortlistButton } from '../catalogue/ShortlistButton.tsx';
+import { ClaimCheck } from '../claimcheck/ClaimCheck.tsx';
+import { explanationText } from '../claimcheck/claimCheck.ts';
 import { useAsync } from '../hooks/useAsync.ts';
 import { useShortlist } from '../hooks/useShortlist.ts';
 import { TERM_LABELS } from '../labels.ts';
@@ -209,6 +211,15 @@ export function ModuleDetailScreen() {
                   Scores are worked out by code from your profile. The advisor explains them but cannot change them, and the
                   choice is yours.
                 </p>
+                <ClaimCheck
+                  className="mt-3"
+                  label="Check this explanation"
+                  kind="fit"
+                  text={explanationText(explanation.data.explanation)}
+                  sourceUrl={module.sourceUrl}
+                  derivedBy={module.derivedBy}
+                  storageKey={`${module.id}.fit`}
+                />
               </>
             ) : explanation.error ? (
               <ErrorState

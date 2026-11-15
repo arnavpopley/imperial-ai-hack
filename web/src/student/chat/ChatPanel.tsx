@@ -243,7 +243,7 @@ export function ChatPanel({ variant, prefill = '', className, onAddCv }: ChatPan
               type="submit"
               disabled={sending || !draft.trim()}
               whileTap={{ scale: 0.92 }}
-              className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand text-on-brand transition hover:brightness-110 disabled:opacity-40"
+              className="grid size-11 shrink-0 place-items-center rounded-xl bg-brand text-on-brand transition hover:brightness-110 disabled:opacity-40"
             >
               <Icon name="send" size={16} label="Send" />
             </motion.button>

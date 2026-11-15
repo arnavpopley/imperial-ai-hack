@@ -2,7 +2,7 @@
 // (a full-screen sheet on phones). The window is a native modal <dialog>, which traps focus, makes the page
 // behind it inert and closes on Escape; motion animates it in and out.
 import { AnimatePresence, motion } from 'motion/react';
-import { useEffect, useId, useRef, useState } from 'react';
+import { type RefObject, useEffect, useId, useRef, useState } from 'react';
 import { cx } from '../../components/cx.ts';
 import { Icon } from '../../components/Icon.tsx';
 import { ModeChip } from '../../components/ModeChip.tsx';
@@ -37,6 +37,64 @@ function useActivitySignature(): string {
   return `${replies}|${draft ? draft.summary : ''}|${escalations}`;
 }
 
+/** Past this many pixels of scroll the labelled pill shrinks to its round icon, so it covers less of the page. */
+const COLLAPSE_AFTER_PX = 80;
+/** The labelled pill's footprint from sm up: 72px tall, about 220px wide, 24px in from the corner. */
+const PILL = { width: 224, height: 72, inset: 24 } as const;
+const INTERACTIVE = 'a[href], button, input, select, textarea, summary, [role="button"], [tabindex]:not([tabindex="-1"])';
+
+/** True when a control on the page sits where the labelled pill would be drawn. */
+function pillWouldCoverControl(launcher: HTMLElement | null): boolean {
+  const right = window.innerWidth - PILL.inset;
+  const bottom = window.innerHeight - PILL.inset;
+  const left = right - PILL.width;
+  const top = bottom - PILL.height;
+  for (const el of document.querySelectorAll<HTMLElement>(INTERACTIVE)) {
+    if (launcher?.contains(el)) continue;
+    const r = el.getBoundingClientRect();
+    if (r.width === 0 || r.height === 0) continue;
+    if (r.left < right && r.right > left && r.top < bottom && r.bottom > top) return true;
+  }
+  return false;
+}
+
+/**
+ * Whether the launcher shows only its round icon: once the page scrolls away from the top, or whenever the
+ * labelled pill would sit over a control (the module page's question chips, a card's shortlist button).
+ */
+function useCompactLauncher(launcherRef: RefObject<HTMLElement | null>): boolean {
+  const [compact, setCompact] = useState(false);
+  useEffect(() => {
+    let frame = 0;
+    let settle = 0;
+    const check = () => setCompact(window.scrollY > COLLAPSE_AFTER_PX || pillWouldCoverControl(launcherRef.current));
+    const update = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(check);
+      // Entrance animations move controls without a resize or scroll, so check again once they have settled.
+      window.clearTimeout(settle);
+      settle = window.setTimeout(check, 600);
+    };
+    update();
+    window.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    // Content that loads or expands after mount can move a control under the pill without any scroll.
+    const resizes = new ResizeObserver(update);
+    resizes.observe(document.body);
+    const mutations = new MutationObserver(update);
+    mutations.observe(document.body, { childList: true, subtree: true });
+    return () => {
+      cancelAnimationFrame(frame);
+      window.clearTimeout(settle);
+      window.removeEventListener('scroll', update);
+      window.removeEventListener('resize', update);
+      resizes.disconnect();
+      mutations.disconnect();
+    };
+  }, [launcherRef]);
+  return compact;
+}
+
 export function AdvisorLauncher({ state, onOpen, onClose, showBubble }: AdvisorLauncherProps) {
   const { session } = useReadySession();
   const signature = useActivitySignature();
@@ -46,6 +104,8 @@ export function AdvisorLauncher({ state, onOpen, onClose, showBubble }: AdvisorL
   const titleId = useId();
   const subtitleId = useId();
   const { open } = state;
+  const launcherRef = useRef<HTMLDivElement>(null);
+  const collapsed = useCompactLauncher(launcherRef);
 
   // Anything that happens while the window is open counts as seen.
   // Seen while the window is open, and on the interview, where the same conversation is already on screen
@@ -70,7 +130,7 @@ export function AdvisorLauncher({ state, onOpen, onClose, showBubble }: AdvisorL
   return (
     <>
       {showBubble && (
-        <div className="fixed right-4 bottom-4 z-(--z-launcher) sm:right-6 sm:bottom-6">
+        <div ref={launcherRef} className="fixed right-4 bottom-4 z-(--z-launcher) sm:right-6 sm:bottom-6">
           <AnimatePresence>
             {!open && (
               <motion.button
@@ -85,7 +145,10 @@ export function AdvisorLauncher({ state, onOpen, onClose, showBubble }: AdvisorL
                 whileHover={{ scale: 1.06 }}
                 whileTap={{ scale: 0.94 }}
                 transition={{ type: 'spring', stiffness: 380, damping: 26 }}
-                className="relative flex h-16 items-center gap-3 rounded-full bg-gradient-to-br from-brand to-mode-explain pr-4 pl-4 text-on-brand shadow-lift sm:h-[4.5rem] sm:pr-7 sm:pl-5"
+                className={cx(
+                  'relative flex h-16 items-center gap-3 rounded-full bg-gradient-to-br from-brand to-mode-explain pr-4 pl-4 text-on-brand shadow-lift sm:h-[4.5rem]',
+                  collapsed ? 'sm:px-4' : 'sm:pr-7 sm:pl-5',
+                )}
               >
                 {/* A gentle idle pulse; the reduced-motion rule in index.css stops it after one beat. */}
                 <span aria-hidden="true" className="absolute inset-0 animate-halo rounded-full bg-brand" />
@@ -93,8 +156,15 @@ export function AdvisorLauncher({ state, onOpen, onClose, showBubble }: AdvisorL
                   <Icon name="chat" size={22} />
                   <Icon name="sparkle" size={12} className="absolute top-1 right-1" />
                 </span>
-                {/* Always labelled on wider screens so the advisor is obvious; just the icon on phones. */}
-                <span aria-hidden="true" className="relative text-base font-semibold whitespace-nowrap max-sm:hidden">
+                {/*
+                 * Labelled on wider screens while the page is at the top, so the advisor is obvious; just the icon on
+                 * phones, once the student scrolls, and whenever the pill would sit over a control on the page.
+                 * The button's aria-label names it either way.
+                 */}
+                <span
+                  aria-hidden="true"
+                  className={cx('relative text-base font-semibold whitespace-nowrap max-sm:hidden', collapsed && 'hidden')}
+                >
                   Ask the advisor
                 </span>
                 {unread && (
@@ -154,7 +224,7 @@ export function AdvisorLauncher({ state, onOpen, onClose, showBubble }: AdvisorL
                 <button
                   type="button"
                   onClick={onClose}
-                  className="grid size-10 shrink-0 place-items-center rounded-full text-on-brand/90 hover:bg-on-brand/15 hover:text-on-brand"
+                  className="grid size-11 shrink-0 place-items-center rounded-full text-on-brand/90 hover:bg-on-brand/15 hover:text-on-brand"
                 >
                   <Icon name="x" size={20} label="Close the advisor" />
                 </button>
