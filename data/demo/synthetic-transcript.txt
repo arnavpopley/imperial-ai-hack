@@ -1,0 +1,28 @@
+SYNTHETIC DEMO TRANSCRIPT - not a real student and not real Imperial results
+Generated for the ModuleMatch hackathon demo (spec section 23)
+Student: Demo Student (synthetic), MEng Mechanical Engineering, entering Year 3
+
+Year 1 (2024-25)
+MECH40002 Fluid Mechanics 1 60%
+MECH40003 Thermodynamics 1 71%
+MECH40004 Mechatronics 1 69%
+MECH40005 Stress Analysis 1 72%
+MECH40006 Materials 1 67%
+MECH40008 Mathematics and Computing 1 74%
+
+Year 2 (2025-26)
+MECH50001 Heat Transfer 66%
+MECH50002 Stress Analysis 2 70%
+  Q1 15/20  Q2 14/20  Q3 16/20  Q4 11/20  Q5 14/20
+MECH50003 Mathematics and Computing 2 73%
+  Q1 20/25  Q2 19/25  Q3 15/25  Q4 19/25
+MECH50004 Mechatronics 2 68%
+MECH50005 Materials 2 69%
+MECH50006 Thermodynamics 2 71%
+  Q1 19/25  Q2 18/25  Q3 17/25  Q4 17/25
+MECH50008 Dynamics 68%
+MECH50010 Fluid Mechanics 2 57%
+  Q1 15/20  Q2 13/20  Q3 6/20  Q4 12/20  Q5 11/20
+DESE50002 Design Engineering Elective 64%
+
+Year 2 average 67.3 - SYNTHETIC
