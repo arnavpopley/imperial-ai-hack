@@ -31,6 +31,44 @@ export function moduleMentions(text: string, modules: Module[]): string[] {
   return found;
 }
 
+// ---------- interview turns that are not answers (issue #56) ----------
+// During the interview every turn used to go to the interviewer. These deterministic checks run first, so a
+// request to stop or a question about modules is handled as what it is, whatever the model would have said.
+
+/** Polite lead-ins before a request: "ok, can we just skip the rest". */
+const LEAD_IN = String.raw`(?:(?:ok(?:ay)?|please|sorry|actually|honestly|no thanks|can (?:we|i|you)|could (?:we|you)|let'?s|i(?:'d| would) like to|i want to|just)[\s,.!]+)*`;
+/**
+ * "skip", "skip the rest", "skip to my modules", "stop the questions", "show me my modules". It must open the
+ * message, and a bare "skip" must stand alone (end of message, punctuation, "and", "now"), so "skip this
+ * question" or "I want to skip exams" stays an answer.
+ */
+const FINISH_INTERVIEW = new RegExp(
+  String.raw`^\s*${LEAD_IN}(?:` +
+    String.raw`skip(?: (?:the rest|the interview|it all|(?:all )?(?:the |these |your )?questions|ahead|to (?:my |the )?(?:modules|recommendations|results|catalogue))|(?=\s*(?:$|[,.!?;]|(?:and|now|please)\b)))` +
+    String.raw`|(?:stop|end|finish)(?: with)?(?: the| these)? (?:interview|questions)` +
+    String.raw`|(?:show|take) me (?:to )?(?:my |the )?(?:modules|recommendations|results|catalogue)` +
+    String.raw`|go to (?:my |the )?(?:modules|recommendations|results|catalogue)` +
+    String.raw`)\b`,
+  'i',
+);
+
+export function wantsToFinishInterview(text: string): boolean {
+  return FINISH_INTERVIEW.test(text);
+}
+
+const MODULE_WORDS = /\b(modules?|electives?|courses?|i-?explores?)\b/i;
+
+/**
+ * A question about modules asked mid-interview ("Which modules use Python?", "Will Mechatronics 3A get me a
+ * job?"). It is a question (ends with "?") that names a module or asks about the catalogue, so it is answered
+ * from the module data, not mined for profile evidence. Questions about the interview itself stay with the
+ * interviewer.
+ */
+export function isModuleQuestion(text: string, moduleIds: readonly string[]): boolean {
+  if (!/\?\s*$/.test(text)) return false;
+  return moduleIds.length > 0 || CATALOGUE.test(text) || MODULE_WORDS.test(text);
+}
+
 export function classifyByRules(text: string, mode: Mode, modules: Module[]): IntentResult {
   const moduleIds = moduleMentions(text, modules);
   if (mode === 'INTERVIEW') {

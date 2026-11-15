@@ -96,6 +96,17 @@ export function nextQuestion(session: SessionState, askedStepIds: string[]): Nex
   return gap ? followUp(gap) : null;
 }
 
+/**
+ * The question the student has been asked and not yet answered: the latest asked step while the interview is
+ * open. A turn that is not an answer (a question about modules, an off-topic message) ends by asking it again.
+ */
+export function pendingStep(session: SessionState): PlanStep | null {
+  const { interview } = session;
+  const id = interview.askedSteps.at(-1);
+  if (interview.finished || !id) return null;
+  return QUICK_PLAN.find((step) => step.id === id) ?? (id.startsWith('follow:') ? followUp(id.slice('follow:'.length)).step : null);
+}
+
 /** The targeted follow-up question for one slot. */
 export function followUp(slot: string): NextQuestion {
   return { step: { id: `follow:${slot}`, slots: [slot], question: FOLLOW_UPS[slot] ?? FOLLOW_UPS.interest!, widget: null }, targetSlots: [slot] };
@@ -133,7 +144,10 @@ Rules:
   sexuality, disability, or finances. If the student volunteers any of these,
   say it will not be stored and move on.
 - Do not recommend modules. That is another agent's job.
-- Ask about the suggested next question's topic, in your own words. Reply with only your message to the student.`;
+- Reflect only what the student actually said. Never state facts about them they did not give (not "Python is
+  clearly your strength" unless they said so).
+- Ask exactly one question: the suggested next question's topic, in your own words. Never add a second question.
+  Reply with only your message to the student.`;
 
 /**
  * Streams the interviewer's next message: a reflection plus the question. Offline, the plan's wording is
