@@ -86,20 +86,39 @@ export function legendOffset(buttonLeft: number, viewportWidth: number): { left:
   return { left: Math.max(left, EDGE - buttonLeft), width };
 }
 
+/** The smallest height the panel is given, so a cramped view still shows a scrollable panel rather than a sliver. */
+const MIN_PANEL_HEIGHT = 120;
+
+/**
+ * Height left under the button before the window, or a clipping container around it (such as the advisor window,
+ * which hides its overflow), cuts the panel off. The panel scrolls within it.
+ */
+export function roomBelow(button: HTMLElement): number {
+  let bottom = window.innerHeight;
+  // The page itself is bounded by the window; only containers inside it can clip sooner.
+  for (let node = button.parentElement; node && node !== document.body; node = node.parentElement) {
+    if (getComputedStyle(node).overflowY !== 'visible') bottom = Math.min(bottom, node.getBoundingClientRect().bottom);
+  }
+  return Math.max(MIN_PANEL_HEIGHT, bottom - button.getBoundingClientRect().bottom - 8 - EDGE);
+}
+
 /**
  * "How to read these": the four chips and what each means, in a small popover. Opens below its button, kept inside
  * the window; closes on Escape (focus returns to the button) or a click outside.
  */
 export function ProvenanceLegend({ className, tone = 'default' }: { className?: string; tone?: 'default' | 'on-brand' }) {
   const [open, setOpen] = useState(false);
-  const [place, setPlace] = useState<{ left: number; width: number }>({ left: 0, width: PANEL_WIDTH });
+  const [place, setPlace] = useState<{ left: number; width: number; maxHeight?: number }>({ left: 0, width: PANEL_WIDTH });
   const wrapperRef = useRef<HTMLSpanElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const panelId = useId();
 
   const toggle = () => {
-    const rect = buttonRef.current?.getBoundingClientRect();
-    if (rect) setPlace(legendOffset(rect.left, window.innerWidth));
+    const button = buttonRef.current;
+    if (button) {
+      const rect = button.getBoundingClientRect();
+      setPlace({ ...legendOffset(rect.left, window.innerWidth), maxHeight: roomBelow(button) });
+    }
     setOpen((v) => !v);
   };
 
@@ -147,7 +166,7 @@ export function ProvenanceLegend({ className, tone = 'default' }: { className?: 
         aria-label="How to read these labels"
         hidden={!open}
         style={place}
-        className="animate-rise absolute top-full z-30 mt-2 block rounded-xl border border-line bg-surface p-3 text-left text-ink shadow-lift"
+        className="animate-rise absolute top-full z-30 mt-2 block overflow-y-auto overscroll-contain rounded-xl border border-line bg-surface p-3 text-left text-ink shadow-lift"
       >
         <span className="block text-2xs font-semibold tracking-wide text-muted uppercase">Numbers from code, words from the AI</span>
         <span className="mt-2 grid gap-2">
