@@ -1,5 +1,6 @@
 // Spec 20.3 as a page of its own: what we know about the student, the words it came from, an edit form and
-// a "Delete everything" danger zone. Interests, goals and preferences only; never grades, health or background.
+// a "Delete everything" danger zone. Interests, goals and preferences, plus marks only when the student shares them
+// with consent (spec 23); never health or background.
 import { confidenceLabel, type Evidence, type StudentProfile } from '@modulematch/shared';
 import { AnimatePresence, motion } from 'motion/react';
 import { useId, useState, type ReactNode } from 'react';
@@ -23,6 +24,7 @@ import {
 } from '../labels.ts';
 import { ProfileEditor } from '../profile/ProfileEditor.tsx';
 import { useProfileActions } from '../profile/useProfileActions.ts';
+import { ResultsDataSection } from '../results/ResultsDataSection.tsx';
 import { paths } from '../routes.ts';
 import { useModuleTitle, useReferenceData } from '../state/ReferenceDataProvider.tsx';
 import { useReadySession } from '../state/SessionProvider.tsx';
@@ -62,6 +64,13 @@ export function YourDataPage() {
         <EditSection editing={editing} onEditingChange={setEditing} />
       </section>
 
+      <section aria-labelledby="results-heading" className="grid min-w-0 grid-cols-1 gap-6">
+        <SectionHeading id="results-heading" eyebrow="Results" title="Marks you chose to share">
+          Visible only to you. They never change your fit scores.
+        </SectionHeading>
+        <ResultsDataSection />
+      </section>
+
       <DangerZone />
     </div>
   );
@@ -79,8 +88,8 @@ function Hero({ profile, quoteCount }: { profile: StudentProfile; quoteCount: nu
           </p>
           <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Your data</h1>
           <p className="max-w-xl text-base text-muted text-pretty">
-            Only your interests, goals and preferences. Never grades, health or background. Staff only ever see
-            totals for groups of five or more.
+            Your interests, goals and preferences, and marks only if you choose to share them. Never health or
+            background. Staff only ever see totals for groups of five or more.
           </p>
           <ul className="flex flex-wrap gap-2 text-sm">
             <Fact icon="tutor">{profile.programme}</Fact>
@@ -501,7 +510,7 @@ function DangerZone() {
             Delete everything
           </h2>
           <p className="text-sm text-muted">
-            Removes your profile and every quote above, then starts over. This cannot be undone.
+            Removes your profile, every quote above and any marks you shared, then starts over. This cannot be undone.
           </p>
         </div>
       </div>

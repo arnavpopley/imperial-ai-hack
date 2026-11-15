@@ -7,6 +7,8 @@ import { Icon } from '../../components/Icon.tsx';
 import { ModuleTypeChip } from '../../components/ModuleTypeChip.tsx';
 import { SubScoreBars } from '../../components/SubScoreBars.tsx';
 import { TERM_LABELS } from '../labels.ts';
+import { NudgeNote } from '../results/NudgeNote.tsx';
+import { useNudge } from '../results/ResultsProvider.tsx';
 import { paths } from '../routes.ts';
 import type { RankedModule } from '../state/CatalogueProvider.tsx';
 import { ScoreRing } from './ScoreRing.tsx';
@@ -34,6 +36,8 @@ export function ModuleCard({ item, lowConfidence, shortlisted, pending, onToggle
   const title = module?.title ?? item.moduleId;
   const dimmed = lowConfidence || !eligible;
   const reduce = useReducedMotion();
+  // From the student's own marks, when shared: a gentle note beside the score, never a change to it.
+  const nudge = useNudge(item.moduleId);
   const delay = Math.min(index, STAGGER_LIMIT) * 0.05;
 
   return (
@@ -92,6 +96,8 @@ export function ModuleCard({ item, lowConfidence, shortlisted, pending, onToggle
             </div>
 
             <SubScoreBars sub={item.sub} variant="compact" dimmed={dimmed} className="mt-4 max-w-lg" />
+
+            {nudge && <NudgeNote nudge={nudge} className="mt-3 max-w-lg" />}
 
             {!eligible && item.ineligibleReasons.length > 0 && (
               <div className="relative z-10 mt-3 flex flex-wrap items-start justify-between gap-2 rounded-xl bg-surface-2 px-3 py-2 text-[13px]">

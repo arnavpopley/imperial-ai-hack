@@ -1,9 +1,10 @@
 // Screen 2: a progress timeline on the left, the conversation in the middle and the live profile on the
 // right. Phones get a compact progress bar and a toggle between the conversation and the profile.
 // The optional extras (CV, societies) open in place of the conversation, which stays mounted underneath.
+// "Your results" (spec 23) comes first: optional but recommended, it opens by itself once at the start.
 import { AnimatePresence, motion, MotionConfig } from 'motion/react';
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import { Button } from '../../components/Button.tsx';
 import { cx } from '../../components/cx.ts';
 import { SegmentedControl } from '../../components/SegmentedControl.tsx';
@@ -16,11 +17,15 @@ import { SocietiesPanel } from '../interview/SocietiesPanel.tsx';
 import { useCompletedExtras, type TimelineExtra } from '../interview/timeline.ts';
 import { ProfilePanel } from '../profile/ProfilePanel.tsx';
 import { useProfileActions } from '../profile/useProfileActions.ts';
-import { paths } from '../routes.ts';
+import { ResultsPanel } from '../results/ResultsPanel.tsx';
+import { useResults } from '../results/ResultsProvider.tsx';
+import { resultsStepStatus, useResultsStepMemory } from '../results/resultsStep.ts';
+import { paths, wantsResultsPanel } from '../routes.ts';
 import { useReadySession } from '../state/SessionProvider.tsx';
 
 type Pane = 'chat' | 'profile';
 type ExtraId = TimelineExtra['id'];
+type PanelId = ExtraId | 'results';
 
 const EASE = [0.2, 0.8, 0.2, 1] as const;
 
@@ -28,8 +33,21 @@ export function InterviewScreen() {
   const { session } = useReadySession();
   const { save, saving, error } = useProfileActions();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { hasResults } = useResults();
+  const resultsStep = useResultsStepMemory(session.id);
   const [pane, setPane] = useState<Pane>('chat');
-  const [activeExtra, setActiveExtra] = useState<ExtraId | null>(null);
+  // Opened from elsewhere ("Upload a mark sheet"), or offered once before the student's first answer.
+  const [activeExtra, setActiveExtra] = useState<PanelId | null>(() =>
+    wantsResultsPanel(location.state) ||
+    (!resultsStep.memory.offered && !session.interview.finished && !session.messages.some((m) => m.role === 'student'))
+      ? 'results'
+      : null,
+  );
+  const { markOffered } = resultsStep;
+  useEffect(() => {
+    if (activeExtra === 'results') markOffered();
+  }, [activeExtra, markOffered]);
   const [cvSlots, setCvSlots] = useState<ReadonlySet<string>>(() => new Set());
   const [doneExtras, markExtraDone] = useCompletedExtras(session.id);
   // The example student's first answer, waiting in the message box when the example was just started.
@@ -43,7 +61,7 @@ export function InterviewScreen() {
     { id: 'societies', label: 'Societies and clubs', icon: 'heart', done: doneExtras.has('societies') },
   ];
 
-  const openExtra = (id: ExtraId) => {
+  const openExtra = (id: PanelId) => {
     setActiveExtra((current) => (current === id ? null : id));
     setPane('chat');
   };
@@ -59,7 +77,22 @@ export function InterviewScreen() {
     if (confirmed || (await save({ confirm: true }))) navigate(paths.catalogue);
   };
 
-  const timelineProps = { session, extras, activeExtra, onOpenExtra: openExtra };
+  const skipResults = () => {
+    resultsStep.skip();
+    closeExtra();
+  };
+
+  const timelineProps = {
+    session,
+    extras,
+    activeExtra: activeExtra === 'results' ? null : activeExtra,
+    onOpenExtra: openExtra,
+    results: {
+      status: resultsStepStatus(hasResults, resultsStep.memory),
+      active: activeExtra === 'results',
+      onOpen: () => openExtra('results'),
+    },
+  };
 
   return (
     <MotionConfig reducedMotion="user">
@@ -133,7 +166,9 @@ export function InterviewScreen() {
                   transition={{ duration: 0.35, ease: EASE }}
                   className="absolute inset-0 overflow-y-auto bg-surface p-5 sm:p-8"
                 >
-                  {activeExtra === 'cv' ? (
+                  {activeExtra === 'results' ? (
+                    <ResultsPanel onClose={closeExtra} onSkip={skipResults} />
+                  ) : activeExtra === 'cv' ? (
                     <CvPanel onImported={onCvImported} onClose={closeExtra} />
                   ) : (
                     <SocietiesPanel onSeen={onSocietiesSeen} onClose={closeExtra} />

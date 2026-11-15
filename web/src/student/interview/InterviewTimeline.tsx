@@ -4,6 +4,8 @@ import type { SessionState } from '@modulematch/shared';
 import { AnimatePresence, motion } from 'motion/react';
 import { cx } from '../../components/cx.ts';
 import { Icon } from '../../components/Icon.tsx';
+import { MarkSheetIcon } from '../results/icons.tsx';
+import type { ResultsStepStatus } from '../results/resultsStep.ts';
 import { buildTimeline, type StepStatus, type TimelineExtra, type TimelineStep } from './timeline.ts';
 import './interview.css';
 
@@ -13,16 +15,32 @@ interface InterviewTimelineProps {
   /** The extra whose panel is open, if any. */
   activeExtra: TimelineExtra['id'] | null;
   onOpenExtra: (id: TimelineExtra['id']) => void;
+  /** The optional "Your results" step at the start of the interview (spec 23). */
+  results?: ResultsStep;
   className?: string;
 }
 
+export interface ResultsStep {
+  status: ResultsStepStatus;
+  /** True while the results panel is open. */
+  active: boolean;
+  onOpen: () => void;
+}
+
+const RESULTS_STATUS_TEXT: Record<ResultsStepStatus, string> = {
+  done: 'Marks shared',
+  skipped: 'Skipped for now',
+  todo: 'Optional, recommended',
+};
+
 const STATUS_TEXT: Record<StepStatus, string> = { done: 'done', current: 'in progress', upcoming: 'not started' };
 
-export function InterviewTimeline({ session, extras, activeExtra, onOpenExtra, className }: InterviewTimelineProps) {
+export function InterviewTimeline({ session, extras, activeExtra, onOpenExtra, results, className }: InterviewTimelineProps) {
   const steps = buildTimeline(session);
   return (
     <nav aria-label="Interview progress" className={className}>
       <ol className="grid">
+        {results && <ResultsTimelineItem step={results} />}
         {steps.map((step, index) => (
           <motion.li
             key={step.id}
@@ -108,6 +126,55 @@ export function InterviewTimeline({ session, extras, activeExtra, onOpenExtra, c
   );
 }
 
+/** "Your results": optional but recommended, so it opens its panel instead of waiting for a question. */
+function ResultsTimelineItem({ step }: { step: ResultsStep }) {
+  const done = step.status === 'done';
+  return (
+    <motion.li
+      initial={{ opacity: 0, x: -8 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.35, ease: [0.2, 0.8, 0.2, 1] }}
+      className="relative pb-5"
+    >
+      <Connector done={step.status !== 'todo'} />
+      <button
+        type="button"
+        onClick={step.onOpen}
+        aria-pressed={step.active}
+        className={cx(
+          'group -my-1 -ml-1 grid w-[calc(100%+0.25rem)] grid-cols-[2rem_1fr] items-start gap-x-3 rounded-xl py-1 pr-2 pl-1 text-left transition',
+          step.active ? 'bg-brand-soft' : 'hover:bg-surface-2',
+        )}
+      >
+        <span
+          aria-hidden="true"
+          className={cx(
+            'relative grid size-8 place-items-center rounded-full transition-colors duration-300',
+            done && 'bg-brand text-on-brand',
+            step.status === 'skipped' && 'border border-dashed border-line-strong bg-surface text-muted',
+            step.status === 'todo' && 'bg-surface text-brand ring-2 ring-brand/50 ring-offset-0 group-hover:ring-brand',
+          )}
+        >
+          {done ? <AnimatedTick /> : <MarkSheetIcon size={14} />}
+        </span>
+        <span className="min-w-0 pt-0.5">
+          <span className="block text-[14px] leading-tight text-ink">Your results</span>
+          <span
+            aria-hidden="true"
+            className={cx(
+              'mt-1 inline-block rounded-full text-[11px] font-semibold',
+              step.status === 'todo' ? 'bg-brand-soft px-1.5 py-px text-brand' : 'text-muted',
+            )}
+          >
+            {step.status === 'todo' ? 'Optional · recommended' : RESULTS_STATUS_TEXT[step.status]}
+          </span>
+          <span className="sr-only">, {RESULTS_STATUS_TEXT[step.status]}</span>
+        </span>
+      </button>
+    </motion.li>
+  );
+}
+
 /** The line down to the next step, filled in brand colour once this step is done. */
 function Connector({ done }: { done: boolean }) {
   return (
@@ -188,7 +255,7 @@ export function AnimatedTick({ size = 14 }: { size?: number }) {
 }
 
 /** Phones: one line of progress with the current step's name, and the extras as small buttons. */
-export function InterviewProgressBar({ session, extras, activeExtra, onOpenExtra, className }: InterviewTimelineProps) {
+export function InterviewProgressBar({ session, extras, activeExtra, onOpenExtra, results, className }: InterviewTimelineProps) {
   const steps = buildTimeline(session).flatMap((s) => s.children ?? [s]);
   const current = steps.find((s) => s.status === 'current');
   const doneCount = steps.filter((s) => s.status === 'done').length;
@@ -232,7 +299,26 @@ export function InterviewProgressBar({ session, extras, activeExtra, onOpenExtra
           </span>
         ))}
       </div>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
+        {results && (
+          <button
+            type="button"
+            onClick={results.onOpen}
+            aria-pressed={results.active}
+            className={cx(
+              'flex h-9 items-center gap-1.5 rounded-full border px-3 text-[13px] transition',
+              results.active ? 'border-brand bg-brand-soft text-brand' : 'border-line-strong text-ink',
+            )}
+          >
+            {results.status === 'done' ? (
+              <Icon name="check" size={13} className="text-fit-high" />
+            ) : (
+              <MarkSheetIcon size={13} className="text-brand" />
+            )}
+            Your results
+            <span className="sr-only">, {RESULTS_STATUS_TEXT[results.status]}</span>
+          </button>
+        )}
         {extras.map((extra) => (
           <button
             key={extra.id}

@@ -1,0 +1,114 @@
+// The student's own marks (spec 23): what is stored, the performance nudges and the tailored exam feedback,
+// shared by the interview step, the catalogue, the module page, the feedback page and "Your data".
+// Nudges are informational only: nothing here touches fit scores or rankings.
+import type {
+  PerformanceNudge,
+  PerformanceView,
+  ResultsUploadResponse,
+  StudentResults,
+  TailoredFeedback,
+} from '@modulematch/shared';
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import { api } from '../../api.ts';
+import { useAsync, type AsyncResult } from '../hooks/useAsync.ts';
+import { useReadySession } from '../state/SessionProvider.tsx';
+
+export type UploadBody = Parameters<typeof api.uploadResults>[1];
+
+interface ResultsValue {
+  results: AsyncResult<StudentResults>;
+  performance: AsyncResult<PerformanceView>;
+  feedback: AsyncResult<TailoredFeedback[]>;
+  /** True once the student has shared at least one mark. */
+  hasResults: boolean;
+  /** Codes that matched no catalogue module: kept, but not used for nudges. */
+  unmatched: readonly string[];
+  /** Whether the last upload was read by the model or the offline parser. */
+  lastSource: ResultsUploadResponse['source'] | null;
+  nudgeFor: (moduleId: string) => PerformanceNudge | undefined;
+  upload: (body: UploadBody) => Promise<ResultsUploadResponse>;
+  /** Withdraw consent and delete every stored mark. */
+  withdraw: () => Promise<void>;
+}
+
+const ResultsContext = createContext<ResultsValue | null>(null);
+
+export function ResultsProvider({ children }: { children: ReactNode }) {
+  const { session } = useReadySession();
+  const sessionId = session.id;
+  /** Bumped after an upload or a withdrawal, so nudges and feedback are worked out again. */
+  const [version, setVersion] = useState(0);
+  const [unmatched, setUnmatched] = useState<readonly string[]>([]);
+  const [lastSource, setLastSource] = useState<ResultsUploadResponse['source'] | null>(null);
+
+  const results = useAsync(() => api.results(sessionId), [sessionId]);
+  // Nudges mention the student's interests, so they follow profile edits too.
+  const performance = useAsync(() => api.performance(sessionId), [sessionId, version, session.profile.updatedAt]);
+  const feedback = useAsync(() => api.examFeedback(sessionId), [sessionId, version]);
+  const { setData: setResults } = results;
+
+  const nudges = useMemo(() => {
+    const view = performance.data;
+    if (!view?.consent) return new Map<string, PerformanceNudge>();
+    return new Map(view.nudges.map((n) => [n.moduleId, n]));
+  }, [performance.data]);
+
+  const nudgeFor = useCallback((moduleId: string) => nudges.get(moduleId), [nudges]);
+
+  const upload = useCallback(
+    async (body: UploadBody) => {
+      const response = await api.uploadResults(sessionId, body);
+      setResults(response.results);
+      setUnmatched(response.unmatched);
+      setLastSource(response.source);
+      setVersion((v) => v + 1);
+      return response;
+    },
+    [sessionId, setResults],
+  );
+
+  const withdraw = useCallback(async () => {
+    setResults(await api.deleteResults(sessionId));
+    setUnmatched([]);
+    setLastSource(null);
+    setVersion((v) => v + 1);
+  }, [sessionId, setResults]);
+
+  const value = useMemo<ResultsValue>(
+    () => ({
+      results,
+      performance,
+      feedback,
+      hasResults: (results.data?.results.length ?? 0) > 0,
+      unmatched: [...new Set([...unmatched, ...(results.data?.results ?? []).filter((r) => !r.matched).map((r) => r.code)])],
+      lastSource,
+      nudgeFor,
+      upload,
+      withdraw,
+    }),
+    [results, performance, feedback, unmatched, lastSource, nudgeFor, upload, withdraw],
+  );
+  return <ResultsContext.Provider value={value}>{children}</ResultsContext.Provider>;
+}
+
+export function useResults(): ResultsValue {
+  const value = useContext(ResultsContext);
+  if (!value) throw new Error('useResults must be used inside ResultsProvider');
+  return value;
+}
+
+/** The nudge for one module, or undefined (also outside the provider, so cards render anywhere). */
+export function useNudge(moduleId: string): PerformanceNudge | undefined {
+  return useContext(ResultsContext)?.nudgeFor(moduleId);
+}
+
+/** Exams with tailored feedback, for the nav link; zero outside the provider or before it loads. */
+export function useFeedbackCount(): number {
+  return useContext(ResultsContext)?.feedback.data?.length ?? 0;
+}
+
+/** Exam feedback whose "This affects" list includes a module, for a link from that module's page. */
+export function useFeedbackAffecting(moduleId: string): TailoredFeedback[] {
+  const list = useContext(ResultsContext)?.feedback.data;
+  return useMemo(() => (list ?? []).filter((f) => f.affectsModules.some((m) => m.moduleId === moduleId)), [list, moduleId]);
+}
