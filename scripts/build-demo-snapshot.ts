@@ -17,7 +17,7 @@ const STUDENT_ID = 'synthetic-robotics-automation-01';
 const TOP_MODULES = 6;
 const TOP_SOCIETIES = 3;
 
-const entry = (cohort as { students: { profile: StudentProfile; shortlist: string[] }[] }).students.find(
+const entry = (cohort as unknown as { students: { profile: StudentProfile; shortlist: string[] }[] }).students.find(
   (s) => s.profile.studentId === STUDENT_ID,
 );
 if (!entry) throw new Error(`${STUDENT_ID} is not in data/cohort.json`);
@@ -32,7 +32,7 @@ const byId = new Map(modules.map((m) => [m.id, m]));
 const ranked = rankModules(profile, modules, DEFAULT_WEIGHTS, rules).filter((r) => r.eligible);
 const top = ranked.slice(0, TOP_MODULES).map((r) => {
   const m = byId.get(r.moduleId)!;
-  return { id: m.id, code: m.code, title: m.title, ects: m.ects, term: m.term, fit: r.fit, sub: r.sub };
+  return { id: m.id, code: m.code, title: m.title, ects: m.ects, terms: m.terms, fit: r.fit, sub: r.sub };
 });
 
 const shortlisted = shortlist.map((id) => byId.get(id)).filter((m) => m !== undefined);
