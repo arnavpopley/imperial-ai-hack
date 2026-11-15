@@ -17,7 +17,6 @@ export function sessionSnapshot(session: SessionState): RestoreSessionBody {
     shortlist: session.shortlist,
     interview: session.interview,
     createdAt: session.createdAt,
-    updatedAt: session.updatedAt,
   };
   // Older messages go first; the profile, shortlist and evidence carry the student's choices.
   while (snapshot.messages.length > 0 && bytes(snapshot) > RESTORE_BODY_MAX_BYTES) snapshot.messages = snapshot.messages.slice(Math.ceil(snapshot.messages.length / 4));

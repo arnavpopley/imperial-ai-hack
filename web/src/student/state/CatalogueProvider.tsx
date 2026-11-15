@@ -99,7 +99,7 @@ const sameWeights = (a: Weights, b: Weights) =>
   a.interest === b.interest && a.goal === b.goal && a.style === b.style && a.breadth === b.breadth;
 
 export function CatalogueProvider({ children }: { children: ReactNode }) {
-  const { session, recsVersion, replace } = useReadySession();
+  const { session, recsVersion, update } = useReadySession();
   const { moduleById } = useReferenceData();
   const sessionId = session.id;
   // A Senior Tutor decision changes eligibility without touching the profile, so it refetches the ranking too.
@@ -137,8 +137,8 @@ export function CatalogueProvider({ children }: { children: ReactNode }) {
         if (seq !== saveSeq.current) return;
         setData(response);
         setSaveState('saved');
-        // The stored session with the new weights: the client's copy restores other demo instances (spec 13).
-        if (response.session) replace(response.session);
+        // The session's weights are the restore snapshot's (spec 13), so they follow what the server saved.
+        update((s) => (sameWeights(s.weights, response.weights) ? s : { ...s, weights: response.weights }));
       },
       () => {
         if (seq === saveSeq.current) setSaveState('error');

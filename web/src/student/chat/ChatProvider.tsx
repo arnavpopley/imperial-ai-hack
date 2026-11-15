@@ -196,7 +196,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             break;
           }
           case 'session':
-            // The session as stored after the turn: the client's copy stays complete for restoring other instances.
+            // The session as stored after the turn, so the client's copy (its restore snapshot, spec 13) is complete.
             if (event.session.id === sessionId) replace(event.session);
             break;
           case 'done':

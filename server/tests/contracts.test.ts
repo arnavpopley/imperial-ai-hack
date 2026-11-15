@@ -191,7 +191,7 @@ describe('every route returns a valid response', () => {
       .filter((l) => l.startsWith('data: '))
       .map((l) => S.SseEvent.parse(JSON.parse(l.slice(6))));
     expect(events.map((e) => e.type)).toContain('profile_update');
-    // The reply ends with `done`, then the session as stored after the turn (spec 13: the client's copy for restores).
+    // The reply ends with `done`, then the session as stored after the turn (spec 13: the client's restore snapshot).
     expect(events.at(-2)?.type).toBe('done');
     const last = events.at(-1);
     expect(last?.type).toBe('session');

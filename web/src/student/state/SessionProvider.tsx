@@ -2,7 +2,7 @@
 // local patches from the SSE stream, and polling while a member of staff owes a reply.
 import type { EscalationDraft, SessionState } from '@modulematch/shared';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { api, isSessionLost, SESSION_LOST_EVENT, setSessionCopy, type SessionLostDetail } from '../../api.ts';
+import { api, isSessionLost, SESSION_LOST_EVENT, setSnapshotSource, type SessionLostDetail } from '../../api.ts';
 import { draftIdentity } from '../../components/exceptions.ts';
 import { errorMessage } from '../../components/StateViews.tsx';
 import { sessionSnapshot } from './snapshot.ts';
@@ -81,19 +81,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     latest.current = session;
   }, [session, resumeId]);
 
-  // When a demo server instance lacks the session or holds an older copy, the API client restores this copy there and
+  // When a demo server instance does not have the session, the API client restores it there from this copy and
   // retries (spec 13), so the student never notices. Without a loaded copy (a reload) there is nothing to restore.
   useEffect(() => {
-    const mine = (id: string) => (latest.current?.id === id ? latest.current : null);
-    setSessionCopy({
-      version: (id) => mine(id)?.updatedAt ?? null,
-      // The version is always that of a whole session the client adopted, so it never claims state it does not hold.
-      snapshot: (id) => {
-        const copy = mine(id);
-        return copy ? sessionSnapshot(copy) : null;
-      },
-    });
-    return () => setSessionCopy(null);
+    setSnapshotSource((id) => (latest.current?.id === id ? sessionSnapshot(latest.current) : null));
+    return () => setSnapshotSource(null);
   }, []);
   useEffect(() => {
     const onLost = (event: Event) => {

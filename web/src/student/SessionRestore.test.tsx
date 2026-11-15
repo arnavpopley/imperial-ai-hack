@@ -131,39 +131,6 @@ describe('restoring a session on an instance that does not have it', () => {
     await done();
   });
 
-  it('sends its version, and refreshes an instance with an older copy (409) the same way', async () => {
-    let refreshed = false;
-    const calls = mockFetch((call) => {
-      if (call.path.endsWith('/restore')) {
-        refreshed = true;
-        return json(session, 200);
-      }
-      // This instance holds an older copy until the client's copy replaces it; then it reports a newer version.
-      if (!refreshed) return json({ error: 'session stale' }, 409);
-      // A version header never changes the client's version: only a whole session it adopts does.
-      return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { 'x-session-version': '2026-11-15T09:30:00.000Z' } });
-    });
-    const versions: (string | null)[] = [];
-    const spy = vi.mocked(globalThis.fetch);
-    const { status, done } = await mountReady();
-    await act(async () => {
-      await api.timetable(ID);
-    });
-    for (const [, init] of spy.mock.calls) versions.push(new Headers(init?.headers).get('x-session-version'));
-    expect(calls.map((c) => `${c.method} ${c.path}`).slice(-3)).toEqual([`GET /api/sessions/${ID}/timetable`, `POST /api/sessions/${ID}/restore`, `GET /api/sessions/${ID}/timetable`]);
-    // Every request after the session loaded carried the client's version.
-    expect(versions.slice(-3)).toEqual([session.updatedAt, null, session.updatedAt]);
-    const snapshot = JSON.parse(calls.find((c) => c.path.endsWith('/restore'))!.body!) as { updatedAt: string };
-    expect(snapshot.updatedAt).toBe(session.updatedAt);
-    expect(status()).toBe('ready');
-
-    await act(async () => {
-      await api.timetable(ID);
-    });
-    expect(new Headers(spy.mock.calls.at(-1)![1]?.headers).get('x-session-version')).toBe(session.updatedAt);
-    await done();
-  });
-
   it('falls back to "This demo server restarted" when the restore itself fails', async () => {
     mockFetch((call) => (call.path.endsWith('/restore') ? json({ error: 'boom' }, 500) : notFound()));
     const { status, done } = await mountReady();

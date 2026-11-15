@@ -140,49 +140,31 @@ export function listSlots(db: Db = getDb()): Slot[] {
 /** Create a session and everything it holds (profile, evidence, messages, shortlist, escalations). */
 export function createSession(state: SessionState, db: Db = getDb()): SessionState {
   const s = S.SessionState.parse(state);
-  db.transaction((tx) => insertSession(tx, s));
-  return requireSession(s.id, db);
-}
-
-/**
- * Replaces an older copy of a session with a newer one (session restore, spec 13). Everything this instance held for
- * the session goes first (the cascade takes its escalations, marks and feedback too), so nothing the student has since
- * deleted elsewhere survives here.
- */
-export function replaceSession(state: SessionState, db: Db = getDb()): SessionState {
-  const s = S.SessionState.parse(state);
   db.transaction((tx) => {
-    tx.delete(sessions).where(eq(sessions.id, s.id)).run();
-    insertSession(tx, s);
+    tx.insert(sessions)
+      .values({
+        id: s.id,
+        mode: s.mode,
+        weights: s.weights,
+        interview: s.interview,
+        escalationDraft: s.escalationDraft,
+        exceptions: s.exceptions,
+        createdAt: s.createdAt,
+        updatedAt: s.updatedAt,
+      })
+      .run();
+    tx.insert(profiles).values({ sessionId: s.id, data: s.profile }).run();
+    if (s.evidence.length > 0) tx.insert(evidence).values(s.evidence).run();
+    if (s.messages.length > 0) tx.insert(messages).values(s.messages).run();
+    if (s.shortlist.length > 0) {
+      tx.insert(shortlistItems)
+        .values(s.shortlist.map((moduleId) => ({ sessionId: s.id, moduleId })))
+        .onConflictDoNothing()
+        .run();
+    }
+    if (s.escalations.length > 0) tx.insert(escalations).values(s.escalations).run();
   });
   return requireSession(s.id, db);
-}
-
-type Tx = Parameters<Parameters<Db['transaction']>[0]>[0];
-
-function insertSession(tx: Tx, s: SessionState): void {
-  tx.insert(sessions)
-    .values({
-      id: s.id,
-      mode: s.mode,
-      weights: s.weights,
-      interview: s.interview,
-      escalationDraft: s.escalationDraft,
-      exceptions: s.exceptions,
-      createdAt: s.createdAt,
-      updatedAt: s.updatedAt,
-    })
-    .run();
-  tx.insert(profiles).values({ sessionId: s.id, data: s.profile }).run();
-  if (s.evidence.length > 0) tx.insert(evidence).values(s.evidence).run();
-  if (s.messages.length > 0) tx.insert(messages).values(s.messages).run();
-  if (s.shortlist.length > 0) {
-    tx.insert(shortlistItems)
-      .values(s.shortlist.map((moduleId) => ({ sessionId: s.id, moduleId })))
-      .onConflictDoNothing()
-      .run();
-  }
-  if (s.escalations.length > 0) tx.insert(escalations).values(s.escalations).run();
 }
 
 /** The full session state for resume, assembled from every table, or null when the id is unknown. */

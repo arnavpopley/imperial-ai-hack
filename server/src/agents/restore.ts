@@ -36,7 +36,7 @@ export function restoredMode(mode: Mode, shortlist: readonly string[]): Mode {
   return mode === 'ONBOARD' || mode === 'INTERVIEW' ? mode : restingModeFor(shortlist);
 }
 
-export function restoredSession(id: string, input: RestoreSessionBody, moduleIds: ReadonlySet<string>): RestoredSession {
+export function restoredSession(id: string, input: RestoreSessionBody, moduleIds: ReadonlySet<string>, now = new Date().toISOString()): RestoredSession {
   const snapshot = schemas.RestoreSessionBody.parse(input);
   let cleaned = 0;
   const tidy = (text: string) => {
@@ -59,8 +59,7 @@ export function restoredSession(id: string, input: RestoreSessionBody, moduleIds
     escalationDraft: null,
     exceptions: [],
     createdAt: snapshot.createdAt,
-    // The copy keeps its version, so this instance and the client agree on it and neither looks stale to the other.
-    updatedAt: snapshot.updatedAt,
+    updatedAt: now,
   };
   return { state, cleaned, droppedModules: shortlist.filter((m) => !moduleIds.has(m)) };
 }

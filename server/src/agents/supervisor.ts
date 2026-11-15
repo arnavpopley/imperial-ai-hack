@@ -436,28 +436,18 @@ async function guaranteeTurn(turn: Turn, moduleId: string | null, resume: PlanSt
 
 // ---------- entry point ----------
 
-/**
- * One turn at a time per session, so concurrent tabs cannot overwrite each other's profile changes. A session restore
- * (spec 13) runs in the same queue, so it never lands in the middle of a turn that loaded the older copy.
- */
+/** One turn at a time per session, so concurrent tabs cannot overwrite each other's profile changes. */
 const sessionQueues = new Map<string, Promise<void>>();
 
-export function inSessionQueue<T>(sessionId: string, work: () => T | Promise<T>): Promise<T> {
+export function handleTurn(sessionId: string, body: SendMessageBody, emit: Emit): Promise<void> {
   const previous = sessionQueues.get(sessionId) ?? Promise.resolve();
-  const run = previous.then(work);
-  const settled = run.then(
-    () => {},
-    () => {},
-  );
+  const run = previous.then(() => runTurn(sessionId, body, emit));
+  const settled = run.catch(() => {});
   sessionQueues.set(sessionId, settled);
   void settled.then(() => {
     if (sessionQueues.get(sessionId) === settled) sessionQueues.delete(sessionId);
   });
   return run;
-}
-
-export function handleTurn(sessionId: string, body: SendMessageBody, emit: Emit): Promise<void> {
-  return inSessionQueue(sessionId, () => runTurn(sessionId, body, emit));
 }
 
 async function runTurn(sessionId: string, body: SendMessageBody, emit: Emit): Promise<void> {
