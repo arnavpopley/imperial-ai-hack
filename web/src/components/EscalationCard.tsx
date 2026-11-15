@@ -18,6 +18,8 @@ const SUMMARY_MAX = 1000;
 interface CommonProps {
   escalationType: EscalationType;
   summary: string;
+  /** The module the request is about, named in the card's title (issue 107). */
+  subject?: string | null;
   className?: string;
 }
 
@@ -169,13 +171,16 @@ function DraftBody({ escalationType, summary, reason: suggested = '', onSend, on
   );
 }
 
-function SentBody({ summary, status, createdAt, queue }: SentProps & { queue: string }) {
+/** "Sent to the Senior Tutor · Nuclear Reactor Physics": the module, when the request names one (issue 107). */
+const titled = (title: string, subject: string | null | undefined) => (subject ? `${title} · ${subject}` : title);
+
+function SentBody({ summary, status, createdAt, queue, subject }: SentProps & { queue: string }) {
   const claimed = status === 'claimed';
   return (
     <div className="grid gap-2 p-4">
       <CardHeader
         icon="clock"
-        title={claimed ? `The ${queue} is looking at this` : `Sent to the ${queue}`}
+        title={titled(claimed ? `The ${queue} is looking at this` : `Sent to the ${queue}`, subject)}
         detail={`${claimed ? 'Claimed' : 'Waiting for a reply'} · sent ${formatTime(createdAt)}. Their reply will appear here.`}
         tone="bg-mode-escalated/10 text-mode-escalated"
       />
@@ -184,13 +189,13 @@ function SentBody({ summary, status, createdAt, queue }: SentProps & { queue: st
   );
 }
 
-function AnsweredBody({ summary, staffResponse, createdAt, decision, queue }: AnsweredProps & { queue: string }) {
+function AnsweredBody({ summary, staffResponse, createdAt, decision, queue, subject }: AnsweredProps & { queue: string }) {
   const declined = decision === 'declined';
   return (
     <div className="grid gap-3 p-4">
       <CardHeader
         icon={declined ? 'x' : 'check'}
-        title={decision ? EXCEPTION_LABELS[decision] : `Reply from the ${queue}`}
+        title={titled(decision ? EXCEPTION_LABELS[decision] : `Reply from the ${queue}`, subject)}
         detail={`About your request from ${formatTime(createdAt)}`}
         tone={declined ? 'bg-ink/6 text-muted' : 'bg-fit-high/12 text-fit-high'}
       />

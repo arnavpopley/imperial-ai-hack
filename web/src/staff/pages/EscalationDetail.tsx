@@ -1,12 +1,15 @@
 // Detail pane for one escalation: the approved summary, the student's context and the reply box. Rule exceptions
 // also show what the request shares (the broken rule, the reason, completed modules and fit) and take a decision.
+// Issue 107: the request and its decision come first and fit a 1440×900 screen; the student context follows.
 import type { ExceptionRequest, StaffEscalation } from '@modulematch/shared';
 import { useEffect, useId, useState } from 'react';
 import { Link, useParams } from 'react-router';
-import { ESCALATION_TYPES, StatusBadge, TypeBadge } from '../components/EscalationBadges.tsx';
+import { ESCALATION_TYPES, StatusBadge } from '../components/EscalationBadges.tsx';
 import { Button, EmptyState } from '../components/ui.tsx';
 import { AlertIcon, ArrowLeftIcon, CheckIcon, HeartIcon, InboxIcon, XIcon } from '../components/icons.tsx';
 import { Avatar } from '../../components/Avatar.tsx';
+import { escalationTitle } from '../../components/escalationTitle.ts';
+import { useModuleLookup } from '../hooks/useModuleLookup.ts';
 import {
   approvalOpensModule,
   DECISION_LABELS,
@@ -47,8 +50,11 @@ export function EscalationDetail() {
 
 function EscalationCase({ escalation: e }: { escalation: StaffEscalation }) {
   const { queue, moduleTitle } = useStaffData();
+  const { moduleByIdForTitle } = useModuleLookup();
   const { markSeen } = queue;
   const type = ESCALATION_TYPES[e.type];
+  // The request panel lays out the same facts as the summary, so the summary shrinks to one line there.
+  const detailed = e.type === 'RULE_EXCEPTION' && e.request !== null;
   const ids = { title: useId(), summary: useId(), context: useId(), request: useId(), reply: useId() };
   const declined = e.decision === 'declined';
 
@@ -57,22 +63,23 @@ function EscalationCase({ escalation: e }: { escalation: StaffEscalation }) {
   return (
     <article
       aria-labelledby={ids.title}
-      className="grid gap-7 rounded-panel bg-surface p-card shadow-soft ring-1 ring-line sm:p-card-lg"
+      className="grid min-w-0 gap-3 rounded-panel bg-surface p-5 shadow-soft ring-1 ring-line"
     >
-      <header className="flex flex-wrap items-start gap-4">
-        <Avatar seed={e.sessionId} size={64} />
-        <div className="grid min-w-0 flex-1 gap-2">
-          <h2 id={ids.title} className="text-2xl font-semibold tracking-tight">
-            {type.label} for the {type.queue}
-          </h2>
+      <header className="flex items-start gap-3">
+        <Avatar seed={e.sessionId} size={40} />
+        <div className="grid min-w-0 flex-1 gap-1">
+          <div className="flex items-start justify-between gap-3">
+            <h2 id={ids.title} className="min-w-0 text-xl leading-snug font-semibold tracking-tight">
+              {escalationTitle(e, moduleByIdForTitle)}
+            </h2>
+            <span className="mt-0.5 shrink-0">
+              <StatusBadge status={e.status} />
+            </span>
+          </div>
           <p className="text-sm text-muted">
-            {e.studentContext.programme}, Year {e.studentContext.yearOfStudy} ·{' '}
+            For the {type.queue} · {e.studentContext.programme}, Year {e.studentContext.yearOfStudy} ·{' '}
             <time dateTime={e.createdAt}>{formatDateTime(e.createdAt)}</time>
           </p>
-          <div className="flex flex-wrap items-center gap-2">
-            <TypeBadge type={e.type} />
-            <StatusBadge status={e.status} />
-          </div>
         </div>
       </header>
 
@@ -84,23 +91,44 @@ function EscalationCase({ escalation: e }: { escalation: StaffEscalation }) {
         </p>
       )}
 
-      <section aria-labelledby={ids.summary}>
-        <h3 id={ids.summary} className="text-xs font-semibold tracking-[0.08em] text-muted uppercase">
+      <section aria-labelledby={ids.summary} className="min-w-0">
+        <h3 id={ids.summary} className="flex flex-wrap items-baseline justify-between gap-x-3 text-xs font-semibold tracking-[0.08em] text-muted uppercase">
           What the student is asking
+          <span className="font-normal tracking-normal normal-case">Drafted by the AI, approved by the student</span>
         </h3>
-        <blockquote className="mt-3 rounded-2xl border-l-4 border-brand bg-brand-soft/50 px-5 py-4 text-base leading-relaxed">
-          {e.summary}
-        </blockquote>
-        <p className="mt-2 text-xs text-muted">Drafted by the AI, then read and approved by the student.</p>
+        {detailed ? (
+          // The facts are laid out below, so one line here, with the full approved text a click away.
+          <details className="group mt-2 min-w-0 rounded-2xl border-l-4 border-brand bg-brand-soft/50 px-4 py-2.5 text-sm leading-relaxed">
+            <summary className="flex cursor-pointer list-none items-baseline gap-2 [&::-webkit-details-marker]:hidden">
+              <span className="min-w-0 flex-1 truncate group-open:hidden">{e.summary}</span>
+              <span className="hidden flex-1 group-open:inline">Full summary</span>
+              <span className="shrink-0 text-xs font-medium text-brand">
+                <span className="group-open:hidden">Full summary</span>
+                <span className="hidden group-open:inline">Hide</span>
+              </span>
+            </summary>
+            <p className="mt-2">{e.summary}</p>
+          </details>
+        ) : (
+          <blockquote className="mt-2 rounded-2xl border-l-4 border-brand bg-brand-soft/50 px-4 py-3 text-base leading-relaxed">
+            {e.summary}
+          </blockquote>
+        )}
       </section>
 
-      {e.type === 'RULE_EXCEPTION' && e.request && <ExceptionDetails headingId={ids.request} request={e.request} />}
+      {detailed && e.request && <ExceptionDetails headingId={ids.request} request={e.request} />}
 
-      <section aria-labelledby={ids.context} className="rounded-2xl bg-surface-2 p-5">
+      {e.status === 'resolved' ? (
+        <ResolvedNote escalation={e} headingId={ids.reply} declined={declined} />
+      ) : (
+        <ReplyBox escalation={e} />
+      )}
+
+      <section aria-labelledby={ids.context} className="rounded-2xl bg-surface-2 px-4 py-3">
         <h3 id={ids.context} className="text-xs font-semibold tracking-[0.08em] text-muted uppercase">
           Student context
         </h3>
-        <dl className="mt-3 grid gap-x-6 gap-y-3 text-sm sm:grid-cols-[auto_minmax(0,1fr)]">
+        <dl className="mt-2 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-[auto_minmax(0,1fr)]">
           <dt className="text-muted">Programme</dt>
           <dd>{e.studentContext.programme}</dd>
           <dt className="text-muted">Year</dt>
@@ -121,29 +149,24 @@ function EscalationCase({ escalation: e }: { escalation: StaffEscalation }) {
           </dd>
         </dl>
       </section>
-
-      {e.status === 'resolved' ? (
-        <section
-          aria-labelledby={ids.reply}
-          className={`rounded-2xl border p-5 ${declined ? 'border-line bg-surface-2' : 'border-fit-high/30 bg-fit-high/5'}`}
-        >
-          <h3
-            id={ids.reply}
-            className={`flex items-center gap-1.5 text-sm font-medium ${declined ? 'text-ink' : 'text-fit-high'}`}
-          >
-            {declined ? <XIcon /> : <CheckIcon />}
-            {e.decision
-              ? `${DECISION_LABELS[e.decision]}. The decision is in the student's session`
-              : "Resolved. The reply is in the student's session"}
-          </h3>
-          <p className="mt-2 text-sm leading-relaxed whitespace-pre-line">
-            {e.staffResponse ?? 'Resolved without a written reply.'}
-          </p>
-        </section>
-      ) : (
-        <ReplyBox escalation={e} />
-      )}
     </article>
+  );
+}
+
+function ResolvedNote({ escalation: e, headingId, declined }: { escalation: StaffEscalation; headingId: string; declined: boolean }) {
+  return (
+    <section
+      aria-labelledby={headingId}
+      className={`rounded-2xl border p-4 ${declined ? 'border-line bg-surface-2' : 'border-fit-high/30 bg-fit-high/5'}`}
+    >
+      <h3 id={headingId} className={`flex items-center gap-1.5 text-sm font-medium ${declined ? 'text-ink' : 'text-fit-high'}`}>
+        {declined ? <XIcon /> : <CheckIcon />}
+        {e.decision
+          ? `${DECISION_LABELS[e.decision]}. The decision is in the student's session`
+          : "Resolved. The reply is in the student's session"}
+      </h3>
+      <p className="mt-2 text-sm leading-relaxed whitespace-pre-line">{e.staffResponse ?? 'Resolved without a written reply.'}</p>
+    </section>
   );
 }
 
@@ -157,33 +180,36 @@ function ExceptionDetails({ headingId, request }: { headingId: string; request: 
   const rows = ruleRows(request.violations);
 
   return (
-    <section aria-labelledby={headingId} className="rounded-2xl bg-surface-2 p-5">
-      <h3 id={headingId} className="text-xs font-semibold tracking-[0.08em] text-muted uppercase">
+    <section aria-labelledby={headingId} className="rounded-2xl bg-surface-2 px-4 py-3">
+      <h3 id={headingId} className="flex flex-wrap items-baseline justify-between gap-x-3 text-xs font-semibold tracking-[0.08em] text-muted uppercase">
         The request
+        <span className="font-normal tracking-normal normal-case">Shared by the student, as it stood when they sent it</span>
       </h3>
-      <dl className="mt-3 grid gap-x-6 gap-y-3 text-sm sm:grid-cols-[auto_minmax(0,1fr)]">
-        <dt className="text-muted">Module</dt>
-        <dd>
-          {request.moduleId ? named(request.moduleId) : <span className="text-muted">No single module: a programme rule</span>}
-        </dd>
+      <dl className="mt-2 grid gap-x-5 gap-y-2 text-sm sm:grid-cols-[auto_minmax(0,1fr)]">
+        {/* The title names the module, so a row is only needed when the request names none. */}
+        {!request.moduleId && (
+          <>
+            <dt className="text-muted">Module</dt>
+            <dd className="text-muted">No single module: a programme rule</dd>
+          </>
+        )}
 
         <dt className="text-muted">Rule broken</dt>
         <dd>
           {rows.length === 0 ? (
             <span className="text-muted">The rules engine found no broken rule when this was sent.</span>
           ) : (
-            <ul className="grid gap-2">
+            <ul className="grid gap-1.5">
               {rows.map((row, i) => (
-                <li key={`${row.code}-${i}`} className="rounded-xl border border-line bg-surface px-3 py-2">
-                  <p className="font-medium">
-                    {row.label} <span className="font-mono text-xs font-normal text-muted">{row.code}</span>
-                  </p>
+                // Plain labels only (issue 107); the full sentence sits behind the row's tooltip.
+                <li key={`${row.code}-${i}`} title={row.detail} className="rounded-xl border border-line bg-surface px-3 py-1">
+                  <span className="font-medium">{row.label}</span>
                   {row.prerequisiteId && (
-                    <p className="mt-0.5 text-xs text-muted">
-                      Missing: <span className="text-ink">{named(row.prerequisiteId)}</span>
-                    </p>
+                    <span className="text-muted">
+                      {' '}
+                      · missing <span className="text-ink">{named(row.prerequisiteId)}</span>
+                    </span>
                   )}
-                  <p className="mt-1 text-xs leading-relaxed text-muted">{row.detail}</p>
                 </li>
               ))}
             </ul>
@@ -211,17 +237,23 @@ function ExceptionDetails({ headingId, request }: { headingId: string; request: 
           {request.completedModuleIds.length === 0 ? (
             <span className="text-muted">None recorded</span>
           ) : (
-            <ul className="flex flex-wrap gap-1.5">
-              {request.completedModuleIds.map((id) => (
-                <li key={id} className="rounded-full border border-line bg-surface px-3 py-1">
-                  {named(id)}
-                </li>
-              ))}
-            </ul>
+            // Folded, so the decision stays on the first screen; one click shows them all.
+            <details className="group">
+              <summary className="cursor-pointer text-brand marker:text-muted">
+                {request.completedModuleIds.length} modules
+                <span className="group-open:hidden">, show them</span>
+              </summary>
+              <ul className="mt-2 flex flex-wrap gap-1.5">
+                {request.completedModuleIds.map((id) => (
+                  <li key={id} className="rounded-full border border-line bg-surface px-3 py-1">
+                    {named(id)}
+                  </li>
+                ))}
+              </ul>
+            </details>
           )}
         </dd>
       </dl>
-      <p className="mt-3 text-xs text-muted">Shared by the student with this request, as it stood when they sent it.</p>
     </section>
   );
 }
@@ -258,7 +290,7 @@ function ReplyBox({ escalation }: { escalation: StaffEscalation }) {
 
   return (
     <form
-      className="grid gap-3"
+      className="grid gap-2"
       onSubmit={(ev) => {
         ev.preventDefault();
         if (!decides && trimmed) void submit('reply');
@@ -273,16 +305,16 @@ function ReplyBox({ escalation }: { escalation: StaffEscalation }) {
         value={text}
         onChange={(ev) => setText(ev.target.value)}
         maxLength={MAX_REPLY}
-        rows={decides ? 4 : 6}
+        rows={decides ? 2 : 5}
         placeholder={
           decides
             ? 'For example: Please work through the bridging notes before week 3.'
             : 'For example: Thanks for raising this. I have passed it to the module lead and will update you by Friday.'
         }
-        className={`w-full resize-y rounded-2xl border border-line bg-canvas p-4 text-sm leading-relaxed placeholder:text-muted ${focusRing}`}
+        className={`w-full resize-y rounded-2xl border border-line bg-canvas px-4 py-2 text-sm leading-relaxed placeholder:text-muted ${focusRing}`}
       />
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p id={hintId} className="text-xs text-muted">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+        <p id={hintId} className="min-w-0 flex-1 text-xs text-muted">
           {decides ? decisionHint(escalation) : "Sending marks this resolved and shows the reply in the student's session."}{' '}
           <span className="tabular-nums">
             {text.length}/{MAX_REPLY}
@@ -314,6 +346,6 @@ function ReplyBox({ escalation }: { escalation: StaffEscalation }) {
 
 function decisionHint(escalation: StaffEscalation): string {
   return approvalOpensModule(escalation.request)
-    ? "Approving waives the rule above for this student only, so they can shortlist the module; its credits still count towards the cap. Either decision resolves the case and appears in their session."
-    : 'No module rule can be waived here (the credit cap always applies), so the decision is recorded and shown to the student, but nothing opens up.';
+    ? 'Approving opens the module to this student only; its credits still count towards the cap.'
+    : 'No module rule can be waived here (the credit cap always applies); the decision is recorded and shown to the student.';
 }

@@ -1,22 +1,11 @@
 // The Senior Tutor's view of a rule-exception request: the broken rule as data, and the reply each action sends.
-import { schemas } from '@modulematch/shared';
+import { RULE_CODE_LABELS, schemas } from '@modulematch/shared';
 import type { ExceptionDecision, ExceptionRequest, RuleViolation } from '@modulematch/shared';
 import type { z } from 'zod';
 import { percent } from './format.ts';
 
 export const MAX_REPLY = schemas.ESCALATION_REPLY_MAX;
 
-/** Plain names for the rules-engine codes (spec 9.1). */
-export const RULE_LABELS: Record<RuleViolation['code'], string> = {
-  PREREQUISITE_MISSING: 'Prerequisite not completed',
-  NOT_ALLOWED: 'Not open to the programme',
-  ECTS_CAP_EXCEEDED: 'Over the credit cap',
-  ELECTIVE_ECTS_SHORT: 'Elective credits short',
-  I_EXPLORE_MISSING: 'No I-Explore module',
-  UNKNOWN_MODULE: 'Not in the catalogue',
-  ABOVE_YEAR_LEVEL: 'Taught in a later year',
-  RULES_NOT_LOADED: "Year's rules not loaded",
-};
 
 export interface RuleRow {
   code: RuleViolation['code'];
@@ -30,7 +19,7 @@ export interface RuleRow {
 export const ruleRows = (violations: readonly RuleViolation[]): RuleRow[] =>
   violations.map((v) => ({
     code: v.code,
-    label: RULE_LABELS[v.code],
+    label: RULE_CODE_LABELS[v.code],
     moduleId: v.moduleId,
     prerequisiteId: v.prerequisiteId ?? null,
     detail: v.message,

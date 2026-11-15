@@ -40,7 +40,7 @@ export function StaffApp() {
         The app header is sticky (4rem). Every control in the console keeps 6rem clear above it when the browser
         scrolls it into view, by focus or scrollIntoView, so nothing interactive lands under the header.
       */}
-      <div className="grid grid-cols-1 gap-8 [&_:is(a,button,input,select,textarea,summary,[tabindex])]:scroll-mt-24">
+      <StaffLayout>
         <StaffHeader />
         <StaffSection>
         <Routes>
@@ -66,9 +66,16 @@ export function StaffApp() {
           />
         </Routes>
         </StaffSection>
-      </div>
+      </StaffLayout>
     </StaffDataProvider>
   );
+}
+
+/** The console's column. Escalations uses tighter gaps so the request and its decision fit the first screen. */
+function StaffLayout({ children }: { children: ReactNode }) {
+  const { pathname } = useLocation();
+  const gap = sectionFor(pathname) === 'escalations' ? 'gap-4' : 'gap-8';
+  return <div className={`grid grid-cols-1 ${gap} [&_:is(a,button,input,select,textarea,summary,[tabindex])]:scroll-mt-24`}>{children}</div>;
 }
 
 const SECTIONS = [
@@ -93,8 +100,17 @@ function StaffHeader() {
   const { queue } = useStaffData();
   const current = sectionFor(pathname);
 
+  // On Escalations the request is the point of the page (demo step 6), so the hero shrinks to one line.
+  const slim = current === 'escalations';
+
   return (
-    <div className="grid gap-6">
+    <div className={slim ? 'grid gap-4' : 'grid gap-6'}>
+      {slim ? (
+        <header className="flex flex-wrap items-center justify-between gap-3 rounded-panel bg-slate-950 px-5 py-2 text-white shadow-soft">
+          <h1 className="text-lg font-semibold tracking-tight">Staff console</h1>
+          <PrivacyNote />
+        </header>
+      ) : (
       <header className="relative isolate overflow-hidden rounded-panel bg-slate-950 text-white shadow-lift">
         <img
           src="/images/staff-meeting.jpg"
@@ -113,6 +129,7 @@ function StaffHeader() {
           <PrivacyNote />
         </div>
       </header>
+      )}
       <nav aria-label="Staff sections" className="-mx-1 overflow-x-auto px-1 [scrollbar-width:none]">
         <ul className="flex w-max gap-1 rounded-full bg-surface-2 p-1 ring-1 ring-line">
           {SECTIONS.map(({ key, to, label, Icon }) => {
