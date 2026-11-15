@@ -5,7 +5,7 @@ How to run the live demo at judging (spec 18.2): about three minutes, with a jud
 ## The night before
 
 1. Pull `main` and install: `npm ci`.
-2. Run the automated check: `npm run e2e`. It starts its own API and web server on free ports, drives the whole journey below in headless Chrome at 1440×900 and 390×844 in light and dark, and at 1280×720 in light, and stops everything it started. All 45 cells of the table should say `pass` (eight demo steps plus the optional step 1b, at five viewport and theme combinations). Screenshots and logs go to `scripts/e2e/output/<time>/`, and each run writes a `summary.md` there.
+2. Run the automated check: `npm run e2e`. It starts its own API and web server on free ports, drives the whole journey below in headless Chrome at 1440×900 and 390×844 in light and dark, and at 1280×720 in light, and stops everything it started. All 50 cells of the table should say `pass` (eight demo steps plus the optional steps 1b and 1c, at five viewport and theme combinations; the check withdraws consent at the end of 1c rather than 1b). Screenshots and logs go to `scripts/e2e/output/<time>/`, and each run writes a `summary.md` there.
 3. Run the check once with live models: `npm run e2e -- --live` (one viewport, about $0.50; it reports the spend at the end). Expect interview turns of 5–9 s and about 11 s for the rule-break reply.
 4. Record the backup video in offline mode (see [demo-video.md](demo-video.md)), and keep it on the laptop as well as online.
 
@@ -68,8 +68,8 @@ The judge types; you point. Suggested answers are in italics if the judge wants 
 | `--live` | Real models from `.env`; desktop light only unless `--matrix` |
 | `--only=desktop-light,phone-dark` | Run some of the four viewport and theme combinations |
 | `--headed` | Show the Chrome window |
-| `--until=clash` | Stop after the step with that id (interview, results, catalogue, weights, clash, rule, staff-reply, insight, trace) |
-| `--skip-optional` | Leave out step 1b |
+| `--until=clash` | Stop after the step with that id (interview, results, examiner, catalogue, weights, clash, rule, staff-reply, insight, trace) |
+| `--skip-optional` | Leave out steps 1b and 1c |
 | `--out=<dir>` | Where to write screenshots, logs and `summary.md` |
 
 Set `CHROME_PATH` if Chrome is not at `/Applications/Google Chrome.app`.
