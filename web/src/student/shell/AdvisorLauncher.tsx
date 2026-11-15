@@ -59,15 +59,53 @@ function pillWouldCoverControl(launcher: HTMLElement | null): boolean {
 }
 
 /**
- * Whether the launcher shows only its round icon: once the page scrolls away from the top, or whenever the
- * labelled pill would sit over a control (the module page's question chips, a card's shortlist button).
+ * True when a control's centre sits under the icon-only button (72×64px, 16px in from the corner on phones;
+ * 72×72px, 24px in from sm up), plus a small margin. On narrow screens content runs under the corner, so even
+ * the icon can land on a Swap or remove button as the page scrolls.
  */
-function useCompactLauncher(launcherRef: RefObject<HTMLElement | null>): boolean {
-  const [compact, setCompact] = useState(false);
+function iconWouldCoverControl(launcher: HTMLElement | null): boolean {
+  const wide = window.matchMedia('(min-width: 640px)').matches;
+  const width = 72;
+  const height = wide ? 72 : 64;
+  const inset = wide ? 24 : 16;
+  const margin = 8;
+  const right = document.documentElement.clientWidth - inset + margin;
+  const bottom = window.innerHeight - inset + margin;
+  const left = right - width - 2 * margin;
+  const top = bottom - height - 2 * margin;
+  for (const el of document.querySelectorAll<HTMLElement>(INTERACTIVE)) {
+    if (launcher?.contains(el)) continue;
+    const r = el.getBoundingClientRect();
+    if (r.width === 0 || r.height === 0) continue;
+    const x = r.left + r.width / 2;
+    const y = r.top + r.height / 2;
+    if (x > left && x < right && y > top && y < bottom) return true;
+  }
+  return false;
+}
+
+interface LauncherFit {
+  /** Only the round icon: once the page scrolls away from the top, or when the labelled pill would sit over a control. */
+  compact: boolean;
+  /** Out of the way altogether while a control's centre is under the icon; it comes back as soon as that clears. */
+  tucked: boolean;
+}
+
+/**
+ * How the launcher fits the page under it: the labelled pill at the top of a page, the round icon once the page
+ * scrolls or the pill would sit over a control (the module page's question chips, a card's shortlist button),
+ * and tucked away while even the icon would cover a control (issue #46).
+ */
+function useCompactLauncher(launcherRef: RefObject<HTMLElement | null>): LauncherFit {
+  const [fit, setFit] = useState<LauncherFit>({ compact: false, tucked: false });
   useEffect(() => {
     let frame = 0;
     let settle = 0;
-    const check = () => setCompact(window.scrollY > COLLAPSE_AFTER_PX || pillWouldCoverControl(launcherRef.current));
+    const check = () => {
+      const compact = window.scrollY > COLLAPSE_AFTER_PX || pillWouldCoverControl(launcherRef.current);
+      const tucked = iconWouldCoverControl(launcherRef.current);
+      setFit((current) => (current.compact === compact && current.tucked === tucked ? current : { compact, tucked }));
+    };
     const update = () => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(check);
@@ -92,7 +130,7 @@ function useCompactLauncher(launcherRef: RefObject<HTMLElement | null>): boolean
       mutations.disconnect();
     };
   }, [launcherRef]);
-  return compact;
+  return fit;
 }
 
 export function AdvisorLauncher({ state, onOpen, onClose, showBubble }: AdvisorLauncherProps) {
@@ -105,12 +143,13 @@ export function AdvisorLauncher({ state, onOpen, onClose, showBubble }: AdvisorL
   const subtitleId = useId();
   const { open } = state;
   const launcherRef = useRef<HTMLDivElement>(null);
-  const collapsed = useCompactLauncher(launcherRef);
+  const { compact: collapsed, tucked } = useCompactLauncher(launcherRef);
 
-  // Anything that happens while the window is open counts as seen.
+  // Seen while the window is open, and on the interview, where the same conversation is already on screen
+  // (otherwise the dot lights up on the first screen after the interview with nothing new to read).
   useEffect(() => {
-    if (open) setSeen(signature);
-  }, [open, signature]);
+    if (open || !showBubble) setSeen(signature);
+  }, [open, showBubble, signature]);
   const unread = !open && signature !== seen;
 
   // Show the dialog as soon as it opens; it is closed after the exit animation (onExitComplete).
@@ -128,7 +167,15 @@ export function AdvisorLauncher({ state, onOpen, onClose, showBubble }: AdvisorL
   return (
     <>
       {showBubble && (
-        <div ref={launcherRef} className="fixed right-4 bottom-4 z-(--z-launcher) sm:right-6 sm:bottom-6">
+        <div
+          ref={launcherRef}
+          className={cx(
+            'fixed right-4 bottom-4 z-(--z-launcher) transition-[opacity,translate] duration-200 sm:right-6 sm:bottom-6',
+            // Tucked: hidden and click-through while a control is under it, but shown again to keyboard focus.
+            tucked &&
+              'pointer-events-none translate-y-4 opacity-0 has-[:focus-visible]:pointer-events-auto has-[:focus-visible]:translate-y-0 has-[:focus-visible]:opacity-100',
+          )}
+        >
           <AnimatePresence>
             {!open && (
               <motion.button
@@ -149,7 +196,7 @@ export function AdvisorLauncher({ state, onOpen, onClose, showBubble }: AdvisorL
                 )}
               >
                 {/* A gentle idle pulse; the reduced-motion rule in index.css stops it after one beat. */}
-                <span aria-hidden="true" className="absolute inset-0 animate-halo rounded-full bg-brand" />
+                <span aria-hidden="true" className="pointer-events-none absolute inset-0 animate-halo rounded-full bg-brand" />
                 <span aria-hidden="true" className="relative grid size-10 place-items-center rounded-full bg-on-brand/15">
                   <Icon name="chat" size={22} />
                   <Icon name="sparkle" size={12} className="absolute top-1 right-1" />

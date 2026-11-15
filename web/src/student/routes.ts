@@ -11,6 +11,8 @@ export const paths = {
   catalogue: '/catalogue',
   timetable: '/timetable',
   pathways: '/pathways',
+  /** Tailored feedback on the student's exams (spec 23). */
+  feedback: '/feedback',
   module: (moduleId: string) => `/modules/${encodeURIComponent(moduleId)}`,
 } as const;
 
@@ -27,4 +29,11 @@ export function routeForMode(mode: Mode): string {
     case 'ESCALATED':
       return paths.catalogue;
   }
+}
+
+/** Navigation state that opens the interview's "Your results" panel, for "Upload a mark sheet" links. */
+export const OPEN_RESULTS_STATE = { openResults: true } as const;
+
+export function wantsResultsPanel(state: unknown): boolean {
+  return typeof state === 'object' && state !== null && 'openResults' in state && state.openResults === true;
 }

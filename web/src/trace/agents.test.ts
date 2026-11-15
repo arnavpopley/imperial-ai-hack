@@ -25,6 +25,9 @@ const TIER_IN_SOURCE: Record<string, { file: string; pattern: (tier: string) => 
   catalogue: { file: 'server/src/agents/catalogue.ts', pattern: (t) => `modelId('${t}')` },
   knowledge: { file: 'server/src/agents/knowledge.ts', pattern: (t) => `tier: '${t}'` },
   insightsAgent: { file: 'server/src/agents/insights.ts', pattern: (t) => `tier: '${t}'` },
+  resultsReader: { file: 'server/src/agents/results-reader.ts', pattern: (t) => `tier: '${t}'` },
+  examFeedback: { file: 'server/src/agents/exam-feedback.ts', pattern: (t) => `tier: '${t}'` },
+  examDrafter: { file: 'server/src/agents/exam-feedback.ts', pattern: (t) => `tier: '${t}'` },
   analyst: { file: 'scripts/analyse-modules.ts', pattern: (t) => `requireEnv('MODEL_${t.toUpperCase()}')` },
 };
 
@@ -42,14 +45,17 @@ describe('agent roster', () => {
       'Timetabler',
       'Catalogue',
       'Module knowledge',
+      'Results reader',
+      'Exam feedback',
       'Insights',
+      'Exam form drafter',
       'Module Analyst',
     ]);
-    expect([count('student'), count('staff'), count('offline')]).toEqual([7, 1, 1]);
+    expect([count('student'), count('staff'), count('offline')]).toEqual([9, 2, 1]);
   });
 
   it('gives the heading a count word that matches', () => {
-    expect(countWord(AGENTS.length)).toBe('Nine');
+    expect(countWord(AGENTS.length)).toBe('Twelve');
     expect(countWord(42)).toBe('42');
   });
 
@@ -74,8 +80,13 @@ describe('agent roster', () => {
     }
   });
 
-  it('can light up every agent the trace records', () => {
-    const ids = new Set<string>([...NODES.map((n) => n.id), 'knowledge']);
-    for (const agent of AGENTS.filter((a) => a.audience !== 'offline')) expect(ids.has(agent.id), agent.id).toBe(true);
+  it("can light up every agent a student's session traces", () => {
+    const ids = new Set<string>([...NODES.map((n) => n.id), 'knowledge', 'resultsReader', 'examFeedback']);
+    for (const agent of AGENTS.filter((a) => a.audience === 'student')) expect(ids.has(agent.id), agent.id).toBe(true);
+  });
+
+  it('keeps the exam form drafter on the staff side and the marks agents on the student side', () => {
+    const audience = (id: string) => AGENTS.find((a) => a.id === id)?.audience;
+    expect([audience('examDrafter'), audience('examFeedback'), audience('resultsReader')]).toEqual(['staff', 'student', 'student']);
   });
 });

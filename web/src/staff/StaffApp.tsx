@@ -127,7 +127,7 @@ function StaffHeader() {
                       layoutId="staff-tab"
                       aria-hidden="true"
                       transition={{ type: 'spring', stiffness: 420, damping: 36 }}
-                      className="absolute inset-0 rounded-full bg-surface shadow-soft ring-1 ring-line"
+                      className="pointer-events-none absolute inset-0 rounded-full bg-surface shadow-soft ring-1 ring-line"
                     />
                   )}
                   <span className="relative flex items-center gap-2">

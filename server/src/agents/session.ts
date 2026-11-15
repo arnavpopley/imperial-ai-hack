@@ -184,10 +184,29 @@ export function setMode(session: SessionState, to: Mode, tracer: Tracer, reason:
  * client adds the alternative before removing the module it replaces), keeps the session in PLAN, so the
  * trace records each change of mode once instead of PLAN -> RECOMMEND -> PLAN on every edit.
  */
-export function syncPlanMode(session: SessionState, tracer: Tracer): void {
+export function syncPlanMode(session: SessionState, tracer: Tracer): Mode | null {
   const planning = session.shortlist.length >= 2;
-  if (session.mode === 'RECOMMEND' && planning) setMode(session, 'PLAN', tracer, 'shortlist has two or more modules');
-  else if (session.mode === 'PLAN' && !planning) setMode(session, 'RECOMMEND', tracer, 'shortlist edited');
+  if (session.mode === 'RECOMMEND' && planning) return setMode(session, 'PLAN', tracer, 'shortlist has two or more modules');
+  if (session.mode === 'PLAN' && !planning) return setMode(session, 'RECOMMEND', tracer, 'shortlist edited');
+  return null;
+}
+
+/**
+ * One shortlist edit, shared by the shortlist POST and the chat's shortlist turn so both leave the same
+ * trace: saves it, records it, and applies the spec 12 shortlist-size transitions. Eligibility is the
+ * caller's gate. Returns the mode the session left, or null when the mode did not change.
+ *
+ * The caller's copy of the session can be stale (a chat turn awaits guardrails and intent first, and the
+ * student may approve an escalation in another tab meanwhile), so the saved mode is read back before the
+ * transition. The read, the edit and the mode write run synchronously, so nothing can slip in between.
+ */
+export function applyShortlistEdit(session: SessionState, moduleId: string, action: 'add' | 'remove', tracer: Tracer): Mode | null {
+  session.mode = repo.getSession(session.id)?.mode ?? session.mode;
+  if (action === 'add') repo.addToShortlist(session.id, moduleId);
+  else repo.removeFromShortlist(session.id, moduleId);
+  session.shortlist = repo.listShortlist(session.id);
+  tracer.record({ actor: 'supervisor', kind: 'tool', input: `shortlist ${action} ${moduleId}`, output: `${session.shortlist.length} on shortlist`, verdict: null });
+  return syncPlanMode(session, tracer);
 }
 
 /**

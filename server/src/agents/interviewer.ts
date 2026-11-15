@@ -102,14 +102,19 @@ export function nextQuestion(session: SessionState, askedStepIds: string[]): Nex
 
 const topicLabel = (id: string) => taxonomy.topics[id as keyof typeof taxonomy.topics]?.label ?? id;
 
+/** A topic label mid-sentence: only the first letter is lowered, so acronyms keep their case ("machine learning and AI"). */
+const inSentence = (label: string) => (/^[A-Z]{2}/.test(label) ? label : label.charAt(0).toLowerCase() + label.slice(1));
+
+const DAY_NAMES: Record<string, string> = { mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday' };
+
 /** A short reflection of what the extractor just heard, used offline and as the live prompt's hint. */
 export function reflect(newEvidence: Evidence[]): string {
   const liked = newEvidence
     .filter((e) => e.slot.startsWith('interest:') && typeof e.value === 'number' && e.value >= 0.5)
-    .map((e) => topicLabel(e.slot.slice('interest:'.length)).toLowerCase());
+    .map((e) => inSentence(topicLabel(e.slot.slice('interest:'.length))));
   const disliked = newEvidence
     .filter((e) => e.slot.startsWith('interest:') && typeof e.value === 'number' && e.value < 0.5)
-    .map((e) => topicLabel(e.slot.slice('interest:'.length)).toLowerCase());
+    .map((e) => inSentence(topicLabel(e.slot.slice('interest:'.length))));
   if (liked.length) return `Got it: ${[...new Set(liked)].slice(0, 3).join(', ')}.`;
   if (disliked.length) return `Noted, less ${[...new Set(disliked)].slice(0, 2).join(' and ')}.`;
   return newEvidence.length ? 'Thanks, that helps.' : 'Thanks.';
@@ -194,7 +199,7 @@ export function whatIHeard(profile: StudentProfile, pathwayTitles: Record<string
     `• Maths comfort ${pct(profile.style.mathsComfort)}, coding comfort ${pct(profile.style.codingComfort)}, workload ${pct(profile.style.workloadTolerance)}`,
     `• Outside your degree: ${lean(profile.breadthAppetite, 'rather not', 'keen')}`,
     profile.timetablePrefs.avoidDays.length || profile.timetablePrefs.earliestStart
-      ? `• Keep free: ${[...profile.timetablePrefs.avoidDays, profile.timetablePrefs.earliestStart ? `before ${profile.timetablePrefs.earliestStart}` : null].filter(Boolean).join(', ')}`
+      ? `• Keep free: ${[...profile.timetablePrefs.avoidDays.map((d) => DAY_NAMES[d] ?? d), profile.timetablePrefs.earliestStart ? `before ${profile.timetablePrefs.earliestStart}` : null].filter(Boolean).join(', ')}`
       : null,
     'Is that right? Confirm it, or tell me what to change.',
   ]
