@@ -333,7 +333,8 @@ export const STEPS = [
         (code) => {
           const card = [...document.querySelectorAll('main article')].find((a) => a.innerText.includes(code));
           const overall = card?.querySelector('h2 button')?.innerText ?? '';
-          return /Q2/.test(overall) && overall;
+          // Offline the headline says "Q2"; a live model may write "Question 2", which is just as right.
+          return /\b(Q|Question)\s*2\b/i.test(overall) && overall;
         },
         [FEEDBACK_MODULE],
         { desc: 'a Dynamics card that leads with Q2', timeout: ctx.timeout },
