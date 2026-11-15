@@ -20,7 +20,7 @@ export function CompareToggle({ title, slot, full, onToggle, className }: Compar
     <label
       title={disabled ? `You can compare up to ${MAX_COMPARE} modules at a time` : undefined}
       className={cx(
-        'inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border px-2.5 text-[13px] font-medium transition-colors select-none has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand',
+        'inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border px-2.5 text-xs font-medium transition-colors select-none has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand',
         checked ? 'border-brand/40 bg-brand-soft text-brand' : 'border-line text-muted hover:border-line-strong hover:text-ink',
         disabled && 'cursor-not-allowed opacity-50 hover:border-line hover:text-muted',
         className,
@@ -37,7 +37,7 @@ export function CompareToggle({ title, slot, full, onToggle, className }: Compar
       <span
         aria-hidden="true"
         className={cx(
-          'grid size-4 place-items-center rounded-[5px] text-[10px] leading-none font-bold text-on-brand',
+          'grid size-4 place-items-center rounded-[5px] text-2xs leading-none font-bold text-on-brand',
           checked ? COMPARE_DOT[slot] : 'border-[1.5px] border-line-strong bg-surface',
         )}
       >

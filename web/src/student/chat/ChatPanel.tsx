@@ -174,7 +174,7 @@ export function ChatPanel({ variant, prefill = '', className, onAddCv }: ChatPan
                       transition={{ delay: 0.05 * i }}
                       whileHover={{ y: -2 }}
                       whileTap={{ scale: 0.96 }}
-                      className="rounded-full border border-brand/30 bg-brand-soft px-4 py-2 text-[14px] font-medium text-brand transition-colors hover:bg-brand hover:text-on-brand"
+                      className="rounded-full border border-brand/30 bg-brand-soft px-4 py-2 text-sm font-medium text-brand transition-colors hover:bg-brand hover:text-on-brand"
                     >
                       {choice}
                     </motion.button>
@@ -222,7 +222,7 @@ export function ChatPanel({ variant, prefill = '', className, onAddCv }: ChatPan
                     setDraft(s);
                     inputRef.current?.focus();
                   }}
-                  className="shrink-0 rounded-full border border-line px-3 py-1 text-[12px] text-muted transition hover:border-brand/40 hover:text-ink"
+                  className="shrink-0 rounded-full border border-line px-3 py-1 text-2xs text-muted transition hover:border-brand/40 hover:text-ink"
                 >
                   {s}
                 </button>
@@ -253,7 +253,7 @@ export function ChatPanel({ variant, prefill = '', className, onAddCv }: ChatPan
               <Icon name="send" size={16} label="Send" />
             </motion.button>
           </div>
-          <p className="mt-2 hidden text-[12px] text-muted sm:block">
+          <p className="mt-2 hidden text-2xs text-muted sm:block">
             {offersResultsStep(session.profile.yearOfStudy)
               ? 'Enter to send. Grades and health details typed here are never stored. Share marks only in Your results.'
               : 'Enter to send. Grades and health details typed here are never stored.'}
@@ -297,7 +297,7 @@ function EmptyConversation({
     <motion.div {...ENTER} className="mx-auto grid max-w-md justify-items-center py-6 text-center sm:py-10">
       <InterviewerStage persona={persona} speaking={false} layout="hero" />
       <p className="mt-8 text-2xl font-semibold tracking-tight">Hi, I&rsquo;m {persona.name}.</p>
-      <p className="mt-2 text-[15px] leading-relaxed text-muted">
+      <p className="mt-2 text-sm leading-relaxed text-muted">
         A few easy questions about what you enjoy. No right answers.
       </p>
       <div className="mt-6 flex flex-wrap justify-center gap-2">
@@ -305,13 +305,13 @@ function EmptyConversation({
           type="button"
           onClick={onStart}
           disabled={disabled}
-          className={cx(buttonClass('primary'), 'h-11 px-5 text-[15px]')}
+          className={cx(buttonClass('primary'), 'h-11 px-5 text-sm')}
         >
           Let&rsquo;s start
           <Icon name="arrow-right" size={16} />
         </button>
         {onAddCv && (
-          <button type="button" onClick={onAddCv} className={cx(buttonClass('secondary'), 'h-11 px-5 text-[15px]')}>
+          <button type="button" onClick={onAddCv} className={cx(buttonClass('secondary'), 'h-11 px-5 text-sm')}>
             <Icon name="bookmark" size={15} />
             Start from my CV
           </button>
@@ -342,7 +342,7 @@ function TurnView({
 }) {
   if (turn.role === 'system') {
     return (
-      <motion.li layout="position" {...ENTER} className="text-center text-[13px] text-muted">
+      <motion.li layout="position" {...ENTER} className="text-center text-xs text-muted">
         {turn.content}
       </motion.li>
     );
@@ -377,7 +377,7 @@ function TurnView({
         <InterviewerAvatar persona={persona} speaking={streaming} size={40} />
       )}
       <div className="grid min-w-0 flex-1 justify-items-start gap-2">
-        <span className="flex items-center gap-2 text-[13px]">
+        <span className="flex items-center gap-2 text-xs">
           <span className="font-semibold">{speakerName(turn.agent, persona)}</span>
           {turn.agent && !staff && turn.agent !== 'interviewer' && (
             <span className="text-muted">{humanise(turn.agent)}</span>
@@ -397,7 +397,7 @@ function TurnView({
             className={cx(
               'rounded-[1.25rem] rounded-tl-md border border-line bg-surface whitespace-pre-wrap shadow-soft',
               prominent
-                ? 'px-5 py-4 text-[1.2rem] leading-snug font-medium tracking-tight sm:text-[1.35rem]'
+                ? 'px-5 py-4 text-lg leading-snug font-medium tracking-tight'
                 : 'px-5 py-3 text-base leading-relaxed',
             )}
           >
@@ -414,7 +414,7 @@ function TurnView({
           />
         )}
         {turn.status === 'error' && (
-          <div role="alert" className="flex flex-wrap items-center gap-2 text-[13px] text-fit-low">
+          <div role="alert" className="flex flex-wrap items-center gap-2 text-xs text-fit-low">
             <Icon name="info" size={14} />
             <span>That message did not go through. {turn.error}</span>
             <button type="button" onClick={onRetry} className="font-semibold underline underline-offset-2">

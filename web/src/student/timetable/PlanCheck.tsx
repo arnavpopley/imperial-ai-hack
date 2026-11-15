@@ -27,7 +27,7 @@ export function PlanCheck({ view, titleFor }: { view: TimetableView; titleFor: (
           <Icon name="shield" size={15} className="text-brand" />
           Plan check
         </h2>
-        <span className="text-[12px] text-muted tabular-nums">
+        <span className="text-2xs text-muted tabular-nums">
           {met} of {rows.length} met
         </span>
       </div>
@@ -40,7 +40,7 @@ export function PlanCheck({ view, titleFor }: { view: TimetableView; titleFor: (
                 <Icon name={row.id === 'keep-free' && row.state === 'note' ? 'moon' : state.icon} size={12} />
               </span>
               <div className="min-w-0">
-                <p className="flex items-baseline justify-between gap-2 text-[13px]">
+                <p className="flex items-baseline justify-between gap-2 text-xs">
                   <span className="font-medium">
                     {row.label}
                     <span className="sr-only">, {state.word}</span>
@@ -59,13 +59,13 @@ export function PlanCheck({ view, titleFor }: { view: TimetableView; titleFor: (
                   />
                 )}
                 {row.id === 'i-explore' && row.state === 'todo' && (
-                  <Link to={paths.catalogue} className="mt-1 inline-flex items-center gap-1 text-[12px] font-semibold text-brand underline-offset-2 hover:underline">
+                  <Link to={paths.catalogue} className="mt-1 inline-flex items-center gap-1 text-2xs font-semibold text-brand underline-offset-2 hover:underline">
                     Find one
                     <Icon name="arrow-right" size={12} />
                   </Link>
                 )}
                 {row.id === 'keep-free' && view.keepFreeConflicts.length > 0 && (
-                  <ul className="mt-1 grid gap-0.5 text-[12px] text-muted">
+                  <ul className="mt-1 grid gap-0.5 text-2xs text-muted">
                     {view.keepFreeConflicts.slice(0, 3).map(({ slot, window }) => (
                       <li key={`${slot.moduleId}|${slot.sessionKey}|${slot.day}|${slot.start}`} className="leading-snug break-words">
                         <span className="font-medium text-ink tabular-nums">
@@ -82,7 +82,7 @@ export function PlanCheck({ view, titleFor }: { view: TimetableView; titleFor: (
           );
         })}
       </ul>
-      <details className="group mt-3 border-t border-line pt-2.5 text-[12px] text-muted">
+      <details className="group mt-3 border-t border-line pt-2.5 text-2xs text-muted">
         <summary className="cursor-pointer font-medium marker:text-muted hover:text-ink">Rule details</summary>
         <ul className="mt-1.5 grid gap-1">
           {details.map((message) => (

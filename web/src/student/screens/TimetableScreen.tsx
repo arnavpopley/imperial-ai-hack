@@ -187,7 +187,7 @@ function TimetableBody({ view, onChanged, refreshing, stale }: TimetableBodyProp
             None of your shortlisted modules teach in this term.
           </EmptyState>
         )}
-        {refreshing && <p className="mt-2 text-[12px] text-muted">Updating…</p>}
+        {refreshing && <p className="mt-2 text-2xs text-muted">Updating…</p>}
       </section>
 
       <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4">
@@ -231,16 +231,16 @@ function TimetableBody({ view, onChanged, refreshing, stale }: TimetableBodyProp
           <EctsBar ects={view.ects} />
           <ul className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-1">
             {view.coreModuleIds.map((id) => (
-              <li key={id} className="flex items-center gap-2.5 rounded-lg py-1 text-[13px]">
+              <li key={id} className="flex items-center gap-2.5 rounded-lg py-1 text-xs">
                 <Icon name="lock" size={12} className="shrink-0 text-muted" />
                 <Link to={paths.module(id)} className="min-w-0 flex-1 truncate font-medium hover:text-brand">
                   {titleFor(id)}
                 </Link>
-                <span className="rounded-md bg-ink/6 px-1.5 py-0.5 text-[11px] font-semibold text-muted">Core</span>
+                <span className="rounded-md bg-ink/6 px-1.5 py-0.5 text-2xs font-semibold text-muted">Core</span>
               </li>
             ))}
             {picked.map((id) => (
-              <li key={id} className="flex items-center gap-2.5 rounded-lg py-1 text-[13px]">
+              <li key={id} className="flex items-center gap-2.5 rounded-lg py-1 text-xs">
                 <span className={cx('size-2.5 shrink-0 rounded-full', colourFor(id).dot)} aria-hidden="true" />
                 <Link to={paths.module(id)} className="min-w-0 flex-1 truncate font-medium hover:text-brand">
                   {titleFor(id)}
@@ -263,7 +263,7 @@ function TimetableBody({ view, onChanged, refreshing, stale }: TimetableBodyProp
             </Link>
           )}
           {shortlist.error && (
-            <p role="alert" className="mt-2 text-[13px] text-fit-low">
+            <p role="alert" className="mt-2 text-xs text-fit-low">
               {shortlist.error}
             </p>
           )}
@@ -306,7 +306,7 @@ function ExportActions({ view, titleFor, codeFor, stale }: ExportActionsProps) {
           Add to calendar
         </Button>
       </div>
-      <p className="mt-1.5 text-[11px] text-muted">Provisional, based on previous years. Saved on your device only.</p>
+      <p className="mt-1.5 text-2xs text-muted">Provisional, based on previous years. Saved on your device only.</p>
       {/* Left out while stale, so even the browser's own Print never mixes an old week with a new shortlist. */}
       {!printStale && (
         <PlanPrint
@@ -328,7 +328,7 @@ function ProvisionalNotice() {
   return (
     <div
       role="note"
-      className="flex items-center gap-2.5 rounded-card border border-dashed border-fit-mid/50 bg-fit-mid/8 px-3.5 py-2.5 text-[13px]"
+      className="flex items-center gap-2.5 rounded-card border border-dashed border-fit-mid/50 bg-fit-mid/8 px-3.5 py-2.5 text-xs"
     >
       <Icon name="clock" size={16} className="shrink-0 text-fit-mid" />
       <p className="min-w-0">
@@ -351,7 +351,7 @@ function EctsBar({ ects }: { ects: TimetableView['ects'] }) {
   ];
   return (
     <div>
-      <p className="flex items-baseline justify-between text-[12px]">
+      <p className="flex items-baseline justify-between text-2xs">
         <span className="font-semibold tabular-nums">
           {total} <span className="font-normal text-muted">{labels.of}</span>
         </span>
@@ -366,7 +366,7 @@ function EctsBar({ ects }: { ects: TimetableView['ects'] }) {
           <span key={p.key} className={p.className} style={{ width: `${(p.value / scale) * 100}%` }} />
         ))}
       </div>
-      <ul className="mt-1.5 flex flex-wrap gap-x-3 text-[11px] text-muted tabular-nums" aria-hidden="true">
+      <ul className="mt-1.5 flex flex-wrap gap-x-3 text-2xs text-muted tabular-nums" aria-hidden="true">
         {parts.map((p) => (
           <li key={p.key} className="flex items-center gap-1">
             <span className={cx('size-2 rounded-full', p.className)} />
@@ -381,7 +381,7 @@ function EctsBar({ ects }: { ects: TimetableView['ects'] }) {
 
 function Legend() {
   return (
-    <ul className="flex flex-wrap items-center gap-x-3 gap-y-2 text-[11px] text-muted" aria-label="Legend">
+    <ul className="flex flex-wrap items-center gap-x-3 gap-y-2 text-2xs text-muted" aria-label="Legend">
       <li className="flex items-center gap-1.5">
         <span className="h-3.5 w-6 rounded border border-dashed border-ink/50 bg-surface-2" aria-hidden="true" />
         Provisional

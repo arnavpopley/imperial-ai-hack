@@ -123,7 +123,7 @@ export function EscalationTray({ scope = 'all', onReviewDraft, className }: Esca
               <button
                 type="button"
                 onClick={onReviewDraft}
-                className="inline-flex h-8 items-center gap-1.5 rounded-full bg-mode-escalated/10 px-3 text-[12px] font-semibold text-mode-escalated ring-1 ring-mode-escalated/30 ring-inset hover:bg-mode-escalated/15"
+                className="inline-flex h-8 items-center gap-1.5 rounded-full bg-mode-escalated/10 px-3 text-2xs font-semibold text-mode-escalated ring-1 ring-mode-escalated/30 ring-inset hover:bg-mode-escalated/15"
               >
                 <Icon name="tutor" size={13} />
                 Note to {ESCALATION_QUEUE[draft.type]} · review
@@ -140,7 +140,7 @@ export function EscalationTray({ scope = 'all', onReviewDraft, className }: Esca
                   aria-expanded={isOpen}
                   onClick={() => (isOpen ? fold(e) : setOpen(e.id))}
                   className={cx(
-                    'inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[12px] font-semibold ring-1 ring-inset',
+                    'inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-2xs font-semibold ring-1 ring-inset',
                     chip.tone,
                     answered(e) && 'rounded-r-none pr-2',
                   )}

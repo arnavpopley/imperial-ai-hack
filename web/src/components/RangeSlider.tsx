@@ -44,10 +44,10 @@ export function RangeSlider({
   return (
     <div className={cx('min-w-0', className)}>
       <div className="flex items-baseline justify-between gap-3">
-        <label htmlFor={id} className={cx('text-[13px] font-medium', disabled && 'text-muted')}>
+        <label htmlFor={id} className={cx('text-xs font-medium', disabled && 'text-muted')}>
           {label}
         </label>
-        <span className={cx('text-[13px] tabular-nums', unset || disabled ? 'text-muted' : 'font-semibold')}>{valueText}</span>
+        <span className={cx('text-xs tabular-nums', unset || disabled ? 'text-muted' : 'font-semibold')}>{valueText}</span>
       </div>
       <div className={cx('relative mt-1.5 h-6', disabled && 'opacity-55')}>
         <input
