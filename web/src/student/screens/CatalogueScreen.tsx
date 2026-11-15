@@ -9,7 +9,7 @@ import { Icon } from '../../components/Icon.tsx';
 import { MODULE_TYPE_LABELS } from '../../components/ModuleTypeChip.tsx';
 import { SampleDataLabel } from '../../components/SampleDataLabel.tsx';
 import { SegmentedControl } from '../../components/SegmentedControl.tsx';
-import { EmptyState, ErrorState, Skeleton } from '../../components/StateViews.tsx';
+import { EmptyState, ErrorState, errorMessage, Skeleton } from '../../components/StateViews.tsx';
 import { ModuleCard } from '../catalogue/ModuleCard.tsx';
 import { PhotoBanner } from '../catalogue/PhotoBanner.tsx';
 import { WeightPanel } from '../catalogue/WeightPanel.tsx';
@@ -165,7 +165,8 @@ function RankedRow({ first, children }: { first: boolean; children: ReactNode })
 
 function ConfidenceNotice({ level }: { level: 'medium' | 'low' }) {
   const navigate = useNavigate();
-  const { send, sending } = useChat();
+  const { askTwoMore, sending } = useChat();
+  const [error, setError] = useState<string | null>(null);
   const medium = level === 'medium';
   return (
     <div
@@ -190,12 +191,22 @@ function ConfidenceNotice({ level }: { level: 'medium' | 'low' }) {
         icon="chat"
         disabled={sending}
         onClick={() => {
-          if (medium) void send('I have time for two more questions.');
-          navigate(paths.interview);
+          // Both levels return to the interview for two targeted questions; the first is asked straight away.
+          // A failed request keeps the student here with the reason, so they can try again.
+          setError(null);
+          void askTwoMore().then(
+            () => navigate(paths.interview),
+            (err: unknown) => setError(errorMessage(err)),
+          );
         }}
       >
         {medium ? 'Answer two more' : 'Back to the interview'}
       </Button>
+      {error && (
+        <p role="alert" className="basis-full text-[13px] text-fit-low">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

@@ -1,17 +1,24 @@
-// Detail pane for one escalation: the approved summary, the student's context and the reply box.
-import { schemas } from '@modulematch/shared';
-import type { StaffEscalation } from '@modulematch/shared';
+// Detail pane for one escalation: the approved summary, the student's context and the reply box. Rule exceptions
+// also show what the request shares (the broken rule, the reason, completed modules and fit) and take a decision.
+import type { ExceptionRequest, StaffEscalation } from '@modulematch/shared';
 import { useEffect, useId, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { ESCALATION_TYPES, StatusBadge, TypeBadge } from '../components/EscalationBadges.tsx';
 import { Button, EmptyState } from '../components/ui.tsx';
-import { AlertIcon, ArrowLeftIcon, CheckIcon, HeartIcon, InboxIcon } from '../components/icons.tsx';
+import { AlertIcon, ArrowLeftIcon, CheckIcon, HeartIcon, InboxIcon, XIcon } from '../components/icons.tsx';
 import { Avatar } from '../../components/Avatar.tsx';
+import {
+  approvalOpensModule,
+  DECISION_LABELS,
+  MAX_REPLY,
+  respondBody,
+  ruleRows,
+  subScoreText,
+  type StaffAction,
+} from '../lib/exceptionCase.ts';
 import { focusRing, formatDateTime } from '../lib/format.ts';
 import { errorMessage } from '../lib/errors.ts';
 import { useStaffData } from '../StaffData.tsx';
-
-const MAX_REPLY = schemas.EscalationRespondBody.shape.response.maxLength ?? 2000;
 
 export function EscalationDetail() {
   const { escalationId = '' } = useParams();
@@ -42,7 +49,8 @@ function EscalationCase({ escalation: e }: { escalation: StaffEscalation }) {
   const { queue, moduleTitle } = useStaffData();
   const { markSeen } = queue;
   const type = ESCALATION_TYPES[e.type];
-  const ids = { title: useId(), summary: useId(), context: useId(), reply: useId() };
+  const ids = { title: useId(), summary: useId(), context: useId(), request: useId(), reply: useId() };
+  const declined = e.decision === 'declined';
 
   useEffect(() => markSeen(e.id), [markSeen, e.id]);
 
@@ -86,6 +94,8 @@ function EscalationCase({ escalation: e }: { escalation: StaffEscalation }) {
         <p className="mt-2 text-xs text-muted">Drafted by the AI, then read and approved by the student.</p>
       </section>
 
+      {e.type === 'RULE_EXCEPTION' && e.request && <ExceptionDetails headingId={ids.request} request={e.request} />}
+
       <section aria-labelledby={ids.context} className="rounded-2xl bg-surface-2 p-5">
         <h3 id={ids.context} className="text-xs font-semibold tracking-[0.08em] text-muted uppercase">
           Student context
@@ -113,51 +123,149 @@ function EscalationCase({ escalation: e }: { escalation: StaffEscalation }) {
       </section>
 
       {e.status === 'resolved' ? (
-        <section aria-labelledby={ids.reply} className="rounded-2xl border border-fit-high/30 bg-fit-high/5 p-5">
-          <h3 id={ids.reply} className="flex items-center gap-1.5 text-sm font-medium text-fit-high">
-            <CheckIcon /> Resolved. The reply is in the student's session
+        <section
+          aria-labelledby={ids.reply}
+          className={`rounded-2xl border p-5 ${declined ? 'border-line bg-surface-2' : 'border-fit-high/30 bg-fit-high/5'}`}
+        >
+          <h3
+            id={ids.reply}
+            className={`flex items-center gap-1.5 text-sm font-medium ${declined ? 'text-ink' : 'text-fit-high'}`}
+          >
+            {declined ? <XIcon /> : <CheckIcon />}
+            {e.decision
+              ? `${DECISION_LABELS[e.decision]}. The decision is in the student's session`
+              : "Resolved. The reply is in the student's session"}
           </h3>
           <p className="mt-2 text-sm leading-relaxed whitespace-pre-line">
             {e.staffResponse ?? 'Resolved without a written reply.'}
           </p>
         </section>
       ) : (
-        <ReplyBox escalationId={e.id} />
+        <ReplyBox escalation={e} />
       )}
     </article>
   );
 }
 
-type SendState = { status: 'idle' } | { status: 'sending' } | { status: 'error'; message: string };
+/** What the student agreed to share with the Senior Tutor when they sent the request, and nothing more. */
+function ExceptionDetails({ headingId, request }: { headingId: string; request: ExceptionRequest }) {
+  const { moduleTitle, moduleCode } = useStaffData();
+  const named = (id: string) => {
+    const code = moduleCode(id);
+    return code ? `${code} ${moduleTitle(id)}` : moduleTitle(id);
+  };
+  const rows = ruleRows(request.violations);
 
-function ReplyBox({ escalationId }: { escalationId: string }) {
+  return (
+    <section aria-labelledby={headingId} className="rounded-2xl bg-surface-2 p-5">
+      <h3 id={headingId} className="text-xs font-semibold tracking-[0.08em] text-muted uppercase">
+        The request
+      </h3>
+      <dl className="mt-3 grid gap-x-6 gap-y-3 text-sm sm:grid-cols-[auto_minmax(0,1fr)]">
+        <dt className="text-muted">Module</dt>
+        <dd>
+          {request.moduleId ? named(request.moduleId) : <span className="text-muted">No single module: a programme rule</span>}
+        </dd>
+
+        <dt className="text-muted">Rule broken</dt>
+        <dd>
+          {rows.length === 0 ? (
+            <span className="text-muted">The rules engine found no broken rule when this was sent.</span>
+          ) : (
+            <ul className="grid gap-2">
+              {rows.map((row, i) => (
+                <li key={`${row.code}-${i}`} className="rounded-xl border border-line bg-surface px-3 py-2">
+                  <p className="font-medium">
+                    {row.label} <span className="font-mono text-xs font-normal text-muted">{row.code}</span>
+                  </p>
+                  {row.prerequisiteId && (
+                    <p className="mt-0.5 text-xs text-muted">
+                      Missing: <span className="text-ink">{named(row.prerequisiteId)}</span>
+                    </p>
+                  )}
+                  <p className="mt-1 text-xs leading-relaxed text-muted">{row.detail}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </dd>
+
+        <dt className="text-muted">Reason given</dt>
+        <dd>{request.reason ? <q>{request.reason}</q> : <span className="text-muted">No reason given</span>}</dd>
+
+        <dt className="text-muted">Fit for the module</dt>
+        <dd>
+          {request.fit ? (
+            <span>
+              <span className="font-semibold tabular-nums">{request.fit.fit}</span>
+              <span className="text-muted"> / 100 · </span>
+              <span className="text-xs text-muted tabular-nums">{subScoreText(request.fit.sub)}</span>
+            </span>
+          ) : (
+            <span className="text-muted">Not scored</span>
+          )}
+        </dd>
+
+        <dt className="text-muted">Completed modules</dt>
+        <dd>
+          {request.completedModuleIds.length === 0 ? (
+            <span className="text-muted">None recorded</span>
+          ) : (
+            <ul className="flex flex-wrap gap-1.5">
+              {request.completedModuleIds.map((id) => (
+                <li key={id} className="rounded-full border border-line bg-surface px-3 py-1">
+                  {named(id)}
+                </li>
+              ))}
+            </ul>
+          )}
+        </dd>
+      </dl>
+      <p className="mt-3 text-xs text-muted">Shared by the student with this request, as it stood when they sent it.</p>
+    </section>
+  );
+}
+
+type SendState = { status: 'idle' } | { status: 'sending'; action: StaffAction } | { status: 'error'; message: string };
+
+const SENDING: Record<StaffAction, string> = { approve: 'Approving…', decline: 'Declining…', reply: 'Sending…' };
+
+function ReplyBox({ escalation }: { escalation: StaffEscalation }) {
   const { queue } = useStaffData();
   const [text, setText] = useState('');
   const [send, setSend] = useState<SendState>({ status: 'idle' });
   const fieldId = useId();
   const hintId = useId();
   const trimmed = text.trim();
+  // Rule exceptions take a decision, with the message optional; every other case takes a written reply.
+  const decides = escalation.type === 'RULE_EXCEPTION';
+  const busy = send.status === 'sending';
 
-  const submit = async () => {
-    setSend({ status: 'sending' });
+  const submit = async (action: StaffAction) => {
+    const body = respondBody(action, text);
+    if (!body) return;
+    setSend({ status: 'sending', action });
     try {
-      await queue.respond(escalationId, trimmed);
+      await queue.respond(escalation.id, body);
       // On success the escalation is resolved and this box unmounts.
     } catch (err) {
       setSend({ status: 'error', message: errorMessage(err) });
     }
   };
 
+  const label = (action: StaffAction, idle: string) =>
+    send.status === 'sending' && send.action === action ? SENDING[action] : idle;
+
   return (
     <form
       className="grid gap-3"
       onSubmit={(ev) => {
         ev.preventDefault();
-        if (trimmed) void submit();
+        if (!decides && trimmed) void submit('reply');
       }}
     >
       <label htmlFor={fieldId} className="text-sm font-medium">
-        Reply to the student
+        {decides ? 'Message to the student (optional)' : 'Reply to the student'}
       </label>
       <textarea
         id={fieldId}
@@ -165,20 +273,35 @@ function ReplyBox({ escalationId }: { escalationId: string }) {
         value={text}
         onChange={(ev) => setText(ev.target.value)}
         maxLength={MAX_REPLY}
-        rows={6}
-        placeholder="For example: I have approved a prerequisite waiver. Please complete the bridging notes before week 3."
+        rows={decides ? 4 : 6}
+        placeholder={
+          decides
+            ? 'For example: Please work through the bridging notes before week 3.'
+            : 'For example: Thanks for raising this. I have passed it to the module lead and will update you by Friday.'
+        }
         className={`w-full resize-y rounded-2xl border border-line bg-canvas p-4 text-sm leading-relaxed placeholder:text-muted ${focusRing}`}
       />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p id={hintId} className="text-xs text-muted">
-          Sending marks this resolved and shows the reply in the student's session.{' '}
+          {decides ? decisionHint(escalation) : "Sending marks this resolved and shows the reply in the student's session."}{' '}
           <span className="tabular-nums">
             {text.length}/{MAX_REPLY}
           </span>
         </p>
-        <Button type="submit" variant="primary" disabled={!trimmed || send.status === 'sending'}>
-          {send.status === 'sending' ? 'Sending…' : 'Send reply and resolve'}
-        </Button>
+        {decides ? (
+          <div className="flex flex-wrap gap-2">
+            <Button disabled={busy} onClick={() => void submit('decline')}>
+              <XIcon /> {label('decline', 'Decline')}
+            </Button>
+            <Button variant="primary" disabled={busy} onClick={() => void submit('approve')}>
+              <CheckIcon /> {label('approve', 'Approve exception')}
+            </Button>
+          </div>
+        ) : (
+          <Button type="submit" variant="primary" disabled={!trimmed || busy}>
+            {label('reply', 'Send reply and resolve')}
+          </Button>
+        )}
       </div>
       {send.status === 'error' && (
         <p role="alert" className="flex items-center gap-1.5 text-sm text-fit-low">
@@ -187,4 +310,10 @@ function ReplyBox({ escalationId }: { escalationId: string }) {
       )}
     </form>
   );
+}
+
+function decisionHint(escalation: StaffEscalation): string {
+  return approvalOpensModule(escalation.request)
+    ? "Approving waives the rule above for this student only, so they can shortlist the module; its credits still count towards the cap. Either decision resolves the case and appears in their session."
+    : 'No module rule can be waived here (the credit cap always applies), so the decision is recorded and shown to the student, but nothing opens up.';
 }
