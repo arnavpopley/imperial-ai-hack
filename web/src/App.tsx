@@ -3,7 +3,7 @@ import { Link, Route, Routes, useLocation } from 'react-router';
 import { motion, MotionConfig } from 'motion/react';
 import { cx } from './components/cx.ts';
 import { Icon, type IconName } from './components/Icon.tsx';
-import { LoadingState } from './components/StateViews.tsx';
+import { PageLoading } from './components/LazyRoute.tsx';
 import { ThemeToggle } from './components/ThemeToggle.tsx';
 import { StudentApp } from './student/StudentApp.tsx';
 
@@ -55,7 +55,7 @@ export function App() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, ease: [0.2, 0.8, 0.2, 1] }}
           >
-            <Suspense fallback={<LoadingState label="Loading" />}>
+            <Suspense fallback={<PageLoading />}>
               <Routes>
                 <Route path="/*" element={<StudentApp />} />
                 <Route path="/staff/*" element={<StaffApp />} />

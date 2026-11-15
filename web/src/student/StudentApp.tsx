@@ -9,44 +9,57 @@
 //   /pathways            pathways, progress and societies
 //   /feedback            tailored exam feedback from the examiner's notes and the student's own marks (spec 23)
 //   /your-data           what we hold, the quotes behind it, edit and delete (spec 20.3)
-import type { ReactNode } from 'react';
+import { Suspense, useEffect, type ReactNode } from 'react';
 import { Navigate, Route, Routes } from 'react-router';
 import { Button } from '../components/Button.tsx';
 import { ErrorState, LoadingState } from '../components/StateViews.tsx';
+import { Lazy, lazyNamed, PageLoading, whenIdle } from '../components/LazyRoute.tsx';
 import { ChatProvider } from './chat/ChatProvider.tsx';
-import { FeedbackScreen } from './feedback/FeedbackScreen.tsx';
 import { ResultsProvider } from './results/ResultsProvider.tsx';
 import { paths, routeForMode } from './routes.ts';
-import { CatalogueScreen } from './screens/CatalogueScreen.tsx';
-import { InterviewScreen } from './screens/InterviewScreen.tsx';
 import { LandingScreen } from './screens/LandingScreen.tsx';
-import { ModuleDetailScreen } from './screens/ModuleDetailScreen.tsx';
-import { OnboardScreen } from './screens/OnboardScreen.tsx';
-import { PathwaysScreen } from './screens/PathwaysScreen.tsx';
-import { TimetableScreen } from './screens/TimetableScreen.tsx';
-import { StudentShell } from './shell/StudentShell.tsx';
 import { CatalogueProvider } from './state/CatalogueProvider.tsx';
 import { ReferenceDataProvider } from './state/ReferenceDataProvider.tsx';
 import { SessionProvider, useSession } from './state/SessionProvider.tsx';
 import { yourDataPath } from './yourdata/paths.ts';
-import { YourDataPage } from './yourdata/YourDataPage.tsx';
+
+// The landing page is the only screen in the first download. Every other screen, and the shell around the
+// session screens (which carries the advisor chat and its avatars), loads when first opened.
+const OnboardScreen = lazyNamed(() => import('./screens/OnboardScreen.tsx'), 'OnboardScreen');
+const StudentShell = lazyNamed(() => import('./shell/StudentShell.tsx'), 'StudentShell');
+const InterviewScreen = lazyNamed(() => import('./screens/InterviewScreen.tsx'), 'InterviewScreen');
+const CatalogueScreen = lazyNamed(() => import('./screens/CatalogueScreen.tsx'), 'CatalogueScreen');
+const ModuleDetailScreen = lazyNamed(() => import('./screens/ModuleDetailScreen.tsx'), 'ModuleDetailScreen');
+const TimetableScreen = lazyNamed(() => import('./screens/TimetableScreen.tsx'), 'TimetableScreen');
+const PathwaysScreen = lazyNamed(() => import('./screens/PathwaysScreen.tsx'), 'PathwaysScreen');
+const FeedbackScreen = lazyNamed(() => import('./feedback/FeedbackScreen.tsx'), 'FeedbackScreen');
+const YourDataPage = lazyNamed(() => import('./yourdata/YourDataPage.tsx'), 'YourDataPage');
 
 export function StudentApp() {
+  // After the first paint, warm the demo path (onboarding, the shell, the interview and the catalogue), so the
+  // first clicks do not wait on a download. Rarely used screens still load only when opened.
+  useEffect(
+    () =>
+      whenIdle(() => {
+        for (const screen of [OnboardScreen, StudentShell, InterviewScreen, CatalogueScreen]) screen.preload();
+      }),
+    [],
+  );
   return (
     <ReferenceDataProvider>
       <SessionProvider>
         <Routes>
           <Route index element={<EntryRoute page={<LandingScreen />} />} />
           <Route path={paths.welcome.slice(1)} element={<WelcomeRoute />} />
-          <Route path={paths.start.slice(1)} element={<EntryRoute page={<OnboardScreen />} />} />
+          <Route path={paths.start.slice(1)} element={<EntryRoute page={<Lazy><OnboardScreen /></Lazy>} />} />
           <Route element={<SessionGate />}>
-            <Route path="interview" element={<InterviewScreen />} />
-            <Route path="catalogue" element={<CatalogueScreen />} />
-            <Route path="modules/:moduleId" element={<ModuleDetailScreen />} />
-            <Route path="timetable" element={<TimetableScreen />} />
-            <Route path="pathways" element={<PathwaysScreen />} />
-            <Route path={paths.feedback.slice(1)} element={<FeedbackScreen />} />
-            <Route path={yourDataPath.slice(1)} element={<YourDataPage />} />
+            <Route path="interview" element={<Lazy><InterviewScreen /></Lazy>} />
+            <Route path="catalogue" element={<Lazy><CatalogueScreen /></Lazy>} />
+            <Route path="modules/:moduleId" element={<Lazy><ModuleDetailScreen /></Lazy>} />
+            <Route path="timetable" element={<Lazy><TimetableScreen /></Lazy>} />
+            <Route path="pathways" element={<Lazy><PathwaysScreen /></Lazy>} />
+            <Route path={paths.feedback.slice(1)} element={<Lazy><FeedbackScreen /></Lazy>} />
+            <Route path={yourDataPath.slice(1)} element={<Lazy><YourDataPage /></Lazy>} />
           </Route>
           <Route path="*" element={<Navigate to={paths.onboard} replace />} />
         </Routes>
@@ -78,7 +91,9 @@ function SessionGate() {
     <ChatProvider key={session.id}>
       <CatalogueProvider key={session.id}>
         <ResultsProvider key={session.id}>
-          <StudentShell />
+          <Suspense fallback={<PageLoading />}>
+            <StudentShell />
+          </Suspense>
         </ResultsProvider>
       </CatalogueProvider>
     </ChatProvider>
