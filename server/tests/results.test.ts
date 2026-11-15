@@ -1,11 +1,11 @@
 // Spec 23: consented results upload, the transcript parser, performance nudges (which never change scores), examiner
 // feedback forms (drafts hidden from students) and tailored exam feedback on the offline template path.
-import { schemas as S, type ExamFeedbackForm, type Module, type ModuleResult, type StudentResults } from '@modulematch/shared';
+import { RESULTS_BASE64_MAX, RESULTS_BODY_MAX_BYTES, schemas as S, type ExamFeedbackForm, type Module, type ModuleResult, type StudentResults } from '@modulematch/shared';
 import { readFileSync } from 'node:fs';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { heuristicDraft, uniqueIds } from '../src/agents/exam-feedback.ts';
-import { explainByRules } from '../src/agents/matcher.ts';
 import { createApp } from '../src/app.ts';
+import { TOO_LARGE } from '../src/routes/results.ts';
 import { seedIfEmpty } from '../src/bootstrap.ts';
 import { dataPath } from '../src/db/datasets.ts';
 import * as repo from '../src/db/repo.ts';
@@ -125,6 +125,23 @@ describe('results routes', () => {
     expect(((await res.json()) as { error: string }).error).toMatch(/paste the text/i);
   });
 
+  it('refuses a body over the size limit with a friendly 413, before reading it', async () => {
+    const id = await newSession();
+    const base64 = 'A'.repeat(RESULTS_BODY_MAX_BYTES);
+    const res = await upload(id, { consent: true, file: { mediaType: 'application/pdf', base64 } });
+    expect(res.status).toBe(413);
+    expect(await res.json()).toEqual({ error: TOO_LARGE });
+    expect(TOO_LARGE).toMatch(/3 MB/);
+  });
+
+  it('caps a file at 3 MB of base64, under the 4.5 MB request limit Vercel allows', () => {
+    const file = (base64: string) => S.ResultsUploadBody.safeParse({ consent: true, file: { mediaType: 'application/pdf', base64 } }).success;
+    expect(RESULTS_BASE64_MAX).toBe(4_000_000);
+    expect(file('A'.repeat(RESULTS_BASE64_MAX))).toBe(true);
+    expect(file('A'.repeat(RESULTS_BASE64_MAX + 4))).toBe(false);
+    expect(RESULTS_BODY_MAX_BYTES).toBeLessThan(4_500_000);
+  });
+
   it('rejects impossible marks with a clear message and stores nothing', async () => {
     const id = await newSession();
     const res = await upload(id, { consent: true, text: 'MECH50010 Fluid Mechanics 2 62\nQ3 21/20' });
@@ -226,7 +243,7 @@ describe('performance engine', () => {
 });
 
 describe('nudges never change fit scores or rankings', () => {
-  it('returns identical recommendations before and after an upload, and shows the nudge as a watch-out', async () => {
+  it('returns identical recommendations before and after an upload, and shows each nudge once, never in the explanation', async () => {
     const id = await newSession();
     await app.request(`/api/sessions/${id}/profile`, send('PUT', { interests: { 'fluid-mechanics': 0.9 } }));
     const before = await (await app.request(`/api/sessions/${id}/recommendations`)).json();
@@ -240,9 +257,12 @@ describe('nudges never change fit scores or rankings', () => {
     expect(nudge?.message).toMatch(/fluid mechanics/i);
     expect(perf.nudges.map((n) => n.moduleId)).not.toContain('MECH50010');
 
+    // One nudge per module in the performance view, which is the only place the module page reads it from.
+    expect(perf.nudges.filter((n) => n.moduleId === 'MECH60006')).toHaveLength(1);
     const res = await app.request(`/api/sessions/${id}/modules/MECH60006/explanation`);
     const { explanation } = S.ExplanationResponse.parse(await res.json());
-    expect(explanation.watchOuts).toContain(nudge!.message);
+    expect(JSON.stringify(explanation)).not.toContain(nudge!.message);
+    expect(explanation.watchOuts.some((w) => /below (your|their) (own )?average/i.test(w))).toBe(false);
   });
 });
 
@@ -343,32 +363,5 @@ describe('tailored exam feedback', () => {
     const other = await newSession();
     await upload(other, { consent: true, text: 'MECH50010 Fluid Mechanics 2 62' });
     expect(await (await app.request(`/api/sessions/${other}/exam-feedback`)).json()).toEqual([]);
-  });
-});
-
-describe('explanation watch-out from a nudge', () => {
-  it('appears last in explainByRules and nowhere else', () => {
-    const module = repo.getModule('MECH60006')!;
-    const profile = S.StudentProfile.parse({
-      studentId: 's',
-      programme: 'MEng Mechanical Engineering',
-      yearOfStudy: 3,
-      completedModuleIds: [],
-      interests: {},
-      pathways: [],
-      pathwaysSkipped: false,
-      style: { examPreference: null, groupPreference: null, appliedPreference: null, mathsComfort: null, codingComfort: null, workloadTolerance: null },
-      breadthAppetite: null,
-      timetablePrefs: { avoidDays: [], earliestStart: null },
-      completeness: 0,
-      updatedAt: '2026-11-14T00:00:00.000Z',
-    });
-    const rec = S.Recommendation.parse({ moduleId: module.id, fit: 55, sub: { interest: 0.5, goal: null, style: 0.7, breadth: 0.5 }, eligible: true, ineligibleReasons: [], confidence: 'medium' });
-    const nudge = { moduleId: module.id, topics: ['fluid-mechanics'], delta: -8.7, message: 'Fluid Mechanics 3A leans on fluid mechanics. Worth keeping in mind.' };
-    const without = explainByRules(profile, module, rec, []);
-    const withNudge = explainByRules(profile, module, rec, [], nudge);
-    expect(withNudge.watchOuts).toEqual([...without.watchOuts, nudge.message]);
-    expect(withNudge.summary).toBe(without.summary);
-    expect(withNudge.because).toEqual(without.because);
   });
 });
