@@ -1,6 +1,6 @@
 // Spec 9.3: insights engine for module leads. Every number in an insight card comes from here; the
 // Insights agent only words them. Privacy (spec 20.4): nothing is reported for a cohort under MIN_COHORT.
-import { MIN_COHORT, STYLE_SLOTS, TOPIC_IDS } from '@modulematch/shared';
+import { counterfactualInsightId, MIN_COHORT, STYLE_SLOTS, TOPIC_IDS } from '@modulematch/shared';
 import type {
   Insight,
   InsightKind,
@@ -9,6 +9,7 @@ import type {
   ProgrammeRules,
   Slot,
   StudentProfile,
+  SuggestedEdit,
   TopicId,
   Weights,
 } from '@modulematch/shared';
@@ -449,7 +450,18 @@ function isOversubscribed(module: Module, ctx: InsightContext): boolean {
   return module.capacity !== null && shortlisted > module.capacity && shortlisted >= MIN_COHORT;
 }
 
-function counterfactualCard(module: Module, ctx: InsightContext, counterfactual: Counterfactual, n: number): Insight {
+/** The change as the tag editor would make it: the field and the value it ends up at. */
+export function suggestedEditFor(module: Module, change: ModuleChange): SuggestedEdit {
+  switch (change.kind) {
+    case 'add-topic':
+      return { group: 'topics', key: change.topic, value: change.weight };
+    case 'shift-demand':
+      return { group: 'demand', key: change.field, value: clamp01(module.demand[change.field] + change.delta) };
+  }
+}
+
+/** One card per change worth acting on. Its id carries the change, so a decision stays with that change. */
+function counterfactualCard(module: Module, ctx: InsightContext, counterfactual: Counterfactual): Insight {
   const { groupSize: size, newlyTopModules: newly, alreadyTopModules: already, crossStrongFit: crossing } = counterfactual;
   const points = counterfactual.uplift.toFixed(1);
   const top = ctx.rules ? `${TOP_MODULES_WORDS} eligible modules` : `${TOP_MODULES_WORDS} modules`;
@@ -464,7 +476,7 @@ function counterfactualCard(module: Module, ctx: InsightContext, counterfactual:
           ? `${crossing} of the ${size} interested students would reach fit ${STRONG_FIT}`
           : `+${points} fit points on average for ${size} interested students`;
   return {
-    id: insightId(module.id, 'COUNTERFACTUAL', n),
+    id: counterfactualInsightId(module.id, suggestedEditFor(module, counterfactual.change)),
     moduleId: module.id,
     kind: 'COUNTERFACTUAL',
     headline: `${counterfactual.description}: ${impact}`,
@@ -505,7 +517,7 @@ export function counterfactualInsights(module: Module, ctx: InsightContext): Ins
   if (isOversubscribed(module, ctx)) return [];
   const tested = counterfactuals(module, ctx);
   const meaningful = tested.filter((counterfactual) => counterfactual.uplift >= MEANINGFUL_UPLIFT);
-  if (meaningful.length > 0) return meaningful.map((counterfactual, i) => counterfactualCard(module, ctx, counterfactual, i + 1));
+  if (meaningful.length > 0) return meaningful.map((counterfactual) => counterfactualCard(module, ctx, counterfactual));
   const summary = summaryCard(module, ctx, tested);
   return summary ? [summary] : [];
 }
@@ -626,10 +638,18 @@ export function clashInsights(module: Module, ctx: InsightContext): Insight[] {
 }
 
 /** Every insight card for one module, each awaiting a staff decision (spec 10.7). */
+/**
+ * Cards most worth a module lead's time first: changes that would raise fit, then demand (including what
+ * to do when a module is full), then overlooked, then timetable clashes, and the summary card last, since
+ * it says no single change is worth making.
+ */
 export function buildInsights(module: Module, ctx: InsightContext): Insight[] {
+  const counterfactualCards = counterfactualInsights(module, ctx);
+  const isSummary = (insight: Insight) => insight.upliftPoints === null;
   return [
-    ...counterfactualInsights(module, ctx),
-    ...[overlooked(module, ctx), demand(module, ctx)].filter((insight) => insight !== null),
+    ...counterfactualCards.filter((insight) => !isSummary(insight)),
+    ...[demand(module, ctx), overlooked(module, ctx)].filter((insight) => insight !== null),
     ...clashInsights(module, ctx),
+    ...counterfactualCards.filter(isSummary),
   ];
 }

@@ -8,7 +8,7 @@ import type { ComponentType, SVGProps } from 'react';
 import { Link } from 'react-router';
 import type { StaffDecision } from '../hooks/useInsights.ts';
 import { focusRing, plural } from '../lib/format.ts';
-import { canEditTags, isSummaryCard, outcomeOf } from '../lib/insights.ts';
+import { isSummaryCard, outcomeOf, tagEditorLink } from '../lib/insights.ts';
 import { CheckIcon, ChevronDownIcon, ClockAlertIcon, EyeIcon, NoteIcon, TrendUpIcon, UsersIcon, XIcon } from './icons.tsx';
 
 type IconComponent = ComponentType<Omit<SVGProps<SVGSVGElement>, 'children'>>;
@@ -53,6 +53,7 @@ export function InsightCard({
   const [changing, setChanging] = useState(false);
   const outcome = outcomeOf(insight);
   const collapsed = outcome !== null && !changing;
+  const editLink = tagEditorLink(insight);
   const outcomeRef = useRef<HTMLDivElement>(null);
   const actionsRef = useRef<HTMLDivElement>(null);
   const interacted = useRef(false);
@@ -188,12 +189,9 @@ export function InsightCard({
               {outcome.owner && <span className="text-muted"> Owner: {outcome.owner}.</span>}
             </span>
           </p>
-          {canEditTags(insight) && (
-            <Link
-              to={`/staff/modules/${encodeURIComponent(insight.moduleId)}/tags`}
-              className={`rounded-lg font-medium text-brand hover:underline ${focusRing}`}
-            >
-              Open the tag editor
+          {editLink && (
+            <Link to={editLink} className={`rounded-lg font-medium text-brand hover:underline ${focusRing}`}>
+              Make this change in the tag editor
             </Link>
           )}
         </div>

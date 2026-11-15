@@ -1,7 +1,8 @@
 // Screen 9: staff correct a module's derived fields beside the analyst's rationale (spec 10.4).
-import { SKILL_IDS, TOPIC_IDS } from '@modulematch/shared';
-import type { Module, ModuleDemand, Pathway } from '@modulematch/shared';
+import { parseSuggestedEdit, SKILL_IDS, TOPIC_IDS } from '@modulematch/shared';
+import type { Module, ModuleDemand, Pathway, SuggestedEdit } from '@modulematch/shared';
 import { useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router';
 import { api } from '../../api.ts';
 import { DiffSummary } from '../components/DiffSummary.tsx';
 import { Rationale, countReviewFlags } from '../components/Rationale.tsx';
@@ -10,10 +11,11 @@ import type { Option } from '../components/WeightEditor.tsx';
 import { Button, ErrorState, LoadingState, Panel } from '../components/ui.tsx';
 import { AlertIcon, CheckIcon } from '../components/icons.tsx';
 import { useResource } from '../hooks/useResource.ts';
-import { changeCount, diffDraft, draftFrom, editBody } from '../lib/derivedDraft.ts';
+import { applySuggestedEdit, changeCount, diffDraft, draftFrom, editBody } from '../lib/derivedDraft.ts';
 import type { DerivedDraft, DraftDiff, WeightField } from '../lib/derivedDraft.ts';
-import { focusRing, humanise, plural, skillLabel, topicLabel } from '../lib/format.ts';
+import { focusRing, humanise, plural, skillLabel, topicLabel, weight } from '../lib/format.ts';
 import { errorMessage } from '../lib/errors.ts';
+import { EDIT_PARAM } from '../lib/insights.ts';
 import { useStaffData } from '../StaffData.tsx';
 import { useModuleOutlet } from './ModulesPage.tsx';
 
@@ -36,6 +38,8 @@ const SKILL_OPTIONS: Option[] = SKILL_IDS.map((id) => ({ id, label: skillLabel(i
 export function TagEditor() {
   const { summary } = useModuleOutlet();
   const { catalogue, reloadCatalogue } = useStaffData();
+  // "Make this change in the tag editor" on an accepted insight card passes its change here.
+  const editParam = useSearchParams()[0].get(EDIT_PARAM) ?? '';
 
   if (catalogue.status === 'loading') return <LoadingState label="Loading module tags" rows={4} />;
   if (catalogue.status === 'error')
@@ -49,17 +53,18 @@ export function TagEditor() {
         onRetry={reloadCatalogue}
       />
     );
-  // Keyed so switching modules starts a fresh draft.
-  return <TagEditorForm key={module.id} module={module} />;
+  // Keyed so switching modules, or arriving with another suggested edit, starts a fresh draft.
+  return <TagEditorForm key={`${module.id}?${editParam}`} module={module} suggested={parseSuggestedEdit(editParam)} />;
 }
 
 type SaveState = { status: 'idle' } | { status: 'saving' } | { status: 'saved' } | { status: 'error'; message: string };
 
-function TagEditorForm({ module }: { module: Module }) {
+function TagEditorForm({ module, suggested }: { module: Module; suggested: SuggestedEdit | null }) {
   const { replaceModule } = useStaffData();
   const pathways = useResource('pathways', api.pathways);
   const [saved, setSaved] = useState<Module>(module);
-  const [draft, setDraft] = useState<DerivedDraft>(() => draftFrom(module));
+  // An accepted insight's change starts in the draft, unsaved, so it shows as a change to review.
+  const [draft, setDraft] = useState<DerivedDraft>(() => applySuggestedEdit(draftFrom(module), suggested));
   const [save, setSave] = useState<SaveState>({ status: 'idle' });
 
   const baseline = useMemo(() => draftFrom(saved), [saved]);
@@ -111,6 +116,16 @@ function TagEditorForm({ module }: { module: Module }) {
           void submit();
         }}
       >
+        {suggested && save.status !== 'saved' && (
+          <p role="status" className="flex items-start gap-2 rounded-2xl bg-brand-soft px-4 py-3 text-sm">
+            <CheckIcon className="mt-0.5 size-4 shrink-0 text-brand" />
+            <span>
+              <span className="font-medium">Filled in from the insight you accepted:</span>{' '}
+              {labelFor(suggested.group, suggested.key)} set to {weight(suggested.value)}. Nothing is saved until you
+              review the change and save it.
+            </span>
+          </p>
+        )}
         <fieldset disabled={saving} className="grid min-w-0 grid-cols-1 gap-5 transition-opacity disabled:opacity-60">
           <legend className="sr-only">Derived fields</legend>
           <Panel title="Topics" description="What the module covers. Only taxonomy topics can be added.">

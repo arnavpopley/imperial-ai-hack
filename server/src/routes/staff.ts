@@ -53,9 +53,11 @@ export const staffRoutes = new Hono()
     );
     const current = cards.filter((i) => i.cohortSize >= MIN_COHORT);
     repo.upsertInsights(current);
-    // Only cards the current calculation still produces are shown; stored decisions carry over by id.
-    const ids = new Set(current.map((i) => i.id));
-    return c.json(repo.listInsights(module.id).filter((i) => ids.has(i.id)));
+    // Only cards the current calculation still produces are shown, in the engine's order (most useful first);
+    // stored decisions carry over by id.
+    const order = new Map(current.map((i, n) => [i.id, n]));
+    const shown = repo.listInsights(module.id).filter((i) => order.has(i.id));
+    return c.json(shown.sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0)));
   })
   .post('/insights/:id/decision', body(schemas.InsightDecisionBody), (c) => {
     const insight = repo.setInsightDecision(c.req.param('id'), c.req.valid('json').decision);

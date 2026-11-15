@@ -1,5 +1,5 @@
 // Spec 9.3: counterfactual uplift, other insight kinds, cohort stats and the minimum-cohort privacy rule.
-import { DEFAULT_WEIGHTS } from '@modulematch/shared';
+import { DEFAULT_WEIGHTS, formatSuggestedEdit, parseSuggestedEdit, suggestedEditOf } from '@modulematch/shared';
 import { describe, expect, it } from 'vitest';
 import { plainWording, sameNumbers } from '../src/agents/insights.ts';
 import {
@@ -15,6 +15,7 @@ import {
   MEANINGFUL_UPLIFT,
   overlooked,
   shareInWords,
+  suggestedEditFor,
   type InsightContext,
 } from '../src/engines/index.ts';
 import { makeModule, makeProfile, makeRules, makeSlot } from './engines-fixtures.ts';
@@ -167,13 +168,31 @@ describe('cohortStats', () => {
 });
 
 describe('insight cards', () => {
-  it('builds counterfactual cards with deterministic ids and pending decisions', () => {
+  it('builds counterfactual cards with deterministic ids that carry the change, and pending decisions', () => {
     const insights = buildInsights(target, context(6));
     const cards = insights.filter((insight) => insight.kind === 'COUNTERFACTUAL');
-    expect(cards.map((card) => card.id)).toEqual(['target:COUNTERFACTUAL:1', 'target:COUNTERFACTUAL:2']);
+    expect(cards.map((card) => card.id)).toEqual([
+      'target:COUNTERFACTUAL:demand.mathsIntensity=0.7',
+      'target:COUNTERFACTUAL:topics.thermodynamics-energy=0.3',
+    ]);
+    expect(cards.map((card) => suggestedEditOf(card.id))).toEqual([
+      { group: 'demand', key: 'mathsIntensity', value: 0.7 },
+      { group: 'topics', key: 'thermodynamics-energy', value: 0.3 },
+    ]);
     expect(cards[0]).toMatchObject({ moduleId: 'target', cohortSize: 6, upliftPoints: 5, decision: 'pending' });
     expect(cards[0]?.headline).toContain('+5.0 fit points');
     expect(buildInsights(target, context(6))).toEqual(insights);
+  });
+
+  it('orders cards by usefulness: real changes, demand, clashes, then the summary', () => {
+    const shared = Array.from({ length: 6 }, () => ['target', 'f1']);
+    const kinds = (module: typeof target, ctx: InsightContext) =>
+      buildInsights(module, ctx).map((card) => (card.upliftPoints === null && card.kind === 'COUNTERFACTUAL' ? 'SUMMARY' : card.kind));
+    expect(kinds({ ...target, capacity: 6 }, context(6, shared))).toEqual(['COUNTERFACTUAL', 'COUNTERFACTUAL', 'DEMAND', 'CLASH']);
+    // With a light style weight and no topic left to add that the students want, only the summary remains.
+    const settled = { ...target, topics: { ...target.topics, 'thermodynamics-energy': 1 }, capacity: 6 };
+    const light = { ...context(6, shared), weights: { ...DEFAULT_WEIGHTS, style: 0.03 } };
+    expect(kinds(settled, light)).toEqual(['DEMAND', 'CLASH', 'SUMMARY']);
   });
 
   it('leads with the top-five impact, alongside the average', () => {
@@ -280,6 +299,25 @@ describe('insight cards', () => {
     const shortlists = Array.from({ length: 4 }, () => ['target', 'f1']);
     const ctx = { ...context(4, shortlists), cohort: interested(4) };
     expect(buildInsights({ ...target, capacity: 4 }, ctx)).toEqual([]);
+  });
+});
+
+describe('suggested edits', () => {
+  it('round-trip through text and reject anything that is not a known field set to 0 to 1', () => {
+    const edit = { group: 'demand', key: 'examShare', value: 0.4 } as const;
+    expect(formatSuggestedEdit(edit)).toBe('demand.examShare=0.4');
+    expect(parseSuggestedEdit('demand.examShare=0.4')).toEqual(edit);
+    expect(parseSuggestedEdit('topics.fluid-mechanics=0.3')).toEqual({ group: 'topics', key: 'fluid-mechanics', value: 0.3 });
+    expect(parseSuggestedEdit('topics.not-a-topic=0.3')).toBeNull();
+    expect(parseSuggestedEdit('demand.examShare=1.5')).toBeNull();
+    expect(parseSuggestedEdit('skills.cad=0.3')).toBeNull();
+    expect(suggestedEditOf('target:COUNTERFACTUAL:summary')).toBeNull();
+    expect(suggestedEditOf('target:CLASH:1')).toBeNull();
+  });
+
+  it('record the value a demand change ends at, kept within 0 to 1', () => {
+    const low = { ...target, demand: { ...target.demand, examShare: 0.1 } };
+    expect(suggestedEditFor(low, { kind: 'shift-demand', field: 'examShare', delta: -0.2 })).toEqual({ group: 'demand', key: 'examShare', value: 0 });
   });
 });
 
