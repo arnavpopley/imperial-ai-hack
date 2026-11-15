@@ -107,7 +107,7 @@ export function DemoScreen() {
 function Explained({ children, note }: { children: ReactNode; note: { title: string; points: string[] } }) {
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
-      <div className="rounded-panel bg-surface p-card shadow-soft ring-1 ring-line sm:p-card-lg">{children}</div>
+      <div className="min-w-0 rounded-panel bg-surface p-card shadow-soft ring-1 ring-line sm:p-card-lg">{children}</div>
       <aside className="rounded-panel bg-brand-soft p-card">
         <p className="flex items-center gap-2 text-sm font-bold text-brand">
           <Icon name="info" size={16} />
@@ -302,48 +302,51 @@ function WeekTab() {
         <h2 className="text-lg font-bold">{TERM_LABELS[term as keyof typeof TERM_LABELS]} term</h2>
         {clash && <ClashMarker variant={clash.label as ClashLabel} probability={clash.probability} />}
       </div>
-      <div className="mt-5 grid grid-cols-[2.5rem_repeat(5,minmax(0,1fr))] gap-1.5">
-        <span />
-        {WEEKDAYS.map((d) => (
-          <span key={d} className="pb-1 text-center text-sm font-semibold text-muted">
-            {DAY_LABELS[d]}
-          </span>
-        ))}
-        <div className="relative" style={{ height: (DAY_END - DAY_START) * HOUR_PX }}>
-          {Array.from({ length: DAY_END - DAY_START }, (_, i) => (
-            <span key={i} className="absolute right-1 text-xs text-muted" style={{ top: i * HOUR_PX - 6 }}>
-              {DAY_START + i}:00
+      {/* A minimum width keeps clashing blocks readable on phones; the grid scrolls sideways instead. */}
+      <div className="-mx-2 mt-5 overflow-x-auto px-2 pb-2">
+        <div className="grid min-w-[38rem] grid-cols-[2.5rem_repeat(5,minmax(0,1fr))] gap-1.5">
+          <span />
+          {WEEKDAYS.map((d) => (
+            <span key={d} className="pb-1 text-center text-sm font-semibold text-muted">
+              {DAY_LABELS[d]}
             </span>
           ))}
-        </div>
-        {WEEKDAYS.map((day: Weekday) => (
-          <div key={day} className="relative rounded-xl bg-surface-2" style={{ height: (DAY_END - DAY_START) * HOUR_PX }}>
-            {sideBySide(slots.filter((s) => s.day === day)).map(({ slot: s, column, columns }) => {
-                const top = (toHours(s.start) - DAY_START) * HOUR_PX;
-                const height = (toHours(s.end) - toHours(s.start)) * HOUR_PX;
-                return (
-                  <div
-                    key={`${s.moduleId}-${s.start}`}
-                    className={cx(
-                      'absolute overflow-hidden rounded-lg p-1.5 text-xs leading-tight font-semibold text-white',
-                      colour.get(s.moduleId),
-                      columns > 1 && 'ring-2 ring-clash-certain ring-offset-1 ring-offset-surface-2',
-                    )}
-                    // Overlapping slots share the column side by side, so a clash is plain to see.
-                    style={{
-                      top,
-                      height,
-                      left: `calc(${(column / columns) * 100}% + 4px)`,
-                      width: `calc(${100 / columns}% - 8px)`,
-                    }}
-                    title={`${titleOf.get(s.moduleId)}, ${s.start} to ${s.end}`}
-                  >
-                    {titleOf.get(s.moduleId)}
-                  </div>
-                );
-              })}
+          <div className="relative" style={{ height: (DAY_END - DAY_START) * HOUR_PX }}>
+            {Array.from({ length: DAY_END - DAY_START }, (_, i) => (
+              <span key={i} className="absolute right-1 text-xs text-muted" style={{ top: i * HOUR_PX - 6 }}>
+                {DAY_START + i}:00
+              </span>
+            ))}
           </div>
-        ))}
+          {WEEKDAYS.map((day: Weekday) => (
+            <div key={day} className="relative rounded-xl bg-surface-2" style={{ height: (DAY_END - DAY_START) * HOUR_PX }}>
+              {sideBySide(slots.filter((s) => s.day === day)).map(({ slot: s, column, columns }) => {
+                  const top = (toHours(s.start) - DAY_START) * HOUR_PX;
+                  const height = (toHours(s.end) - toHours(s.start)) * HOUR_PX;
+                  return (
+                    <div
+                      key={`${s.moduleId}-${s.start}`}
+                      className={cx(
+                        'absolute overflow-hidden rounded-lg p-1.5 text-xs leading-tight font-semibold text-white',
+                        colour.get(s.moduleId),
+                        columns > 1 && 'ring-2 ring-clash-certain ring-offset-1 ring-offset-surface-2',
+                      )}
+                      // Overlapping slots share the column side by side, so a clash is plain to see.
+                      style={{
+                        top,
+                        height,
+                        left: `calc(${(column / columns) * 100}% + 4px)`,
+                        width: `calc(${100 / columns}% - 8px)`,
+                      }}
+                      title={`${titleOf.get(s.moduleId)}, ${s.start} to ${s.end}`}
+                    >
+                      {titleOf.get(s.moduleId)}
+                    </div>
+                  );
+                })}
+            </div>
+          ))}
+        </div>
       </div>
     </Explained>
   );
