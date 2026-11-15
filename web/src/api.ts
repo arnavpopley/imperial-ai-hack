@@ -1,5 +1,5 @@
 // Typed client for the API contract in spec section 13. Screens call these instead of fetch directly.
-import { schemas } from '@modulematch/shared';
+import { SESSION_VERSION_HEADER, schemas } from '@modulematch/shared';
 import type {
   ClashPriority,
   CompareView,
@@ -85,49 +85,82 @@ async function failure(res: Response, path: string): Promise<Error> {
   return err;
 }
 
-/** Gives the client's own copy of a session, or null when it holds none for that id. Set by the session provider. */
-type SnapshotSource = (sessionId: string) => RestoreSessionBody | null;
-let snapshotSource: SnapshotSource | null = null;
+/**
+ * The client's own copy of the session, kept by the session provider (spec 13). On the public demo each server
+ * instance keeps its own copy, so every session request carries the client's version, an instance with an older copy
+ * answers 409 "session stale", and one without the session answers 404; either way the client restores its copy there.
+ */
+export interface SessionCopy {
+  /** The version (`updatedAt`) of the client's copy of this session, or null when it holds none. */
+  version: (sessionId: string) => string | null;
+  /** The restore snapshot of the client's copy, or null when it holds none. */
+  snapshot: (sessionId: string) => RestoreSessionBody | null;
+  /** A response said an instance holds this version; a newer one becomes the client's version. */
+  seen: (sessionId: string, version: string) => void;
+}
+let sessionCopy: SessionCopy | null = null;
 
-export function setSnapshotSource(source: SnapshotSource | null): void {
-  snapshotSource = source;
+export function setSessionCopy(copy: SessionCopy | null): void {
+  sessionCopy = copy;
 }
 
 /**
  * Restore rounds per request. Each round puts the session on one more server instance, and a retry can still land on
  * an instance that has not had it yet, so a request gets a few rounds before the session counts as lost.
  */
-export const RESTORE_ROUNDS = 3;
+export const RESTORE_ROUNDS = 6;
 
-/** Sends the client's copy of the session to whichever instance answers; true once that instance has the session. */
+/** True for an answer that the instance lacks the session (404) or holds an older copy of it (409). */
+async function needsRestore(res: Response): Promise<boolean> {
+  if (res.status !== 404 && res.status !== 409) return false;
+  const text = await res.clone().text();
+  return res.status === 404 ? text.includes('session not found') : text.includes('session stale');
+}
+
+/** Sends the client's copy of the session to whichever instance answers; true once that instance has it. */
 async function restore(sessionId: string): Promise<boolean> {
   try {
-    const snapshot = snapshotSource?.(sessionId);
+    const snapshot = sessionCopy?.snapshot(sessionId);
     if (!snapshot) return false;
     const res = await fetch(`/api${s(sessionId)}/restore`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(snapshot),
     });
+    if (res.ok) noteVersion(sessionId, res);
     return res.ok;
   } catch {
     return false;
   }
 }
 
+function noteVersion(sessionId: string, res: Response): void {
+  const version = res.headers.get(SESSION_VERSION_HEADER);
+  if (version) sessionCopy?.seen(sessionId, version);
+}
+
+/** The request with the client's version of the session added, so an instance with an older copy can say so. */
+function withVersion(sessionId: string | null, init: RequestInit): RequestInit {
+  const version = sessionId ? sessionCopy?.version(sessionId) : null;
+  if (!version) return init;
+  const headers = new Headers(init.headers);
+  headers.set(SESSION_VERSION_HEADER, version);
+  return { ...init, headers };
+}
+
 /**
- * Sends a request. When the server answers that it does not know the session (a demo instance that never saw it),
- * restores the session there from the client's copy and sends the request again. A 404 means the request did
- * nothing, so sending it again is safe. If a restore fails, the 404 stands and the session counts as lost.
+ * Sends a request. When the instance that answers lacks the session (404 "session not found") or holds an older copy
+ * (409 "session stale"), restores the client's copy there and sends the request again. Either answer means the
+ * request did nothing, so sending it again is safe. If a restore fails, the answer stands; a 404 then counts as lost.
  */
 async function send(path: string, init: RequestInit): Promise<Response> {
-  let res = await fetch(`/api${path}`, init);
   const sessionId = sessionIdIn(path);
-  for (let round = 0; sessionId && res.status === 404 && round < RESTORE_ROUNDS; round++) {
-    if (!(await res.clone().text()).includes('session not found')) break;
+  let res = await fetch(`/api${path}`, withVersion(sessionId, init));
+  for (let round = 0; sessionId && round < RESTORE_ROUNDS && (await needsRestore(res)); round++) {
     if (!(await restore(sessionId))) break;
-    res = await fetch(`/api${path}`, init);
+    res = await fetch(`/api${path}`, withVersion(sessionId, init));
   }
+  if (sessionId && res.ok) noteVersion(sessionId, res);
   return res;
 }
 

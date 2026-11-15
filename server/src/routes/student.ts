@@ -91,21 +91,23 @@ export const studentRoutes = new Hono()
     const session = load(c);
     return session instanceof Response ? session : c.json(session);
   })
-  // The client's copy of a session this instance does not have (spec 13: each demo instance keeps its own database).
-  // Creates the session only when it is missing here; an existing session is returned as it is, never overwritten.
+  // The client's copy of a session (spec 13: each demo instance keeps its own database). Creates the session when it is
+  // missing here, and replaces a strictly older copy; a copy as new as the snapshot or newer is never overwritten.
   .post(
     '/:id/restore',
     bodyLimit({ maxSize: RESTORE_BODY_MAX_BYTES, onError: (c) => c.json({ error: 'snapshot too large' }, 413) }),
     body(schemas.RestoreSessionBody),
     (c) => {
       const id = c.req.param('id');
+      const snapshot = c.req.valid('json');
       const existing = repo.getSession(id);
-      if (existing) return c.json(existing, 200);
+      if (existing && existing.updatedAt >= snapshot.updatedAt) return c.json(existing, 200);
       if (!SESSION_ID.test(id)) return c.json({ error: 'invalid session id' }, 400);
       const moduleIds = new Set(catalogue.modules().map((m) => m.id));
-      const { state, cleaned, droppedModules } = restoredSession(id, c.req.valid('json'), moduleIds);
+      const { state, cleaned, droppedModules } = restoredSession(id, snapshot, moduleIds);
       try {
-        repo.createSession(state);
+        if (existing) repo.replaceSession(state);
+        else repo.createSession(state);
       } catch (error) {
         // Another request restored it first, or the snapshot's ids clash with stored rows; never overwrite either.
         const now = repo.getSession(id);
@@ -122,10 +124,10 @@ export const studentRoutes = new Hono()
         actor: 'supervisor',
         kind: 'mode',
         input: `snapshot from the student's browser: ${state.messages.length} messages, ${state.evidence.length} evidence, ${state.shortlist.length} shortlisted`,
-        output: `session restored on this instance in ${state.mode}${note}`,
+        output: `session restored on this instance in ${state.mode}${existing ? ', replacing an older copy' : ''}${note}`,
         verdict: null,
       });
-      return c.json(fresh(id), 201);
+      return c.json(fresh(id), existing ? 200 : 201);
     },
   )
   .post('/:id/messages', body(schemas.SendMessageBody), (c) => {
@@ -139,6 +141,9 @@ export const studentRoutes = new Hono()
         // An empty messageId: this apology is not stored, so it cannot be rated.
         await stream.writeSSE({ event: 'done', data: JSON.stringify({ type: 'done', messageId: '', widget: null }) });
       });
+      // The session as stored after the turn, so the client's copy (which can restore other instances) is complete.
+      const after = repo.getSession(session.id);
+      if (after) await stream.writeSSE({ event: 'session', data: JSON.stringify({ type: 'session', session: after }) });
     });
   })
   .put('/:id/profile', body(schemas.ProfileEditBody), (c) => {

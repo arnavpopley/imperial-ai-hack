@@ -1,6 +1,6 @@
 // Session restore (spec 13): a demo server instance that does not have a session can recreate it from the client's
 // snapshot, but never overwrites one it has, never takes staff-side state or marks, and traces what it did.
-import { RESTORE_BODY_MAX_BYTES, schemas as S, type RestoreSessionBody, type SessionState } from '@modulematch/shared';
+import { RESTORE_BODY_MAX_BYTES, SESSION_VERSION_HEADER, schemas as S, type RestoreSessionBody, type SessionState } from '@modulematch/shared';
 import { randomUUID } from 'node:crypto';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../src/app.ts';
@@ -30,6 +30,7 @@ function snapshotOf(s: SessionState, overrides: Partial<RestoreSessionBody> = {}
     shortlist: s.shortlist,
     interview: s.interview,
     createdAt: s.createdAt,
+    updatedAt: s.updatedAt,
     ...overrides,
   };
 }
@@ -71,14 +72,40 @@ describe('POST /sessions/:id/restore', () => {
     expect(trace.some((e) => e.kind === 'mode' && e.output.startsWith('session restored on this instance in PLAN'))).toBe(true);
   });
 
-  it('never overwrites a session this instance has', async () => {
+  it('never overwrites a copy as new as the snapshot or newer', async () => {
     const live = await newSession();
-    const res = await post(`/api/sessions/${live.id}/restore`, snapshotOf(live, { shortlist: [repo.listModules()[0]!.id], mode: 'RECOMMEND', messages: [] }));
+    const older = new Date(Date.parse(live.updatedAt) - 60_000).toISOString();
+    for (const updatedAt of [live.updatedAt, older]) {
+      const res = await post(`/api/sessions/${live.id}/restore`, snapshotOf(live, { shortlist: [repo.listModules()[0]!.id], mode: 'RECOMMEND', messages: [], updatedAt }));
+      expect(res.status).toBe(200);
+      const after = repo.getSession(live.id)!;
+      expect(after.shortlist).toEqual(live.shortlist);
+      expect(after.mode).toBe(live.mode);
+      expect(after.messages).toHaveLength(live.messages.length);
+    }
+  });
+
+  it('answers 409 "session stale" when its copy is older than the client\'s, then takes the newer copy', async () => {
+    const live = await newSession();
+    const newer = new Date(Date.parse(live.updatedAt) + 60_000).toISOString();
+    // Every response says which version this instance holds.
+    const plain = await app.request(`/api/sessions/${live.id}`);
+    expect(plain.headers.get(SESSION_VERSION_HEADER)).toBe(live.updatedAt);
+    expect((await app.request(`/api/sessions/${live.id}`, { headers: { [SESSION_VERSION_HEADER]: live.updatedAt } })).status).toBe(200);
+
+    const stale = await app.request(`/api/sessions/${live.id}/recommendations`, { headers: { [SESSION_VERSION_HEADER]: newer } });
+    expect(stale.status).toBe(409);
+    expect(await stale.json()).toEqual({ error: 'session stale' });
+
+    // The client's newer copy (two modules shortlisted elsewhere) replaces this one, staff-side rows included.
+    repo.createEscalation({ id: randomUUID(), sessionId: live.id, type: 'LOW_CONFIDENCE', summary: 'old copy', status: 'open', staffResponse: null, createdAt: live.createdAt, request: null, decision: null });
+    const [a, b] = repo.listModules().map((m) => m.id);
+    const res = await post(`/api/sessions/${live.id}/restore`, snapshotOf(live, { mode: 'PLAN', shortlist: [a!, b!], interview: { ...live.interview, confirmed: true, finished: true }, updatedAt: newer }));
     expect(res.status).toBe(200);
     const after = repo.getSession(live.id)!;
-    expect(after.shortlist).toEqual(live.shortlist);
-    expect(after.mode).toBe(live.mode);
-    expect(after.messages).toHaveLength(live.messages.length);
+    expect(after).toMatchObject({ mode: 'PLAN', shortlist: [a, b], updatedAt: newer, escalations: [] });
+    expect(repo.listTraceEvents(live.id).some((e) => e.output.includes('replacing an older copy'))).toBe(true);
+    expect((await app.request(`/api/sessions/${live.id}/recommendations`, { headers: { [SESSION_VERSION_HEADER]: newer } })).status).toBe(200);
   });
 
   it('applies the stored-text guardrails and the mode machine, and keeps only catalogue modules', async () => {

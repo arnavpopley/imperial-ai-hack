@@ -5,6 +5,7 @@ import { beforeAll, describe, expect, it, vi } from 'vitest';
 import type { z } from 'zod';
 import { createApp } from '../src/app.ts';
 import { seedIfEmpty } from '../src/bootstrap.ts';
+import * as repo from '../src/db/repo.ts';
 
 const app = createApp();
 const S = schemas;
@@ -190,7 +191,11 @@ describe('every route returns a valid response', () => {
       .filter((l) => l.startsWith('data: '))
       .map((l) => S.SseEvent.parse(JSON.parse(l.slice(6))));
     expect(events.map((e) => e.type)).toContain('profile_update');
-    expect(events.at(-1)?.type).toBe('done');
+    // The reply ends with `done`, then the session as stored after the turn (spec 13: the client's copy for restores).
+    expect(events.at(-2)?.type).toBe('done');
+    const last = events.at(-1);
+    expect(last?.type).toBe('session');
+    if (last?.type === 'session') expect(last.session).toEqual(repo.getSession(fresh));
   });
 });
 

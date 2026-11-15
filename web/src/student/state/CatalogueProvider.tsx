@@ -99,7 +99,7 @@ const sameWeights = (a: Weights, b: Weights) =>
   a.interest === b.interest && a.goal === b.goal && a.style === b.style && a.breadth === b.breadth;
 
 export function CatalogueProvider({ children }: { children: ReactNode }) {
-  const { session, recsVersion } = useReadySession();
+  const { session, recsVersion, update } = useReadySession();
   const { moduleById } = useReferenceData();
   const sessionId = session.id;
   // A Senior Tutor decision changes eligibility without touching the profile, so it refetches the ranking too.
@@ -119,13 +119,15 @@ export function CatalogueProvider({ children }: { children: ReactNode }) {
     api.recommendations(sessionId).then(
       (response) => {
         if (live && editSeq.current === startedAt) setWeights(response.weights);
+        // The session's copy of the weights restores other demo instances (spec 13), so it follows the server.
+        if (live) update((s) => (sameWeights(s.weights, response.weights) ? s : { ...s, weights: response.weights }));
       },
       () => {},
     );
     return () => {
       live = false;
     };
-  }, [recsVersion, sessionId]);
+  }, [recsVersion, sessionId, update]);
   const saveSeq = useRef(0);
   const { setData } = recs;
 
@@ -137,6 +139,7 @@ export function CatalogueProvider({ children }: { children: ReactNode }) {
         if (seq !== saveSeq.current) return;
         setData(response);
         setSaveState('saved');
+        update((s) => (sameWeights(s.weights, response.weights) ? s : { ...s, weights: response.weights }));
       },
       () => {
         if (seq === saveSeq.current) setSaveState('error');

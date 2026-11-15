@@ -626,10 +626,18 @@ export const RESTORE_EVIDENCE_MAX = 400;
 export const RESTORE_MESSAGE_CHARS_MAX = 8_000;
 
 /**
+ * The stored session's `updatedAt`, sent on every session response and, by the client, on every session request. An
+ * instance whose copy is older than the client's answers 409 "session stale", and the client restores it there.
+ */
+export const SESSION_VERSION_HEADER = 'x-session-version';
+
+/**
  * The student's own copy of their session, sent to POST /sessions/:id/restore when a demo server instance does not
  * have the session (each instance keeps its own database). It carries only what the student built: the profile and
  * its evidence, the conversation, weights, shortlist, interview and mode. Staff-side state (escalations, approved
  * exceptions, the escalation draft) and marks (consented results) are not part of it, and unknown keys are refused.
+ * `updatedAt` is the version of the copy: an instance without the session takes it, an instance with an older copy
+ * takes its student-built parts, and an instance with the same or a newer copy keeps its own.
  */
 export const RestoreSessionBody = z
   .object({
@@ -641,6 +649,7 @@ export const RestoreSessionBody = z
     shortlist: z.array(z.string()).max(40),
     interview: InterviewState,
     createdAt: IsoDate,
+    updatedAt: IsoDate,
   })
   .strict();
 
@@ -1051,6 +1060,8 @@ export const SseEvent = z.discriminatedUnion('type', [
     draft: EscalationDraft.nullable(),
     escalation: Escalation.nullable(),
   }),
+  /** The whole session as stored after a chat turn, so the client's copy (which restores other instances) is complete. */
+  z.object({ type: z.literal('session'), session: SessionState }),
   z.object({
     type: z.literal('done'),
     /** The stored assistant message id (chat) or a fresh id (module Q&A). Empty when the reply was not stored. */
