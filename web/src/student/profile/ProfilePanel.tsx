@@ -49,7 +49,7 @@ export function ProfilePanel({ profile, evidence, highlightSlots, className }: P
   const glow = (slot: string, ev: Evidence | undefined) => isFresh(ev) || (highlightSlots?.has(slot) ?? false);
   const halfDaysEv = latestEvidence(evidence, 'timetablePrefs.avoidHalfDays');
   const avoidDaysEv = latestEvidence(evidence, 'timetablePrefs.avoidDays') ?? halfDaysEv;
-  const halfOf = (day: string) => avoidHalfDays.find((h) => h.startsWith(day));
+  const halvesOf = (day: string) => avoidHalfDays.filter((h) => h.startsWith(day));
   const earliestStartEv = latestEvidence(evidence, 'timetablePrefs.earliestStart');
   const pathwaysEv = latestEvidence(evidence, 'pathways');
   const breadthEv = latestEvidence(evidence, 'breadthAppetite');
@@ -208,13 +208,16 @@ export function ProfilePanel({ profile, evidence, highlightSlots, className }: P
               </span>
               <span className="flex gap-1.5 py-1" aria-hidden="true">
                 {WEEKDAYS.map((day) => {
-                  const half = avoidDays.includes(day) ? undefined : halfOf(day);
+                  // Both halves kept free read as the whole day.
+                  const halves = halvesOf(day);
+                  const whole = avoidDays.includes(day) || halves.length === 2;
+                  const half = whole ? undefined : halves[0];
                   return (
                     <span
                       key={day}
                       className={cx(
                         'grid h-9 flex-1 place-items-center rounded-lg text-[12px] leading-none font-medium transition-colors',
-                        avoidDays.includes(day) ? 'bg-brand text-on-brand' : half ? 'bg-brand/15 text-brand' : 'bg-surface-2 text-muted',
+                        whole ? 'bg-brand text-on-brand' : half ? 'bg-brand/15 text-brand' : 'bg-surface-2 text-muted',
                       )}
                     >
                       <span>
