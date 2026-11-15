@@ -1,5 +1,5 @@
 // One clash with its swap suggestions. Spec 10.6: a swap is applied only after the student confirms.
-import type { Clash, SwapSuggestion } from '@modulematch/shared';
+import { SWAP_FIT_TOLERANCE, type Clash, type SwapSuggestion } from '@modulematch/shared';
 import { motion, useReducedMotion } from 'motion/react';
 import { useState } from 'react';
 import { Button } from '../../components/Button.tsx';
@@ -122,7 +122,7 @@ export function ClashCard({ clash, swaps, titleFor, onSwap, onAsk, onEscalate }:
         </div>
       ) : (
         <div className="mt-3 rounded-xl bg-surface-2 p-3 text-[13px]">
-          <p>No valid swap: no module of the same kind fits your programme rules and keeps your fit within 10 points.</p>
+          <p>No valid swap: no module of the same kind fits your programme rules and keeps your fit within {SWAP_FIT_TOLERANCE} points.</p>
           <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
             <button
               type="button"

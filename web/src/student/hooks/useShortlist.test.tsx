@@ -59,9 +59,10 @@ function Harness() {
       <button type="button" onClick={() => void shortlist.toggle('MECH60018')}>
         Shortlist Mechatronics 3A
       </button>
-      <button type="button" onClick={() => void shortlist.swap('MECH60018', 'MECH60001')}>
+      <button type="button" onClick={() => void shortlist.swap('MECH60018', 'MECH60001').catch(() => undefined)}>
         Swap
       </button>
+      <p data-testid="shortlist">{current.shortlist.join(',')}</p>
     </>
   );
 }
@@ -93,12 +94,13 @@ describe('useShortlist and the mode chip', () => {
   const click = (label: string) =>
     act(async () => [...container.querySelectorAll('button')].find((b) => b.textContent === label)?.click());
   const chip = (where: 'shell' | 'drawer') => container.querySelector(`[data-testid="${where}"]`)?.textContent;
+  const saved = () => container.querySelector('[data-testid="shortlist"]')?.textContent;
 
   afterEach(() => {
     act(() => root.unmount());
     container.remove();
     writeStoredSessionId(null);
-    vi.clearAllMocks();
+    vi.resetAllMocks();
   });
 
   it('shows "Planning timetable" as soon as a second module is shortlisted', async () => {
@@ -129,5 +131,37 @@ describe('useShortlist and the mode chip', () => {
       ['s1', { moduleId: 'MECH60018', action: 'remove' }],
     ]);
     expect(chip('shell')).toContain('Planning timetable');
+  });
+
+  it('keeps the swap when the removal was saved but its response was lost', async () => {
+    vi.mocked(api.getSession)
+      .mockResolvedValueOnce(session('PLAN', ['MECH60009', 'MECH60018']))
+      .mockResolvedValueOnce(session('PLAN', ['MECH60009', 'MECH60001']));
+    vi.mocked(api.shortlist)
+      .mockResolvedValueOnce(session('PLAN', ['MECH60009', 'MECH60018', 'MECH60001']))
+      .mockRejectedValueOnce(new Error('network error'));
+    await mount();
+
+    await click('Swap');
+
+    expect(vi.mocked(api.shortlist).mock.calls).toHaveLength(2);
+    expect(saved()).toBe('MECH60009,MECH60001');
+  });
+
+  it('takes the alternative off again when the removal really failed', async () => {
+    const before = session('PLAN', ['MECH60009', 'MECH60018']);
+    vi.mocked(api.getSession)
+      .mockResolvedValueOnce(before)
+      .mockResolvedValueOnce(session('PLAN', ['MECH60009', 'MECH60018', 'MECH60001']));
+    vi.mocked(api.shortlist)
+      .mockResolvedValueOnce(session('PLAN', ['MECH60009', 'MECH60018', 'MECH60001']))
+      .mockRejectedValueOnce(new Error('network error'))
+      .mockResolvedValueOnce(before);
+    await mount();
+
+    await click('Swap');
+
+    expect(vi.mocked(api.shortlist).mock.calls[2]).toEqual(['s1', { moduleId: 'MECH60001', action: 'remove' }]);
+    expect(saved()).toBe('MECH60009,MECH60018');
   });
 });

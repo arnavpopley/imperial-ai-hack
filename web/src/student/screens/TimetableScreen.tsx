@@ -1,6 +1,6 @@
 // Screen 5: weekly grid per term with clashes highlighted, swaps beside each clash, and the
 // programme rules result (spec 9.1, 9.2).
-import type { Clash, SwapSuggestion, Term, TimetableView } from '@modulematch/shared';
+import { SWAP_FIT_TOLERANCE, type Clash, type SwapSuggestion, type Term, type TimetableView } from '@modulematch/shared';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useState } from 'react';
 import { Link } from 'react-router';
@@ -99,7 +99,7 @@ function TimetableBody({ view, onChanged, refreshing }: { view: TimetableView; o
     const { programme, yearOfStudy } = session.profile;
     offerDraft({
       type: 'LOW_CONFIDENCE',
-      summary: `${programme}, Year ${yearOfStudy}. ${titleFor(clash.moduleA)} and ${titleFor(clash.moduleB)} clash in the ${TERM_LABELS[clash.term].toLowerCase()} term, and no swap fits the programme rules within 10 fit points. A conversation with a personal tutor may help choose between them.`,
+      summary: `${programme}, Year ${yearOfStudy}. ${titleFor(clash.moduleA)} and ${titleFor(clash.moduleB)} clash in the ${TERM_LABELS[clash.term].toLowerCase()} term, and no swap fits the programme rules within ${SWAP_FIT_TOLERANCE} fit points. A conversation with a personal tutor may help choose between them.`,
     });
     window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
   };
