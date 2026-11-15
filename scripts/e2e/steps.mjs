@@ -44,6 +44,8 @@ const STAFF_REPLY = 'Please read the Introduction to Nuclear Energy A notes befo
 const CLASHING = ['MECH60009', 'MECH60018'];
 /** Finance & Financial Management: one of the two modules with a counterfactual that clears the bar (+2.1 fit). */
 const COUNTERFACTUAL_MODULE = 'BUSI60043';
+/** Dynamics: the transcript carries its question marks (Q1 to Q4), matching data/demo/synthetic-marking-notes.txt. */
+const FEEDBACK_MODULE = 'MECH50008';
 
 const CONVERSATION = { css: 'ol[aria-label="Conversation"]' };
 const MAIN_NAV = (text) => ({ css: 'nav[aria-label="Role"] a', text });
@@ -103,6 +105,24 @@ const pathIs = (page, path, timeout) =>
     desc: `the URL to become ${typeof path === 'string' ? path : path.re}`,
     timeout,
   });
+
+/**
+ * Opens a module in the staff console by typing its code into the picker's search box, as the runbook says.
+ * Clicking a row in the full list can miss: right after /staff redirects, the list scrolls its selected row
+ * into view, and a click during that scroll lands on the wrong row.
+ */
+async function openStaffModule(staff, moduleId) {
+  const search = { forLabel: 'Search modules' };
+  await staff.click(search, { desc: 'the module picker search box' });
+  await staff.eval((s) => window.__e2e.one(s)?.select(), search);
+  await staff.send('Input.insertText', { text: moduleId });
+  const link = { css: `nav[aria-label="Modules"] a[href="/staff/modules/${moduleId}"]` };
+  await staff.waitFor((id) => [...document.querySelectorAll('nav[aria-label="Modules"] a[href^="/staff/modules/"]')].filter((a) => a.checkVisibility()).length === 1 && Boolean(document.querySelector(`nav[aria-label="Modules"] a[href="/staff/modules/${id}"]`)), [moduleId], {
+    desc: `the picker to show only ${moduleId}`,
+  });
+  await staff.click(link, { desc: `${moduleId} in the module picker` });
+  await pathIs(staff, `/staff/modules/${moduleId}`);
+}
 
 /** Ranked catalogue order as module ids, read from the card links. */
 const rankedIds = (page) =>
@@ -197,7 +217,7 @@ export const STEPS = [
   },
   {
     id: 'results',
-    title: 'Optional: results upload, nudge, feedback, withdraw',
+    title: 'Optional: results upload, nudge, feedback',
     // Spec 23 is not in the three-minute script, so a failure here is reported but does not stop the demo steps.
     optional: true,
     async run(ctx) {
@@ -254,6 +274,73 @@ export const STEPS = [
       ctx.note('feedback page: Stress Analysis 2 revision plan shown');
       await page.scrollIntoView({ css: 'h2, h3', text: 'Stress Analysis 2' });
       await ctx.checkpoint(page, 'feedback');
+      await page.click(STUDENT_TAB('Catalogue'));
+      await pathIs(page, '/catalogue');
+    },
+  },
+  {
+    id: 'examiner',
+    title: 'Optional: examiner feedback round trip, then withdraw',
+    // Runbook step 1c: a module lead drafts Dynamics feedback from the synthetic marking notes and publishes it;
+    // the student, whose transcript has Dynamics question marks, gets a card that leads with Q2. Then the student
+    // withdraws consent (the end of 1b in the runbook), which must remove every note.
+    optional: true,
+    async run(ctx) {
+      const page = ctx.student;
+      const feedbackCount = () =>
+        Number(
+          /Exam feedback\s*(\d+)/.exec(
+            [...document.querySelectorAll('nav[aria-label="Student sections"] a')].find((a) => /Exam feedback/.test(a.textContent))?.textContent ?? '',
+          )?.[1] ?? 0,
+        );
+      const before = await page.eval(feedbackCount);
+
+      ctx.staff ??= await ctx.openPage('staff');
+      const staff = ctx.staff;
+      ctx.active = staff;
+      await staff.bringToFront();
+      await staff.goto(`${ctx.web}/`);
+      await staff.click(MAIN_NAV('Staff'), { desc: 'the Staff role switch' });
+      await pathIs(staff, { re: '^/staff' });
+      // Dynamics is a Year 2 core module, so it sits under the picker's All view.
+      await staff.click({ css: 'nav[aria-label="Modules"] label', text: { re: '^All\\s*\\d*$' } }, { desc: 'All in the module picker', timeout: ctx.timeout });
+      await openStaffModule(staff, FEEDBACK_MODULE);
+      await staff.click({ css: 'nav a', text: { exact: 'Exam feedback' } }, { desc: 'the module\'s Exam feedback tab' });
+      await pathIs(staff, `/staff/modules/${FEEDBACK_MODULE}/exam`);
+      await staff.type({ forLabel: { exact: 'Exam' } }, 'Summer 2026 written exam (synthetic demo)', { desc: 'the exam name' });
+      await staff.click({ css: 'button', text: 'Insert example notes (synthetic)' });
+      await staff.waitFor(() => (document.querySelector('textarea')?.value ?? '').includes('Q2'), [], { desc: 'the example notes in the box' });
+      await staff.click({ css: 'button[type="submit"]', text: 'Draft the form' });
+      await staff.waitForElement({ css: 'h3', text: 'AI draft: check before publishing' }, { desc: 'the AI draft banner', timeout: ctx.timeout });
+      await staff.waitForElement({ css: '[aria-label="Student preview"]' }, { desc: 'the student preview' });
+      await ctx.checkpoint(staff, 'exam-draft');
+      await staff.click({ css: 'form[aria-label="Exam feedback form"] button', text: { re: '^Publish' } }, { desc: 'Publish to students' });
+      await staff.click({ forLabel: 'I have checked this AI draft', within: { css: 'dialog[open]' } }, { desc: 'the checked-the-draft box' });
+      await staff.click({ css: 'dialog[open] button[type="submit"]', text: 'Publish to students' }, { desc: 'confirm Publish to students' });
+      await staff.waitForElement({ css: 'h3', text: 'Published to students' }, { desc: 'the published state', timeout: ctx.timeout });
+      await ctx.checkpoint(staff, 'exam-published');
+
+      ctx.active = page;
+      await page.bringToFront();
+      await page.reload();
+      await page.waitFor((n) => {
+        const a = [...document.querySelectorAll('nav[aria-label="Student sections"] a')].find((x) => /Exam feedback/.test(x.textContent));
+        return Number(/Exam feedback\s*(\d+)/.exec(a?.textContent ?? '')?.[1] ?? 0) === n;
+      }, [before + 1], { desc: `the Exam feedback count to go from ${before} to ${before + 1}`, timeout: ctx.timeout });
+      await page.click(STUDENT_TAB('Exam feedback'));
+      await pathIs(page, '/feedback');
+      const lead = await page.waitFor(
+        (code) => {
+          const card = [...document.querySelectorAll('main article')].find((a) => a.innerText.includes(code));
+          const overall = card?.querySelector('h2 button')?.innerText ?? '';
+          return /Q2/.test(overall) && overall;
+        },
+        [FEEDBACK_MODULE],
+        { desc: 'a Dynamics card that leads with Q2', timeout: ctx.timeout },
+      );
+      ctx.note(`examiner round trip: feedback ${before} -> ${before + 1}; Dynamics card: ${lead.replace(/\s+/g, ' ').slice(0, 140)}`);
+      await page.scrollIntoView({ css: 'main article', text: FEEDBACK_MODULE });
+      await ctx.checkpoint(page, 'dynamics-feedback');
 
       await page.click(STUDENT_TAB('Your data'));
       await pathIs(page, '/your-data');
@@ -596,8 +683,7 @@ export const STEPS = [
       await pathIs(staff, { re: '^/staff/modules/[^/]+$' });
       // Most modules now get one "no single change makes a big difference" summary; Finance & Financial
       // Management keeps a real counterfactual (+2.1 fit), so the demo opens it.
-      await staff.click({ css: `a[href="/staff/modules/${COUNTERFACTUAL_MODULE}"]` }, { desc: `${COUNTERFACTUAL_MODULE} in the module picker` });
-      await pathIs(staff, `/staff/modules/${COUNTERFACTUAL_MODULE}`);
+      await openStaffModule(staff, COUNTERFACTUAL_MODULE);
       const index = await staff.waitFor(() => {
         const i = [...document.querySelectorAll('article')]
           .filter((a) => a.checkVisibility())
