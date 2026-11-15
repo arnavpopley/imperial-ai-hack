@@ -16,7 +16,7 @@ const pathway: Pathway = {
 };
 const relevant = { pathwayRelevance: { software: 0.8 } };
 const modules = [
-  makeModule('done', { skills: { coding: 0.8 } }),
+  makeModule('done', { level: 2, skills: { coding: 0.8 } }),
   makeModule('listed', { skills: { coding: 0.6 } }),
   makeModule('core', { type: 'core', skills: { teamwork: 0.9 } }),
   makeModule('more-coding', { skills: { coding: 1 }, pathwayRelevance: { software: 0.9 } }),
@@ -54,6 +54,13 @@ describe('pathwayProgress', () => {
       { skill: 'teamwork', importance: 0.25, covered: teamwork },
     ]);
     expect(result.progress).toBeCloseTo(0.75 * coding + 0.25 * teamwork);
+  });
+
+  it('counts a completed module from the current year in full, like the core module it was', () => {
+    // core is a Year 3 module and the student is in Year 3: completing it must not lower progress.
+    const planned = pathwayProgress(profile, pathway, modules, ['listed'], ranked, ['core']).progress;
+    const doneCore = makeProfile({ completedModuleIds: ['done', 'core'] });
+    expect(pathwayProgress(doneCore, pathway, modules, ['listed'], ranked, []).progress).toBeCloseTo(planned);
   });
 
   it('keeps rising with each module instead of saturating', () => {

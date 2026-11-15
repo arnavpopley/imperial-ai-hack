@@ -50,7 +50,7 @@ function topSkill(pathway: Pathway, before: SkillTotals, after: SkillTotals): Sk
 
 /**
  * Spec 9.4: progress over the student's plan, with a per-skill breakdown (most important first). The plan is
- * the completed modules (at COMPLETED_WEIGHT), this year's core modules and the shortlist. The next-best
+ * the completed modules (earlier years at COMPLETED_WEIGHT), this year's core modules and the shortlist. The next-best
  * module is eligible, not completed, core or shortlisted, at least NEXT_BEST_MIN_RELEVANCE relevant to the
  * pathway and adds some progress; the most relevant wins, then the best fit, then the larger gain, then the
  * module id. Null when no module qualifies.
@@ -66,9 +66,11 @@ export function pathwayProgress(
   const byId = new Map(modules.map((module) => [module.id, module]));
   const completed = new Set(profile.completedModuleIds);
   const taken = new Set([...completed, ...core, ...shortlist]);
+  // Only earlier years' modules are discounted; a completed module from this year counts in full.
+  const weightOf = (module: Module) => (completed.has(module.id) && module.level < profile.yearOfStudy ? COMPLETED_WEIGHT : 1);
   const totals = [...taken].reduce<SkillTotals>((sum, id) => {
     const module = byId.get(id);
-    return module ? addSkills(sum, module, completed.has(id) ? COMPLETED_WEIGHT : 1) : sum;
+    return module ? addSkills(sum, module, weightOf(module)) : sum;
   }, {});
   const progress = progressOf(pathway, totals);
 
