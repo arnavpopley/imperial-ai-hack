@@ -213,13 +213,19 @@ export const Escalation = z.object({
 export const InsightKind = z.enum(['COUNTERFACTUAL', 'OVERLOOKED', 'DEMAND', 'CLASH']);
 export const InsightDecision = z.enum(['pending', 'accepted', 'noted', 'dismissed']);
 
+/** Spec 9.3 insight card. Headline and detail are plain English, with every number from the engine. */
 export const Insight = z.object({
   id: z.string(),
   moduleId: z.string(),
   kind: InsightKind,
   headline: z.string(),
   detail: z.string(),
+  /** Students behind the card; never under MIN_COHORT (spec 20.4). */
   cohortSize: z.number().int().min(0),
+  /**
+   * Average fit uplift, in points, of a counterfactual change worth a card of its own. Null for every other
+   * kind, and for the counterfactual summary card that stands in for changes too small to act on.
+   */
   upliftPoints: z.number().nullable(),
   decision: InsightDecision,
 });
@@ -671,6 +677,16 @@ export const StudentResults = z.object({
   updatedAt: IsoDate.nullable(),
 });
 
+/**
+ * Upload size limits. Production runs on a Vercel function, which rejects request bodies over 4.5 MB, so a file is
+ * capped at 3 MB: about 4 MB once base64 encoded, leaving room for the rest of the JSON body.
+ */
+export const RESULTS_FILE_MAX_BYTES = 3_000_000;
+/** Base64 length of the largest allowed file: every 3 bytes become 4 characters. */
+export const RESULTS_BASE64_MAX = Math.ceil(RESULTS_FILE_MAX_BYTES / 3) * 4;
+/** The whole JSON body: the largest file plus the text, the field names and some slack, still under 4.5 MB. */
+export const RESULTS_BODY_MAX_BYTES = RESULTS_BASE64_MAX + 200_000;
+
 /** Upload a transcript or mark sheet. Consent must be given explicitly with every upload. */
 export const ResultsUploadBody = z
   .object({
@@ -679,11 +695,11 @@ export const ResultsUploadBody = z
     file: z
       .object({
         mediaType: z.enum(['application/pdf', 'image/png', 'image/jpeg']),
-        /** Base64 file contents, at most about 6 MB once decoded. */
+        /** Base64 file contents, at most 3 MB once decoded (RESULTS_FILE_MAX_BYTES). */
         base64: z
           .string()
           .min(4)
-          .max(8_000_000)
+          .max(RESULTS_BASE64_MAX)
           .regex(/^[A-Za-z0-9+/]+={0,2}$/, 'file must be non-empty base64'),
       })
       .optional(),

@@ -151,8 +151,7 @@ export const studentRoutes = new Hono()
   .get('/:id/modules/:moduleId/explanation', async (c) => {
     const session = load(c);
     if (session instanceof Response) return session;
-    // The panel shows the performance nudge, if any (spec 23); this response is never stored.
-    const explanation = await explanationFor(session, c.req.param('moduleId'), createTracer(session.id, tracerSink), undefined, { withNudge: true });
+    const explanation = await explanationFor(session, c.req.param('moduleId'), createTracer(session.id, tracerSink));
     if (!explanation) return c.json({ error: 'module not found' }, 404);
     const cited = new Set(explanation.because.flatMap((b) => (b.evidenceId ? [b.evidenceId] : [])));
     return c.json({ explanation, evidence: session.evidence.filter((e) => cited.has(e.id)) });

@@ -1,6 +1,6 @@
 // Guards the results upload's client-side checks: accepted files, the size cap that matches the contract, base64
 // that the contract accepts, and friendly messages for API errors (a 422 on a file offers the paste box).
-import { schemas } from '@modulematch/shared';
+import { RESULTS_BASE64_MAX, RESULTS_BODY_MAX_BYTES, schemas } from '@modulematch/shared';
 import { describe, expect, it } from 'vitest';
 import { base64FromDataUrl, checkFile, errorStatus, isUsableBase64, MAX_FILE_BYTES, mediaTypeOf, uploadProblem } from './files.ts';
 
@@ -14,7 +14,10 @@ describe('results upload files', () => {
   });
 
   it('caps files so their base64 fits the contract', () => {
-    expect(Math.ceil(MAX_FILE_BYTES / 3) * 4).toBeLessThanOrEqual(8_000_000);
+    expect(MAX_FILE_BYTES).toBe(3_000_000);
+    expect(Math.ceil(MAX_FILE_BYTES / 3) * 4).toBeLessThanOrEqual(RESULTS_BASE64_MAX);
+    // The whole JSON body stays under Vercel's 4.5 MB request limit.
+    expect(RESULTS_BODY_MAX_BYTES).toBeLessThan(4.5 * 1000 * 1000);
     expect(checkFile({ type: 'application/pdf', name: 'a.pdf', size: MAX_FILE_BYTES }).ok).toBe(true);
     expect(checkFile({ type: 'application/pdf', name: 'a.pdf', size: MAX_FILE_BYTES + 1 }).ok).toBe(false);
     expect(checkFile({ type: 'application/pdf', name: 'a.pdf', size: 0 }).ok).toBe(false);
@@ -36,6 +39,8 @@ describe('results upload files', () => {
     const impossible = uploadProblem(new Error('422 {"error":"MECH50010 Q3 is 26/20, above its maximum. Please check and upload again."}'), false);
     expect(impossible).toEqual({ message: 'MECH50010 Q3 is 26/20, above its maximum. Please check and upload again.', pasteInstead: false });
     expect(uploadProblem(new Error('422 {"error":"Please paste the text instead."}'), true)).toEqual({ message: 'Please paste the text instead.', pasteInstead: true });
+    expect(uploadProblem(new Error('413 {"error":"That file is too large to upload."}'), true)).toEqual({ message: 'That file is too large to upload.', pasteInstead: true });
+    expect(uploadProblem(new Error('413 Request Entity Too Large'), true).message).toContain('3 MB');
     expect(errorStatus('404 not found')).toBe(404);
     expect(errorStatus('network down')).toBeNull();
   });

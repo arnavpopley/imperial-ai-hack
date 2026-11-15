@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { benchmarkRoutes } from './routes/benchmark.ts';
+import { liveEvalRoutes } from './routes/live-results.ts';
 import { resultsRoutes } from './routes/results.ts';
 import { sharedRoutes } from './routes/shared.ts';
 import { staffRoutes } from './routes/staff.ts';
@@ -14,6 +15,7 @@ export function createApp() {
   app.route('/sessions', resultsRoutes);
   app.route('/staff', staffRoutes);
   app.route('/eval', benchmarkRoutes);
+  app.route('/eval', liveEvalRoutes);
   app.route('/', sharedRoutes);
   app.onError((err, c) => {
     console.error(err);

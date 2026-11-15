@@ -1,4 +1,4 @@
-// Screen 8 shell: module picker beside the selected module's dashboard or tag editor.
+// Screen 8 shell: module picker beside the selected module's dashboard, tag editor or exam feedback form.
 import type { StaffModuleSummary } from '@modulematch/shared';
 import { useEffect } from 'react';
 import { NavLink, Outlet, useNavigate, useOutletContext, useParams } from 'react-router';
@@ -102,6 +102,9 @@ export function ModuleLayout() {
           </NavLink>
           <NavLink to={`${base}/tags`} className={tab}>
             Derived tags
+          </NavLink>
+          <NavLink to={`${base}/exam`} className={tab}>
+            Exam feedback
           </NavLink>
         </nav>
       </header>

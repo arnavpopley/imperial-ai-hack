@@ -1,0 +1,1752 @@
+{
+  "summary": {
+    "tag": "haiku-before",
+    "extractor": "baseline live prompt on claude-haiku-4-5",
+    "rows": 177,
+    "failures": 0,
+    "stoppedForBudget": false,
+    "slotAgreement": {
+      "agree": 123,
+      "total": 246,
+      "rate": 0.5
+    },
+    "bySource": {
+      "seed": {
+        "rows": 34,
+        "exact": 22,
+        "agree": 45,
+        "total": 59,
+        "slotRate": 0.7627118644067796,
+        "exactRate": 0.6470588235294118
+      },
+      "adaption": {
+        "rows": 143,
+        "exact": 66,
+        "agree": 78,
+        "total": 187,
+        "slotRate": 0.41711229946524064,
+        "exactRate": 0.46153846153846156
+      }
+    },
+    "perKind": {
+      "interest": {
+        "agree": 77,
+        "total": 148,
+        "missing": 18,
+        "extra": 53,
+        "value": 0,
+        "rate": 0.5202702702702703
+      },
+      "style": {
+        "agree": 29,
+        "total": 59,
+        "missing": 1,
+        "extra": 28,
+        "value": 1,
+        "rate": 0.4915254237288136
+      },
+      "pathways": {
+        "agree": 7,
+        "total": 12,
+        "missing": 3,
+        "extra": 2,
+        "value": 0,
+        "rate": 0.5833333333333334
+      },
+      "pathwaysSkipped": {
+        "agree": 1,
+        "total": 8,
+        "missing": 0,
+        "extra": 7,
+        "value": 0,
+        "rate": 0.125
+      },
+      "breadthAppetite": {
+        "agree": 3,
+        "total": 7,
+        "missing": 2,
+        "extra": 2,
+        "value": 0,
+        "rate": 0.42857142857142855
+      },
+      "earliestStart": {
+        "agree": 3,
+        "total": 7,
+        "missing": 0,
+        "extra": 4,
+        "value": 0,
+        "rate": 0.42857142857142855
+      },
+      "avoidDays": {
+        "agree": 3,
+        "total": 5,
+        "missing": 1,
+        "extra": 1,
+        "value": 0,
+        "rate": 0.6
+      }
+    },
+    "verdicts": {
+      "unreviewed": 68,
+      "ours": 11,
+      "ambiguous": 24,
+      "reference": 20
+    },
+    "spend": "claude-haiku-4-5: 172 calls, 180917 in / 12705 out, $0.244",
+    "usd": 0.2444,
+    "seconds": 29
+  },
+  "disagreements": [
+    {
+      "key": "A mix of exams and coursework is fine. | style.appliedPreference",
+      "source": "seed",
+      "question": "Do you prefer exams, coursework or projects? And theory, or hands-on and applied?",
+      "answer": "A mix of exams and coursework is fine.",
+      "guarded": "A mix of exams and coursework is fine.",
+      "slot": "style.appliedPreference",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.5,
+      "review": null
+    },
+    {
+      "key": "As an international student I want to work in aerospace back home. | pathways",
+      "source": "seed",
+      "question": "What would you like to be doing after you graduate? \"Not sure yet\" is a fine answer.",
+      "answer": "As an international student I want to work in aerospace back home.",
+      "guarded": "",
+      "slot": "pathways",
+      "type": "missing",
+      "reference": [
+        "aerospace-motorsport"
+      ],
+      "ours": null,
+      "review": {
+        "verdict": "ours",
+        "reason": "G2 removes the whole sentence because \"As an international student\" cannot be cut cleanly; losing the pathway is the privacy-first choice."
+      }
+    },
+    {
+      "key": "Combining digital sketching on tablets with physical collage materials encourages the most inclusive participation. | interest:creative-arts-design",
+      "source": "adaption",
+      "question": "Which mixed media approach helps your students collaborate best during group art projects?",
+      "answer": "Combining digital sketching on tablets with physical collage materials encourages the most inclusive participation.",
+      "guarded": "Combining digital sketching on tablets with physical collage materials encourages the most inclusive participation.",
+      "slot": "interest:creative-arts-design",
+      "type": "missing",
+      "reference": 0.6,
+      "ours": null,
+      "review": {
+        "verdict": "ambiguous",
+        "reason": "A teaching statement about sketching and collage; an arts interest is plausible but not stated about themselves."
+      }
+    },
+    {
+      "key": "Combining digital sketching on tablets with physical collage materials encourages the most inclusive participation. | style.groupPreference",
+      "source": "adaption",
+      "question": "Which mixed media approach helps your students collaborate best during group art projects?",
+      "answer": "Combining digital sketching on tablets with physical collage materials encourages the most inclusive participation.",
+      "guarded": "Combining digital sketching on tablets with physical collage materials encourages the most inclusive participation.",
+      "slot": "style.groupPreference",
+      "type": "extra",
+      "reference": null,
+      "ours": 1,
+      "review": null
+    },
+    {
+      "key": "Combining digital sketching on tablets with physical collage materials encourages the most inclusive participation. | style.workloadTolerance",
+      "source": "adaption",
+      "question": "Which mixed media approach helps your students collaborate best during group art projects?",
+      "answer": "Combining digital sketching on tablets with physical collage materials encourages the most inclusive participation.",
+      "guarded": "Combining digital sketching on tablets with physical collage materials encourages the most inclusive participation.",
+      "slot": "style.workloadTolerance",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.7,
+      "review": null
+    },
+    {
+      "key": "Her work on interest rate sensitivity in emerging markets provides the best framework for my current data set. | interest:statistics-data",
+      "source": "adaption",
+      "question": "Which of Candace Browning's analyses on capital market trends do you find most relevant for your thesis?",
+      "answer": "Her work on interest rate sensitivity in emerging markets provides the best framework for my current data set.",
+      "guarded": "Her work on interest rate sensitivity in emerging markets provides the best framework for my current data set.",
+      "slot": "interest:statistics-data",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.7,
+      "review": {
+        "verdict": "reference",
+        "reason": "Statistics was invented from \"my current data set\"."
+      }
+    },
+    {
+      "key": "Honestly the maths modules and the statistics course were my favourite. | interest:mathematics-modelling",
+      "source": "seed",
+      "question": "Which topics or lectures made you lose track of time?",
+      "answer": "Honestly the maths modules and the statistics course were my favourite.",
+      "guarded": "Honestly the maths modules and the statistics course were my favourite.",
+      "slot": "interest:mathematics-modelling",
+      "type": "missing",
+      "reference": 0.9,
+      "ours": null,
+      "review": {
+        "verdict": "reference",
+        "reason": "Haiku paraphrased the quote, so grounding dropped a real interest. Fixed: grounding now maps a shortened quote to its verbatim span."
+      }
+    },
+    {
+      "key": "I aim to blend behavioral science with local legal frameworks for change. | interest:policy-ethics",
+      "source": "adaption",
+      "question": "Are you focused on adapting anti-harassment content or designing equity training for conservative regions?",
+      "answer": "I aim to blend behavioral science with local legal frameworks for change.",
+      "guarded": "I aim to blend behavioral science with local legal frameworks for change.",
+      "slot": "interest:policy-ethics",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.7,
+      "review": null
+    },
+    {
+      "key": "I aim to blend behavioral science with local legal frameworks for change. | pathwaysSkipped",
+      "source": "adaption",
+      "question": "Are you focused on adapting anti-harassment content or designing equity training for conservative regions?",
+      "answer": "I aim to blend behavioral science with local legal frameworks for change.",
+      "guarded": "I aim to blend behavioral science with local legal frameworks for change.",
+      "slot": "pathwaysSkipped",
+      "type": "extra",
+      "reference": null,
+      "ours": true,
+      "review": null
+    },
+    {
+      "key": "I aim to blend neuroscience and formal modeling for decision-making systems. | interest:machine-learning-ai",
+      "source": "adaption",
+      "question": "Do you prefer computational models of self-control or dual-process theory in addiction?",
+      "answer": "I aim to blend neuroscience and formal modeling for decision-making systems.",
+      "guarded": "I aim to blend neuroscience and formal modeling for decision-making systems.",
+      "slot": "interest:machine-learning-ai",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.8,
+      "review": {
+        "verdict": "reference",
+        "reason": "Machine learning was not named; \"formal modeling for decision-making\" is not ML."
+      }
+    },
+    {
+      "key": "I aim to guide students through gender studies and personal empowerment discourse. | interest:policy-ethics",
+      "source": "adaption",
+      "question": "Are you interested in intersectionality studies or critical pedagogy for Southeast Asian societies?",
+      "answer": "I aim to guide students through gender studies and personal empowerment discourse.",
+      "guarded": "I aim to guide students through gender studies and personal empowerment discourse.",
+      "slot": "interest:policy-ethics",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.7,
+      "review": {
+        "verdict": "ambiguous",
+        "reason": "Gender studies has no taxonomy topic; policy-ethics is a stretch either way."
+      }
+    },
+    {
+      "key": "I aim to integrate digital strategies with scholarly rigor for global firms. | interest:policy-ethics",
+      "source": "adaption",
+      "question": "Are you studying digital transformation strategies or organizational innovation in traditional industries?",
+      "answer": "I aim to integrate digital strategies with scholarly rigor for global firms.",
+      "guarded": "I aim to integrate digital strategies with scholarly rigor for global firms.",
+      "slot": "interest:policy-ethics",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.5,
+      "review": null
+    },
+    {
+      "key": "I aim to integrate digital strategies with scholarly rigor for global firms. | interest:programming-software",
+      "source": "adaption",
+      "question": "Are you studying digital transformation strategies or organizational innovation in traditional industries?",
+      "answer": "I aim to integrate digital strategies with scholarly rigor for global firms.",
+      "guarded": "I aim to integrate digital strategies with scholarly rigor for global firms.",
+      "slot": "interest:programming-software",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.6,
+      "review": null
+    },
+    {
+      "key": "I aim to research risk management applications in life insurance sectors. | pathways",
+      "source": "adaption",
+      "question": "Do you wish to specialize in asset-liability modeling or machine learning in insurance?",
+      "answer": "I aim to research risk management applications in life insurance sectors.",
+      "guarded": "I aim to research risk management applications in life insurance sectors.",
+      "slot": "pathways",
+      "type": "missing",
+      "reference": [
+        "research-academia"
+      ],
+      "ours": null,
+      "review": {
+        "verdict": "ambiguous",
+        "reason": "Researching a topic is not necessarily a research career; the guard deliberately requires career words."
+      }
+    },
+    {
+      "key": "I aim to study integration theories and mathematical exposition rigor. | pathwaysSkipped",
+      "source": "adaption",
+      "question": "Do you prefer advanced calculus research or supervising graduate work in real analysis?",
+      "answer": "I aim to study integration theories and mathematical exposition rigor.",
+      "guarded": "I aim to study integration theories and mathematical exposition rigor.",
+      "slot": "pathwaysSkipped",
+      "type": "extra",
+      "reference": null,
+      "ours": true,
+      "review": null
+    },
+    {
+      "key": "I aim to synthesize complex logical systems and structural epistemology models. | interest:history-philosophy",
+      "source": "adaption",
+      "question": "Are you interested in formalizing abstract logical frameworks or interdisciplinary systems theory?",
+      "answer": "I aim to synthesize complex logical systems and structural epistemology models.",
+      "guarded": "I aim to synthesize complex logical systems and structural epistemology models.",
+      "slot": "interest:history-philosophy",
+      "type": "missing",
+      "reference": 0.7,
+      "ours": null,
+      "review": {
+        "verdict": "reference",
+        "reason": "Epistemology is philosophy, so history-philosophy should be set."
+      }
+    },
+    {
+      "key": "I aim to synthesize complex logical systems and structural epistemology models. | style.appliedPreference",
+      "source": "adaption",
+      "question": "Are you interested in formalizing abstract logical frameworks or interdisciplinary systems theory?",
+      "answer": "I aim to synthesize complex logical systems and structural epistemology models.",
+      "guarded": "I aim to synthesize complex logical systems and structural epistemology models.",
+      "slot": "style.appliedPreference",
+      "type": "missing",
+      "reference": 0.3,
+      "ours": null,
+      "review": {
+        "verdict": "ours",
+        "reason": "Nothing in the answer states a theory or applied preference."
+      }
+    },
+    {
+      "key": "I am deeply interested in the intersection of behavioral economics and public policy. | interest:finance-economics",
+      "source": "adaption",
+      "question": "What specific academic interests are driving your choice of electives?",
+      "answer": "I am deeply interested in the intersection of behavioral economics and public policy.",
+      "guarded": "I am deeply interested in the intersection of behavioral economics and public policy.",
+      "slot": "interest:finance-economics",
+      "type": "missing",
+      "reference": 0.85,
+      "ours": null,
+      "review": null
+    },
+    {
+      "key": "I am interested in navigating traditional practices within public health policy. | interest:global-development",
+      "source": "adaption",
+      "question": "Do you plan to study the ethics of cultural relativism or decolonizing health research?",
+      "answer": "I am interested in navigating traditional practices within public health policy.",
+      "guarded": "I am interested in navigating traditional practices within public health policy.",
+      "slot": "interest:global-development",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.6,
+      "review": null
+    },
+    {
+      "key": "I am interested in refining rating systems and defining clear performance levels. | interest:management-leadership",
+      "source": "adaption",
+      "question": "Do you wish to design psychometric rubrics or train educators in learning outcome measurements?",
+      "answer": "I am interested in refining rating systems and defining clear performance levels.",
+      "guarded": "I am interested in refining rating systems and defining clear performance levels.",
+      "slot": "interest:management-leadership",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.7,
+      "review": {
+        "verdict": "reference",
+        "reason": "Management-leadership was invented from rating systems and performance levels."
+      }
+    },
+    {
+      "key": "I am leaning towards an honors thesis focused on urban sustainability. | pathways",
+      "source": "adaption",
+      "question": "Are you interested in pursuing an honors thesis or a capstone project?",
+      "answer": "I am leaning towards an honors thesis focused on urban sustainability.",
+      "guarded": "I am leaning towards an honors thesis focused on urban sustainability.",
+      "slot": "pathways",
+      "type": "extra",
+      "reference": null,
+      "ours": [
+        "energy-transition"
+      ],
+      "review": null
+    },
+    {
+      "key": "I can't afford the field trip, but I'm really into sustainability. | interest:sustainability-climate",
+      "source": "seed",
+      "question": "Which topics or lectures made you lose track of time?",
+      "answer": "I can't afford the field trip, but I'm really into sustainability.",
+      "guarded": "",
+      "slot": "interest:sustainability-climate",
+      "type": "missing",
+      "reference": 0.85,
+      "ours": null,
+      "review": null
+    },
+    {
+      "key": "I choose labor hours and capital investment as inputs, with service output and customer satisfaction as outputs. | interest:management-leadership",
+      "source": "adaption",
+      "question": "What input variables do you select when constructing a variable returns to scale model for efficiency analysis?",
+      "answer": "I choose labor hours and capital investment as inputs, with service output and customer satisfaction as outputs.",
+      "guarded": "I choose labor hours and capital investment as inputs, with service output and customer satisfaction as outputs.",
+      "slot": "interest:management-leadership",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.6,
+      "review": null
+    },
+    {
+      "key": "I create a strict hourly schedule and avoid all social commitments. | timetablePrefs.earliestStart",
+      "source": "adaption",
+      "question": "How do you manage your time during finals week?",
+      "answer": "I create a strict hourly schedule and avoid all social commitments.",
+      "guarded": "I create a strict hourly schedule and avoid all social commitments.",
+      "slot": "timetablePrefs.earliestStart",
+      "type": "extra",
+      "reference": null,
+      "ours": "09:00",
+      "review": null
+    },
+    {
+      "key": "I create detailed concept maps to visualize the relationships between different theories. | style.appliedPreference",
+      "source": "adaption",
+      "question": "What is your preferred method for reviewing complex theoretical frameworks?",
+      "answer": "I create detailed concept maps to visualize the relationships between different theories.",
+      "guarded": "I create detailed concept maps to visualize the relationships between different theories.",
+      "slot": "style.appliedPreference",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.3,
+      "review": null
+    },
+    {
+      "key": "I dedicate two hours each morning to review and prep for the next term. | timetablePrefs.earliestStart",
+      "source": "adaption",
+      "question": "How do you manage your study schedule during holiday breaks?",
+      "answer": "I dedicate two hours each morning to review and prep for the next term.",
+      "guarded": "I dedicate two hours each morning to review and prep for the next term.",
+      "slot": "timetablePrefs.earliestStart",
+      "type": "extra",
+      "reference": null,
+      "ours": "06:00",
+      "review": null
+    },
+    {
+      "key": "I examine how class and religion overlap with gender to create unique barriers for female students in rural areas. | pathwaysSkipped",
+      "source": "adaption",
+      "question": "How does intersectionality shape your analysis of gender roles in Southeast Asian educational contexts?",
+      "answer": "I examine how class and religion overlap with gender to create unique barriers for female students in rural areas.",
+      "guarded": "I examine how class and religion overlap with gender to create unique barriers for female students in rural areas.",
+      "slot": "pathwaysSkipped",
+      "type": "extra",
+      "reference": null,
+      "ours": true,
+      "review": null
+    },
+    {
+      "key": "I focus on balancing linguistic diversity with literacy standards in multicultural settings. | interest:languages",
+      "source": "adaption",
+      "question": "Do you wish to develop inclusive language programs or study dialect awareness in education?",
+      "answer": "I focus on balancing linguistic diversity with literacy standards in multicultural settings.",
+      "guarded": "I focus on balancing linguistic diversity with literacy standards in multicultural settings.",
+      "slot": "interest:languages",
+      "type": "missing",
+      "reference": 0.8,
+      "ours": null,
+      "review": {
+        "verdict": "reference",
+        "reason": "Linguistic diversity names languages."
+      }
+    },
+    {
+      "key": "I focus on evidence-based analysis of mental health and dissertation standards. | interest:policy-ethics",
+      "source": "adaption",
+      "question": "Do you wish to research the psychological effects of video games or digital media on behavior?",
+      "answer": "I focus on evidence-based analysis of mental health and dissertation standards.",
+      "guarded": "I focus on evidence-based analysis of mental health and dissertation standards.",
+      "slot": "interest:policy-ethics",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.6,
+      "review": {
+        "verdict": "reference",
+        "reason": "Policy-ethics was invented from mental health analysis."
+      }
+    },
+    {
+      "key": "I focus on evidence-based analysis of mental health and dissertation standards. | interest:statistics-data",
+      "source": "adaption",
+      "question": "Do you wish to research the psychological effects of video games or digital media on behavior?",
+      "answer": "I focus on evidence-based analysis of mental health and dissertation standards.",
+      "guarded": "I focus on evidence-based analysis of mental health and dissertation standards.",
+      "slot": "interest:statistics-data",
+      "type": "missing",
+      "reference": 0.5,
+      "ours": null,
+      "review": {
+        "verdict": "ambiguous",
+        "reason": "\"Evidence-based analysis\" weakly implies statistics."
+      }
+    },
+    {
+      "key": "I focus on low-speed aerodynamics and renewable energy optimization projects. | interest:computational-simulation",
+      "source": "adaption",
+      "question": "Do you prefer aerodynamic design simulations or vertical-axis wind turbine performance analysis?",
+      "answer": "I focus on low-speed aerodynamics and renewable energy optimization projects.",
+      "guarded": "I focus on low-speed aerodynamics and renewable energy optimization projects.",
+      "slot": "interest:computational-simulation",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.7,
+      "review": null
+    },
+    {
+      "key": "I focus on low-speed aerodynamics and renewable energy optimization projects. | interest:thermodynamics-energy",
+      "source": "adaption",
+      "question": "Do you prefer aerodynamic design simulations or vertical-axis wind turbine performance analysis?",
+      "answer": "I focus on low-speed aerodynamics and renewable energy optimization projects.",
+      "guarded": "I focus on low-speed aerodynamics and renewable energy optimization projects.",
+      "slot": "interest:thermodynamics-energy",
+      "type": "missing",
+      "reference": 0.7,
+      "ours": null,
+      "review": {
+        "verdict": "ambiguous",
+        "reason": "Renewable energy optimisation maps to sustainability (both set it); thermodynamics is the reference's extra reading."
+      }
+    },
+    {
+      "key": "I focus on narratology and scholarly depth in Irish literary criticism. | interest:communication-writing",
+      "source": "adaption",
+      "question": "Do you wish to analyze narrative theory in modernist fiction or the child's perspective in Joyce?",
+      "answer": "I focus on narratology and scholarly depth in Irish literary criticism.",
+      "guarded": "I focus on narratology and scholarly depth in Irish literary criticism.",
+      "slot": "interest:communication-writing",
+      "type": "missing",
+      "reference": 0.6,
+      "ours": null,
+      "review": {
+        "verdict": "ambiguous",
+        "reason": "Literary criticism: communication-writing or history-philosophy are both loose fits."
+      }
+    },
+    {
+      "key": "I focus on precision with scientific terminology and advanced placement materials. | style.mathsComfort",
+      "source": "adaption",
+      "question": "Do you wish to develop standardized test curricula or analyze solar physics passages?",
+      "answer": "I focus on precision with scientific terminology and advanced placement materials.",
+      "guarded": "I focus on precision with scientific terminology and advanced placement materials.",
+      "slot": "style.mathsComfort",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.8,
+      "review": null
+    },
+    {
+      "key": "I focus on real-world physics modeling and kinematics for STEM students. | interest:computational-simulation",
+      "source": "adaption",
+      "question": "Do you prefer designing competitive exam prep or explaining rotational dynamics in athletic motion?",
+      "answer": "I focus on real-world physics modeling and kinematics for STEM students.",
+      "guarded": "I focus on real-world physics modeling and kinematics for STEM students.",
+      "slot": "interest:computational-simulation",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.7,
+      "review": {
+        "verdict": "ambiguous",
+        "reason": "Physics modelling could be computational simulation or mathematics; the student said neither."
+      }
+    },
+    {
+      "key": "I focus on regulatory compliance and technical precision in food safety. | interest:policy-ethics",
+      "source": "adaption",
+      "question": "Do you wish to study food microbiology protocols or hazard analysis in condiment production?",
+      "answer": "I focus on regulatory compliance and technical precision in food safety.",
+      "guarded": "I focus on regulatory compliance and technical precision in food safety.",
+      "slot": "interest:policy-ethics",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.8,
+      "review": {
+        "verdict": "ours",
+        "reason": "Regulatory compliance is one of policy-ethics' cue words (\"regulation\")."
+      }
+    },
+    {
+      "key": "I focus on regulatory compliance and technical precision in food safety. | interest:sustainability-climate",
+      "source": "adaption",
+      "question": "Do you wish to study food microbiology protocols or hazard analysis in condiment production?",
+      "answer": "I focus on regulatory compliance and technical precision in food safety.",
+      "guarded": "I focus on regulatory compliance and technical precision in food safety.",
+      "slot": "interest:sustainability-climate",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.7,
+      "review": null
+    },
+    {
+      "key": "I focus on sunspot numbers and flare classifications to help students correlate solar cycles with space weather events. | interest:sustainability-climate",
+      "source": "adaption",
+      "question": "What specific solar activity metric do you prioritize when designing curriculum for advanced placement astronomy?",
+      "answer": "I focus on sunspot numbers and flare classifications to help students correlate solar cycles with space weather events.",
+      "guarded": "I focus on sunspot numbers and flare classifications to help students correlate solar cycles with space weather events.",
+      "slot": "interest:sustainability-climate",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.7,
+      "review": {
+        "verdict": "reference",
+        "reason": "Sunspots and space weather are not climate or sustainability."
+      }
+    },
+    {
+      "key": "I focus on the use of visual framing and dialogue pacing to reveal underlying power dynamics in origin stories. | interest:creative-arts-design",
+      "source": "adaption",
+      "question": "What cinematic narrative device do you analyze to deconstruct cultural stereotypes in superhero films?",
+      "answer": "I focus on the use of visual framing and dialogue pacing to reveal underlying power dynamics in origin stories.",
+      "guarded": "I focus on the use of visual framing and dialogue pacing to reveal underlying power dynamics in origin stories.",
+      "slot": "interest:creative-arts-design",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.7,
+      "review": {
+        "verdict": "ours",
+        "reason": "Visual framing and pacing in film is creative arts and design."
+      }
+    },
+    {
+      "key": "I focus on the use of visual framing and dialogue pacing to reveal underlying power dynamics in origin stories. | interest:history-philosophy",
+      "source": "adaption",
+      "question": "What cinematic narrative device do you analyze to deconstruct cultural stereotypes in superhero films?",
+      "answer": "I focus on the use of visual framing and dialogue pacing to reveal underlying power dynamics in origin stories.",
+      "guarded": "I focus on the use of visual framing and dialogue pacing to reveal underlying power dynamics in origin stories.",
+      "slot": "interest:history-philosophy",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.7,
+      "review": null
+    },
+    {
+      "key": "I focus on WeChat Mini Programs and Spring Boot architectures. | style.appliedPreference",
+      "source": "adaption",
+      "question": "Do you prefer building full-stack applications or mobile interfaces for your thesis?",
+      "answer": "I focus on WeChat Mini Programs and Spring Boot architectures.",
+      "guarded": "I focus on WeChat Mini Programs and Spring Boot architectures.",
+      "slot": "style.appliedPreference",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.8,
+      "review": null
+    },
+    {
+      "key": "I have ADHD so long lectures are tough, but I enjoy electronics. | interest:electronics-embedded",
+      "source": "seed",
+      "question": "Which topics or lectures made you lose track of time?",
+      "answer": "I have ADHD so long lectures are tough, but I enjoy electronics.",
+      "guarded": "",
+      "slot": "interest:electronics-embedded",
+      "type": "missing",
+      "reference": 0.8,
+      "ours": null,
+      "review": null
+    },
+    {
+      "key": "I lost track of time in the wind tunnel lab and the CFD coursework. | style.appliedPreference",
+      "source": "seed",
+      "question": "Which topics or lectures made you lose track of time?",
+      "answer": "I lost track of time in the wind tunnel lab and the CFD coursework.",
+      "guarded": "I lost track of time in the wind tunnel lab and the CFD coursework.",
+      "slot": "style.appliedPreference",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.85,
+      "review": null
+    },
+    {
+      "key": "I model entropy generation rates to identify inefficiencies in heat exchangers operating under transient conditions. | interest:computational-simulation",
+      "source": "adaption",
+      "question": "How do you apply non-equilibrium thermodynamics principles to optimize industrial thermal system designs?",
+      "answer": "I model entropy generation rates to identify inefficiencies in heat exchangers operating under transient conditions.",
+      "guarded": "I model entropy generation rates to identify inefficiencies in heat exchangers operating under transient conditions.",
+      "slot": "interest:computational-simulation",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.8,
+      "review": {
+        "verdict": "ambiguous",
+        "reason": "Modelling entropy generation could be simulation; the student did not say they simulate."
+      }
+    },
+    {
+      "key": "I model entropy generation rates to identify inefficiencies in heat exchangers operating under transient conditions. | interest:mathematics-modelling",
+      "source": "adaption",
+      "question": "How do you apply non-equilibrium thermodynamics principles to optimize industrial thermal system designs?",
+      "answer": "I model entropy generation rates to identify inefficiencies in heat exchangers operating under transient conditions.",
+      "guarded": "I model entropy generation rates to identify inefficiencies in heat exchangers operating under transient conditions.",
+      "slot": "interest:mathematics-modelling",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.8,
+      "review": {
+        "verdict": "ambiguous",
+        "reason": "Modelling implies maths but maths was not named."
+      }
+    },
+    {
+      "key": "I model entropy generation rates to identify inefficiencies in heat exchangers operating under transient conditions. | style.appliedPreference",
+      "source": "adaption",
+      "question": "How do you apply non-equilibrium thermodynamics principles to optimize industrial thermal system designs?",
+      "answer": "I model entropy generation rates to identify inefficiencies in heat exchangers operating under transient conditions.",
+      "guarded": "I model entropy generation rates to identify inefficiencies in heat exchangers operating under transient conditions.",
+      "slot": "style.appliedPreference",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.85,
+      "review": null
+    },
+    {
+      "key": "I need a rigorous, accessible curriculum with open-source learning pathways. | breadthAppetite",
+      "source": "adaption",
+      "question": "Do you prefer a structured nine-month Python plan or self-guided YouTube-based learning?",
+      "answer": "I need a rigorous, accessible curriculum with open-source learning pathways.",
+      "guarded": "I need a rigorous, accessible curriculum with open-source learning pathways.",
+      "slot": "breadthAppetite",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.6,
+      "review": null
+    },
+    {
+      "key": "I need a rigorous, accessible curriculum with open-source learning pathways. | style.appliedPreference",
+      "source": "adaption",
+      "question": "Do you prefer a structured nine-month Python plan or self-guided YouTube-based learning?",
+      "answer": "I need a rigorous, accessible curriculum with open-source learning pathways.",
+      "guarded": "I need a rigorous, accessible curriculum with open-source learning pathways.",
+      "slot": "style.appliedPreference",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.3,
+      "review": null
+    },
+    {
+      "key": "I need absolute silence, so I usually spend ten hours a week in the library. | style.workloadTolerance",
+      "source": "adaption",
+      "question": "Are there any particular study environments where you feel most productive?",
+      "answer": "I need absolute silence, so I usually spend ten hours a week in the library.",
+      "guarded": "I need absolute silence, so I usually spend ten hours a week in the library.",
+      "slot": "style.workloadTolerance",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.8,
+      "review": null
+    },
+    {
+      "key": "I perform much better on open-book essays than on timed multiple-choice tests. | style.appliedPreference",
+      "source": "adaption",
+      "question": "Which assessment methods do you find most effective for your learning?",
+      "answer": "I perform much better on open-book essays than on timed multiple-choice tests.",
+      "guarded": "I perform much better on open-book essays than on timed multiple-choice tests.",
+      "slot": "style.appliedPreference",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.4,
+      "review": null
+    },
+    {
+      "key": "I practice mindfulness and strictly schedule my sleep to avoid burnout. | style.workloadTolerance",
+      "source": "adaption",
+      "question": "How do you handle academic stress during the most intense weeks?",
+      "answer": "I practice mindfulness and strictly schedule my sleep to avoid burnout.",
+      "guarded": "I practice mindfulness and strictly schedule my sleep to avoid burnout.",
+      "slot": "style.workloadTolerance",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.7,
+      "review": null
+    },
+    {
+      "key": "I prefer apps that allow real-time ecological momentary assessment over weekly retrospective surveys. | interest:psychology-behaviour",
+      "source": "adaption",
+      "question": "What digital therapeutics tools do you find most effective for tracking patient mood fluctuations?",
+      "answer": "I prefer apps that allow real-time ecological momentary assessment over weekly retrospective surveys.",
+      "guarded": "I prefer apps that allow real-time ecological momentary assessment over weekly retrospective surveys.",
+      "slot": "interest:psychology-behaviour",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.7,
+      "review": {
+        "verdict": "ambiguous",
+        "reason": "Ecological momentary assessment is a psychology method; the answer is about apps."
+      }
+    },
+    {
+      "key": "I prefer detailed marginal comments on my drafts rather than a final letter grade. | style.examPreference",
+      "source": "adaption",
+      "question": "What kind of feedback from instructors do you find most useful?",
+      "answer": "I prefer detailed marginal comments on my drafts rather than a final letter grade.",
+      "guarded": "I prefer detailed marginal comments on my drafts rather than a final letter grade.",
+      "slot": "style.examPreference",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.2,
+      "review": null
+    },
+    {
+      "key": "I prefer individual work because I can control the quality and pace of the output. | style.workloadTolerance",
+      "source": "adaption",
+      "question": "Do you prefer working individually or in a team for major projects?",
+      "answer": "I prefer individual work because I can control the quality and pace of the output.",
+      "guarded": "I prefer individual work because I can control the quality and pace of the output.",
+      "slot": "style.workloadTolerance",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.7,
+      "review": null
+    },
+    {
+      "key": "I prioritize lift-to-drag ratios at low Reynolds numbers using QBlade simulations before finalizing the design. | interest:computational-simulation",
+      "source": "adaption",
+      "question": "How do you approach selecting airfoil profiles when optimizing low-speed turbine performance?",
+      "answer": "I prioritize lift-to-drag ratios at low Reynolds numbers using QBlade simulations before finalizing the design.",
+      "guarded": "I prioritize lift-to-drag ratios at low Reynolds numbers using QBlade simulations before finalizing the design.",
+      "slot": "interest:computational-simulation",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.85,
+      "review": {
+        "verdict": "ours",
+        "reason": "QBlade simulations are named: computational-simulation is right, and the reference label was empty."
+      }
+    },
+    {
+      "key": "I prioritize lift-to-drag ratios at low Reynolds numbers using QBlade simulations before finalizing the design. | interest:design-manufacturing",
+      "source": "adaption",
+      "question": "How do you approach selecting airfoil profiles when optimizing low-speed turbine performance?",
+      "answer": "I prioritize lift-to-drag ratios at low Reynolds numbers using QBlade simulations before finalizing the design.",
+      "guarded": "I prioritize lift-to-drag ratios at low Reynolds numbers using QBlade simulations before finalizing the design.",
+      "slot": "interest:design-manufacturing",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.8,
+      "review": {
+        "verdict": "ambiguous",
+        "reason": "\"Before finalising the design\" names design, weakly."
+      }
+    },
+    {
+      "key": "I prioritize lift-to-drag ratios at low Reynolds numbers using QBlade simulations before finalizing the design. | interest:fluid-mechanics",
+      "source": "adaption",
+      "question": "How do you approach selecting airfoil profiles when optimizing low-speed turbine performance?",
+      "answer": "I prioritize lift-to-drag ratios at low Reynolds numbers using QBlade simulations before finalizing the design.",
+      "guarded": "I prioritize lift-to-drag ratios at low Reynolds numbers using QBlade simulations before finalizing the design.",
+      "slot": "interest:fluid-mechanics",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.9,
+      "review": {
+        "verdict": "ours",
+        "reason": "Lift-to-drag ratios at low Reynolds numbers are fluid mechanics; the reviewed label missed it."
+      }
+    },
+    {
+      "key": "I prioritize lift-to-drag ratios at low Reynolds numbers using QBlade simulations before finalizing the design. | style.appliedPreference",
+      "source": "adaption",
+      "question": "How do you approach selecting airfoil profiles when optimizing low-speed turbine performance?",
+      "answer": "I prioritize lift-to-drag ratios at low Reynolds numbers using QBlade simulations before finalizing the design.",
+      "guarded": "I prioritize lift-to-drag ratios at low Reynolds numbers using QBlade simulations before finalizing the design.",
+      "slot": "style.appliedPreference",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.85,
+      "review": null
+    },
+    {
+      "key": "I prioritize precise terminology for equations but restructure sentences to improve readability for interdisciplinary audiences. | interest:communication-writing",
+      "source": "adaption",
+      "question": "How do you balance technical accuracy with narrative flow when editing papers on heat transfer phenomena?",
+      "answer": "I prioritize precise terminology for equations but restructure sentences to improve readability for interdisciplinary audiences.",
+      "guarded": "I prioritize precise terminology for equations but restructure sentences to improve readability for interdisciplinary audiences.",
+      "slot": "interest:communication-writing",
+      "type": "missing",
+      "reference": 0.6,
+      "ours": null,
+      "review": {
+        "verdict": "ambiguous",
+        "reason": "Restructuring sentences for readability weakly implies an interest in writing."
+      }
+    },
+    {
+      "key": "I schedule my club meetings on weekends to keep my weekdays clear. | timetablePrefs.avoidDays",
+      "source": "adaption",
+      "question": "How do you balance your extracurriculars with your studies?",
+      "answer": "I schedule my club meetings on weekends to keep my weekdays clear.",
+      "guarded": "I schedule my club meetings on weekends to keep my weekdays clear.",
+      "slot": "timetablePrefs.avoidDays",
+      "type": "extra",
+      "reference": null,
+      "ours": [],
+      "review": null
+    },
+    {
+      "key": "I still need to take Intermediate Calculus before I can enter the engineering core. | interest:mathematics-modelling",
+      "source": "adaption",
+      "question": "Do you have any prerequisites you still need to complete?",
+      "answer": "I still need to take Intermediate Calculus before I can enter the engineering core.",
+      "guarded": "I still need to take Intermediate Calculus before I can enter the engineering core.",
+      "slot": "interest:mathematics-modelling",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.6,
+      "review": {
+        "verdict": "reference",
+        "reason": "A prerequisite they still need is not an interest in mathematics."
+      }
+    },
+    {
+      "key": "I struggle with synthesizing large amounts of academic literature into a coherent thesis. | style.codingComfort",
+      "source": "adaption",
+      "question": "Do you feel you need additional support in any specific study skill?",
+      "answer": "I struggle with synthesizing large amounts of academic literature into a coherent thesis.",
+      "guarded": "I struggle with synthesizing large amounts of academic literature into a coherent thesis.",
+      "slot": "style.codingComfort",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.3,
+      "review": null
+    },
+    {
+      "key": "I struggle with timed tests, so I'd much rather do a portfolio. | style.appliedPreference",
+      "source": "adaption",
+      "question": "Do you prefer traditional exams or project-based assessments?",
+      "answer": "I struggle with timed tests, so I'd much rather do a portfolio.",
+      "guarded": "I struggle with timed tests, so I'd much rather do a portfolio.",
+      "slot": "style.appliedPreference",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.75,
+      "review": null
+    },
+    {
+      "key": "I suggest starting with pilot projects in supply chain visibility before scaling to full production line automation. | interest:control-robotics",
+      "source": "adaption",
+      "question": "What strategic framework do you recommend for integrating digital tools into traditional manufacturing workflows?",
+      "answer": "I suggest starting with pilot projects in supply chain visibility before scaling to full production line automation.",
+      "guarded": "I suggest starting with pilot projects in supply chain visibility before scaling to full production line automation.",
+      "slot": "interest:control-robotics",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.5,
+      "review": null
+    },
+    {
+      "key": "I suggest starting with pilot projects in supply chain visibility before scaling to full production line automation. | interest:entrepreneurship-innovation",
+      "source": "adaption",
+      "question": "What strategic framework do you recommend for integrating digital tools into traditional manufacturing workflows?",
+      "answer": "I suggest starting with pilot projects in supply chain visibility before scaling to full production line automation.",
+      "guarded": "I suggest starting with pilot projects in supply chain visibility before scaling to full production line automation.",
+      "slot": "interest:entrepreneurship-innovation",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.6,
+      "review": null
+    },
+    {
+      "key": "I use the Cornell method to separate main ideas from supporting details. | style.codingComfort",
+      "source": "adaption",
+      "question": "What is your approach to taking notes during a fast-paced lecture?",
+      "answer": "I use the Cornell method to separate main ideas from supporting details.",
+      "guarded": "I use the Cornell method to separate main ideas from supporting details.",
+      "slot": "style.codingComfort",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.6,
+      "review": null
+    },
+    {
+      "key": "I use visual block-coding tools to show how computers recognize patterns in images without writing complex code. | interest:machine-learning-ai",
+      "source": "adaption",
+      "question": "How do you simplify the concept of machine learning algorithms for eighth-grade STEM students?",
+      "answer": "I use visual block-coding tools to show how computers recognize patterns in images without writing complex code.",
+      "guarded": "I use visual block-coding tools to show how computers recognize patterns in images without writing complex code.",
+      "slot": "interest:machine-learning-ai",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.8,
+      "review": {
+        "verdict": "ambiguous",
+        "reason": "Teaching children how computers recognise images: ML is named in effect, but as a teacher, not a student."
+      }
+    },
+    {
+      "key": "I use visual block-coding tools to show how computers recognize patterns in images without writing complex code. | interest:programming-software",
+      "source": "adaption",
+      "question": "How do you simplify the concept of machine learning algorithms for eighth-grade STEM students?",
+      "answer": "I use visual block-coding tools to show how computers recognize patterns in images without writing complex code.",
+      "guarded": "I use visual block-coding tools to show how computers recognize patterns in images without writing complex code.",
+      "slot": "interest:programming-software",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.7,
+      "review": null
+    },
+    {
+      "key": "I use visual block-coding tools to show how computers recognize patterns in images without writing complex code. | style.codingComfort",
+      "source": "adaption",
+      "question": "How do you simplify the concept of machine learning algorithms for eighth-grade STEM students?",
+      "answer": "I use visual block-coding tools to show how computers recognize patterns in images without writing complex code.",
+      "guarded": "I use visual block-coding tools to show how computers recognize patterns in images without writing complex code.",
+      "slot": "style.codingComfort",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.6,
+      "review": {
+        "verdict": "reference",
+        "reason": "Block-coding tools used to teach say nothing about their own coding comfort."
+      }
+    },
+    {
+      "key": "I want to blend cognitive science with intelligent tutoring system development. | style.appliedPreference",
+      "source": "adaption",
+      "question": "Are you interested in AI-assisted learning systems or mentor-guided pedagogical frameworks?",
+      "answer": "I want to blend cognitive science with intelligent tutoring system development.",
+      "guarded": "I want to blend cognitive science with intelligent tutoring system development.",
+      "slot": "style.appliedPreference",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.75,
+      "review": null
+    },
+    {
+      "key": "I want to combine deep medical knowledge with clear pedagogical approaches. | interest:communication-writing",
+      "source": "adaption",
+      "question": "Are you studying peptic ulcer pathogenesis or designing board-style questions for licensing exams?",
+      "answer": "I want to combine deep medical knowledge with clear pedagogical approaches.",
+      "guarded": "I want to combine deep medical knowledge with clear pedagogical approaches.",
+      "slot": "interest:communication-writing",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.6,
+      "review": null
+    },
+    {
+      "key": "I want to design K-8 programs integrating vocabulary, verbs, and grammar. | interest:design-manufacturing",
+      "source": "adaption",
+      "question": "Are you interested in immersive theme-based pedagogy or scaffolded instruction for mixed levels?",
+      "answer": "I want to design K-8 programs integrating vocabulary, verbs, and grammar.",
+      "guarded": "I want to design K-8 programs integrating vocabulary, verbs, and grammar.",
+      "slot": "interest:design-manufacturing",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.7,
+      "review": null
+    },
+    {
+      "key": "I want to emphasize conceptual modeling and real-world applications in assessments. | style.examPreference",
+      "source": "adaption",
+      "question": "Are you focused on creating context-rich physics problems or national exam preparation strategies?",
+      "answer": "I want to emphasize conceptual modeling and real-world applications in assessments.",
+      "guarded": "I want to emphasize conceptual modeling and real-world applications in assessments.",
+      "slot": "style.examPreference",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.2,
+      "review": null
+    },
+    {
+      "key": "I want to ensure scientific integrity and citation accuracy in climate texts. | interest:communication-writing",
+      "source": "adaption",
+      "question": "Are you focused on rephrasing atmospheric studies or refining oceanic research for originality?",
+      "answer": "I want to ensure scientific integrity and citation accuracy in climate texts.",
+      "guarded": "I want to ensure scientific integrity and citation accuracy in climate texts.",
+      "slot": "interest:communication-writing",
+      "type": "missing",
+      "reference": 0.7,
+      "ours": null,
+      "review": {
+        "verdict": "ambiguous",
+        "reason": "Citation accuracy weakly implies writing."
+      }
+    },
+    {
+      "key": "I want to ensure scientific integrity and citation accuracy in climate texts. | interest:policy-ethics",
+      "source": "adaption",
+      "question": "Are you focused on rephrasing atmospheric studies or refining oceanic research for originality?",
+      "answer": "I want to ensure scientific integrity and citation accuracy in climate texts.",
+      "guarded": "I want to ensure scientific integrity and citation accuracy in climate texts.",
+      "slot": "interest:policy-ethics",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.8,
+      "review": {
+        "verdict": "reference",
+        "reason": "Policy-ethics was invented from scientific integrity."
+      }
+    },
+    {
+      "key": "I want to explore enterprise storage trade-offs for high-performance computing. | interest:computational-simulation",
+      "source": "adaption",
+      "question": "Are you interested in low-latency storage systems or NVMe over Fabrics for trading?",
+      "answer": "I want to explore enterprise storage trade-offs for high-performance computing.",
+      "guarded": "I want to explore enterprise storage trade-offs for high-performance computing.",
+      "slot": "interest:computational-simulation",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.8,
+      "review": {
+        "verdict": "ambiguous",
+        "reason": "High-performance computing can be computational simulation, not stated."
+      }
+    },
+    {
+      "key": "I want to focus on bias mitigation in meta-analyses of rare adverse events. | interest:biomedical-engineering",
+      "source": "adaption",
+      "question": "Are you interested in systematic reviews or automated data extraction from clinical registries?",
+      "answer": "I want to focus on bias mitigation in meta-analyses of rare adverse events.",
+      "guarded": "I want to focus on bias mitigation in meta-analyses of rare adverse events.",
+      "slot": "interest:biomedical-engineering",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.8,
+      "review": null
+    },
+    {
+      "key": "I want to focus on bias mitigation in meta-analyses of rare adverse events. | interest:machine-learning-ai",
+      "source": "adaption",
+      "question": "Are you interested in systematic reviews or automated data extraction from clinical registries?",
+      "answer": "I want to focus on bias mitigation in meta-analyses of rare adverse events.",
+      "guarded": "I want to focus on bias mitigation in meta-analyses of rare adverse events.",
+      "slot": "interest:machine-learning-ai",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.7,
+      "review": {
+        "verdict": "reference",
+        "reason": "Meta-analysis is statistics, not machine learning."
+      }
+    },
+    {
+      "key": "I want to gain the credentials necessary to work in international diplomatic relations. | interest:global-development",
+      "source": "adaption",
+      "question": "What is your primary motivation for pursuing this specific degree?",
+      "answer": "I want to gain the credentials necessary to work in international diplomatic relations.",
+      "guarded": "I want to gain the credentials necessary to work in international diplomatic relations.",
+      "slot": "interest:global-development",
+      "type": "missing",
+      "reference": 0.6,
+      "ours": null,
+      "review": {
+        "verdict": "ambiguous",
+        "reason": "Diplomacy relates to global development, loosely."
+      }
+    },
+    {
+      "key": "I want to gain the credentials necessary to work in international diplomatic relations. | interest:languages",
+      "source": "adaption",
+      "question": "What is your primary motivation for pursuing this specific degree?",
+      "answer": "I want to gain the credentials necessary to work in international diplomatic relations.",
+      "guarded": "I want to gain the credentials necessary to work in international diplomatic relations.",
+      "slot": "interest:languages",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.7,
+      "review": null
+    },
+    {
+      "key": "I want to gain the credentials necessary to work in international diplomatic relations. | pathwaysSkipped",
+      "source": "adaption",
+      "question": "What is your primary motivation for pursuing this specific degree?",
+      "answer": "I want to gain the credentials necessary to work in international diplomatic relations.",
+      "guarded": "I want to gain the credentials necessary to work in international diplomatic relations.",
+      "slot": "pathwaysSkipped",
+      "type": "extra",
+      "reference": null,
+      "ours": true,
+      "review": null
+    },
+    {
+      "key": "I want to gain the credentials needed to start my own consulting firm. | interest:entrepreneurship-innovation",
+      "source": "adaption",
+      "question": "What is your primary motivation for pursuing this degree?",
+      "answer": "I want to gain the credentials needed to start my own consulting firm.",
+      "guarded": "I want to gain the credentials needed to start my own consulting firm.",
+      "slot": "interest:entrepreneurship-innovation",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.8,
+      "review": null
+    },
+    {
+      "key": "I want to gain the credentials needed to start my own consulting firm. | interest:management-leadership",
+      "source": "adaption",
+      "question": "What is your primary motivation for pursuing this degree?",
+      "answer": "I want to gain the credentials needed to start my own consulting firm.",
+      "guarded": "I want to gain the credentials needed to start my own consulting firm.",
+      "slot": "interest:management-leadership",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.7,
+      "review": null
+    },
+    {
+      "key": "I want to integrate reflective practices with measurable outcomes in curricula. | breadthAppetite",
+      "source": "adaption",
+      "question": "Do you prefer humanistic language pedagogy or phenomenology in second language acquisition?",
+      "answer": "I want to integrate reflective practices with measurable outcomes in curricula.",
+      "guarded": "I want to integrate reflective practices with measurable outcomes in curricula.",
+      "slot": "breadthAppetite",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.7,
+      "review": {
+        "verdict": "reference",
+        "reason": "Nothing about modules outside their degree."
+      }
+    },
+    {
+      "key": "I want to secure a summer fellowship at a government agency or think tank. | pathways",
+      "source": "adaption",
+      "question": "What are your goals regarding internships during your undergraduate years?",
+      "answer": "I want to secure a summer fellowship at a government agency or think tank.",
+      "guarded": "I want to secure a summer fellowship at a government agency or think tank.",
+      "slot": "pathways",
+      "type": "extra",
+      "reference": null,
+      "ours": [
+        "consulting"
+      ],
+      "review": null
+    },
+    {
+      "key": "I want to specialize in digital learning infrastructure and library science collaboration. | pathwaysSkipped",
+      "source": "adaption",
+      "question": "Are you keen on integrating educational technology or leading cross-departmental academic initiatives?",
+      "answer": "I want to specialize in digital learning infrastructure and library science collaboration.",
+      "guarded": "I want to specialize in digital learning infrastructure and library science collaboration.",
+      "slot": "pathwaysSkipped",
+      "type": "extra",
+      "reference": null,
+      "ours": true,
+      "review": null
+    },
+    {
+      "key": "I want to support hesitant learners through cultural sensitivity and emotional safety. | interest:policy-ethics",
+      "source": "adaption",
+      "question": "Are you interested in trauma-informed pedagogy or inclusive practices for multilingual classrooms?",
+      "answer": "I want to support hesitant learners through cultural sensitivity and emotional safety.",
+      "guarded": "I want to support hesitant learners through cultural sensitivity and emotional safety.",
+      "slot": "interest:policy-ethics",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.6,
+      "review": {
+        "verdict": "reference",
+        "reason": "Policy-ethics was invented from cultural sensitivity in teaching."
+      }
+    },
+    {
+      "key": "I want to support hesitant learners through cultural sensitivity and emotional safety. | interest:psychology-behaviour",
+      "source": "adaption",
+      "question": "Are you interested in trauma-informed pedagogy or inclusive practices for multilingual classrooms?",
+      "answer": "I want to support hesitant learners through cultural sensitivity and emotional safety.",
+      "guarded": "I want to support hesitant learners through cultural sensitivity and emotional safety.",
+      "slot": "interest:psychology-behaviour",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.7,
+      "review": {
+        "verdict": "ambiguous",
+        "reason": "Emotional safety of learners touches psychology, loosely."
+      }
+    },
+    {
+      "key": "I want to translate neurobiological processes into engaging multimedia content. | pathwaysSkipped",
+      "source": "adaption",
+      "question": "Are you interested in designing interactive modules on brain function or cognitive science pedagogy?",
+      "answer": "I want to translate neurobiological processes into engaging multimedia content.",
+      "guarded": "I want to translate neurobiological processes into engaging multimedia content.",
+      "slot": "pathwaysSkipped",
+      "type": "extra",
+      "reference": null,
+      "ours": true,
+      "review": null
+    },
+    {
+      "key": "I want to work in Formula 1 aerodynamics. | interest:design-manufacturing",
+      "source": "seed",
+      "question": "What would you like to be doing after you graduate? \"Not sure yet\" is a fine answer.",
+      "answer": "I want to work in Formula 1 aerodynamics.",
+      "guarded": "I want to work in Formula 1 aerodynamics.",
+      "slot": "interest:design-manufacturing",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.7,
+      "review": null
+    },
+    {
+      "key": "I want to work in Formula 1 aerodynamics. | interest:fluid-mechanics",
+      "source": "seed",
+      "question": "What would you like to be doing after you graduate? \"Not sure yet\" is a fine answer.",
+      "answer": "I want to work in Formula 1 aerodynamics.",
+      "guarded": "I want to work in Formula 1 aerodynamics.",
+      "slot": "interest:fluid-mechanics",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.9,
+      "review": {
+        "verdict": "ours",
+        "reason": "Formula 1 aerodynamics names fluid mechanics, which the prompt allows from a career answer."
+      }
+    },
+    {
+      "key": "I work part-time on Tuesdays and Thursdays from noon until five. | timetablePrefs.earliestStart",
+      "source": "adaption",
+      "question": "Are there any specific schedule constraints we should consider?",
+      "answer": "I work part-time on Tuesdays and Thursdays from noon until five.",
+      "guarded": "I work part-time on Tuesdays and Thursdays from noon until five.",
+      "slot": "timetablePrefs.earliestStart",
+      "type": "extra",
+      "reference": null,
+      "ours": "17:00",
+      "review": null
+    },
+    {
+      "key": "I'm definitely a night owl; I do my best thinking after midnight. | timetablePrefs.earliestStart",
+      "source": "adaption",
+      "question": "What time of day are you most productive?",
+      "answer": "I'm definitely a night owl; I do my best thinking after midnight.",
+      "guarded": "I'm definitely a night owl; I do my best thinking after midnight.",
+      "slot": "timetablePrefs.earliestStart",
+      "type": "extra",
+      "reference": null,
+      "ours": "00:00",
+      "review": null
+    },
+    {
+      "key": "I'm more productive solo, though I can handle group work if necessary. | style.workloadTolerance",
+      "source": "adaption",
+      "question": "Do you prefer collaborating in groups or working alone?",
+      "answer": "I'm more productive solo, though I can handle group work if necessary.",
+      "guarded": "I'm more productive solo, though I can handle group work if necessary.",
+      "slot": "style.workloadTolerance",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.65,
+      "review": null
+    },
+    {
+      "key": "I'm okay with finding sources, but I struggle with synthesizing the literature. | style.codingComfort",
+      "source": "adaption",
+      "question": "What is your current comfort level with academic research?",
+      "answer": "I'm okay with finding sources, but I struggle with synthesizing the literature.",
+      "guarded": "I'm okay with finding sources, but I struggle with synthesizing the literature.",
+      "slot": "style.codingComfort",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.3,
+      "review": null
+    },
+    {
+      "key": "I'm thinking about adding a minor in Philosophy to complement my Political Science degree. | breadthAppetite",
+      "source": "adaption",
+      "question": "Are you considering a double major or a minor?",
+      "answer": "I'm thinking about adding a minor in Philosophy to complement my Political Science degree.",
+      "guarded": "I'm thinking about adding a minor in Philosophy to complement my Political Science degree.",
+      "slot": "breadthAppetite",
+      "type": "missing",
+      "reference": 0.65,
+      "ours": null,
+      "review": {
+        "verdict": "reference",
+        "reason": "Adding a philosophy minor is an appetite for modules outside the degree."
+      }
+    },
+    {
+      "key": "I'm thinking about adding a minor in Philosophy to complement my Political Science degree. | interest:policy-ethics",
+      "source": "adaption",
+      "question": "Are you considering a double major or a minor?",
+      "answer": "I'm thinking about adding a minor in Philosophy to complement my Political Science degree.",
+      "guarded": "I'm thinking about adding a minor in Philosophy to complement my Political Science degree.",
+      "slot": "interest:policy-ethics",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.6,
+      "review": null
+    },
+    {
+      "key": "I'm torn between pursuing a PhD in Sociology or entering public policy. | interest:policy-ethics",
+      "source": "adaption",
+      "question": "What are your primary career goals after graduation?",
+      "answer": "I'm torn between pursuing a PhD in Sociology or entering public policy.",
+      "guarded": "I'm torn between pursuing a PhD in Sociology or entering public policy.",
+      "slot": "interest:policy-ethics",
+      "type": "missing",
+      "reference": 0.6,
+      "ours": null,
+      "review": {
+        "verdict": "reference",
+        "reason": "Public policy is named."
+      }
+    },
+    {
+      "key": "I'm torn between pursuing a PhD in Sociology or entering public policy. | pathways",
+      "source": "adaption",
+      "question": "What are your primary career goals after graduation?",
+      "answer": "I'm torn between pursuing a PhD in Sociology or entering public policy.",
+      "guarded": "I'm torn between pursuing a PhD in Sociology or entering public policy.",
+      "slot": "pathways",
+      "type": "missing",
+      "reference": [
+        "research-academia"
+      ],
+      "ours": null,
+      "review": {
+        "verdict": "reference",
+        "reason": "A PhD is named, so research-academia; Haiku said pathwaysSkipped, which the guard now drops."
+      }
+    },
+    {
+      "key": "I'm torn between pursuing a PhD in Sociology or entering public policy. | pathwaysSkipped",
+      "source": "adaption",
+      "question": "What are your primary career goals after graduation?",
+      "answer": "I'm torn between pursuing a PhD in Sociology or entering public policy.",
+      "guarded": "I'm torn between pursuing a PhD in Sociology or entering public policy.",
+      "slot": "pathwaysSkipped",
+      "type": "extra",
+      "reference": null,
+      "ours": true,
+      "review": null
+    },
+    {
+      "key": "I'm very interested in blending computer science with digital humanities. | breadthAppetite",
+      "source": "adaption",
+      "question": "What are your thoughts on interdisciplinary studies?",
+      "answer": "I'm very interested in blending computer science with digital humanities.",
+      "guarded": "I'm very interested in blending computer science with digital humanities.",
+      "slot": "breadthAppetite",
+      "type": "missing",
+      "reference": 0.7,
+      "ours": null,
+      "review": {
+        "verdict": "ambiguous",
+        "reason": "Blending computer science with humanities may be breadth appetite; the question was not about breadth."
+      }
+    },
+    {
+      "key": "I'm very interested in blending computer science with digital humanities. | interest:creative-arts-design",
+      "source": "adaption",
+      "question": "What are your thoughts on interdisciplinary studies?",
+      "answer": "I'm very interested in blending computer science with digital humanities.",
+      "guarded": "I'm very interested in blending computer science with digital humanities.",
+      "slot": "interest:creative-arts-design",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.7,
+      "review": {
+        "verdict": "reference",
+        "reason": "Digital humanities is not creative arts."
+      }
+    },
+    {
+      "key": "I'm very interested in blending computer science with digital humanities. | interest:history-philosophy",
+      "source": "adaption",
+      "question": "What are your thoughts on interdisciplinary studies?",
+      "answer": "I'm very interested in blending computer science with digital humanities.",
+      "guarded": "I'm very interested in blending computer science with digital humanities.",
+      "slot": "interest:history-philosophy",
+      "type": "missing",
+      "reference": 0.6,
+      "ours": null,
+      "review": {
+        "verdict": "ambiguous",
+        "reason": "Humanities maps loosely to history-philosophy."
+      }
+    },
+    {
+      "key": "I've always been fascinated by behavioral economics and game theory. | interest:finance-economics",
+      "source": "adaption",
+      "question": "Which academic subjects spark your interest most?",
+      "answer": "I've always been fascinated by behavioral economics and game theory.",
+      "guarded": "I've always been fascinated by behavioral economics and game theory.",
+      "slot": "interest:finance-economics",
+      "type": "missing",
+      "reference": 0.8,
+      "ours": null,
+      "review": null
+    },
+    {
+      "key": "I've always wanted to understand how urban planning affects social equity. | interest:global-development",
+      "source": "adaption",
+      "question": "What prompted your interest in this specific major?",
+      "answer": "I've always wanted to understand how urban planning affects social equity.",
+      "guarded": "I've always wanted to understand how urban planning affects social equity.",
+      "slot": "interest:global-development",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.6,
+      "review": {
+        "verdict": "ambiguous",
+        "reason": "Social equity in urban planning could be global development."
+      }
+    },
+    {
+      "key": "I've used basic Excel, but I've never touched R or SPSS before. | style.codingComfort",
+      "source": "adaption",
+      "question": "What is your experience with statistical software?",
+      "answer": "I've used basic Excel, but I've never touched R or SPSS before.",
+      "guarded": "I've used basic Excel, but I've never touched R or SPSS before.",
+      "slot": "style.codingComfort",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.2,
+      "review": {
+        "verdict": "ours",
+        "reason": "Never having touched R or SPSS is a stated low coding comfort."
+      }
+    },
+    {
+      "key": "Local fisheries often resist no-take zones due to immediate economic losses despite long-term ecological benefits. | interest:global-development",
+      "source": "adaption",
+      "question": "What stakeholder conflict do you anticipate when implementing community-based coral reef conservation policies?",
+      "answer": "Local fisheries often resist no-take zones due to immediate economic losses despite long-term ecological benefits.",
+      "guarded": "Local fisheries often resist no-take zones due to immediate economic losses despite long-term ecological benefits.",
+      "slot": "interest:global-development",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.5,
+      "review": null
+    },
+    {
+      "key": "Local fisheries often resist no-take zones due to immediate economic losses despite long-term ecological benefits. | interest:policy-ethics",
+      "source": "adaption",
+      "question": "What stakeholder conflict do you anticipate when implementing community-based coral reef conservation policies?",
+      "answer": "Local fisheries often resist no-take zones due to immediate economic losses despite long-term ecological benefits.",
+      "guarded": "Local fisheries often resist no-take zones due to immediate economic losses despite long-term ecological benefits.",
+      "slot": "interest:policy-ethics",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.7,
+      "review": {
+        "verdict": "ambiguous",
+        "reason": "No-take zones and fisheries are environmental policy, loosely."
+      }
+    },
+    {
+      "key": "Local fisheries often resist no-take zones due to immediate economic losses despite long-term ecological benefits. | interest:sustainability-climate",
+      "source": "adaption",
+      "question": "What stakeholder conflict do you anticipate when implementing community-based coral reef conservation policies?",
+      "answer": "Local fisheries often resist no-take zones due to immediate economic losses despite long-term ecological benefits.",
+      "guarded": "Local fisheries often resist no-take zones due to immediate economic losses despite long-term ecological benefits.",
+      "slot": "interest:sustainability-climate",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.6,
+      "review": null
+    },
+    {
+      "key": "Maybe consulting, or a quant role at a bank. | interest:finance-economics",
+      "source": "seed",
+      "question": "What would you like to be doing after you graduate? \"Not sure yet\" is a fine answer.",
+      "answer": "Maybe consulting, or a quant role at a bank.",
+      "guarded": "Maybe consulting, or a quant role at a bank.",
+      "slot": "interest:finance-economics",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.7,
+      "review": null
+    },
+    {
+      "key": "My focus is on self-perception theory and its clinical applications. | interest:biomedical-engineering",
+      "source": "adaption",
+      "question": "Are you exploring self-schema development or identity formation across the lifespan?",
+      "answer": "My focus is on self-perception theory and its clinical applications.",
+      "guarded": "My focus is on self-perception theory and its clinical applications.",
+      "slot": "interest:biomedical-engineering",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.6,
+      "review": {
+        "verdict": "reference",
+        "reason": "\"Clinical applications\" of psychology is not biomedical engineering."
+      }
+    },
+    {
+      "key": "My syntax is usually correct, but I often fail to connect psychological concepts to my central argument clearly. | style.codingComfort",
+      "source": "adaption",
+      "question": "Do you struggle more with syntactic precision or semantic clarity in your literature review drafts?",
+      "answer": "My syntax is usually correct, but I often fail to connect psychological concepts to my central argument clearly.",
+      "guarded": "My syntax is usually correct, but I often fail to connect psychological concepts to my central argument clearly.",
+      "slot": "style.codingComfort",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.7,
+      "review": null
+    },
+    {
+      "key": "No preference, any time works. | timetablePrefs.avoidDays",
+      "source": "seed",
+      "question": "Last one: any days or times you want to keep free?",
+      "answer": "No preference, any time works.",
+      "guarded": "No preference, any time works.",
+      "slot": "timetablePrefs.avoidDays",
+      "type": "missing",
+      "reference": [],
+      "ours": null,
+      "review": null
+    },
+    {
+      "key": "Not a fan of nuclear stuff or anything too theoretical. | style.appliedPreference",
+      "source": "seed",
+      "question": "And what would you avoid if you could?",
+      "answer": "Not a fan of nuclear stuff or anything too theoretical.",
+      "guarded": "Not a fan of nuclear stuff or anything too theoretical.",
+      "slot": "style.appliedPreference",
+      "type": "value",
+      "reference": 1,
+      "ours": 0.2,
+      "review": null
+    },
+    {
+      "key": "Practicing small-signal model derivations repeatedly builds the intuition needed to solve complex circuit problems quickly. | style.appliedPreference",
+      "source": "adaption",
+      "question": "What problem-solving approach do you recommend for mastering analog electronics concepts for the GATE exam?",
+      "answer": "Practicing small-signal model derivations repeatedly builds the intuition needed to solve complex circuit problems quickly.",
+      "guarded": "Practicing small-signal model derivations repeatedly builds the intuition needed to solve complex circuit problems quickly.",
+      "slot": "style.appliedPreference",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.85,
+      "review": {
+        "verdict": "ambiguous",
+        "reason": "Practising derivations does not state a theory or applied preference."
+      }
+    },
+    {
+      "key": "Probably heat transfer, and anything where we got to design and make something in the workshop. | style.appliedPreference",
+      "source": "seed",
+      "question": "Which topics or lectures made you lose track of time?",
+      "answer": "Probably heat transfer, and anything where we got to design and make something in the workshop.",
+      "guarded": "Probably heat transfer, and anything where we got to design and make something in the workshop.",
+      "slot": "style.appliedPreference",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.85,
+      "review": null
+    },
+    {
+      "key": "Something in energy, maybe nuclear or renewables. | interest:nuclear-energy",
+      "source": "seed",
+      "question": "What would you like to be doing after you graduate? \"Not sure yet\" is a fine answer.",
+      "answer": "Something in energy, maybe nuclear or renewables.",
+      "guarded": "Something in energy, maybe nuclear or renewables.",
+      "slot": "interest:nuclear-energy",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.7,
+      "review": {
+        "verdict": "ours",
+        "reason": "Nuclear is named; the prompt allows interests named in a career answer."
+      }
+    },
+    {
+      "key": "Something in energy, maybe nuclear or renewables. | interest:sustainability-climate",
+      "source": "seed",
+      "question": "What would you like to be doing after you graduate? \"Not sure yet\" is a fine answer.",
+      "answer": "Something in energy, maybe nuclear or renewables.",
+      "guarded": "Something in energy, maybe nuclear or renewables.",
+      "slot": "interest:sustainability-climate",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.7,
+      "review": {
+        "verdict": "ours",
+        "reason": "Renewables are named."
+      }
+    },
+    {
+      "key": "The interplay between the endocrine and nervous systems during stress responses is hardest to map mentally. | interest:psychology-behaviour",
+      "source": "adaption",
+      "question": "Which human body system do you find most difficult to visualize when studying complex physiological interactions?",
+      "answer": "The interplay between the endocrine and nervous systems during stress responses is hardest to map mentally.",
+      "guarded": "The interplay between the endocrine and nervous systems during stress responses is hardest to map mentally.",
+      "slot": "interest:psychology-behaviour",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.7,
+      "review": {
+        "verdict": "reference",
+        "reason": "Endocrine and nervous systems are physiology, not psychology."
+      }
+    },
+    {
+      "key": "Translating complex fluid dynamics scenarios into solvable differential equations without oversimplifying the variables. | style.appliedPreference",
+      "source": "adaption",
+      "question": "What type of real-world modeling problem do you find most challenging in your advanced physics assessments?",
+      "answer": "Translating complex fluid dynamics scenarios into solvable differential equations without oversimplifying the variables.",
+      "guarded": "Translating complex fluid dynamics scenarios into solvable differential equations without oversimplifying the variables.",
+      "slot": "style.appliedPreference",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.75,
+      "review": null
+    },
+    {
+      "key": "Visualizing goroutine scheduling and channel communication helps students grasp concurrency without race conditions. | interest:programming-software",
+      "source": "adaption",
+      "question": "What interactive platform feature do you find most essential for teaching concurrent programming in Go?",
+      "answer": "Visualizing goroutine scheduling and channel communication helps students grasp concurrency without race conditions.",
+      "guarded": "Visualizing goroutine scheduling and channel communication helps students grasp concurrency without race conditions.",
+      "slot": "interest:programming-software",
+      "type": "extra",
+      "reference": null,
+      "ours": 0.85,
+      "review": {
+        "verdict": "ours",
+        "reason": "Goroutine scheduling is programming; the reviewed label was empty."
+      }
+    },
+    {
+      "key": "Yes, specifically urban music economies and festival data in Lagos. | interest:creative-arts-design",
+      "source": "adaption",
+      "question": "Are you interested in studying the socio-economic impacts of cultural events in West Africa?",
+      "answer": "Yes, specifically urban music economies and festival data in Lagos.",
+      "guarded": "Yes, specifically urban music economies and festival data in Lagos.",
+      "slot": "interest:creative-arts-design",
+      "type": "missing",
+      "reference": 0.5,
+      "ours": null,
+      "review": {
+        "verdict": "ambiguous",
+        "reason": "Urban music economies: arts and global development are both loose fits."
+      }
+    },
+    {
+      "key": "Yes, specifically urban music economies and festival data in Lagos. | interest:global-development",
+      "source": "adaption",
+      "question": "Are you interested in studying the socio-economic impacts of cultural events in West Africa?",
+      "answer": "Yes, specifically urban music economies and festival data in Lagos.",
+      "guarded": "Yes, specifically urban music economies and festival data in Lagos.",
+      "slot": "interest:global-development",
+      "type": "missing",
+      "reference": 0.5,
+      "ours": null,
+      "review": {
+        "verdict": "ambiguous",
+        "reason": "As above."
+      }
+    }
+  ]
+}

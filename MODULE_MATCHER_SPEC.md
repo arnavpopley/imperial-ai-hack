@@ -485,6 +485,8 @@ $$\Delta_\delta = \frac{1}{|S_m|} \sum_{s \in S_m} \left( \mathrm{Fit}_\delta(s,
 
 Return the top three changes by $\Delta_\delta$.
 
+Each card also reports the impact a module lead acts on: how many of $S_m$ would newly have the module in their top five eligible modules, and how many would rise to fit 70 or more. Only changes with $\Delta_\delta \ge 2$ get a card of their own; otherwise one summary card says "No single change makes a big difference" and names the main gap: the fit component (or, for style, the dimension) where the module falls furthest behind each student's top five. Cards use plain wording ("Move 20% of the marks from the exam to coursework", "Add teaching on X (about a tenth of the content)"), never internal units or 0-to-1 values. An oversubscribed module gets no counterfactual cards; its `DEMAND` card suggests managing demand instead, naming the best-fitting modules of the same type that still have places.
+
 Other insight kinds:
 - `OVERLOOKED`: average fit among the cohort is above the catalogue median, and shortlisting is below 20% of capacity.
 - `DEMAND`: projected demand against capacity.
@@ -658,13 +660,16 @@ stateDiagram-v2
   ONBOARD --> INTERVIEW: programme and year entered
   INTERVIEW --> RECOMMEND: profile confirmed or interview skipped
   RECOMMEND --> EXPLAIN: asks why or what-if
-  EXPLAIN --> RECOMMEND: done
+  EXPLAIN --> RECOMMEND: done, shortlist has fewer than two modules
+  EXPLAIN --> PLAN: done, shortlist has two or more modules
   RECOMMEND --> INTERVIEW: low confidence and student agrees
   RECOMMEND --> PLAN: shortlist has two or more modules
-  PLAN --> RECOMMEND: shortlist drops below two, or an explanation or what-if ends
+  PLAN --> EXPLAIN: asks why or what-if
+  PLAN --> RECOMMEND: shortlist drops below two modules
   INTERVIEW --> ESCALATED: guardrail trigger
   RECOMMEND --> ESCALATED: rule exception or low confidence
   PLAN --> ESCALATED: clash with no valid swap
+  EXPLAIN --> ESCALATED: escalation sent during an explanation
   ESCALATED --> RECOMMEND: staff responds
 ```
 
@@ -880,7 +885,7 @@ Added on 14 November at the team's request. This reverses the earlier "no grades
 
 **Consent.** Results are shared only through the dedicated upload, with an explicit consent tick on every upload, and are optional but recommended. Consent can be withdrawn at any time, which deletes every stored mark; deleting the profile deletes them too. Grades typed into the chat are still redacted by G2.
 
-**Upload.** A PDF transcript, a photo of a mark sheet, or pasted text. Live, `MODEL_FAST` reads the document (PDF and image input) into structured module results. Offline, a parser reads lines such as `MECH50010 Fluid Mechanics 2 62`. Codes that match no catalogue module are kept but not used.
+**Upload.** A PDF transcript, a photo of a mark sheet, or pasted text. A file can be up to 3 MB, about 4 MB once base64 encoded, so the request stays under the 4.5 MB body limit of the Vercel function; a larger body gets a friendly 413. Live, `MODEL_FAST` reads the document (PDF and image input) into structured module results. Offline, a parser reads lines such as `MECH50010 Fluid Mechanics 2 62`. Codes that match no catalogue module are kept but not used.
 
 **Performance view (code, not a model).** For each taxonomy topic, the student's topic-weighted average mark over the modules they took, and its difference from their own overall average. Nudges are attached to modules whose main topics (weight 0.5 or more) are topics where the student is at least 5 marks below their own average. For example: "You're interested in fluid mechanics, but your Fluid Mechanics 2 mark was 8 below your average. Worth keeping in mind." **Nudges never change fit scores or rankings**: they inform; the student decides.
 
@@ -888,7 +893,7 @@ Added on 14 November at the team's request. This reverses the earlier "no grades
 
 **Privacy.** Marks and tailored feedback are visible only to the student. Staff never see an individual's marks. Any staff view of exam performance is aggregate, with a minimum cohort of five. Demo marks and exam forms are synthetic and labelled.
 
-**Implementation details (backend).** An upload replaces the results for the modules it contains and keeps the others, so a student can upload one year at a time. Pasted transcripts pass G3's pattern rules only, not the G3 classifier, so marks reach no model except the transcript reader and the tailored-feedback agent; the live matcher is told which topics a nudge is about, never the marks. Nudges appear in the explanation panel, which is never stored; chat replies are stored as messages, so they do not carry nudges. A question mark above its maximum, or a mark above 100, is rejected with a message and nothing is stored. An examiner save or a new AI draft returns the form to draft, so students stop seeing it until it is published again. The trace records counts only, never marks.
+**Implementation details (backend).** An upload replaces the results for the modules it contains and keeps the others, so a student can upload one year at a time. Pasted transcripts pass G3's pattern rules only, not the G3 classifier, so marks reach no model except the transcript reader and the tailored-feedback agent; explanations never carry nudges, so the matcher sees no marks. Nudges come only from the performance view and appear once per module, as a "Keep in mind" note on the module page and on catalogue cards; chat replies are stored as messages, so they never carry nudges. A question mark above its maximum, or a mark above 100, is rejected with a message and nothing is stored. An examiner save or a new AI draft returns the form to draft, so students stop seeing it until it is published again. The trace records counts only, never marks.
 
 ## 21. Open items
 

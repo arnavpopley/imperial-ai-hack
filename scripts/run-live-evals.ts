@@ -1,22 +1,26 @@
 // Live evaluation (spec 18): runs the real models against cases with known answers, to measure prompt and data
 // changes instead of guessing. Unlike `npm run eval` it calls the API, so it costs money: about $1-2 per run.
 // Usage: `npm run eval:live` (needs ANTHROPIC_API_KEY). Results go to data/eval-live-latest.json.
-import { DEFAULT_WEIGHTS, schemas, type Evidence, type EvalResult, type EvalRun, type StudentProfile } from '@modulematch/shared';
+// `npm run eval:live -- --hard-cases` runs only the extraction hard cases (about 20 Haiku calls, a few cents) and
+// prints them without overwriting the saved run.
+import { DEFAULT_WEIGHTS, schemas, type Evidence, type EvalResult, type StudentProfile } from '@modulematch/shared';
 import { randomUUID } from 'node:crypto';
 import { existsSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { z } from 'zod';
 import { extract, mergeUpdates } from '../server/src/agents/extractor.ts';
 import { answerModuleQuestion, moduleFacts } from '../server/src/agents/knowledge.ts';
-import { isLive, structured } from '../server/src/agents/llm.ts';
+import { isLive, modelId, structured } from '../server/src/agents/llm.ts';
 import { explain } from '../server/src/agents/matcher.ts';
 import { emptyProfile } from '../server/src/agents/session.ts';
 import { loadPathways, rawModule, rulesFor } from '../server/src/db/catalogue.ts';
 import { DATASET_FILES, dataPath, ModulesFile, readDataset, REPO_ROOT } from '../server/src/db/datasets.ts';
 import { rankModules } from '../server/src/engines/index.ts';
 import { runInputGuardrails } from '../server/src/guardrails/pipeline.ts';
+import type { LiveEvalRun } from '../server/src/routes/live-results.ts';
 import { createTracer } from '../server/src/trace/tracer.ts';
 import { EXTRACTION_TRANSCRIPTS, PERSONAS } from './eval-cases.ts';
+import { guardedText, HARD_CASES, scoreHardCase } from './eval-hard-cases.ts';
 
 const envFile = resolve(REPO_ROOT, '.env');
 if (existsSync(envFile)) process.loadEnvFile(envFile);
@@ -38,6 +42,8 @@ const titleOf = (id: string) => byId.get(id)?.title ?? id;
 const rules = rulesFor('MEng Mechanical Engineering', 3)!;
 const baseProfile = (): StudentProfile => emptyProfile({ programme: 'MEng Mechanical Engineering', yearOfStudy: 3, completedModuleIds: [], interviewDepth: 'quick' }, 'live-eval');
 const pct = (x: number) => `${Math.round(x * 100)}%`;
+/** The judge is the most capable model available (MODEL_JUDGE overrides), so it is stronger than the models it grades. */
+const JUDGE_MODEL = process.env.MODEL_JUDGE || 'claude-fable-5-1';
 /** Words that identify an assessment item, such as "exam", "project" or "labs" (generic words are ignored). */
 const itemWords = (description: string) =>
   description
@@ -198,10 +204,9 @@ async function moduleDetails(): Promise<EvalResult> {
 const Judgement = z.object({ pass: z.boolean(), reason: z.string() });
 
 async function judge(rubric: string, question: string, answer: string): Promise<{ pass: boolean; reason: string }> {
-  // The judge is the most capable model available (MODEL_JUDGE overrides), so it is stronger than the models it grades.
   const verdict = await structured(Judgement, {
     tier: 'smart',
-    model: process.env.MODEL_JUDGE || 'claude-fable-5-1',
+    model: JUDGE_MODEL,
     effort: 'low',
     system: `You grade one answer from a university module advisor against a rubric. Be strict. Reply with pass and a one-sentence reason.\nRubric: ${rubric}`,
     messages: [{ role: 'user', content: `Question: ${question}\nAnswer: ${answer}` }],
@@ -263,6 +268,21 @@ async function liveExtraction(): Promise<EvalResult> {
     }
   }
   return result('Live: extraction', 0.85, details);
+}
+
+// ---------- 3b. extraction hard cases from the Adaption stress test ----------
+
+async function liveHardCases(): Promise<EvalResult> {
+  const pathwayIds = loadPathways().map((p) => p.id);
+  const details: Detail[] = [];
+  for (const c of HARD_CASES) {
+    let fellBack = false;
+    const updates = await extract(guardedText(c.text), c.targetSlots, pathwayIds, undefined, () => (fellBack = true));
+    for (const d of scoreHardCase(c, updates, baseProfile(), 0.35)) {
+      details.push(fellBack ? { ...d, pass: false, note: 'the live extractor failed, so this is a keyword-cue result' } : d);
+    }
+  }
+  return result('Live: extraction (hard cases)', 0.85, details);
 }
 
 /** Equal as sets, including size, so values the student never stated make a case fail. */
@@ -347,16 +367,21 @@ async function grounding(): Promise<EvalResult> {
 }
 
 const started = Date.now();
-const run: EvalRun = {
+const hardCasesOnly = process.argv.includes('--hard-cases');
+// The models are recorded with the results, so the "How it works" page can say which models this run measured.
+const run: LiveEvalRun = {
   id: randomUUID(),
   at: new Date().toISOString(),
-  results: [await moduleKnowledge(), await moduleDetails(), await honesty(), await liveExtraction(), await liveGuardrails(), await grounding()],
+  models: { smart: modelId('smart'), fast: modelId('fast'), light: modelId('light'), judge: JUDGE_MODEL },
+  results: hardCasesOnly
+    ? [await liveHardCases()]
+    : [await moduleKnowledge(), await moduleDetails(), await honesty(), await liveExtraction(), await liveHardCases(), await liveGuardrails(), await grounding()],
 };
-writeFileSync(dataPath('eval-live-latest.json'), `${JSON.stringify(run, null, 2)}\n`);
+if (!hardCasesOnly) writeFileSync(dataPath('eval-live-latest.json'), `${JSON.stringify(run, null, 2)}\n`);
 
 for (const r of run.results) {
   const rate = r.total ? r.passed / r.total : 0;
-  console.log(`${rate >= r.target ? 'PASS' : 'FAIL'}  ${r.name.padEnd(28)} ${r.passed}/${r.total} (${Math.round(rate * 100)}%, target ${Math.round(r.target * 100)}%)`);
+  console.log(`${rate >= r.target ? 'PASS' : 'FAIL'}  ${r.name.padEnd(30)} ${r.passed}/${r.total} (${Math.round(rate * 100)}%, target ${Math.round(r.target * 100)}%)`);
   for (const d of r.details.filter((x) => !x.pass)) console.log(`      ✗ ${d.case}${d.note ? `: ${d.note}` : ''}`);
 }
 console.log(`Took ${Math.round((Date.now() - started) / 1000)} s.`);

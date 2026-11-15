@@ -18,10 +18,10 @@ import {
 import { randomUUID } from 'node:crypto';
 import { loadModuleResources, loadPathways, loadSocieties, rulesFor } from '../db/catalogue.ts';
 import * as repo from '../db/repo.ts';
-import { checkShortlist, completeness, nudgeFor, performanceView, planTimetable, profileHash, rankModules } from '../engines/index.ts';
+import { checkShortlist, completeness, performanceView, planTimetable, profileHash, rankModules } from '../engines/index.ts';
 import type { Tracer } from '../trace/tracer.ts';
 import { explain } from './matcher.ts';
-import { canTransition } from './modes.ts';
+import { canTransition, restingModeFor } from './modes.ts';
 
 export const catalogue = {
   /** Modules with their staff-provided resources (past papers, reading) merged in from data/module-resources.json. */
@@ -171,10 +171,36 @@ export function setMode(session: SessionState, to: Mode, tracer: Tracer, reason:
  * trace records each change of mode once instead of PLAN -> RECOMMEND -> PLAN on every edit.
  */
 export function syncPlanMode(session: SessionState, tracer: Tracer): Mode | null {
-  const planning = session.shortlist.length >= 2;
-  if (session.mode === 'RECOMMEND' && planning) return setMode(session, 'PLAN', tracer, 'shortlist has two or more modules');
-  if (session.mode === 'PLAN' && !planning) return setMode(session, 'RECOMMEND', tracer, 'shortlist edited');
-  return null;
+  if (session.mode !== 'RECOMMEND' && session.mode !== 'PLAN') return null;
+  const to = restingModeFor(session.shortlist);
+  return setMode(session, to, tracer, to === 'PLAN' ? 'shortlist has two or more modules' : 'shortlist edited');
+}
+
+/**
+ * A chat turn's copy of the session can be stale: it awaits guardrails and intent first, and the student may
+ * edit the shortlist or send an escalation in another tab meanwhile. Read the saved mode and shortlist back
+ * just before a transition; the read and the mode write then run synchronously, so nothing slips in between.
+ */
+function reloadModeAndShortlist(session: SessionState): void {
+  const saved = repo.getSession(session.id);
+  if (!saved) return;
+  session.mode = saved.mode;
+  session.shortlist = saved.shortlist;
+}
+
+/** Spec 12: RECOMMEND or PLAN -> EXPLAIN when the student asks why or what-if. Returns the mode it left. */
+export function enterExplain(session: SessionState, tracer: Tracer, reason: string): Mode | null {
+  reloadModeAndShortlist(session);
+  return setMode(session, 'EXPLAIN', tracer, reason);
+}
+
+/**
+ * Spec 12: EXPLAIN returns to the mode the shortlist implies (restingModeFor), PLAN at two or more modules.
+ * A session that left EXPLAIN meanwhile, for example to ESCALATED, is left where it is.
+ */
+export function leaveExplain(session: SessionState, tracer: Tracer, reason: string): Mode | null {
+  reloadModeAndShortlist(session);
+  return session.mode === 'EXPLAIN' ? setMode(session, restingModeFor(session.shortlist), tracer, reason) : null;
 }
 
 /**
@@ -182,12 +208,10 @@ export function syncPlanMode(session: SessionState, tracer: Tracer): Mode | null
  * trace: saves it, records it, and applies the spec 12 shortlist-size transitions. Eligibility is the
  * caller's gate. Returns the mode the session left, or null when the mode did not change.
  *
- * The caller's copy of the session can be stale (a chat turn awaits guardrails and intent first, and the
- * student may approve an escalation in another tab meanwhile), so the saved mode is read back before the
- * transition. The read, the edit and the mode write run synchronously, so nothing can slip in between.
+ * The saved mode is read back first (reloadModeAndShortlist), so a stale chat copy cannot overwrite it.
  */
 export function applyShortlistEdit(session: SessionState, moduleId: string, action: 'add' | 'remove', tracer: Tracer): Mode | null {
-  session.mode = repo.getSession(session.id)?.mode ?? session.mode;
+  reloadModeAndShortlist(session);
   if (action === 'add') repo.addToShortlist(session.id, moduleId);
   else repo.removeFromShortlist(session.id, moduleId);
   session.shortlist = repo.listShortlist(session.id);
@@ -206,7 +230,7 @@ export function performanceFor(session: SessionState): PerformanceView {
   });
 }
 
-/** Explanations are cached by profile hash, results version and module ID (spec 5 cost control). */
+/** Explanations are cached by profile hash and module ID (spec 5 cost control). */
 const explanationCache = new Map<string, Explanation>();
 
 export function clearExplanationCache(): void {
@@ -214,29 +238,25 @@ export function clearExplanationCache(): void {
 }
 
 /**
- * The explanation for one module. `withNudge` adds the student's performance nudge (spec 23) as a watch-out; only
- * the explanation panel asks for it, because chat replies are stored as messages and a nudge, which is derived
- * from marks, must not outlive the student withdrawing consent.
+ * The explanation for one module. It never carries a performance nudge (spec 23): nudges come only from
+ * GET /performance and appear once, as the "Keep in mind" note on the module page and the catalogue cards, so
+ * nothing derived from marks is stored with chat replies or outlives a withdrawal of consent.
  */
 export async function explanationFor(
   session: SessionState,
   moduleId: string,
   tracer: Tracer,
   recs = ranked(session),
-  opts: { withNudge?: boolean } = {},
 ): Promise<Explanation | null> {
   const module = catalogue.modules().find((m) => m.id === moduleId);
   const rec = recs.find((r) => r.moduleId === moduleId);
   if (!module || !rec) return null;
-  const results = opts.withNudge ? repo.getResults(session.id) : null;
-  const nudge = results?.consent.granted ? nudgeFor(performanceFor(session), moduleId) : undefined;
-  // Explanations without a nudge share one cache entry; a nudged one is keyed by the results version too.
-  const key = `${profileHash(session.profile, session.weights)}:${moduleId}${nudge ? `:nudge:${results?.updatedAt}` : ''}`;
+  const key = `${profileHash(session.profile, session.weights)}:${moduleId}`;
   const cached = explanationCache.get(key);
   if (cached) return cached;
   const explanation = await tracer.timed(
-    { actor: 'matcher', kind: 'agent', input: `explain ${module.code} (fit ${rec.fit})${nudge ? ', with a performance nudge' : ''}` },
-    () => explain(session.profile, module, rec, session.evidence, tracer, nudge),
+    { actor: 'matcher', kind: 'agent', input: `explain ${module.code} (fit ${rec.fit})` },
+    () => explain(session.profile, module, rec, session.evidence, tracer),
     (e) => ({ output: `${e.because.length} reasons, ${e.watchOuts.length} watch-outs`, verdict: null }),
   );
   explanationCache.set(key, explanation);

@@ -1,0 +1,915 @@
+{
+  "input": "/Users/arnavpopley/orca/imperial-ai-hack/.claude/worktrees/agent-abd4c47124c58dba3/scripts/adaption/expanded.jsonl",
+  "rows": 184,
+  "valid": 0,
+  "rejected": 184,
+  "rejectsByReason": {
+    "advisor question matches no interview step": 107,
+    "slot not whitelisted": 42,
+    "duplicate of a seed row": 34,
+    "completion is not JSON": 1
+  },
+  "validByStep": {},
+  "labelsBySlot": {},
+  "emptyLabels": 0,
+  "repaired": {
+    "rows": 17,
+    "byStep": {
+      "team": 2,
+      "career": 3,
+      "timetable": 3,
+      "assessment": 7,
+      "love": 2
+    },
+    "slotsKept": 18,
+    "slotsDropped": 23
+  },
+  "rejects": [
+    {
+      "reason": "slot not whitelisted",
+      "detail": "interest:linguistic_diversity",
+      "prompt": "The advisor asked: \"Do you wish to develop inclusive language programs or study dialect awareness in education?\"\nThe student answered: \"I focus on balancing linguistic diversity with literacy standard"
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Do you prefer a fast-paced intensive course or a slower, semester-long pace?",
+      "prompt": "The advisor asked: \"Do you prefer a fast-paced intensive course or a slower, semester-long pace?\"\nThe student answered: \"I prefer the intensive format as it allows me to immerse myself fully.\""
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "interest:literary_theory",
+      "prompt": "The advisor asked: \"How does critical race theory inform your reading of racial discourse in mid-20th century Southern fiction?\"\nThe student answered: \"It reveals how legal and social structures in th"
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Are you focused on rephrasing atmospheric studies or refining oceanic research for originality?",
+      "prompt": "The advisor asked: \"Are you focused on rephrasing atmospheric studies or refining oceanic research for originality?\"\nThe student answered: \"I want to ensure scientific integrity and citation accuracy "
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "style.collaboration",
+      "prompt": "The advisor asked: \"Do you prefer working individually or in a team for major projects?\"\nThe student answered: \"I prefer individual work because I can control the quality and pace of the output.\""
+    },
+    {
+      "reason": "duplicate of a seed row",
+      "prompt": "The advisor asked: \"Last one: any days or times you want to keep free?\"\nThe student answered: \"Keep Fridays free.\""
+    },
+    {
+      "reason": "duplicate of a seed row",
+      "prompt": "The advisor asked: \"Which topics or lectures made you lose track of time?\"\nThe student answered: \"I love robotics. I got a 2:2 last year though.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Do you have any preferences for the format of your course materials?",
+      "prompt": "The advisor asked: \"Do you have any preferences for the format of your course materials?\"\nThe student answered: \"I prefer digital PDFs and interactive modules over traditional printed textbooks.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "How do you balance technical accuracy with narrative flow when editing papers on heat transfer phenomena?",
+      "prompt": "The advisor asked: \"How do you balance technical accuracy with narrative flow when editing papers on heat transfer phenomena?\"\nThe student answered: \"I prioritize precise terminology for equations but"
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "What specific qualities are you looking for in a faculty mentor?",
+      "prompt": "The advisor asked: \"What specific qualities are you looking for in a faculty mentor?\"\nThe student answered: \"I need someone who is active in industry and can provide networking opportunities.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "What are your thoughts on interdisciplinary studies?",
+      "prompt": "The advisor asked: \"What are your thoughts on interdisciplinary studies?\"\nThe student answered: \"I'm very interested in blending computer science with digital humanities.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Are you interested in low-latency storage systems or NVMe over Fabrics for trading?",
+      "prompt": "The advisor asked: \"Are you interested in low-latency storage systems or NVMe over Fabrics for trading?\"\nThe student answered: \"I want to explore enterprise storage trade-offs for high-performance com"
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "style.task_management",
+      "prompt": "The advisor asked: \"How do you manage your time when balancing multiple heavy assignments?\"\nThe student answered: \"I use a digital Kanban board to track deadlines and break tasks down.\""
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "interest:theoretical_physics",
+      "prompt": "The advisor asked: \"What are your primary long-term career aspirations after graduation?\"\nThe student answered: \"I am aiming for a PhD in theoretical physics and a research career.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "What is the primary infrastructure bottleneck hindering telemedicine adoption in rural Iranian hospitals?",
+      "prompt": "The advisor asked: \"What is the primary infrastructure bottleneck hindering telemedicine adoption in rural Iranian hospitals?\"\nThe student answered: \"Unreliable broadband connectivity prevents stable "
+    },
+    {
+      "reason": "duplicate of a seed row",
+      "prompt": "The advisor asked: \"Which topics or lectures made you lose track of time?\"\nThe student answered: \"I really got into machine learning over the summer, mostly neural nets in Python.\""
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "timetablePrefs.morningStudy",
+      "prompt": "The advisor asked: \"How do you manage your study schedule during holiday breaks?\"\nThe student answered: \"I dedicate two hours each morning to review and prep for the next term.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Do you prefer building full-stack applications or mobile interfaces for your thesis?",
+      "prompt": "The advisor asked: \"Do you prefer building full-stack applications or mobile interfaces for your thesis?\"\nThe student answered: \"I focus on WeChat Mini Programs and Spring Boot architectures.\""
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "timetablePrefs.minStartTime",
+      "prompt": "The advisor asked: \"Do you prefer morning or afternoon lecture slots?\"\nThe student answered: \"I'm not functional before 10 AM, so afternoons are much better.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Are you interested in studying abroad next year?",
+      "prompt": "The advisor asked: \"Are you interested in studying abroad next year?\"\nThe student answered: \"I'd love to spend a semester in Spain to improve my language skills.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "How do you deal with academic burnout when it occurs?",
+      "prompt": "The advisor asked: \"How do you deal with academic burnout when it occurs?\"\nThe student answered: \"I take a complete digital detox for a weekend to reset my mental focus.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Do you have a preference for course delivery methods?",
+      "prompt": "The advisor asked: \"Do you have a preference for course delivery methods?\"\nThe student answered: \"I find asynchronous online modules more flexible for my learning style.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "What stakeholder conflict do you anticipate when implementing community-based coral reef conservation policies?",
+      "prompt": "The advisor asked: \"What stakeholder conflict do you anticipate when implementing community-based coral reef conservation policies?\"\nThe student answered: \"Local fisheries often resist no-take zones d"
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Do you prefer aerodynamic design simulations or vertical-axis wind turbine performance analysis?",
+      "prompt": "The advisor asked: \"Do you prefer aerodynamic design simulations or vertical-axis wind turbine performance analysis?\"\nThe student answered: \"I focus on low-speed aerodynamics and renewable energy opti"
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "interest:mnemonics",
+      "prompt": "The advisor asked: \"Have you tried using the phonetic number system to encode long lists of terminology for your exams?\"\nThe student answered: \"Yes, converting numbers to consonant sounds and then int"
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Do you have any prerequisites you still need to complete?",
+      "prompt": "The advisor asked: \"Do you have any prerequisites you still need to complete?\"\nThe student answered: \"I still need to take Intermediate Calculus before I can enter the engineering core.\""
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "interest:academia",
+      "prompt": "The advisor asked: \"What are your primary career goals after graduation?\"\nThe student answered: \"I'm torn between pursuing a PhD in Sociology or entering public policy.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Do you prefer a structured nine-month Python plan or self-guided YouTube-based learning?",
+      "prompt": "The advisor asked: \"Do you prefer a structured nine-month Python plan or self-guided YouTube-based learning?\"\nThe student answered: \"I need a rigorous, accessible curriculum with open-source learning "
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Are you interested in designing interactive modules on brain function or cognitive science pedagogy?",
+      "prompt": "The advisor asked: \"Are you interested in designing interactive modules on brain function or cognitive science pedagogy?\"\nThe student answered: \"I want to translate neurobiological processes into enga"
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "interest:mathematics",
+      "prompt": "The advisor asked: \"Do you prefer advanced calculus research or supervising graduate work in real analysis?\"\nThe student answered: \"I aim to study integration theories and mathematical exposition rigo"
+    },
+    {
+      "reason": "duplicate of a seed row",
+      "prompt": "The advisor asked: \"Would you like something outside your degree, like a language, business or the arts?\"\nThe student answered: \"No, I would rather stay focused.\""
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "style.collaboration",
+      "prompt": "The advisor asked: \"Do you prefer collaborating in groups or working alone?\"\nThe student answered: \"I'm more productive solo, though I can handle group work if necessary.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Are you looking for an accelerated path to graduation?",
+      "prompt": "The advisor asked: \"Are you looking for an accelerated path to graduation?\"\nThe student answered: \"Yes, I'm hoping to take summer courses to finish a semester early.\""
+    },
+    {
+      "reason": "duplicate of a seed row",
+      "prompt": "The advisor asked: \"And what would you avoid if you could?\"\nThe student answered: \"I find programming boring, honestly.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Are you exploring self-schema development or identity formation across the lifespan?",
+      "prompt": "The advisor asked: \"Are you exploring self-schema development or identity formation across the lifespan?\"\nThe student answered: \"My focus is on self-perception theory and its clinical applications.\""
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "interest:web_development",
+      "prompt": "The advisor asked: \"Do you wish to guide teens in web development projects or evaluate student-built websites?\"\nThe student answered: \"I focus on blending coding rigor with UX principles in project-ba"
+    },
+    {
+      "reason": "duplicate of a seed row",
+      "prompt": "The advisor asked: \"What would you like to be doing after you graduate? \"Not sure yet\" is a fine answer.\"\nThe student answered: \"As an international student I want to work in aerospace back home.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Are you planning to apply for any scholarships?",
+      "prompt": "The advisor asked: \"Are you planning to apply for any scholarships?\"\nThe student answered: \"I'm currently drafting an application for the merit-based Chancellor's scholarship.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Do you have any accessibility requirements for your classes?",
+      "prompt": "The advisor asked: \"Do you have any accessibility requirements for your classes?\"\nThe student answered: \"I require a quiet testing environment and extended time on exams.\""
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "style.study_method",
+      "prompt": "The advisor asked: \"How do you typically approach studying for your final exams?\"\nThe student answered: \"I prefer using active recall and spaced repetition over several weeks.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "What specific academic interests are driving your choice of electives?",
+      "prompt": "The advisor asked: \"What specific academic interests are driving your choice of electives?\"\nThe student answered: \"I am deeply interested in the intersection of behavioral economics and public policy."
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "How do you feel about public speaking requirements?",
+      "prompt": "The advisor asked: \"How do you feel about public speaking requirements?\"\nThe student answered: \"It's a huge source of anxiety for me, so I prefer written reports.\""
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "interest:assessment_methods",
+      "prompt": "The advisor asked: \"Which assessment methods do you find most effective for your learning?\"\nThe student answered: \"I perform much better on open-book essays than on timed multiple-choice tests.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "What evidence from organizational behavior research supports the view that entrepreneurs are made rather than born?",
+      "prompt": "The advisor asked: \"What evidence from organizational behavior research supports the view that entrepreneurs are made rather than born?\"\nThe student answered: \"Studies show that structured mentorship "
+    },
+    {
+      "reason": "duplicate of a seed row",
+      "prompt": "The advisor asked: \"Do you work best alone or in a team? And how heavy a workload feels right?\"\nThe student answered: \"Team work please, but a lighter workload this year.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Are you interested in studying the socio-economic impacts of cultural events in West Africa?",
+      "prompt": "The advisor asked: \"Are you interested in studying the socio-economic impacts of cultural events in West Africa?\"\nThe student answered: \"Yes, specifically urban music economies and festival data in La"
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "interest:applied_machine_learning",
+      "prompt": "The advisor asked: \"How do you guide students in selecting feasible datasets for their capstone projects in applied machine learning?\"\nThe student answered: \"I encourage them to use open-source reposi"
+    },
+    {
+      "reason": "duplicate of a seed row",
+      "prompt": "The advisor asked: \"Which topics or lectures made you lose track of time?\"\nThe student answered: \"The biomechanics guest lecture on prosthetics was the highlight of my year.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Do you prefer teaching double-entry bookkeeping or preparing ledger accounts for local businesses?",
+      "prompt": "The advisor asked: \"Do you prefer teaching double-entry bookkeeping or preparing ledger accounts for local businesses?\"\nThe student answered: \"I focus on breaking down complex transactions involving t"
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "style.problem_solving",
+      "prompt": "The advisor asked: \"What problem-solving approach do you recommend for mastering analog electronics concepts for the GATE exam?\"\nThe student answered: \"Practicing small-signal model derivations repeat"
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "How do you approach learning a subject that you find particularly difficult?",
+      "prompt": "The advisor asked: \"How do you approach learning a subject that you find particularly difficult?\"\nThe student answered: \"I seek out supplementary video tutorials and form peer study groups for review."
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Are there any particular study environments where you feel most productive?",
+      "prompt": "The advisor asked: \"Are there any particular study environments where you feel most productive?\"\nThe student answered: \"I need absolute silence, so I usually spend ten hours a week in the library.\""
+    },
+    {
+      "reason": "duplicate of a seed row",
+      "prompt": "The advisor asked: \"Which topics or lectures made you lose track of time?\"\nThe student answered: \"Renewables and climate work really interest me, and the materials labs were fun.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Do you wish to specialize in asset-liability modeling or machine learning in insurance?",
+      "prompt": "The advisor asked: \"Do you wish to specialize in asset-liability modeling or machine learning in insurance?\"\nThe student answered: \"I aim to research risk management applications in life insurance sec"
+    },
+    {
+      "reason": "duplicate of a seed row",
+      "prompt": "The advisor asked: \"And what would you avoid if you could?\"\nThe student answered: \"I would avoid thermodynamics if I could.\""
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "interest:research",
+      "prompt": "The advisor asked: \"Are you interested in pursuing an honors thesis or a capstone project?\"\nThe student answered: \"I am leaning towards an honors thesis focused on urban sustainability.\""
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "interest:narratology",
+      "prompt": "The advisor asked: \"Do you wish to analyze narrative theory in modernist fiction or the child's perspective in Joyce?\"\nThe student answered: \"I focus on narratology and scholarly depth in Irish litera"
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "What is your target GPA for this academic year?",
+      "prompt": "The advisor asked: \"What is your target GPA for this academic year?\"\nThe student answered: \"I'm aiming for a 3.8 to stay competitive for the honors program.\""
+    },
+    {
+      "reason": "duplicate of a seed row",
+      "prompt": "The advisor asked: \"Which topics or lectures made you lose track of time?\"\nThe student answered: \"I can't afford the field trip, but I'm really into sustainability.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Are there any specific software tools you are proficient in for research?",
+      "prompt": "The advisor asked: \"Are there any specific software tools you are proficient in for research?\"\nThe student answered: \"I am experienced with R and Python for statistical analysis and data visualization"
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "style.noteTakingMethod",
+      "prompt": "The advisor asked: \"What is your approach to taking notes during a fast-paced lecture?\"\nThe student answered: \"I use the Cornell method to separate main ideas from supporting details.\""
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "interest:formal_logic",
+      "prompt": "The advisor asked: \"Are you interested in formalizing abstract logical frameworks or interdisciplinary systems theory?\"\nThe student answered: \"I aim to synthesize complex logical systems and structura"
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "What type of real-world modeling problem do you find most challenging in your advanced physics assessments?",
+      "prompt": "The advisor asked: \"What type of real-world modeling problem do you find most challenging in your advanced physics assessments?\"\nThe student answered: \"Translating complex fluid dynamics scenarios int"
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "How do you ensure confidentiality when collecting qualitative data for your thesis?",
+      "prompt": "The advisor asked: \"How do you ensure confidentiality when collecting qualitative data for your thesis?\"\nThe student answered: \"I use pseudonyms and store consent forms separately from the raw intervi"
+    },
+    {
+      "reason": "duplicate of a seed row",
+      "prompt": "The advisor asked: \"Last one: any days or times you want to keep free?\"\nThe student answered: \"No preference, any time works.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Which of Candace Browning's analyses on capital market trends do you find most relevant for your thesis?",
+      "prompt": "The advisor asked: \"Which of Candace Browning's analyses on capital market trends do you find most relevant for your thesis?\"\nThe student answered: \"Her work on interest rate sensitivity in emerging m"
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Are there any specific academic resources you find most helpful?",
+      "prompt": "The advisor asked: \"Are there any specific academic resources you find most helpful?\"\nThe student answered: \"The university's online database for peer-reviewed journals is essential for my research.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "What is your primary motivation for pursuing this specific degree?",
+      "prompt": "The advisor asked: \"What is your primary motivation for pursuing this specific degree?\"\nThe student answered: \"I want to gain the credentials necessary to work in international diplomatic relations.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "How do you handle academic stress during the most intense weeks?",
+      "prompt": "The advisor asked: \"How do you handle academic stress during the most intense weeks?\"\nThe student answered: \"I practice mindfulness and strictly schedule my sleep to avoid burnout.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "How does intersectionality shape your analysis of gender roles in Southeast Asian educational contexts?",
+      "prompt": "The advisor asked: \"How does intersectionality shape your analysis of gender roles in Southeast Asian educational contexts?\"\nThe student answered: \"I examine how class and religion overlap with gender"
+    },
+    {
+      "reason": "duplicate of a seed row",
+      "prompt": "The advisor asked: \"Do you work best alone or in a team? And how heavy a workload feels right?\"\nThe student answered: \"I work best on my own.\""
+    },
+    {
+      "reason": "duplicate of a seed row",
+      "prompt": "The advisor asked: \"Which topics or lectures made you lose track of time?\"\nThe student answered: \"Building robots and programming the electronics is what I love.\""
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "interest:medical_education",
+      "prompt": "The advisor asked: \"Are you studying peptic ulcer pathogenesis or designing board-style questions for licensing exams?\"\nThe student answered: \"I want to combine deep medical knowledge with clear pedag"
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "interest:art_education",
+      "prompt": "The advisor asked: \"Which mixed media approach helps your students collaborate best during group art projects?\"\nThe student answered: \"Combining digital sketching on tablets with physical collage mate"
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "How do you simplify the concept of machine learning algorithms for eighth-grade STEM students?",
+      "prompt": "The advisor asked: \"How do you simplify the concept of machine learning algorithms for eighth-grade STEM students?\"\nThe student answered: \"I use visual block-coding tools to show how computers recogni"
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Are you interested in intersectionality studies or critical pedagogy for Southeast Asian societies?",
+      "prompt": "The advisor asked: \"Are you interested in intersectionality studies or critical pedagogy for Southeast Asian societies?\"\nThe student answered: \"I aim to guide students through gender studies and perso"
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "How do you ensure scientific integrity when rephrasing technical descriptions of atmospheric circulation patterns?",
+      "prompt": "The advisor asked: \"How do you ensure scientific integrity when rephrasing technical descriptions of atmospheric circulation patterns?\"\nThe student answered: \"I cross-check every modified sentence aga"
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "How do you apply non-equilibrium thermodynamics principles to optimize industrial thermal system designs?",
+      "prompt": "The advisor asked: \"How do you apply non-equilibrium thermodynamics principles to optimize industrial thermal system designs?\"\nThe student answered: \"I model entropy generation rates to identify ineff"
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Do rhythmic chanting or visual aids work better for teaching multiplication tables to young learners?",
+      "prompt": "The advisor asked: \"Do rhythmic chanting or visual aids work better for teaching multiplication tables to young learners?\"\nThe student answered: \"Rhythmic chanting creates stronger auditory memory hoo"
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "interest:physics",
+      "prompt": "The advisor asked: \"Are you focused on creating context-rich physics problems or national exam preparation strategies?\"\nThe student answered: \"I want to emphasize conceptual modeling and real-world ap"
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "interest:economics",
+      "prompt": "The advisor asked: \"Which academic subjects spark your interest most?\"\nThe student answered: \"I've always been fascinated by behavioral economics and game theory.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Do you prefer theoretical or applied learning?",
+      "prompt": "The advisor asked: \"Do you prefer theoretical or applied learning?\"\nThe student answered: \"I learn best when I can apply theories to real-world case studies.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "What specific solar activity metric do you prioritize when designing curriculum for advanced placement astronomy?",
+      "prompt": "The advisor asked: \"What specific solar activity metric do you prioritize when designing curriculum for advanced placement astronomy?\"\nThe student answered: \"I focus on sunspot numbers and flare class"
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Are you focused on adapting anti-harassment content or designing equity training for conservative regions?",
+      "prompt": "The advisor asked: \"Are you focused on adapting anti-harassment content or designing equity training for conservative regions?\"\nThe student answered: \"I aim to blend behavioral science with local lega"
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "timetablePrefs.avoid_early_morning",
+      "prompt": "The advisor asked: \"Do you have a preference for morning or evening classes?\"\nThe student answered: \"I am most alert in the afternoons, so I avoid 8 AM lectures.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "What is your preferred method for reviewing complex theoretical frameworks?",
+      "prompt": "The advisor asked: \"What is your preferred method for reviewing complex theoretical frameworks?\"\nThe student answered: \"I create detailed concept maps to visualize the relationships between different "
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "How do you adapt anti-harassment training content to respect hierarchical values in conservative corporate cultures?",
+      "prompt": "The advisor asked: \"How do you adapt anti-harassment training content to respect hierarchical values in conservative corporate cultures?\"\nThe student answered: \"I use indirect storytelling and case st"
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "What strategic framework do you recommend for integrating digital tools into traditional manufacturing workflows?",
+      "prompt": "The advisor asked: \"What strategic framework do you recommend for integrating digital tools into traditional manufacturing workflows?\"\nThe student answered: \"I suggest starting with pilot projects in "
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "How do you evaluate your own progress throughout a semester?",
+      "prompt": "The advisor asked: \"How do you evaluate your own progress throughout a semester?\"\nThe student answered: \"I track my grades on a spreadsheet and reflect on feedback from my professors.\""
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "style.learning_preference",
+      "prompt": "The advisor asked: \"Do you prefer structured lecture-based courses or a more seminar-style approach?\"\nThe student answered: \"I find the interactive nature of small seminars much more engaging for my l"
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "interest:language_curriculum",
+      "prompt": "The advisor asked: \"How do you balance emotional engagement with rigorous assessment standards in your language curriculum?\"\nThe student answered: \"I use reflective journals for personal expression bu"
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "How do you interpret the religious significance of the oath sworn by Odysseus in the Odyssey?",
+      "prompt": "The advisor asked: \"How do you interpret the religious significance of the oath sworn by Odysseus in the Odyssey?\"\nThe student answered: \"It reflects the archaic Greek belief in the binding power of s"
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Do you feel you need additional support in any specific study skill?",
+      "prompt": "The advisor asked: \"Do you feel you need additional support in any specific study skill?\"\nThe student answered: \"I struggle with synthesizing large amounts of academic literature into a coherent thesi"
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "What interactive platform feature do you find most essential for teaching concurrent programming in Go?",
+      "prompt": "The advisor asked: \"What interactive platform feature do you find most essential for teaching concurrent programming in Go?\"\nThe student answered: \"Visualizing goroutine scheduling and channel communi"
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "How would you describe the shift in epistemological paradigms during the early Enlightenment period?",
+      "prompt": "The advisor asked: \"How would you describe the shift in epistemological paradigms during the early Enlightenment period?\"\nThe student answered: \"It moved from reliance on theological authority to empi"
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "interest:global_englishes",
+      "prompt": "The advisor asked: \"How do you incorporate awareness of global Englishes into your standard literacy assessment rubrics?\"\nThe student answered: \"I evaluate communicative effectiveness and grammatical "
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "What specific skills do you hope to develop through your extracurricular activities?",
+      "prompt": "The advisor asked: \"What specific skills do you hope to develop through your extracurricular activities?\"\nThe student answered: \"I am joining the debate team to improve my public speaking and argument"
+    },
+    {
+      "reason": "duplicate of a seed row",
+      "prompt": "The advisor asked: \"Do you work best alone or in a team? And how heavy a workload feels right?\"\nThe student answered: \"I prefer working in a team, and a heavy workload is fine.\""
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "interest:data_architecture",
+      "prompt": "The advisor asked: \"Are you studying relational database theory or data normalization principles for architecture?\"\nThe student answered: \"I want to blend academic rigor with real-world data design ap"
+    },
+    {
+      "reason": "duplicate of a seed row",
+      "prompt": "The advisor asked: \"Do you prefer exams, coursework or projects? And theory, or hands-on and applied?\"\nThe student answered: \"I like exams and I prefer theory and derivations.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "What digital therapeutics tools do you find most effective for tracking patient mood fluctuations?",
+      "prompt": "The advisor asked: \"What digital therapeutics tools do you find most effective for tracking patient mood fluctuations?\"\nThe student answered: \"I prefer apps that allow real-time ecological momentary a"
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Do you have any restrictions on your elective choices?",
+      "prompt": "The advisor asked: \"Do you have any restrictions on your elective choices?\"\nThe student answered: \"I can only take classes that don't conflict with my morning internship.\""
+    },
+    {
+      "reason": "duplicate of a seed row",
+      "prompt": "The advisor asked: \"And what would you avoid if you could?\"\nThe student answered: \"Not a fan of nuclear stuff or anything too theoretical.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "What is your ideal environment for studying?",
+      "prompt": "The advisor asked: \"What is your ideal environment for studying?\"\nThe student answered: \"I need absolute silence, so I usually spend my time in the library stacks.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Do you intend to pursue a professional certification alongside your degree?",
+      "prompt": "The advisor asked: \"Do you intend to pursue a professional certification alongside your degree?\"\nThe student answered: \"Yes, I am planning to take the CFA Level 1 exam during my final year.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Are there any specific skills you want to develop?",
+      "prompt": "The advisor asked: \"Are there any specific skills you want to develop?\"\nThe student answered: \"I really need to improve my academic writing and formal citation skills.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Are you studying digital transformation strategies or organizational innovation in traditional industries?",
+      "prompt": "The advisor asked: \"Are you studying digital transformation strategies or organizational innovation in traditional industries?\"\nThe student answered: \"I aim to integrate digital strategies with schola"
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "What is your strategy for maintaining a high GPA?",
+      "prompt": "The advisor asked: \"What is your strategy for maintaining a high GPA?\"\nThe student answered: \"I attend every office hour session to clarify my understanding of the material.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "What is your strategy for preparing for oral presentations?",
+      "prompt": "The advisor asked: \"What is your strategy for preparing for oral presentations?\"\nThe student answered: \"I record myself speaking and use a timer to ensure I hit key points.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Are you considering a double major or a minor?",
+      "prompt": "The advisor asked: \"Are you considering a double major or a minor?\"\nThe student answered: \"I'm thinking about adding a minor in Philosophy to complement my Political Science degree.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "What cultural theme do you use to integrate Portuguese and English vocabulary in your immersive lessons?",
+      "prompt": "The advisor asked: \"What cultural theme do you use to integrate Portuguese and English vocabulary in your immersive lessons?\"\nThe student answered: \"We explore family traditions during holidays to tea"
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Do you wish to study food microbiology protocols or hazard analysis in condiment production?",
+      "prompt": "The advisor asked: \"Do you wish to study food microbiology protocols or hazard analysis in condiment production?\"\nThe student answered: \"I focus on regulatory compliance and technical precision in foo"
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "How do you usually handle heavy reading loads?",
+      "prompt": "The advisor asked: \"How do you usually handle heavy reading loads?\"\nThe student answered: \"I prefer breaking texts into small chunks and annotating margins for better retention.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Are you keen on integrating educational technology or leading cross-departmental academic initiatives?",
+      "prompt": "The advisor asked: \"Are you keen on integrating educational technology or leading cross-departmental academic initiatives?\"\nThe student answered: \"I want to specialize in digital learning infrastructu"
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "interest:neuroscience",
+      "prompt": "The advisor asked: \"Do you prefer computational models of self-control or dual-process theory in addiction?\"\nThe student answered: \"I aim to blend neuroscience and formal modeling for decision-making "
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "timetablePrefs.granularity",
+      "prompt": "The advisor asked: \"How do you manage your time during finals week?\"\nThe student answered: \"I create a strict hourly schedule and avoid all social commitments.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "What are your goals regarding internships during your undergraduate years?",
+      "prompt": "The advisor asked: \"What are your goals regarding internships during your undergraduate years?\"\nThe student answered: \"I want to secure a summer fellowship at a government agency or think tank.\""
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "timetablePrefs.unavailable_days",
+      "prompt": "The advisor asked: \"Are there any specific schedule constraints we should consider?\"\nThe student answered: \"I work part-time on Tuesdays and Thursdays from noon until five.\""
+    },
+    {
+      "reason": "duplicate of a seed row",
+      "prompt": "The advisor asked: \"Do you prefer exams, coursework or projects? And theory, or hands-on and applied?\"\nThe student answered: \"Coursework over exams, and I like hands-on work.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Are you interested in immersive theme-based pedagogy or scaffolded instruction for mixed levels?",
+      "prompt": "The advisor asked: \"Are you interested in immersive theme-based pedagogy or scaffolded instruction for mixed levels?\"\nThe student answered: \"I want to design K-8 programs integrating vocabulary, verbs"
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "How do you approach learning a new, difficult concept?",
+      "prompt": "The advisor asked: \"How do you approach learning a new, difficult concept?\"\nThe student answered: \"I usually watch several YouTube tutorials before reading the textbook.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "What input variables do you select when constructing a variable returns to scale model for efficiency analysis?",
+      "prompt": "The advisor asked: \"What input variables do you select when constructing a variable returns to scale model for efficiency analysis?\"\nThe student answered: \"I choose labor hours and capital investment "
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "How do you handle conflicting priorities between your social life and academics?",
+      "prompt": "The advisor asked: \"How do you handle conflicting priorities between your social life and academics?\"\nThe student answered: \"I treat my study blocks as non-negotiable appointments in my calendar.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Which human body system do you find most difficult to visualize when studying complex physiological interactions?",
+      "prompt": "The advisor asked: \"Which human body system do you find most difficult to visualize when studying complex physiological interactions?\"\nThe student answered: \"The interplay between the endocrine and ne"
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Do you have any specific interests in elective seminars?",
+      "prompt": "The advisor asked: \"Do you have any specific interests in elective seminars?\"\nThe student answered: \"I'm looking for something related to environmental ethics or sustainability.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Are you interested in systematic reviews or automated data extraction from clinical registries?",
+      "prompt": "The advisor asked: \"Are you interested in systematic reviews or automated data extraction from clinical registries?\"\nThe student answered: \"I want to focus on bias mitigation in meta-analyses of rare "
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Do you struggle more with syntactic precision or semantic clarity in your literature review drafts?",
+      "prompt": "The advisor asked: \"Do you struggle more with syntactic precision or semantic clarity in your literature review drafts?\"\nThe student answered: \"My syntax is usually correct, but I often fail to connec"
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Do you wish to develop standardized test curricula or analyze solar physics passages?",
+      "prompt": "The advisor asked: \"Do you wish to develop standardized test curricula or analyze solar physics passages?\"\nThe student answered: \"I focus on precision with scientific terminology and advanced placemen"
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "How do you balance your extracurriculars with your studies?",
+      "prompt": "The advisor asked: \"How do you balance your extracurriculars with your studies?\"\nThe student answered: \"I schedule my club meetings on weekends to keep my weekdays clear.\""
+    },
+    {
+      "reason": "duplicate of a seed row",
+      "prompt": "The advisor asked: \"Do you prefer exams, coursework or projects? And theory, or hands-on and applied?\"\nThe student answered: \"A mix of exams and coursework is fine.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "How would you describe your current study habits?",
+      "prompt": "The advisor asked: \"How would you describe your current study habits?\"\nThe student answered: \"I tend to procrastinate and pull all-nighters, but I'm trying to use a planner.\""
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "style.collaboration",
+      "prompt": "The advisor asked: \"What is your preferred method for collaborating with peers on projects?\"\nThe student answered: \"I prefer asynchronous communication via shared documents rather than frequent live m"
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "How do you approach selecting airfoil profiles when optimizing low-speed turbine performance?",
+      "prompt": "The advisor asked: \"How do you approach selecting airfoil profiles when optimizing low-speed turbine performance?\"\nThe student answered: \"I prioritize lift-to-drag ratios at low Reynolds numbers using"
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "interest:historical_survey",
+      "prompt": "The advisor asked: \"Are there any specific topics you want to avoid?\"\nThe student answered: \"I'm not interested in the historical survey; I prefer contemporary analysis.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Do you wish to design psychometric rubrics or train educators in learning outcome measurements?",
+      "prompt": "The advisor asked: \"Do you wish to design psychometric rubrics or train educators in learning outcome measurements?\"\nThe student answered: \"I am interested in refining rating systems and defining clea"
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "What cinematic narrative device do you analyze to deconstruct cultural stereotypes in superhero films?",
+      "prompt": "The advisor asked: \"What cinematic narrative device do you analyze to deconstruct cultural stereotypes in superhero films?\"\nThe student answered: \"I focus on the use of visual framing and dialogue pac"
+    },
+    {
+      "reason": "duplicate of a seed row",
+      "prompt": "The advisor asked: \"Which topics or lectures made you lose track of time?\"\nThe student answered: \"Probably heat transfer, and anything where we got to design and make something in the workshop.\""
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "style.assessment_preference",
+      "prompt": "The advisor asked: \"Do you prefer traditional exams or project-based assessments?\"\nThe student answered: \"I struggle with timed tests, so I'd much rather do a portfolio.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "What specific bureaucratic discrepancy is delaying your enrollment appeal with the central administration?",
+      "prompt": "The advisor asked: \"What specific bureaucratic discrepancy is delaying your enrollment appeal with the central administration?\"\nThe student answered: \"The department approved my credits, but the regis"
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Do you have any restrictions on the number of credits you can take?",
+      "prompt": "The advisor asked: \"Do you have any restrictions on the number of credits you can take?\"\nThe student answered: \"I must limit myself to twelve credits this term due to health reasons.\""
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "interest:science",
+      "prompt": "The advisor asked: \"How does your current workload affect your stress levels?\"\nThe student answered: \"I'm feeling overwhelmed by the overlapping deadlines in my three science labs.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "What is your primary motivation for pursuing this degree?",
+      "prompt": "The advisor asked: \"What is your primary motivation for pursuing this degree?\"\nThe student answered: \"I want to gain the credentials needed to start my own consulting firm.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "How do you integrate trauma-informed practices into your daily classroom management strategies?",
+      "prompt": "The advisor asked: \"How do you integrate trauma-informed practices into your daily classroom management strategies?\"\nThe student answered: \"I prioritize predictable routines and offer choices to stude"
+    },
+    {
+      "reason": "duplicate of a seed row",
+      "prompt": "The advisor asked: \"Would you like something outside your degree, like a language, business or the arts?\"\nThe student answered: \"Maybe, a bit.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Do you prefer studying social influence strategies or compliance techniques in education?",
+      "prompt": "The advisor asked: \"Do you prefer studying social influence strategies or compliance techniques in education?\"\nThe student answered: \"I aim to apply persuasion theories and behavioral science to commu"
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "What kind of feedback from instructors do you find most useful?",
+      "prompt": "The advisor asked: \"What kind of feedback from instructors do you find most useful?\"\nThe student answered: \"I prefer detailed marginal comments on my drafts rather than a final letter grade.\""
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "interest:urban_planning",
+      "prompt": "The advisor asked: \"What prompted your interest in this specific major?\"\nThe student answered: \"I've always wanted to understand how urban planning affects social equity.\""
+    },
+    {
+      "reason": "completion is not JSON",
+      "detail": "{\"updates\":[{\"slot\":\"interest:physics_modeling\",\"value\":true},{\"slot\":\"interest:kinematics\",\"value\":true},{\"slot\":\"style",
+      "prompt": "The advisor asked: \"Do you prefer designing competitive exam prep or explaining rotational dynamics in athletic motion?\"\nThe student answered: \"I focus on real-world physics modeling and kinematics fo"
+    },
+    {
+      "reason": "duplicate of a seed row",
+      "prompt": "The advisor asked: \"What would you like to be doing after you graduate? \"Not sure yet\" is a fine answer.\"\nThe student answered: \"I'd love to do a PhD and stay in research.\""
+    },
+    {
+      "reason": "duplicate of a seed row",
+      "prompt": "The advisor asked: \"And what would you avoid if you could?\"\nThe student answered: \"Anything with heavy derivations, proofs are a slog for me.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Do you wish to research the psychological effects of video games or digital media on behavior?",
+      "prompt": "The advisor asked: \"Do you wish to research the psychological effects of video games or digital media on behavior?\"\nThe student answered: \"I focus on evidence-based analysis of mental health and disse"
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Are you interested in AI-assisted learning systems or mentor-guided pedagogical frameworks?",
+      "prompt": "The advisor asked: \"Are you interested in AI-assisted learning systems or mentor-guided pedagogical frameworks?\"\nThe student answered: \"I want to blend cognitive science with intelligent tutoring syst"
+    },
+    {
+      "reason": "duplicate of a seed row",
+      "prompt": "The advisor asked: \"What would you like to be doing after you graduate? \"Not sure yet\" is a fine answer.\"\nThe student answered: \"Maybe consulting, or a quant role at a bank.\""
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "interest:clinical_handwriting_recognition",
+      "prompt": "The advisor asked: \"Is your research interest focused on deep learning models for clinical handwriting recognition?\"\nThe student answered: \"Yes, specifically CNN and LSTM integration for automated pre"
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "What specific criterion do you prioritize when assessing coherence in IELTS Task 2 academic essays?",
+      "prompt": "The advisor asked: \"What specific criterion do you prioritize when assessing coherence in IELTS Task 2 academic essays?\"\nThe student answered: \"I look for clear topic sentences that logically progress"
+    },
+    {
+      "reason": "duplicate of a seed row",
+      "prompt": "The advisor asked: \"What would you like to be doing after you graduate? \"Not sure yet\" is a fine answer.\"\nThe student answered: \"I want to work in Formula 1 aerodynamics.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Which academic subjects do you find most challenging to study?",
+      "prompt": "The advisor asked: \"Which academic subjects do you find most challenging to study?\"\nThe student answered: \"I find quantitative methods and advanced calculus much harder than the qualitative modules.\""
+    },
+    {
+      "reason": "duplicate of a seed row",
+      "prompt": "The advisor asked: \"Do you prefer exams, coursework or projects? And theory, or hands-on and applied?\"\nThe student answered: \"Projects, definitely, and practical work.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "How do you typically organize your academic tasks?",
+      "prompt": "The advisor asked: \"How do you typically organize your academic tasks?\"\nThe student answered: \"I use a digital Kanban board to track my assignments and deadlines.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "How do you prioritize your tasks when facing multiple overlapping deadlines?",
+      "prompt": "The advisor asked: \"How do you prioritize your tasks when facing multiple overlapping deadlines?\"\nThe student answered: \"I prioritize based on the weight of the assignment toward my final grade.\""
+    },
+    {
+      "reason": "duplicate of a seed row",
+      "prompt": "The advisor asked: \"Would you like something outside your degree, like a language, business or the arts?\"\nThe student answered: \"Yes, I would love to try entrepreneurship or a language.\""
+    },
+    {
+      "reason": "duplicate of a seed row",
+      "prompt": "The advisor asked: \"What would you like to be doing after you graduate? \"Not sure yet\" is a fine answer.\"\nThe student answered: \"Not sure yet.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Are you looking for research opportunities this semester?",
+      "prompt": "The advisor asked: \"Are you looking for research opportunities this semester?\"\nThe student answered: \"Yes, I'm specifically interested in assisting with quantitative data analysis in psychology.\""
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "timetablePrefs.productiveTime",
+      "prompt": "The advisor asked: \"What time of day are you most productive?\"\nThe student answered: \"I'm definitely a night owl; I do my best thinking after midnight.\""
+    },
+    {
+      "reason": "duplicate of a seed row",
+      "prompt": "The advisor asked: \"Which topics or lectures made you lose track of time?\"\nThe student answered: \"I lost track of time in the wind tunnel lab and the CFD coursework.\""
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "style.curriculum_balance",
+      "prompt": "The advisor asked: \"What is your ideal balance between theoretical and practical coursework?\"\nThe student answered: \"I want a curriculum that is 70% hands-on lab work and 30% theory.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "What is your preferred method of receiving feedback?",
+      "prompt": "The advisor asked: \"What is your preferred method of receiving feedback?\"\nThe student answered: \"I prefer detailed written comments over a brief face-to-face meeting.\""
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "timetablePrefs.unavailable_days",
+      "prompt": "The advisor asked: \"Do you have any specific constraints regarding your weekly class schedule?\"\nThe student answered: \"I cannot take any courses on Fridays due to my part-time job.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "How do you feel about peer-review sessions?",
+      "prompt": "The advisor asked: \"How do you feel about peer-review sessions?\"\nThe student answered: \"I find them helpful, although I sometimes struggle to give critical feedback.\""
+    },
+    {
+      "reason": "slot not whitelisted",
+      "detail": "interest:second_language_acquisition",
+      "prompt": "The advisor asked: \"Do you prefer humanistic language pedagogy or phenomenology in second language acquisition?\"\nThe student answered: \"I want to integrate reflective practices with measurable outcome"
+    },
+    {
+      "reason": "duplicate of a seed row",
+      "prompt": "The advisor asked: \"What would you like to be doing after you graduate? \"Not sure yet\" is a fine answer.\"\nThe student answered: \"I would like to start my own company one day.\""
+    },
+    {
+      "reason": "duplicate of a seed row",
+      "prompt": "The advisor asked: \"Which topics or lectures made you lose track of time?\"\nThe student answered: \"I have ADHD so long lectures are tough, but I enjoy electronics.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "How do you stay organized with your course readings and notes?",
+      "prompt": "The advisor asked: \"How do you stay organized with your course readings and notes?\"\nThe student answered: \"I use a Zettelkasten system to link concepts across different subjects.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "What is your current comfort level with academic research?",
+      "prompt": "The advisor asked: \"What is your current comfort level with academic research?\"\nThe student answered: \"I'm okay with finding sources, but I struggle with synthesizing the literature.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Do you plan to study the ethics of cultural relativism or decolonizing health research?",
+      "prompt": "The advisor asked: \"Do you plan to study the ethics of cultural relativism or decolonizing health research?\"\nThe student answered: \"I am interested in navigating traditional practices within public he"
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Are you interested in trauma-informed pedagogy or inclusive practices for multilingual classrooms?",
+      "prompt": "The advisor asked: \"Are you interested in trauma-informed pedagogy or inclusive practices for multilingual classrooms?\"\nThe student answered: \"I want to support hesitant learners through cultural sens"
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "What is your experience with statistical software?",
+      "prompt": "The advisor asked: \"What is your experience with statistical software?\"\nThe student answered: \"I've used basic Excel, but I've never touched R or SPSS before.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "How do you explain the function of the brain's frontal lobe to kindergarten students using play-based learning?",
+      "prompt": "The advisor asked: \"How do you explain the function of the brain's frontal lobe to kindergarten students using play-based learning?\"\nThe student answered: \"I compare it to a conductor directing an orc"
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "How do you ensure you are covering all the required material for a course?",
+      "prompt": "The advisor asked: \"How do you ensure you are covering all the required material for a course?\"\nThe student answered: \"I cross-reference the syllabus with my notes and the weekly learning objectives.\""
+    },
+    {
+      "reason": "duplicate of a seed row",
+      "prompt": "The advisor asked: \"Last one: any days or times you want to keep free?\"\nThe student answered: \"Nothing before 10am please.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Can you explain how you apply the phenomenological reduction method to your analysis of consciousness?",
+      "prompt": "The advisor asked: \"Can you explain how you apply the phenomenological reduction method to your analysis of consciousness?\"\nThe student answered: \"I bracket all presuppositions about the external worl"
+    },
+    {
+      "reason": "duplicate of a seed row",
+      "prompt": "The advisor asked: \"Which topics or lectures made you lose track of time?\"\nThe student answered: \"Honestly the maths modules and the statistics course were my favourite.\""
+    },
+    {
+      "reason": "duplicate of a seed row",
+      "prompt": "The advisor asked: \"What would you like to be doing after you graduate? \"Not sure yet\" is a fine answer.\"\nThe student answered: \"Something in energy, maybe nuclear or renewables.\""
+    },
+    {
+      "reason": "advisor question matches no interview step",
+      "detail": "Do you excel more at conceptual modeling or solving complex multi-concept physics assessments?",
+      "prompt": "The advisor asked: \"Do you excel more at conceptual modeling or solving complex multi-concept physics assessments?\"\nThe student answered: \"I prefer integrating real-world applications into deep concep"
+    }
+  ]
+}
