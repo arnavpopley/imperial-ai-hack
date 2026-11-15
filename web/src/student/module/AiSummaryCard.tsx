@@ -27,7 +27,7 @@ export function AiSummaryCard({ moduleId }: { moduleId: string }) {
       />
       <div className="relative">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 id="summary-heading" className="flex items-center gap-2 text-sm font-semibold">
+          <h2 id="summary-heading" className="flex items-center gap-2 text-subheading">
             <span className="grid size-7 place-items-center rounded-full bg-brand-soft text-brand" aria-hidden="true">
               <Icon name="sparkle" size={14} />
             </span>

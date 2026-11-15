@@ -419,7 +419,16 @@ export const TimetableView = z.object({
   keepFreeConflicts: z.array(KeepFreeConflict),
   /** ECTS in the plan: core modules, chosen electives and I-Explore, against the programme cap. */
   /** `max` is the programme's credit cap, or null when the rules for the student's year are not loaded (issue 51). */
-  ects: z.object({ core: z.number().min(0), elective: z.number().min(0), iExplore: z.number().min(0), max: z.number().min(0).nullable() }),
+  ects: z.object({
+    core: z.number().min(0),
+    elective: z.number().min(0),
+    iExplore: z.number().min(0),
+    max: z.number().min(0).nullable(),
+    /** Electives and I-Explore the programme needs (spec 9.1), or null without the year's rules (issue 143 meters). */
+    electiveRequired: z.number().min(0).nullable(),
+    /** Whether the programme needs one I-Explore module. */
+    iExploreRequired: z.boolean(),
+  }),
   rules: RulesResult,
 });
 

@@ -5,7 +5,7 @@ import { fieldId, questionDisplayTitle, questionNumber } from '../lib/examForm.t
 import type { QuestionDraft } from '../lib/examForm.ts';
 import { Field, ListEditor, TextArea, TextInput, TopicPicker } from './ExamFields.tsx';
 import { ArrowDownIcon, ArrowUpIcon, TrashIcon } from './icons.tsx';
-import { Button } from './ui.tsx';
+import { Button } from '../../components/Button.tsx';
 
 export type MoveDirection = 'up' | 'down';
 

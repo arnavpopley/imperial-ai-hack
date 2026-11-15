@@ -11,7 +11,9 @@ import type { MoveDirection } from '../components/ExamQuestionCard.tsx';
 import { CohortOnlyNote, ExamStatusChip, PublishDialog, UnpublishDialog } from '../components/ExamStatus.tsx';
 import { FeedbackPreview } from '../components/FeedbackPreview.tsx';
 import { AlertIcon, CheckIcon, ExamIcon, InfoIcon, PencilIcon, PlusIcon, SendIcon, SparkIcon, UndoIcon } from '../components/icons.tsx';
-import { Button, ErrorState, LoadingState, Panel } from '../components/ui.tsx';
+import { Panel } from '../components/ui.tsx';
+import { Button } from '../../components/Button.tsx';
+import { ErrorState, LoadingState } from '../../components/StateViews.tsx';
 import { useResource } from '../hooks/useResource.ts';
 import {
   EXAM_LABEL_FIELD,
@@ -48,13 +50,13 @@ function ExamWorkspace({ moduleId }: { moduleId: string }) {
   if (state.status === 'loading')
     return (
       <ExamIntro>
-        <LoadingState label="Loading the exam feedback form" rows={3} />
+        <LoadingState label="Loading the exam feedback form" />
       </ExamIntro>
     );
   if (state.status === 'error')
     return (
       <ExamIntro>
-        <ErrorState title="Could not load the exam feedback form" error={state.error} onRetry={reload} />
+        <ErrorState title="Could not load the exam feedback form" message={state.error.message} onRetry={reload} />
       </ExamIntro>
     );
   return <ExamFormWorkspace moduleId={moduleId} initial={state.data} />;
@@ -66,7 +68,7 @@ function ExamIntro({ status, children }: { status?: ExamStatus; children: ReactN
       <div className="grid gap-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="grid gap-1">
-            <h2 className="inline-flex items-center gap-2 text-xl font-semibold tracking-tight">
+            <h2 className="inline-flex items-center gap-2 text-heading">
               <ExamIcon className="size-5 text-brand" /> Exam feedback
             </h2>
             <p className="max-w-2xl text-sm text-muted text-pretty">
@@ -387,7 +389,7 @@ function ExamFormWorkspace({ moduleId, initial }: { moduleId: string; initial: E
 
             <section aria-labelledby="exam-questions-heading" className="grid gap-5">
               <div className="flex flex-wrap items-baseline justify-between gap-2 px-1">
-                <h2 id="exam-questions-heading" className="text-lg font-semibold tracking-tight">
+                <h2 id="exam-questions-heading" className="text-heading">
                   Questions
                 </h2>
                 <p className="text-sm text-muted tabular-nums">

@@ -36,6 +36,11 @@ const BY_TOPIC: Record<string, Art> = {
 /** For a society with no topics (such as hiking), something outdoorsy rather than a blank. */
 const FALLBACK: Art = { icon: 'mountain', gradient: 'from-art-8 to-art-7' };
 
+/** The artwork for one topic, or the outdoorsy fallback. */
+export function artForTopic(topic: string): Art {
+  return BY_TOPIC[topic] ?? FALLBACK;
+}
+
 export function artFor(society: Society | undefined): Art {
   if (!society) return FALLBACK;
   const top = Object.entries(society.topics).sort((a, b) => b[1] - a[1])[0]?.[0];

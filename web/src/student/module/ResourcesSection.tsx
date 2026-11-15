@@ -14,7 +14,7 @@ const GROUPS: readonly { kind: Kind; label: string; icon: IconName }[] = [
 export function ResourcesSection({ resources }: { resources: readonly ModuleResource[] }) {
   return (
     <section aria-labelledby="resources-heading" className="rounded-[1.25rem] border border-line bg-surface p-5 shadow-soft sm:p-6">
-      <h2 id="resources-heading" className="flex items-center gap-2 text-sm font-semibold">
+      <h2 id="resources-heading" className="flex items-center gap-2 text-subheading">
         <span className="grid size-7 place-items-center rounded-full bg-surface-2 text-muted" aria-hidden="true">
           <Icon name="bookmark" size={14} />
         </span>

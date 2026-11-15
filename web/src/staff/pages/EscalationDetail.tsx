@@ -5,8 +5,9 @@ import type { ExceptionRequest, StaffEscalation } from '@modulematch/shared';
 import { useEffect, useId, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { ESCALATION_TYPES, StatusBadge } from '../components/EscalationBadges.tsx';
-import { Button, EmptyState } from '../components/ui.tsx';
-import { AlertIcon, ArrowLeftIcon, CheckIcon, HeartIcon, InboxIcon, XIcon } from '../components/icons.tsx';
+import { Button } from '../../components/Button.tsx';
+import { EmptyState } from '../../components/StateViews.tsx';
+import { AlertIcon, ArrowLeftIcon, CheckIcon, HeartIcon, XIcon } from '../components/icons.tsx';
 import { Avatar } from '../../components/Avatar.tsx';
 import { SubScoreBars } from '../../components/SubScoreBars.tsx';
 import { escalationTitle } from '../../components/escalationTitle.ts';
@@ -40,7 +41,7 @@ export function EscalationDetail() {
         // Keyed so a half-written reply never carries over to another student's case.
         <EscalationCase key={escalation.id} escalation={escalation} />
       ) : (
-        <EmptyState icon={<InboxIcon className="size-6" />} title="Escalation not found">
+        <EmptyState icon="inbox" title="Escalation not found">
           It may have been removed. Pick another from the queue.
         </EmptyState>
       )}
@@ -69,7 +70,7 @@ function EscalationCase({ escalation: e }: { escalation: StaffEscalation }) {
         <Avatar seed={e.sessionId} size={40} />
         <div className="grid min-w-0 flex-1 gap-1">
           <div className="flex items-start justify-between gap-3">
-            <h2 id={ids.title} className="min-w-0 text-xl leading-snug font-semibold tracking-tight">
+            <h2 id={ids.title} className="min-w-0 text-heading">
               {escalationTitle(e, moduleByIdForTitle)}
             </h2>
             <span className="mt-0.5 shrink-0">

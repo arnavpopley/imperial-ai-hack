@@ -4,13 +4,13 @@ import { useEffect, useId, useMemo, useState } from 'react';
 import { NavLink, Outlet, useNavigate, useParams } from 'react-router';
 import { escalationTitle } from '../../components/escalationTitle.ts';
 import { ESCALATION_TYPES, StatusBadge, TypeBadge } from '../components/EscalationBadges.tsx';
-import { EmptyState, ErrorState, LoadingState } from '../components/ui.tsx';
-import { InboxIcon } from '../components/icons.tsx';
+import { EmptyState, ErrorState, LoadingState } from '../../components/StateViews.tsx';
 import { ESCALATION_POLL_MS } from '../hooks/useEscalationQueue.ts';
 import { useModuleLookup } from '../hooks/useModuleLookup.ts';
 import { Avatar } from '../../components/Avatar.tsx';
 import { focusRing, formatClock, formatDateTime, formatRelative, plural } from '../lib/format.ts';
 import { useStaffData } from '../StaffData.tsx';
+import { Select } from '../../components/Select.tsx';
 
 type QueueFilter = 'all' | EscalationType;
 type StatusFilter = 'unresolved' | 'all' | EscalationStatus;
@@ -78,11 +78,11 @@ export function EscalationsPage() {
       {/* The tab already names the page, so the heading is for screen readers and the live status joins the filters. */}
       <h2 className="sr-only">Escalations: questions the AI will not decide alone</h2>
 
-      {items === null && queue.error === null && <LoadingState label="Loading escalations" rows={3} />}
+      {items === null && queue.error === null && <LoadingState label="Loading escalations" />}
       {queue.error && (
         <ErrorState
           title={items === null ? 'Could not load escalations' : 'Live updates paused: the last refresh failed'}
-          error={queue.error}
+          message={queue.error.message}
           onRetry={queue.retry}
         />
       )}
@@ -104,7 +104,7 @@ export function EscalationsPage() {
               <LiveIndicator />
             </div>
             {visible.length === 0 ? (
-              <EmptyState icon={<InboxIcon className="size-6" />} title="Nothing in this view">
+              <EmptyState icon="inbox" title="Nothing in this view">
                 {items.length === 0
                   ? 'No escalations yet. New ones appear here within 5 seconds.'
                   : 'Try another filter.'}
@@ -167,22 +167,23 @@ function FilterSelect<T extends string>({
 }) {
   const id = useId();
   return (
-    <span className="flex min-w-0 flex-1 items-center gap-2">
+    // A basis wide enough for "All queues (12)", so the filters wrap to two rows rather than truncate.
+    <span className="flex min-w-0 flex-1 basis-52 items-center gap-2">
       <label htmlFor={id} className="text-xs font-semibold tracking-[0.08em] text-muted uppercase">
         {label}
       </label>
-      <select
+      <Select
         id={id}
         value={value}
         onChange={(ev) => onChange(ev.target.value as T)}
-        className={`min-w-0 flex-1 rounded-xl border border-line bg-surface px-2.5 py-1.5 text-sm ${focusRing}`}
+        wrapperClassName="flex-1"
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>
             {o.label}
           </option>
         ))}
-      </select>
+      </Select>
     </span>
   );
 }
@@ -227,8 +228,9 @@ function QueueItem({ escalation: e, fresh }: { escalation: StaffEscalation; fres
 
 export function EscalationPlaceholder() {
   return (
-    <div className="hidden lg:block">
-      <EmptyState image="/images/tutor-teamwork.jpg" title="Pick a question from the queue">
+    // Inset, so the scroll pane's larger rounded corners never clip the dashed outline.
+    <div className="hidden lg:block lg:p-1">
+      <EmptyState icon="inbox" title="Pick a question from the queue">
         You will see what the student asked, their context, and a box to reply.
       </EmptyState>
     </div>

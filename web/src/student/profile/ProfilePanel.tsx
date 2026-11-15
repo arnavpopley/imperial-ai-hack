@@ -60,7 +60,7 @@ export function ProfilePanel({ profile, evidence, highlightSlots, className }: P
         <header className="flex items-center gap-4">
           <CompletenessRing value={profile.completeness} />
           <div className="min-w-0">
-            <h2 id="profile-heading" className="text-base font-semibold tracking-tight">
+            <h2 id="profile-heading" className="text-subheading">
               Your profile
             </h2>
             <div className="mt-1.5 flex flex-wrap items-center gap-2">

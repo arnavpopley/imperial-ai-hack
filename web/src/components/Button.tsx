@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes } from 'react';
+import type { ComponentPropsWithRef } from 'react';
 import { cx } from './cx.ts';
 import { Icon, type IconName } from './Icon.tsx';
 import { Spinner } from './Spinner.tsx';
@@ -27,7 +27,7 @@ export function buttonClass(variant: ButtonVariant = 'secondary', size: ButtonSi
   );
 }
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonProps extends ComponentPropsWithRef<'button'> {
   variant?: ButtonVariant;
   size?: ButtonSize;
   icon?: IconName;

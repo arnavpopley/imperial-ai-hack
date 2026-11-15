@@ -4,7 +4,8 @@ import type { FeedbackSummary, FeedbackTargetKind } from '@modulematch/shared';
 import { api } from '../../api.ts';
 import { CountUp } from '../../components/CountUp.tsx';
 import { AlertIcon, CheckIcon, MessageIcon, ShieldIcon } from '../components/icons.tsx';
-import { EmptyState, ErrorState, LoadingState, Panel, StatTile } from '../components/ui.tsx';
+import { Panel, StatTile } from '../components/ui.tsx';
+import { EmptyState, ErrorState, LoadingState } from '../../components/StateViews.tsx';
 import { useResource } from '../hooks/useResource.ts';
 import { focusRing, formatRelative, humanise, percent, plural } from '../lib/format.ts';
 import { useStaffData } from '../StaffData.tsx';
@@ -23,7 +24,7 @@ export function FeedbackPage() {
     <div className="grid grid-cols-1 gap-8">
       <header className="grid gap-4">
         <div className="flex flex-wrap items-end justify-between gap-3">
-          <h2 className="text-3xl font-semibold tracking-tight">Student feedback</h2>
+          <h2 className="text-heading">Student feedback</h2>
           <a
             href={api.staff.feedbackExportUrl}
             download
@@ -43,8 +44,8 @@ export function FeedbackPage() {
           </span>
         </p>
       </header>
-      {state.status === 'loading' && <LoadingState label="Loading student feedback" rows={3} />}
-      {state.status === 'error' && <ErrorState title="Could not load feedback" error={state.error} onRetry={reload} />}
+      {state.status === 'loading' && <LoadingState label="Loading student feedback" />}
+      {state.status === 'error' && <ErrorState title="Could not load feedback" message={state.error.message} onRetry={reload} />}
       {state.status === 'ready' && <FeedbackView summary={state.data} />}
     </div>
   );
@@ -55,7 +56,7 @@ function FeedbackView({ summary }: { summary: FeedbackSummary }) {
 
   if (summary.total === 0)
     return (
-      <EmptyState icon={<MessageIcon className="size-6" />} title="No feedback yet">
+      <EmptyState icon="chat" title="No feedback yet">
         Ratings appear here once students use the thumbs under an answer.
       </EmptyState>
     );

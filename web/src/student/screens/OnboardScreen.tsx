@@ -182,7 +182,7 @@ export function OnboardScreen() {
             )}
           </AnimatePresence>
           <div>
-            <h2 id="onboard-heading" className="text-2xl font-semibold tracking-tight">
+            <h2 id="onboard-heading" className="text-heading">
               Get started
             </h2>
             <p className="mt-1 text-sm text-muted">Three details, then a short chat.</p>

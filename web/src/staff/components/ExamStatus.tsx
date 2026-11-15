@@ -3,7 +3,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { ExamStatus } from '../lib/examForm.ts';
 import { CheckIcon, PencilIcon, SendIcon, ShieldIcon, SparkIcon } from './icons.tsx';
-import { Button } from './ui.tsx';
+import { Button } from '../../components/Button.tsx';
 
 const CHIP: Record<ExamStatus, { label: string; className: string; Icon: typeof CheckIcon }> = {
   unsaved: { label: 'Not saved yet', className: 'bg-surface-2 text-muted ring-line-strong', Icon: PencilIcon },
@@ -94,7 +94,7 @@ function ConfirmDialog({
           <span aria-hidden="true" className="grid size-12 place-items-center rounded-2xl bg-brand-soft text-brand">
             {icon}
           </span>
-          <h2 id={titleId} className="text-xl font-semibold tracking-tight">
+          <h2 id={titleId} className="text-heading">
             {title}
           </h2>
           <div id={bodyId} className="-mt-3 grid gap-2 text-sm leading-relaxed text-muted">

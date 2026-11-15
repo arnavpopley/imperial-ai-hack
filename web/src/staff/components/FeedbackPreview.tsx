@@ -6,6 +6,7 @@ import type { ExamDraft } from '../lib/examForm.ts';
 import { focusRing, topicLabel } from '../lib/format.ts';
 import { inputClass } from './ExamFields.tsx';
 import { CompassIcon, EyeIcon, TrendUpIcon } from './icons.tsx';
+import { Select } from '../../components/Select.tsx';
 
 export function FeedbackPreview({
   draft,
@@ -35,7 +36,7 @@ export function FeedbackPreview({
         <p className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.08em] text-muted uppercase">
           <EyeIcon className="size-4" /> Student preview
         </p>
-        <h2 id={`${selectId}-heading`} className="text-lg font-semibold tracking-tight text-balance">
+        <h2 id={`${selectId}-heading`} className="text-heading text-balance">
           What a student who lost marks on {weakId} would see
         </h2>
         {draft.questions.length > 1 && (
@@ -43,18 +44,18 @@ export function FeedbackPreview({
             <label htmlFor={selectId} className="text-sm font-medium">
               Question the sample student lost marks on
             </label>
-            <select
+            <Select
               id={selectId}
               value={weakIndex}
               onChange={(e) => setChosen(Number(e.target.value))}
-              className={`${inputClass} py-2`}
+              wrapperClassName="w-full"
             >
               {draft.questions.map((q, i) => (
                 <option key={q.key} value={i}>
                   {questionNumber(q, i)}: {questionDisplayTitle(q, i)}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
         )}
       </div>
