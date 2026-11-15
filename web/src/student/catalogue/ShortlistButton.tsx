@@ -23,7 +23,7 @@ function CompulsoryPill({ size, className }: { size: 'md' | 'lg'; className?: st
     <span
       className={cx(
         'inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-ink/6 font-semibold text-muted',
-        size === 'md' ? 'h-10 min-w-[8.5rem] px-4 text-[13px]' : 'h-12 min-w-[10.5rem] px-5 text-sm',
+        size === 'md' ? 'h-10 min-w-[8.5rem] px-4 text-xs' : 'h-12 min-w-[10.5rem] px-5 text-sm',
         className,
       )}
     >
@@ -83,7 +83,7 @@ function ToggleButton({ title, shortlisted, pending, onToggle, size = 'md', clas
       transition={transition('answerFeedback')}
       className={cx(
         'inline-flex shrink-0 items-center justify-center gap-2 rounded-xl font-semibold transition-[background-color,border-color,color,box-shadow] duration-200 disabled:cursor-wait',
-        size === 'md' ? 'h-10 min-w-[8.5rem] px-4 text-sm' : 'h-12 min-w-[10.5rem] px-5 text-[15px]',
+        size === 'md' ? 'h-10 min-w-[8.5rem] px-4 text-sm' : 'h-12 min-w-[10.5rem] px-5 text-sm',
         shortlisted
           ? 'bg-brand text-on-brand shadow-soft hover:brightness-110'
           : 'border-2 border-brand/35 bg-surface text-brand hover:border-brand hover:bg-brand-soft/60',

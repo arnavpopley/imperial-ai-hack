@@ -24,7 +24,7 @@ export function DemandChip({ signal, className }: { signal: ModuleDemandSignal; 
     <span
       title={SOURCE}
       className={cx(
-        'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-semibold text-ink tabular-nums',
+        'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-2xs font-semibold text-ink tabular-nums',
         tone.chip,
         className,
       )}
@@ -39,7 +39,7 @@ export function DemandChip({ signal, className }: { signal: ModuleDemandSignal; 
 /** The module page's fuller note: the chip, where the number comes from, and what it means for the student. */
 export function DemandNote({ signal }: { signal: ModuleDemandSignal }) {
   return (
-    <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-muted">
+    <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
       <DemandChip signal={signal} />
       <span>
         {SOURCE}.{' '}

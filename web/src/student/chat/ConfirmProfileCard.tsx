@@ -60,7 +60,7 @@ export function ConfirmProfileCard() {
           <h3 id="heard-heading" className="text-lg font-semibold tracking-tight">
             Here is what I heard
           </h3>
-          <p className="text-[13px] text-muted">Check it looks like you.</p>
+          <p className="text-xs text-muted">Check it looks like you.</p>
         </div>
       </div>
       {editing ? (
@@ -80,7 +80,7 @@ export function ConfirmProfileCard() {
       ) : (
         <>
           {empty ? (
-            <p className="mt-5 text-[15px] text-muted">I did not pick up much yet. You can add details yourself.</p>
+            <p className="mt-5 text-sm text-muted">I did not pick up much yet. You can add details yourself.</p>
           ) : (
             <motion.div initial="hidden" animate="shown" variants={GROUP} className="mt-6 grid gap-6 sm:grid-cols-2">
               {interests.length > 0 && (
@@ -90,7 +90,7 @@ export function ConfirmProfileCard() {
                       <motion.li
                         key={topic}
                         variants={ITEM}
-                        className="relative overflow-hidden rounded-full bg-surface-2 px-3.5 py-1.5 text-[14px] font-medium"
+                        className="relative overflow-hidden rounded-full bg-surface-2 px-3.5 py-1.5 text-sm font-medium"
                       >
                         <span
                           aria-hidden="true"
@@ -110,7 +110,7 @@ export function ConfirmProfileCard() {
                       <motion.li
                         key={topic}
                         variants={ITEM}
-                        className="rounded-full bg-surface-2 px-3.5 py-1.5 text-[14px] font-medium text-muted"
+                        className="rounded-full bg-surface-2 px-3.5 py-1.5 text-sm font-medium text-muted"
                       >
                         {topicLabel(topic)}
                       </motion.li>
@@ -125,7 +125,7 @@ export function ConfirmProfileCard() {
                       <motion.li
                         key={id}
                         variants={ITEM}
-                        className="rounded-full bg-brand-soft px-3.5 py-1.5 text-[14px] font-medium text-brand"
+                        className="rounded-full bg-brand-soft px-3.5 py-1.5 text-sm font-medium text-brand"
                       >
                         {pathwayById.get(id)?.title ?? id}
                       </motion.li>
@@ -138,7 +138,7 @@ export function ConfirmProfileCard() {
                   <ul className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
                     {styles.map(({ key, value }) => (
                       <motion.li key={key} variants={ITEM} className="grid gap-1.5">
-                        <span className="flex items-baseline justify-between gap-2 text-[13px]">
+                        <span className="flex items-baseline justify-between gap-2 text-xs">
                           <span className="text-muted">{STYLE_META[key].label}</span>
                           <span className="font-medium">{styleValueText(key, value)}</span>
                         </span>
@@ -157,7 +157,7 @@ export function ConfirmProfileCard() {
               )}
               {profile.breadthAppetite !== null && (
                 <Group title="Breadth">
-                  <motion.p variants={ITEM} className="text-[14px] font-medium">
+                  <motion.p variants={ITEM} className="text-sm font-medium">
                     {profile.breadthAppetite >= 0.5
                       ? 'Open to modules outside your degree'
                       : 'Staying close to your degree'}
@@ -172,7 +172,7 @@ export function ConfirmProfileCard() {
                         key={d}
                         variants={ITEM}
                         aria-label={DAY_NAMES[d]}
-                        className="rounded-lg bg-brand px-2.5 py-1 text-[13px] font-medium text-on-brand"
+                        className="rounded-lg bg-brand px-2.5 py-1 text-xs font-medium text-on-brand"
                       >
                         {DAY_LABELS[d]}
                       </motion.li>
@@ -182,13 +182,13 @@ export function ConfirmProfileCard() {
                         key={h}
                         variants={ITEM}
                         aria-label={halfDayLabel(h)}
-                        className="rounded-lg bg-brand/15 px-2.5 py-1 text-[13px] font-medium text-brand"
+                        className="rounded-lg bg-brand/15 px-2.5 py-1 text-xs font-medium text-brand"
                       >
                         {DAY_LABELS[h.slice(0, 3) as Weekday]} {h.endsWith('-am') ? 'AM' : 'PM'}
                       </motion.li>
                     ))}
                     {earliestStart && (
-                      <motion.li variants={ITEM} className="rounded-lg bg-surface-2 px-2.5 py-1 text-[13px]">
+                      <motion.li variants={ITEM} className="rounded-lg bg-surface-2 px-2.5 py-1 text-xs">
                         From {earliestStart}
                       </motion.li>
                     )}
@@ -198,7 +198,7 @@ export function ConfirmProfileCard() {
             </motion.div>
           )}
           {error && (
-            <p role="alert" className="mt-4 text-[13px] text-fit-low">
+            <p role="alert" className="mt-4 text-xs text-fit-low">
               {error}
             </p>
           )}

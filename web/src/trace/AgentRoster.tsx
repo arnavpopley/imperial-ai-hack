@@ -40,7 +40,7 @@ function Group({ label, agents, seen, live }: { label: string; agents: readonly 
     <section aria-label={`${label} agents`} className="grid content-start gap-3">
       <h3 className="flex items-center gap-2 text-xs font-semibold tracking-[0.1em] text-muted uppercase">
         {label}
-        <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[11px] tracking-normal text-ink ring-1 ring-line">{agents.length}</span>
+        <span className="rounded-full bg-surface-2 px-2 py-0.5 text-2xs tracking-normal text-ink ring-1 ring-line">{agents.length}</span>
       </h3>
       <ul className={cx('grid gap-4', agents.length > 2 ? 'sm:grid-cols-2 lg:grid-cols-3' : agents.length === 2 && 'sm:grid-cols-2')}>
         {agents.map((agent, i) => (
@@ -77,17 +77,17 @@ function AgentCard({ agent, index, used, live }: { agent: Agent; index: number; 
             {template ? (
               <span
                 title={`Runs on ${tier.model} when the models are switched on`}
-                className="mt-0.5 inline-block rounded-full bg-surface-2 px-2 py-0.5 text-[11px] font-semibold text-muted ring-1 ring-line"
+                className="mt-0.5 inline-block rounded-full bg-surface-2 px-2 py-0.5 text-2xs font-semibold text-muted ring-1 ring-line"
               >
                 {agent.offlineLabel ?? 'Template (offline)'}
                 <span className="sr-only">; runs on {tier.model} when the models are switched on</span>
               </span>
             ) : (
-              <span className={cx('mt-0.5 inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold', tier.chip)}>{tier.model}</span>
+              <span className={cx('mt-0.5 inline-block rounded-full px-2 py-0.5 text-2xs font-semibold', tier.chip)}>{tier.model}</span>
             )}
           </div>
           {used && (
-            <span className="flex shrink-0 items-center gap-1 self-start rounded-full bg-fit-high/12 px-2 py-0.5 text-[11px] font-semibold text-fit-high">
+            <span className="flex shrink-0 items-center gap-1 self-start rounded-full bg-fit-high/12 px-2 py-0.5 text-2xs font-semibold text-fit-high">
               <span className="size-1.5 rounded-full bg-fit-high" />
               {template ? 'Used (template)' : 'Used'}
             </span>
@@ -96,13 +96,13 @@ function AgentCard({ agent, index, used, live }: { agent: Agent; index: number; 
         <p className="text-sm text-muted">{agent.does}</p>
         <ul aria-label="Tools" className="flex flex-wrap gap-1.5">
           {agent.tools.length === 0 ? (
-            <li className="rounded-md bg-surface-2 px-1.5 py-0.5 text-[11px] text-muted">No tools, data only</li>
+            <li className="rounded-md bg-surface-2 px-1.5 py-0.5 text-2xs text-muted">No tools, data only</li>
           ) : (
             agent.tools.map((tool) => (
               <li
                 key={tool}
                 className={cx(
-                  'flex items-center gap-1 rounded-md bg-surface-2 px-1.5 py-0.5 text-[11px] ring-1 ring-line',
+                  'flex items-center gap-1 rounded-md bg-surface-2 px-1.5 py-0.5 text-2xs ring-1 ring-line',
                   tool.includes('_') && 'font-mono',
                 )}
               >
@@ -154,7 +154,7 @@ function TierLegend({ live }: { live?: boolean }) {
           const agents = AGENTS.filter((a) => a.tier === id);
           return (
             <li key={id} className="flex flex-wrap items-center gap-3">
-              <span className={cx('w-24 rounded-full px-2 py-0.5 text-center text-[11px] font-semibold', tier.chip)}>{tier.model}</span>
+              <span className={cx('w-24 rounded-full px-2 py-0.5 text-center text-2xs font-semibold', tier.chip)}>{tier.model}</span>
               <span className="w-36 text-xs text-muted">{tier.use}</span>
               <span className="flex flex-wrap gap-1.5">
                 {agents.map((a) => (
@@ -168,7 +168,7 @@ function TierLegend({ live }: { live?: boolean }) {
           );
         })}
         <li className="flex flex-wrap items-center gap-3 border-t border-line pt-3">
-          <span className="w-24 rounded-full bg-surface-2 px-2 py-0.5 text-center text-[11px] font-semibold ring-1 ring-line">{JUDGE.model}</span>
+          <span className="w-24 rounded-full bg-surface-2 px-2 py-0.5 text-center text-2xs font-semibold ring-1 ring-line">{JUDGE.model}</span>
           <span className="text-xs text-muted">{JUDGE.use}, never talks to a student</span>
         </li>
       </ul>

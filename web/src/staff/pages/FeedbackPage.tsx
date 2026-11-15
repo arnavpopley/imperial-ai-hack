@@ -130,7 +130,7 @@ function FeedbackView({ summary }: { summary: FeedbackSummary }) {
                 </p>
                 {d.comment && <p className="text-sm">&ldquo;{d.comment}&rdquo;</p>}
                 {(d.question || d.answerExcerpt) && (
-                  <dl className="grid gap-1 text-[13px] leading-relaxed text-muted">
+                  <dl className="grid gap-1 text-xs leading-relaxed text-muted">
                     {d.question && (
                       <div className="flex gap-2">
                         <dt className="shrink-0 font-medium text-ink">Asked</dt>

@@ -40,10 +40,10 @@ export function QuestionChart({ bars, headingId }: { bars: readonly QuestionBar[
       <ol aria-labelledby={headingId} className="grid gap-2">
         {bars.map((b, i) => (
           <li key={b.questionId} className="grid grid-cols-[2.25rem_minmax(0,1fr)_2.75rem] items-end gap-x-3 gap-y-1">
-            <span className={cx('font-mono text-[12px] leading-none font-semibold', b.weak ? 'text-ink' : 'text-muted')}>{b.questionId}</span>
+            <span className={cx('font-mono text-2xs leading-none font-semibold', b.weak ? 'text-ink' : 'text-muted')}>{b.questionId}</span>
             <span className="grid min-w-0 gap-1">
               {b.label && (
-                <span className={cx('truncate text-[12.5px] leading-tight', b.weak ? 'font-medium text-ink' : 'text-muted')}>{b.label}</span>
+                <span className={cx('truncate text-xs leading-tight', b.weak ? 'font-medium text-ink' : 'text-muted')}>{b.label}</span>
               )}
               <span
                 role="img"
@@ -64,13 +64,13 @@ export function QuestionChart({ bars, headingId }: { bars: readonly QuestionBar[
                 />
               </span>
             </span>
-            <span className={cx('text-right text-[12.5px] leading-none tabular-nums', b.weak ? 'font-semibold text-ink' : 'text-muted')}>
+            <span className={cx('text-right text-xs leading-none tabular-nums', b.weak ? 'font-semibold text-ink' : 'text-muted')}>
               {formatMarks(b.mark)}/{formatMarks(b.maxMarks)}
             </span>
           </li>
         ))}
       </ol>
-      <p aria-hidden="true" className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11.5px] text-muted">
+      <p aria-hidden="true" className="flex flex-wrap items-center gap-x-4 gap-y-1 text-2xs text-muted">
         <span className="inline-flex items-center gap-1.5">
           <span className="h-2 w-3 rounded-sm bg-brand/75" /> Scored
         </span>

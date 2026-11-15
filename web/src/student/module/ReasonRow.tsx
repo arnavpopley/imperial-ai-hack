@@ -43,9 +43,9 @@ export function ReasonRow({ text, source, tone = 'reason' }: ReasonRowProps) {
         >
           <Icon name={watchOut ? 'info' : 'check'} size={14} />
         </span>
-        <span className={cx('min-w-0 flex-1 text-[14px] leading-snug', !open && 'line-clamp-2 sm:line-clamp-1')}>{text}</span>
+        <span className={cx('min-w-0 flex-1 text-sm leading-snug', !open && 'line-clamp-2 sm:line-clamp-1')}>{text}</span>
         {meta && (
-          <span className="hidden shrink-0 items-center gap-1 rounded-full bg-surface-2 px-2 py-0.5 text-[11px] font-medium text-muted sm:inline-flex">
+          <span className="hidden shrink-0 items-center gap-1 rounded-full bg-surface-2 px-2 py-0.5 text-2xs font-medium text-muted sm:inline-flex">
             <Icon name={meta.icon} size={11} />
             {meta.label}
           </span>
@@ -67,7 +67,7 @@ export function ReasonRow({ text, source, tone = 'reason' }: ReasonRowProps) {
             transition={{ duration: 0.22 }}
             className="overflow-hidden"
           >
-            <div className="px-3.5 pb-3 pl-[3.25rem] text-[13px] text-muted">
+            <div className="px-3.5 pb-3 pl-[3.25rem] text-xs text-muted">
               <SourceDetail source={source} />
             </div>
           </motion.div>
@@ -84,7 +84,7 @@ function SourceDetail({ source }: { source: EvidencePopoverProps | null }) {
       return (
         <figure className="border-l-2 border-brand/40 pl-3">
           <blockquote className="text-ink italic">“{source.quote}”</blockquote>
-          <figcaption className="mt-1 text-[12px]">
+          <figcaption className="mt-1 text-2xs">
             You said this in the interview · {source.slotLabel} · {Math.round(source.confidence * 100)}% confidence
           </figcaption>
         </figure>
