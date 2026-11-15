@@ -289,7 +289,13 @@ function PhotoStrip() {
   const row = [...STRIP_PHOTOS, ...STRIP_PHOTOS];
   return (
     <div aria-hidden="true" className="-mx-4 overflow-hidden sm:-mx-6 lg:-mx-8">
-      <div className={cx('flex w-max animate-marquee gap-4 hover:[animation-play-state:paused]', still && '[animation-play-state:paused]')}>
+      {/* pr-4 adds the gap after the last photo, so each copy (photos plus gaps) is exactly half the row and -50% loops seamlessly. */}
+      <div
+        className={cx(
+          'flex w-max animate-marquee gap-4 pr-4 hover:[animation-play-state:paused]',
+          still && '[animation-play-state:paused]',
+        )}
+      >
         {row.map((p, i) => (
           <img
             key={`${p.src}-${i}`}
