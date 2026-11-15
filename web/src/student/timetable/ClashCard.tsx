@@ -18,6 +18,8 @@ interface ClashCardProps {
   titleFor: (moduleId: string) => string;
   onSwap: (swap: SwapSuggestion) => Promise<void>;
   onAsk: (question: string) => void;
+  /** Spec 12 (PLAN -> ESCALATED): offer a personal tutor note when the clash has no valid swap. */
+  onEscalate: (clash: Clash) => void;
 }
 
 function overlapText(clash: Clash): string {
@@ -29,7 +31,7 @@ function overlapText(clash: Clash): string {
   return `${DAY_NAMES[first.a.day]} ${formatRange(start, end)}${more}, ${TERM_LABELS[clash.term]}`;
 }
 
-export function ClashCard({ clash, swaps, titleFor, onSwap, onAsk }: ClashCardProps) {
+export function ClashCard({ clash, swaps, titleFor, onSwap, onAsk, onEscalate }: ClashCardProps) {
   const [confirming, setConfirming] = useState<SwapSuggestion | null>(null);
   const [busy, setBusy] = useState(false);
   const reduce = useReducedMotion();
@@ -120,15 +122,25 @@ export function ClashCard({ clash, swaps, titleFor, onSwap, onAsk }: ClashCardPr
         </div>
       ) : (
         <div className="mt-3 rounded-xl bg-surface-2 p-3 text-[13px]">
-          <p>No swap keeps your fit within 10 points.</p>
-          <button
-            type="button"
-            onClick={() => onAsk(`${a} and ${b} clash and there is no swap. What can I do?`)}
-            className="mt-1 inline-flex items-center gap-1 font-semibold text-brand underline-offset-2 hover:underline"
-          >
-            <Icon name="chat" size={13} />
-            Ask the advisor
-          </button>
+          <p>No valid swap: no module of the same kind fits your programme rules and keeps your fit within 10 points.</p>
+          <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
+            <button
+              type="button"
+              onClick={() => onAsk(`${a} and ${b} clash and there is no swap. What can I do?`)}
+              className="inline-flex items-center gap-1 font-semibold text-brand underline-offset-2 hover:underline"
+            >
+              <Icon name="chat" size={13} />
+              Ask the advisor
+            </button>
+            <button
+              type="button"
+              onClick={() => onEscalate(clash)}
+              className="inline-flex items-center gap-1 font-semibold text-brand underline-offset-2 hover:underline"
+            >
+              <Icon name="tutor" size={13} />
+              Ask a personal tutor
+            </button>
+          </div>
         </div>
       )}
       {error && (

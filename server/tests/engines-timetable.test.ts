@@ -1,16 +1,20 @@
 // Spec 9.2: overlap, clash probabilities and labels, timetables, swaps and staff clash priorities.
-import type { Recommendation } from '@modulematch/shared';
+import { DEFAULT_WEIGHTS, type Module, type ProgrammeRules, type Recommendation, type StudentProfile } from '@modulematch/shared';
 import { describe, expect, it } from 'vitest';
+import { DATASET_FILES, ModulesFile, ProgrammeRulesFile, readDataset, SlotsFile } from '../src/db/datasets.ts';
 import {
   buildTimetable,
+  checkShortlist,
   clashLabel,
   clashPriorities,
   clashProbability,
   findClashes,
   overlap,
+  rankModules,
   suggestSwaps,
+  type SwapPlan,
 } from '../src/engines/index.ts';
-import { makeProfile, makeSlot } from './engines-fixtures.ts';
+import { makeModule, makeProfile, makeRules, makeSlot } from './engines-fixtures.ts';
 
 describe('overlap', () => {
   const nine = makeSlot('a', 'mon', '09:00', '10:00');
@@ -167,10 +171,16 @@ describe('suggestSwaps', () => {
     rec('too-weak', 49),
   ];
 
+  const planFor = (profile: StudentProfile, modules: readonly Module[], rules: Partial<ProgrammeRules> = {}): SwapPlan => {
+    const programme = makeRules({ allowedElectiveIds: modules.map((m) => m.id), ...rules });
+    return { modules, rules: programme, check: (list) => checkShortlist(list, profile, modules, programme) };
+  };
+  const electives = ranked.map((r) => makeModule(r.moduleId));
+
   it('replaces the lower-fit module with eligible, clash-free alternatives within 10 points', () => {
     if (!clash) throw new Error('expected a clash between a and b');
     const profile = makeProfile({ completedModuleIds: ['completed'] });
-    const swaps = suggestSwaps(profile, shortlist, clash, ranked, slots);
+    const swaps = suggestSwaps(profile, shortlist, clash, ranked, slots, planFor(profile, electives));
     expect(swaps).toEqual([
       { replaceModuleId: 'b', withModuleId: 'd', fit: 55, fitDelta: -5 },
       { replaceModuleId: 'b', withModuleId: 'k', fit: 53, fitDelta: -7 },
@@ -181,8 +191,86 @@ describe('suggestSwaps', () => {
   it('considers both modules when their fits are equal', () => {
     if (!clash) throw new Error('expected a clash between a and b');
     const tied = [rec('a', 60), rec('b', 60), rec('d', 55)];
-    const swaps = suggestSwaps(makeProfile(), shortlist, clash, tied, slots);
+    const profile = makeProfile();
+    const swaps = suggestSwaps(profile, shortlist, clash, tied, slots, planFor(profile, electives));
     expect(swaps.map((swap) => swap.replaceModuleId)).toEqual(['a', 'b']);
+  });
+
+  it('offers only modules of the same kind, never a core module', () => {
+    if (!clash) throw new Error('expected a clash between a and b');
+    const profile = makeProfile({ completedModuleIds: ['completed'] });
+    const modules = electives.map((m) =>
+      m.id === 'd' ? { ...m, type: 'core' as const, ects: 20 } : m.id === 'k' ? { ...m, type: 'i-explore' as const } : m,
+    );
+    const swaps = suggestSwaps(profile, shortlist, clash, ranked, slots, planFor(profile, modules, { coreModuleIds: ['d'] }));
+    expect(swaps.map((swap) => swap.withModuleId)).toEqual(['i', 'j']);
+  });
+
+  it('replaces the elective, not the core module, when a core module is in the clash', () => {
+    if (!clash) throw new Error('expected a clash between a and b');
+    const profile = makeProfile({ completedModuleIds: ['completed'] });
+    const withE = [...ranked, rec('e', 66)];
+    const plan = planFor(profile, withE.map((r) => makeModule(r.moduleId)), { coreModuleIds: ['b'] });
+    expect(suggestSwaps(profile, shortlist, clash, withE, slots, plan)).toEqual([
+      { replaceModuleId: 'a', withModuleId: 'e', fit: 66, fitDelta: -4 },
+    ]);
+  });
+
+  it('rejects alternatives that clash with a core module the student has not shortlisted', () => {
+    if (!clash) throw new Error('expected a clash between a and b');
+    const profile = makeProfile({ completedModuleIds: ['completed'] });
+    const withCore = [...slots, makeSlot('core', 'wed', '09:00', '10:00'), makeSlot('d', 'wed', '09:00', '10:00')];
+    const modules = [...electives, makeModule('core', { type: 'core' })];
+    const swaps = suggestSwaps(profile, shortlist, clash, ranked, withCore, planFor(profile, modules, { coreModuleIds: ['core'] }));
+    expect(swaps.map((swap) => swap.withModuleId)).toEqual(['k', 'i', 'j']);
+  });
+
+  it('rejects alternatives that add a rules violation or deepen a credit shortfall', () => {
+    if (!clash) throw new Error('expected a clash between a and b');
+    const profile = makeProfile({ completedModuleIds: ['completed'] });
+    // d breaks the credit cap, k needs a prerequisite, and i has fewer credits while electives are short.
+    const modules = electives.map((m) =>
+      m.id === 'd' ? { ...m, ects: 20 } : m.id === 'k' ? { ...m, prerequisites: ['missing'] } : m.id === 'i' ? { ...m, ects: 2.5 } : m,
+    );
+    const plan = planFor(profile, modules, { maxEcts: 20, electiveEctsRequired: 20 });
+    const swaps = suggestSwaps(profile, shortlist, clash, ranked, slots, plan);
+    expect(swaps.map((swap) => swap.withModuleId)).toEqual(['j']);
+  });
+});
+
+describe("suggestSwaps on Rosa's shortlist (seed data)", () => {
+  const { modules } = readDataset(DATASET_FILES.modules, ModulesFile);
+  const { slots } = readDataset(DATASET_FILES.slots, SlotsFile);
+  const rules = readDataset(DATASET_FILES.programmeRules, ProgrammeRulesFile).rules.find(
+    (r) => r.programme === 'MEng Mechanical Engineering' && r.year === 3,
+  );
+  if (!rules) throw new Error('expected MEng Mechanical Engineering year 3 rules');
+  const profile = makeProfile({
+    completedModuleIds: ['MECH40002', 'MECH40003', 'MECH40004', 'MECH40005', 'MECH40006', 'MECH40008', 'MECH50001', 'MECH50002', 'MECH50003', 'MECH50004', 'MECH50005', 'MECH50006', 'MECH50008', 'MECH50010'],
+    interests: { 'control-robotics': 1, 'electronics-embedded': 0.9, 'design-manufacturing': 0.6 },
+    pathways: ['robotics-automation'],
+    style: { examPreference: 0.2, groupPreference: 0.4, appliedPreference: 1, mathsComfort: 0.7, codingComfort: 0.6, workloadTolerance: 0.7 },
+  });
+  const shortlist = ['MECH60009', 'MECH60018', 'MECH60001'];
+  const plan: SwapPlan = { modules, rules, check: (list) => checkShortlist(list, profile, modules, rules) };
+  const typeOf = (id: string) => modules.find((m) => m.id === id)?.type;
+
+  it('never suggests the core Design, Make and Test Project for the Tuesday 14:00 spring clash', () => {
+    const clash = findClashes(shortlist, slots).find((c) => c.term === 'spring' && c.label === 'certain');
+    if (!clash) throw new Error('expected a certain spring clash between MECH60009 and MECH60018');
+    expect([clash.moduleA, clash.moduleB]).toEqual(['MECH60009', 'MECH60018']);
+    // The clashing pair ties and MECH60003 has the best fit of all, so only the kind and rules checks keep it out.
+    const ranked = rankModules(profile, modules, DEFAULT_WEIGHTS, rules).map((r) => ({ ...r, fit: r.moduleId === 'MECH60003' ? 60 : 50 }));
+    expect(ranked.find((r) => r.moduleId === 'MECH60003')?.eligible).toBe(true);
+
+    const swaps = suggestSwaps(profile, shortlist, clash, ranked, slots, plan);
+    expect(swaps.map((swap) => swap.withModuleId)).not.toContain('MECH60003');
+    const before = checkShortlist(shortlist, profile, modules, rules).violations.map((v) => v.code);
+    for (const swap of swaps) {
+      expect(typeOf(swap.withModuleId)).toBe('elective');
+      const after = shortlist.map((id) => (id === swap.replaceModuleId ? swap.withModuleId : id));
+      expect(checkShortlist(after, profile, modules, rules).violations.map((v) => v.code)).toEqual(before);
+    }
   });
 });
 

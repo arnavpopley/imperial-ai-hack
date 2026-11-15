@@ -8,7 +8,7 @@ import { extract, mergeUpdates } from '../agents/extractor.ts';
 import { QUICK_PLAN } from '../agents/interviewer.ts';
 import { answerModuleQuestion, moduleFacts } from '../agents/knowledge.ts';
 import { emitWords } from '../agents/llm.ts';
-import { catalogue, clearExplanationCache, explanationFor, moduleTitle, newSessionState, ranked, recommendationsResponse, saveProfile, setMode, timetableView, tracerSink } from '../agents/session.ts';
+import { catalogue, clearExplanationCache, explanationFor, moduleTitle, newSessionState, ranked, recommendationsResponse, saveProfile, setMode, syncPlanMode, timetableView, tracerSink } from '../agents/session.ts';
 import { confirmProfile, handleTurn, resumeInterview } from '../agents/supervisor.ts';
 import { rawModule } from '../db/catalogue.ts';
 import * as repo from '../db/repo.ts';
@@ -169,18 +169,16 @@ export const studentRoutes = new Hono()
     }
     if (action === 'add') repo.addToShortlist(session.id, moduleId);
     else repo.removeFromShortlist(session.id, moduleId);
-    tracer.record({ actor: 'supervisor', kind: 'tool', input: `shortlist ${action} ${moduleId}`, output: `${repo.listShortlist(session.id).length} on shortlist`, verdict: null });
-    // Spec 12: PLAN returns to RECOMMEND when the shortlist is edited or a swap is accepted.
-    if (session.mode === 'PLAN') setMode(session, 'RECOMMEND', tracer, 'shortlist edited');
+    session.shortlist = repo.listShortlist(session.id);
+    tracer.record({ actor: 'supervisor', kind: 'tool', input: `shortlist ${action} ${moduleId}`, output: `${session.shortlist.length} on shortlist`, verdict: null });
+    // The returned session carries the new mode, so the mode chip follows the shortlist without a reload.
+    syncPlanMode(session, tracer);
     return c.json(fresh(session.id));
   })
   .get('/:id/timetable', (c) => {
+    // Read-only: the mode follows the shortlist POST, never this GET.
     const session = load(c);
-    if (session instanceof Response) return session;
-    if (session.shortlist.length >= 2 && session.mode === 'RECOMMEND') {
-      setMode(session, 'PLAN', createTracer(session.id, tracerSink), 'shortlist has two or more modules');
-    }
-    return c.json(timetableView(session));
+    return session instanceof Response ? session : c.json(timetableView(session));
   })
   .post('/:id/escalations', body(schemas.CreateEscalationBody), (c) => {
     const session = load(c);

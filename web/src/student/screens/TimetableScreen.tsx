@@ -1,6 +1,6 @@
 // Screen 5: weekly grid per term with clashes highlighted, swaps beside each clash, and the
 // programme rules result (spec 9.1, 9.2).
-import type { SwapSuggestion, Term, TimetableView } from '@modulematch/shared';
+import type { Clash, SwapSuggestion, Term, TimetableView } from '@modulematch/shared';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useState } from 'react';
 import { Link } from 'react-router';
@@ -68,7 +68,7 @@ export function TimetableScreen() {
 }
 
 function TimetableBody({ view, onChanged, refreshing }: { view: TimetableView; onChanged: () => void; refreshing: boolean }) {
-  const { session } = useReadySession();
+  const { session, offerDraft } = useReadySession();
   const { moduleById } = useReferenceData();
   const { openAdvisor } = useAdvisor();
   const shortlist = useShortlist();
@@ -91,6 +91,17 @@ function TimetableBody({ view, onChanged, refreshing }: { view: TimetableView; o
   const swap = async (s: SwapSuggestion) => {
     await shortlist.swap(s.replaceModuleId, s.withModuleId);
     onChanged();
+  };
+
+  // Spec 12: a clash with no valid swap can go to a personal tutor. The student reviews the draft in the
+  // escalation tray above the screen and sends it, which moves the session from PLAN to ESCALATED.
+  const escalate = (clash: Clash) => {
+    const { programme, yearOfStudy } = session.profile;
+    offerDraft({
+      type: 'LOW_CONFIDENCE',
+      summary: `${programme}, Year ${yearOfStudy}. ${titleFor(clash.moduleA)} and ${titleFor(clash.moduleB)} clash in the ${TERM_LABELS[clash.term].toLowerCase()} term, and no swap fits the programme rules within 10 fit points. A conversation with a personal tutor may help choose between them.`,
+    });
+    window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
   };
 
   const termOptions = terms.map((t) => {
@@ -157,6 +168,7 @@ function TimetableBody({ view, onChanged, refreshing }: { view: TimetableView; o
                   titleFor={titleFor}
                   onSwap={swap}
                   onAsk={openAdvisor}
+                  onEscalate={escalate}
                 />
               ))}
             </AnimatePresence>

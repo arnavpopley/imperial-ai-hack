@@ -37,19 +37,23 @@ export function useShortlist() {
     [sessionId, shortlist, replace],
   );
 
-  /** Spec 10.6: a swap is applied only after the student confirms it. Throws so the caller can show the error. */
+  /**
+   * Spec 10.6: a swap is applied only after the student confirms it. Throws so the caller can show the error.
+   * The alternative is added before the old module is removed, so the shortlist never dips below two and the
+   * session stays in PLAN (spec 12) instead of flapping to RECOMMEND and back.
+   */
   const swap = useCallback(
     async (removeId: string, addId: string) => {
       mark([removeId, addId], true);
       try {
-        replace(await api.shortlist(sessionId, { moduleId: removeId, action: 'remove' }));
+        replace(await api.shortlist(sessionId, { moduleId: addId, action: 'add' }));
         try {
-          replace(await api.shortlist(sessionId, { moduleId: addId, action: 'add' }));
+          replace(await api.shortlist(sessionId, { moduleId: removeId, action: 'remove' }));
         } catch (err) {
-          // The removal was saved but the addition was not: put the original back so the student is not
-          // left a module short, or at least resync with the server, then report the failure.
+          // The addition was saved but the removal was not: take the alternative off again so the student
+          // is not left with both, or at least resync with the server, then report the failure.
           await api
-            .shortlist(sessionId, { moduleId: removeId, action: 'add' })
+            .shortlist(sessionId, { moduleId: addId, action: 'remove' })
             .then(replace, () => refresh().catch(() => undefined));
           throw err;
         }
