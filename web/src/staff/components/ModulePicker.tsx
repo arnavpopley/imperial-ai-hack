@@ -122,6 +122,10 @@ function ModuleFigures({ module: m }: { module: StaffModuleSummary }) {
           {status === 'near' && <span className="ml-1 font-medium text-fit-mid">near cap</span>}
         </span>
       </span>
+      {!m.openToCohortYear && (
+        // The same programme rules the students' recommendations use (issue 51).
+        <span className="text-xs font-medium text-muted">Not open to this cohort&rsquo;s year</span>
+      )}
       <DemandMiniBar shortlisted={m.shortlisted} capacity={m.capacity} />
       <span className="sr-only">Average fit {Math.round(m.averageFit)}</span>
     </>

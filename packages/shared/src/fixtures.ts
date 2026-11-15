@@ -224,6 +224,13 @@ export const fixtureRecommendations: RecommendationsResponse = {
       confidence: 'high',
     }),
   ].sort((a, b) => b.fit - a.fit),
+  rules: {
+    programme: 'MEng Mechanical Engineering',
+    year: 3,
+    loaded: true,
+    maxModuleLevel: 3,
+    note: 'Illustrative MEng Mechanical Engineering rules for Year 3.',
+  },
 };
 
 const fitOf = (moduleId: string) => fixtureRecommendations.recommendations.find((r) => r.moduleId === moduleId)?.fit ?? 0;
@@ -329,6 +336,7 @@ export const fixtureStaffModules: StaffModuleSummary[] = fixtureModules.map((m, 
   averageFit: [71, 58, 44, 49][i] ?? 0,
   fitHistogram: [0, 1, 4, 9, 18, 30, 42, 50, 32, 14],
   cohortSize: 200,
+  openToCohortYear: true,
 }));
 
 export const fixtureInsights: Insight[] = [

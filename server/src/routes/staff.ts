@@ -16,17 +16,19 @@ import { draftExamForm } from '../agents/exam-feedback.ts';
 import { wordInsight } from '../agents/insights.ts';
 import { clearSummaryCache } from '../agents/knowledge.ts';
 import { catalogue, clearExplanationCache, rulesForProfile, setMode, tracerSink } from '../agents/session.ts';
-import { rulesFor } from '../db/catalogue.ts';
 import * as repo from '../db/repo.ts';
-import { buildInsights, clashPriorities, cohortStats, feedbackJsonl, summariseFeedback, type InsightContext } from '../engines/index.ts';
+import { buildInsights, checkProgrammeRules, clashPriorities, cohortStats, feedbackJsonl, summariseFeedback, type InsightContext } from '../engines/index.ts';
 import { createTracer, type Tracer } from '../trace/tracer.ts';
 import { body } from './validate.ts';
 
-/** The synthetic cohort plus its programme's home topics, shared by every staff view. */
+/**
+ * The synthetic cohort plus its programme's home topics, shared by every staff view. The rules are the ones the
+ * students' own recommendations use (rulesForProfile), so the staff views and the students agree on eligibility.
+ */
 function insightContext(): InsightContext {
   const cohort = repo.listCohort();
   const first = cohort[0]?.profile;
-  const rules = first ? (rulesFor(first.programme, first.yearOfStudy) ?? rulesForProfile(first)) : undefined;
+  const rules = first ? rulesForProfile(first) : undefined;
   return {
     modules: catalogue.modules(),
     cohort: cohort.map((s) => s.profile),
@@ -50,7 +52,9 @@ export const staffRoutes = new Hono()
       const stats = cohortStats(m, ctx.cohort, ctx.shortlists, ctx.weights, ctx.homeTopics);
       // Below the minimum cohort nothing is shown for the module (spec 20.4).
       if (!stats) return [];
-      return [{ moduleId: m.id, code: m.code, title: m.title, type: m.type, capacity: m.capacity, ...stats }];
+      // The same programme check as the students' recommendations (issue 51); prerequisites are personal, so not here.
+      const openToCohortYear = ctx.rules ? checkProgrammeRules(m, ctx.rules).length === 0 : false;
+      return [{ moduleId: m.id, code: m.code, title: m.title, type: m.type, capacity: m.capacity, ...stats, openToCohortYear }];
     });
     return c.json(rows);
   })

@@ -12,13 +12,14 @@ import {
   type ProgrammeRules,
   type Recommendation,
   type RecommendationsResponse,
+  type RulesStatus,
   type SessionState,
   type StudentProfile,
   type SwapSuggestion,
   type TimetableView,
 } from '@modulematch/shared';
 import { randomUUID } from 'node:crypto';
-import { loadModuleResources, loadPathways, loadSocieties, rulesFor } from '../db/catalogue.ts';
+import { levelCapFor, loadModuleResources, loadPathways, loadSocieties, rulesFor } from '../db/catalogue.ts';
 import * as repo from '../db/repo.ts';
 import { buildTimetable, checkShortlist, completeness, findClashes, performanceView, profileHash, rankModules, suggestSwaps } from '../engines/index.ts';
 import type { Tracer } from '../trace/tracer.ts';
@@ -37,22 +38,35 @@ export const catalogue = {
 };
 
 /**
- * Programme rules for the student. Unknown programmes get permissive rules (every catalogue module allowed,
- * no home-topic overlap) so the catalogue still works; the seeded demo programme has real rules.
+ * Programme rules for the student. A programme and year with no entry in data/programme-rules.json gets a stand-in
+ * marked not loaded: the year's level cap still applies, and every other module is "cannot be confirmed" rather than
+ * allowed (issue 51). No rules are invented for it, so there is no credit cap or home-topic overlap either.
  */
 export function rulesForProfile(profile: StudentProfile): ProgrammeRules {
   const rules = rulesFor(profile.programme, profile.yearOfStudy);
   if (rules) return rules;
-  const modules = catalogue.modules();
   return {
     programme: profile.programme,
     year: profile.yearOfStudy,
     coreModuleIds: [],
-    allowedElectiveIds: modules.map((m) => m.id),
+    allowedElectiveIds: [],
     electiveEctsRequired: 0,
-    maxEcts: 75,
+    maxEcts: 60,
     iExploreRequired: false,
     homeTopics: {},
+    loaded: false,
+    maxModuleLevel: levelCapFor(profile.yearOfStudy),
+  };
+}
+
+/** Whether the student's rules are loaded, with one sentence the catalogue shows (issue 51). */
+export function rulesStatus(rules: ProgrammeRules): RulesStatus {
+  const base = { programme: rules.programme, year: rules.year, loaded: rules.loaded, maxModuleLevel: rules.maxModuleLevel };
+  if (rules.loaded) return { ...base, note: `Illustrative ${rules.programme} rules for Year ${rules.year}.` };
+  const cap = rules.maxModuleLevel === null ? '' : ` Modules taught after Year ${rules.maxModuleLevel} are marked as not open to you.`;
+  return {
+    ...base,
+    note: `The ${rules.programme} rules for Year ${rules.year} aren't loaded, so ModuleMatch can't confirm which modules you can take.${cap} Check with your department, or ask the Senior Tutor.`,
   };
 }
 
@@ -155,6 +169,7 @@ export function recommendationsResponse(session: SessionState): RecommendationsR
     confidence: confidenceLabel(session.profile.completeness),
     completeness: session.profile.completeness,
     recommendations: ranked(session),
+    rules: rulesStatus(rulesForProfile(session.profile)),
   };
 }
 

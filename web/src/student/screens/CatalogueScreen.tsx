@@ -18,6 +18,7 @@ import { useFlip } from '../hooks/useFlip.ts';
 import { useShortlist } from '../hooks/useShortlist.ts';
 import { TERM_LABELS, TERMS } from '../labels.ts';
 import { paths } from '../routes.ts';
+import { catalogueCount } from '../rulesStatus.ts';
 import { useAdvisor } from '../shell/StudentShell.tsx';
 import { useCatalogue } from '../state/CatalogueProvider.tsx';
 
@@ -67,6 +68,7 @@ export function CatalogueScreen() {
         focus="center 35%"
       />
 
+      {recs.data && !recs.data.rules.loaded && <RulesNotice note={recs.data.rules.note} />}
       {recs.data && confidence !== 'high' && <ConfidenceNotice level={confidence} />}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[19rem_minmax(0,1fr)] lg:items-start">
@@ -90,7 +92,7 @@ export function CatalogueScreen() {
         <section aria-labelledby="ranked-heading" className="min-w-0">
           <div className="mb-4 flex items-center justify-between gap-3">
             <h2 id="ranked-heading" className="text-[13px] font-medium text-muted" aria-live="polite">
-              {recs.data ? `${visible.length} modules · ${eligibleCount} open to you` : 'Loading your ranking'}
+              {recs.data ? catalogueCount(visible.length, eligibleCount, recs.data.rules) : 'Loading your ranking'}
             </h2>
             {recs.loading && recs.data && <span className="text-[12px] text-muted">Updating…</span>}
           </div>
@@ -160,6 +162,19 @@ function RankedRow({ first, children }: { first: boolean; children: ReactNode })
       </li>
       {children}
     </>
+  );
+}
+
+/** Issue 51: the rules for the student's year are not loaded, so no module is shown as open to them. */
+function RulesNotice({ note }: { note: string }) {
+  return (
+    <div role="status" className="animate-rise flex items-start gap-3 rounded-card border border-fit-mid/35 bg-fit-mid/8 px-4 py-3">
+      <Icon name="info" size={18} className="mt-0.5 shrink-0 text-fit-mid" />
+      <div className="min-w-0 text-sm">
+        <p className="font-semibold">We can&rsquo;t confirm eligibility for your year</p>
+        <p className="text-[13px] text-muted">{note}</p>
+      </div>
+    </div>
   );
 }
 

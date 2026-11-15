@@ -138,6 +138,8 @@ export function rankModules(
         ...scoreModule(profile, module, weights, rules.homeTopics),
         eligible: violations.length === 0,
         ineligibleReasons: violations.map((violation) => violation.message),
+        // Issue 51: refused by nothing but missing rules for the year, so "cannot confirm" rather than "not open".
+        ...(violations.length > 0 && violations.every((v) => v.code === 'RULES_NOT_LOADED') ? { unconfirmed: true as const } : {}),
       };
     })
     .sort(byFitThenId);
