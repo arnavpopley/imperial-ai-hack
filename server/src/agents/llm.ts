@@ -5,10 +5,13 @@ import Anthropic from '@anthropic-ai/sdk';
 import { betaZodOutputFormat } from '@anthropic-ai/sdk/helpers/beta/zod';
 import type { z } from 'zod';
 
-export type ModelTier = 'smart' | 'fast';
+export type ModelTier = 'smart' | 'fast' | 'light';
 
-const MODEL_ENV: Record<ModelTier, string> = { smart: 'MODEL_SMART', fast: 'MODEL_FAST' };
-const MODEL_DEFAULT: Record<ModelTier, string> = { smart: 'claude-sonnet-5-5', fast: 'claude-haiku-4-5' };
+const MODEL_ENV: Record<ModelTier, string> = { smart: 'MODEL_SMART', fast: 'MODEL_FAST', light: 'MODEL_LIGHT' };
+// Opus 5.5 for what the student reads (questions, explanations, answers). Sonnet 5.5 at low effort where quality
+// matters but speed does too (profile extraction, finding sensitive spans). Haiku 4.5 for simple yes/no
+// classification and short wording, where it is accurate enough and much cheaper.
+const MODEL_DEFAULT: Record<ModelTier, string> = { smart: 'claude-opus-5-5', fast: 'claude-sonnet-5-5', light: 'claude-haiku-4-5' };
 
 export function modelId(tier: ModelTier): string {
   return process.env[MODEL_ENV[tier]] || MODEL_DEFAULT[tier];
@@ -34,36 +37,45 @@ interface CallOptions {
   /** Stable instructions. Cached, so keep volatile content out of it. */
   system: string;
   messages: ChatMessage[];
-  /** Output cap for the fast tier. The smart tier thinks before answering, so it always gets SMART_MIN_TOKENS. */
+  /** Output cap. Models that always think get at least THINKING_MIN_TOKENS whatever is asked for here. */
   maxTokens?: number;
-  /** Smart tier only: low for chat replies (faster), medium for explanations. */
+  /** Thinking effort, for models that take one. Defaults to medium on the smart tier and low on the fast tier. */
   effort?: Effort;
+  /** Overrides the tier's model, for example the eval judge. */
+  model?: string;
 }
 
 /**
- * Current smart models always think before answering, and thinking counts towards max_tokens. A small cap
- * can be used up by thinking alone, which cuts the visible reply off, so smart calls never go below this.
+ * Current Opus, Sonnet and Fable models always think before answering, and thinking counts towards max_tokens.
+ * A small cap can be used up by thinking alone, which cuts the visible reply off, so they never go below this.
  */
-const SMART_MIN_TOKENS = 8000;
+const THINKING_MIN_TOKENS = 8000;
+
+/** Haiku neither always thinks nor accepts an effort setting; every other current model does both. */
+const isHaiku = (model: string) => model.startsWith('claude-haiku');
 
 /** Models that accept server-side refusal fallbacks routed by category (`fallbacks: 'default'`). */
 const FALLBACK_MODELS = new Set(['claude-sonnet-5-5', 'claude-opus-5-5', 'claude-opus-5', 'claude-fable-5-1']);
 
 /** Request fields shared by every call: model, cached system prompt, effort, and refusal fallbacks. */
 function baseParams(opts: CallOptions, defaultMaxTokens: number) {
-  const model = modelId(opts.tier);
+  const model = opts.model ?? modelId(opts.tier);
   const fallback = FALLBACK_MODELS.has(model);
   return {
     model,
-    max_tokens: opts.tier === 'smart' ? Math.max(opts.maxTokens ?? 0, SMART_MIN_TOKENS) : (opts.maxTokens ?? defaultMaxTokens),
+    max_tokens: isHaiku(model) ? (opts.maxTokens ?? defaultMaxTokens) : Math.max(opts.maxTokens ?? 0, THINKING_MIN_TOKENS),
     system: [{ type: 'text' as const, text: opts.system, cache_control: { type: 'ephemeral' as const } }],
     messages: opts.messages,
     ...(fallback ? { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' as const } : {}),
   };
 }
 
-/** Effort applies to the smart tier only (default medium); the fast tier does not accept it. */
-const effort = (opts: CallOptions) => (opts.tier === 'smart' ? { effort: opts.effort ?? ('medium' as const) } : {});
+/** Effort for models that take one: medium by default on the smart tier, low on the fast tier for speed. */
+function effort(opts: CallOptions): { effort?: Effort } {
+  const model = opts.model ?? modelId(opts.tier);
+  if (isHaiku(model)) return {};
+  return { effort: opts.effort ?? (opts.tier === 'smart' ? 'medium' : 'low') };
+}
 
 /** A reply that stopped early (token cap or refusal) is incomplete, and callers fall back rather than show it. */
 export class IncompleteReplyError extends Error {

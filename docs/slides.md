@@ -146,7 +146,7 @@ Run the demo from [`demo-video.md`](demo-video.md) (shots 2 to 10), with a judge
 > Ranking: 10/12 personas · Extraction: 33/33 slots · Guardrails: 15/15 adversarial inputs · Determinism: 2/2 · Cohort under five: blocked
 >
 > **Live models** (`npm run eval:live`)
-> Module facts: 12/12 exact · Declines what it can't know: 4/4 · Extraction: 32/33 · Subtle guardrail cases: 7/7 · Grounded explanations: 4/5 (model judge)
+> Module facts: 11/12 exact · Declines what it can't know: 4/4 · Extraction: 33/33 · Subtle guardrail cases: 7/7 · Grounded explanations: 4/5 (Fable 5.1 judge)
 >
 > 292 server tests · 90 web tests · run in CI on every pull request
 

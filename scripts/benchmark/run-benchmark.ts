@@ -13,7 +13,7 @@
 //   --fresh          ignore saved judge picks and sample the judge again
 //   --limit N        only the first N personas (a pilot)
 //   --effort E       judge effort, low or medium (default medium)
-//   --judge-model M  judge model id (default: the smart tier, MODEL_SMART or claude-sonnet-5-5)
+//   --judge-model M  judge model id (default: MODEL_JUDGE if set, else the smart tier)
 //   --out FILE       write somewhere other than data/benchmark-latest.json (for judge robustness checks)
 //   --max-dollars X  stop calling the judge once this run has spent X dollars (default 5)
 // Saved judge picks are reused whenever the persona's words, the module pages, the model and the effort are
@@ -103,7 +103,8 @@ const systems = orderings.map(judgeSystem);
 const codes = optionalRaw.map((m) => m.code);
 
 const hash = (text: string) => createHash('sha256').update(text).digest('hex').slice(0, 16);
-const model = option('judge-model') ?? modelId('smart');
+// MODEL_JUDGE (the grader shared with the live eval) wins over the smart tier, so one setting picks the judge everywhere.
+const model = option('judge-model') ?? (process.env.MODEL_JUDGE || modelId('smart'));
 const sampleKey = (p: BenchmarkPersona, sample: number) => hash([systems[sample], p.description, model, effort, sample].join('\u0000'));
 
 // ---------- judge, with saved picks reused ----------

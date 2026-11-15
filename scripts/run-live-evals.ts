@@ -100,8 +100,10 @@ async function moduleKnowledge(): Promise<EvalResult> {
 const Judgement = z.object({ pass: z.boolean(), reason: z.string() });
 
 async function judge(rubric: string, question: string, answer: string): Promise<{ pass: boolean; reason: string }> {
+  // The judge is the most capable model available (MODEL_JUDGE overrides), so it is stronger than the models it grades.
   const verdict = await structured(Judgement, {
     tier: 'smart',
+    model: process.env.MODEL_JUDGE || 'claude-fable-5-1',
     effort: 'low',
     system: `You grade one answer from a university module advisor against a rubric. Be strict. Reply with pass and a one-sentence reason.\nRubric: ${rubric}`,
     messages: [{ role: 'user', content: `Question: ${question}\nAnswer: ${answer}` }],
