@@ -51,6 +51,8 @@ const CONVERSATION = { css: 'ol[aria-label="Conversation"]' };
 const MAIN_NAV = (text) => ({ css: 'nav[aria-label="Role"] a', text });
 const STUDENT_TAB = (text) => ({ css: 'nav[aria-label="Student sections"] a', text });
 const STAFF_TAB = (text) => ({ css: 'nav[aria-label="Staff sections"] a', text });
+/** The advisor window's close button, by its accessible name (its header also holds a "How to read these" button). */
+const CLOSE_ADVISOR = { css: 'dialog[open] button:has([aria-label="Close the advisor"])' };
 
 const fail = (message) => {
   throw new Error(message);
@@ -262,6 +264,11 @@ export const STEPS = [
       await pathIs(page, '/interview');
       await page.waitForElement({ css: 'h2', text: { exact: 'Your results' } }, { desc: 'the results panel' });
       await page.click({ css: 'label', text: { exact: 'Paste text' } });
+      await page.waitFor(
+        () => [...document.querySelectorAll('label')].find((l) => l.innerText.trim() === 'Paste text')?.control?.checked === true,
+        [],
+        { desc: 'Paste text to be selected' },
+      );
       // Pasting: the whole transcript arrives in one input event, as it does from the clipboard.
       await page.type({ forLabel: 'Paste your marks' }, transcript, { desc: 'the marks box' });
       await page.click({ forLabel: 'I agree to share these marks' }, { desc: 'the consent box' });
@@ -619,7 +626,7 @@ export const STEPS = [
         [],
         { desc: 'the escalation to show as sent' },
       );
-      await page.click({ css: 'dialog[open] header button' }, { desc: 'Close the advisor' });
+      await page.click(CLOSE_ADVISOR, { desc: 'Close the advisor' });
       await page.waitFor(() => !document.querySelector('dialog[open]'), [], { desc: 'the advisor to close' });
       await page.waitFor(modeIs, ['With a tutor'], { desc: 'the mode chip to read "With a tutor"' });
       const count = await page.eval(() => /(\d+) shortlisted/.exec(document.querySelector('nav[aria-label="Student sections"]')?.textContent ?? '')?.[1]);
@@ -706,7 +713,7 @@ export const STEPS = [
         { desc: 'the staff reply in the advisor chat' },
       );
       await ctx.checkpoint(student, 'reply-in-chat');
-      await student.click({ css: 'dialog[open] header button' }, { desc: 'Close the advisor' });
+      await student.click(CLOSE_ADVISOR, { desc: 'Close the advisor' });
       await student.waitFor(() => !document.querySelector('dialog[open]'), [], { desc: 'the advisor to close' });
 
       // The approval opens the module: its card says so, and it can now be shortlisted.
