@@ -4,6 +4,8 @@ import { motion, MotionConfig } from 'motion/react';
 import { cx } from './components/cx.ts';
 import { Icon, type IconName } from './components/Icon.tsx';
 import { Lazy } from './components/LazyRoute.tsx';
+import { LogoMark, Wordmark } from './components/Logo.tsx';
+import { paths } from './student/routes.ts';
 import { ThemeToggle } from './components/ThemeToggle.tsx';
 import { StudentApp } from './student/StudentApp.tsx';
 
@@ -16,10 +18,9 @@ const DEMO_INSTANCE = import.meta.env.VITE_DEMO_INSTANCE === '1';
 
 type Role = 'student' | 'staff' | 'trace';
 
-const ROLES: readonly { role: Role; to: string; label: string; short: string; icon: IconName }[] = [
-  { role: 'student', to: '/', label: 'Student', short: 'Student', icon: 'tutor' },
-  { role: 'staff', to: '/staff', label: 'Staff', short: 'Staff', icon: 'user' },
-  { role: 'trace', to: '/trace', label: 'How it works', short: 'Guide', icon: 'sparkle' },
+const ROLES: readonly { role: Role; to: string; label: string; icon: IconName }[] = [
+  { role: 'student', to: '/', label: 'Student', icon: 'tutor' },
+  { role: 'staff', to: '/staff', label: 'Staff', icon: 'user' },
 ];
 
 function roleFor(pathname: string): Role {
@@ -72,53 +73,85 @@ export function App() {
 function AppHeader({ role }: { role: Role }) {
   return (
     <header className="sticky top-0 z-(--z-header) border-b border-line/80 bg-surface/85 backdrop-blur-md supports-[backdrop-filter]:bg-surface/75">
-      <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-2 px-3 sm:gap-3 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-2 px-3 sm:gap-4 sm:px-6 lg:px-8">
         <Link to="/" className="flex shrink-0 items-center gap-2.5 rounded-lg" aria-label="ModuleMatch, home">
-          <span
-            aria-hidden="true"
-            className="grid size-9 place-items-center rounded-xl bg-brand text-on-brand shadow-soft"
-          >
-            <Icon name="compass" size={20} />
-          </span>
-          <span className="text-base font-semibold tracking-tight max-sm:sr-only">ModuleMatch</span>
+          <LogoMark size={36} />
+          <Wordmark className="max-md:sr-only" />
         </Link>
-        {/* No authentication this weekend (spec 5): the staff console sits behind this role switch. */}
-        <nav aria-label="Role" className="ml-auto">
-          <ul className="flex items-center gap-0.5 rounded-full bg-surface-2 p-1 ring-1 ring-line">
-            {ROLES.map((r) => {
-              const active = r.role === role;
-              return (
-                <li key={r.role}>
-                  <Link
-                    to={r.to}
-                    aria-current={active ? 'page' : undefined}
-                    className={cx(
-                      'relative flex h-9 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium whitespace-nowrap transition-colors sm:px-4 sm:text-sm',
-                      active ? 'text-on-brand' : 'text-muted hover:text-ink',
-                    )}
-                  >
-                    {active && (
-                      <motion.span
-                        layoutId="role-pill"
-                        aria-hidden="true"
-                        className="pointer-events-none absolute inset-0 rounded-full bg-brand shadow-soft"
-                        transition={{ type: 'spring', stiffness: 420, damping: 34 }}
-                      />
-                    )}
-                    <span className="relative flex items-center gap-1.5">
-                      <Icon name={r.icon} size={16} className="max-sm:hidden" />
-                      {/* Phones get a shorter label so the header, with the theme button, fits a 320px screen. */}
-                      <span className="sm:hidden">{r.short}</span>
-                      <span className="max-sm:hidden">{r.label}</span>
-                    </span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+        <nav aria-label="Explore" className="ml-auto flex items-center gap-1">
+          {GUIDES.map((g) => {
+            const active = g.role !== undefined && g.role === role;
+            return (
+              <Link
+                key={g.to}
+                to={g.to}
+                aria-current={active ? 'page' : undefined}
+                aria-label={g.label}
+                className={cx(
+                  'flex h-10 items-center gap-1.5 rounded-full px-2.5 text-sm font-semibold transition-colors sm:px-3.5',
+                  active ? 'bg-brand-soft text-brand' : 'text-muted hover:bg-surface-2 hover:text-ink',
+                  g.phone ? '' : 'max-sm:hidden',
+                )}
+              >
+                <Icon name={g.icon} size={16} />
+                <span className="max-lg:sr-only">{g.label}</span>
+              </Link>
+            );
+          })}
         </nav>
+        <RoleSwitch role={role} />
         <ThemeToggle />
       </div>
     </header>
+  );
+}
+
+/** Plain links beside the role switch. Phones keep only the icon for How it works. */
+const GUIDES: readonly { to: string; label: string; icon: IconName; role?: Role; phone: boolean }[] = [
+  { to: paths.demo, label: 'Demo', icon: 'grid', phone: false },
+  { to: '/trace', label: 'How it works', icon: 'sparkle', role: 'trace', phone: true },
+];
+
+/**
+ * Student or staff, as one switch with a sliding thumb: blue for students, ink for staff, so the change of
+ * view is obvious. No authentication this weekend (spec 5): the staff console sits behind this switch.
+ */
+function RoleSwitch({ role }: { role: Role }) {
+  return (
+    <nav aria-label="Role">
+      <ul className="flex items-center rounded-full bg-surface-2 p-1 ring-1 ring-line">
+        {ROLES.map((r) => {
+          const active = r.role === role;
+          return (
+            <li key={r.role}>
+              <Link
+                to={r.to}
+                aria-current={active ? 'page' : undefined}
+                className={cx(
+                  'relative flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-bold whitespace-nowrap transition-colors sm:px-4',
+                  active ? (r.role === 'staff' ? 'text-canvas' : 'text-on-brand') : 'text-muted hover:text-ink',
+                )}
+              >
+                {active && (
+                  <motion.span
+                    layoutId="role-thumb"
+                    aria-hidden="true"
+                    className={cx(
+                      'pointer-events-none absolute inset-0 rounded-full shadow-soft',
+                      r.role === 'staff' ? 'bg-ink' : 'bg-brand',
+                    )}
+                    transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+                  />
+                )}
+                <span className="relative flex items-center gap-1.5">
+                  <Icon name={r.icon} size={16} className="max-sm:hidden" />
+                  {r.label}
+                </span>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
   );
 }
