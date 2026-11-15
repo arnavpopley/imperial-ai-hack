@@ -2,6 +2,7 @@
 // playing a personal tutor picks five modules for each synthetic student from their words and the public
 // module pages alone; these numbers say how closely the engine's top five matches, next to a random ranking.
 import { useEffect, useState } from 'react';
+import { modelName } from '../liveEval.ts';
 
 interface Metrics {
   precisionAt5: number;
@@ -41,9 +42,7 @@ export function BenchmarkPanel() {
   if (data === undefined) return <p className="text-sm text-muted">Loading the ranking benchmark…</p>;
   if (data === null)
     return (
-      <p className="text-sm text-muted">
-        No ranking benchmark yet. Run <code className="font-mono">npm run benchmark</code>.
-      </p>
+      <p className="text-sm text-muted">No ranking benchmark has been published for this build.</p>
     );
 
   const { engine, randomBaseline, judgeSelfAgreement } = data.summary;
@@ -69,9 +68,9 @@ export function BenchmarkPanel() {
         ))}
       </dl>
       <p className="text-xs text-muted">
-        Across its two tries the tutor repeats {pct(judgeSelfAgreement)} of its picks, a measure of how consistent it is. Judge{' '}
-        {data.judge.model}, run {new Date(data.at).toLocaleDateString()}. Synthetic students; see
-        docs/ranking-benchmark.md.
+        Across its two tries the tutor repeats {pct(judgeSelfAgreement)} of its picks, a measure of how consistent it is.
+        Tutor model {modelName(data.judge.model)}, run {new Date(data.at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}. Synthetic
+        students.
       </p>
     </div>
   );
