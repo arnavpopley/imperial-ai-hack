@@ -4,8 +4,9 @@ import { motion } from 'motion/react';
 import { useMemo } from 'react';
 import { api } from '../../api.ts';
 import { ClashChip } from '../components/ClashChip.tsx';
-import { EmptyState, ErrorState, LoadingState, Panel, StatTile } from '../components/ui.tsx';
-import { AlertIcon, CalendarIcon, CheckIcon, ClockAlertIcon, UsersIcon } from '../components/icons.tsx';
+import { Panel, StatTile } from '../components/ui.tsx';
+import { EmptyState, ErrorState, LoadingState } from '../../components/StateViews.tsx';
+import { AlertIcon, CalendarIcon, ClockAlertIcon, UsersIcon } from '../components/icons.tsx';
 import { CountUp } from '../../components/CountUp.tsx';
 import { useResource } from '../hooks/useResource.ts';
 import { clashLabel, focusRing, percent, plural } from '../lib/format.ts';
@@ -30,9 +31,9 @@ export function TimetablePage() {
           </span>
         </p>
       </header>
-      {state.status === 'loading' && <LoadingState label="Loading clash priorities" rows={4} />}
+      {state.status === 'loading' && <LoadingState label="Loading clash priorities" />}
       {state.status === 'error' && (
-        <ErrorState title="Could not load clash priorities" error={state.error} onRetry={reload} />
+        <ErrorState title="Could not load clash priorities" message={state.error.message} onRetry={reload} />
       )}
       {state.status === 'ready' && <ClashPriorities rows={state.data} />}
     </div>
@@ -45,7 +46,7 @@ function ClashPriorities({ rows }: { rows: ClashPriority[] }) {
 
   if (ranked.length === 0)
     return (
-      <EmptyState icon={<CheckIcon className="size-6" />} title="No clashing pairs">
+      <EmptyState icon="check" title="No clashing pairs">
         No two shortlisted modules overlap in the current slots.
       </EmptyState>
     );

@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 import { Link, Route, Routes, useLocation } from 'react-router';
 import { ClockAlertIcon, GridIcon, InboxIcon, LockIcon, MessageIcon } from './components/icons.tsx';
 import { PrivacyNote } from './components/PrivacyNote.tsx';
-import { EmptyState } from './components/ui.tsx';
+import { EmptyState } from '../components/StateViews.tsx';
 import { focusRing } from './lib/format.ts';
 import { Lazy, lazyNamed } from '../components/LazyRoute.tsx';
 import { ModuleDashboard } from './pages/ModuleDashboard.tsx';
@@ -65,7 +65,7 @@ export function StaffApp() {
           <Route
             path="*"
             element={
-              <EmptyState title="Page not found">That staff page does not exist. Use the tabs above.</EmptyState>
+              <EmptyState icon="search" title="Page not found">That staff page does not exist. Use the tabs above.</EmptyState>
             }
           />
         </Routes>

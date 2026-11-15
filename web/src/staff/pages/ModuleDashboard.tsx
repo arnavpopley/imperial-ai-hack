@@ -5,8 +5,9 @@ import { DemandGauge } from '../components/DemandGauge.tsx';
 import { FitHistogram } from '../components/FitHistogram.tsx';
 import { InsightCard } from '../components/InsightCard.tsx';
 import { PrivacyHidden } from '../components/PrivacyNote.tsx';
-import { EmptyState, ErrorState, LoadingState, Panel, StatTile } from '../components/ui.tsx';
-import { GaugeIcon, ShieldIcon, TrendUpIcon, UsersIcon } from '../components/icons.tsx';
+import { Panel, StatTile } from '../components/ui.tsx';
+import { EmptyState, ErrorState, LoadingState } from '../../components/StateViews.tsx';
+import { GaugeIcon, TrendUpIcon, UsersIcon } from '../components/icons.tsx';
 import { CountUp } from '../../components/CountUp.tsx';
 import { useInsights } from '../hooks/useInsights.ts';
 import { CAPACITY_LABEL, capacityStatus, plural } from '../lib/format.ts';
@@ -82,9 +83,9 @@ function InsightsSection({ moduleId }: { moduleId: string }) {
   const { state, reload, decide, saving, failed } = useInsights(moduleId);
 
   const body = () => {
-    if (state.status === 'loading') return <LoadingState label="Loading insights" rows={2} />;
+    if (state.status === 'loading') return <LoadingState label="Loading insights" />;
     if (state.status === 'error')
-      return <ErrorState title="Could not load insights" error={state.error} onRetry={reload} />;
+      return <ErrorState title="Could not load insights" message={state.error.message} onRetry={reload} />;
 
     // Defence in depth for spec 9.3: never render a card built on fewer than MIN_COHORT students.
     const shown: Insight[] = state.data.filter((i) => i.cohortSize >= MIN_COHORT);
@@ -93,7 +94,7 @@ function InsightsSection({ moduleId }: { moduleId: string }) {
       return hidden > 0 ? (
         <PrivacyHidden />
       ) : (
-        <EmptyState icon={<ShieldIcon className="size-6" />} title={NO_INSIGHTS.title}>
+        <EmptyState icon="shield" title={NO_INSIGHTS.title}>
           {NO_INSIGHTS.body}
         </EmptyState>
       );

@@ -6,6 +6,7 @@ import type { ExamDraft } from '../lib/examForm.ts';
 import { focusRing, topicLabel } from '../lib/format.ts';
 import { inputClass } from './ExamFields.tsx';
 import { CompassIcon, EyeIcon, TrendUpIcon } from './icons.tsx';
+import { Select } from '../../components/Select.tsx';
 
 export function FeedbackPreview({
   draft,
@@ -43,18 +44,18 @@ export function FeedbackPreview({
             <label htmlFor={selectId} className="text-sm font-medium">
               Question the sample student lost marks on
             </label>
-            <select
+            <Select
               id={selectId}
               value={weakIndex}
               onChange={(e) => setChosen(Number(e.target.value))}
-              className={`${inputClass} py-2`}
+              wrapperClassName="w-full"
             >
               {draft.questions.map((q, i) => (
                 <option key={q.key} value={i}>
                   {questionNumber(q, i)}: {questionDisplayTitle(q, i)}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
         )}
       </div>
