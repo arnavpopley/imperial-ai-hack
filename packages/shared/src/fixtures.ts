@@ -344,7 +344,8 @@ export const fixtureStaffModules: StaffModuleSummary[] = fixtureModules.map((m, 
   title: m.title,
   type: m.type,
   capacity: m.capacity,
-  shortlisted: [64, 12, null, 31][i] ?? 0,
+  // The third module has one to four shortlists, withheld (null); `?? 0` would turn that into nobody.
+  shortlisted: i === 2 ? null : ([64, 12, 0, 31][i] ?? 0),
   averageFit: [71, 58, 44, 49][i] ?? 0,
   // Bands of one to four students are merged with their neighbours (spec 20.4): 10–29 holds 5.
   fitBands: [

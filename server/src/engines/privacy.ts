@@ -11,6 +11,16 @@ export const withheld = (n: number): number | null => (isSmallCount(n) ? null : 
 /** A count for staff-facing text: "fewer than 5" for one to four students, otherwise the number. */
 export const countText = (n: number): string => (isSmallCount(n) ? `fewer than ${MIN_COHORT}` : String(n));
 
+/**
+ * Counts that split one published group between them (they add up to its size). Each is shown only when every part
+ * is zero or at least MIN_COHORT; otherwise every non-zero part is null, because with the group's size known a
+ * single small part could be worked out from the others by subtraction.
+ */
+export function partitionCounts(parts: readonly number[]): (number | null)[] {
+  const safe = parts.every((n) => !isSmallCount(n));
+  return parts.map((n) => (safe || n === 0 ? n : null));
+}
+
 /** Fit points per histogram bucket. */
 const BUCKET = 10;
 

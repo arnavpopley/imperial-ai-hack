@@ -14,7 +14,7 @@ import type {
   TopicId,
   Weights,
 } from '@modulematch/shared';
-import { countText, isSmallCount } from './privacy.ts';
+import { isSmallCount, partitionCounts } from './privacy.ts';
 import { checkModuleEligibility } from './rules.ts';
 import { CAPABILITY_SLOTS, DEMAND_FIELD, scoreModule, type StyleSlot, type TopicWeights } from './scoring.ts';
 import { clashLabel, clashPriorities } from './timetable.ts';
@@ -467,9 +467,13 @@ function counterfactualCard(module: Module, ctx: InsightContext, counterfactual:
   const { groupSize: size, newlyTopModules: newly, alreadyTopModules: already, crossStrongFit: crossing } = counterfactual;
   const points = counterfactual.uplift.toFixed(1);
   const top = ctx.rules ? `${TOP_MODULES_WORDS} eligible modules` : `${TOP_MODULES_WORDS} modules`;
-  // Counts of one to four students are written as "fewer than 5" (spec 20.4); the group itself is five or more.
-  const [newlyText, alreadyText, crossingText] = [newly, already, crossing].map(countText);
-  const topSentence = `${newly > 0 ? `${newlyText} more of them` : 'none of them'} would newly have it in their ${top}${already > 0 ? ` (${alreadyText} already do)` : ''}`;
+  // Spec 20.4: these counts split the published group, so with its size known one small part would give the others
+  // away. Each split is shown exactly only when every part is zero or five or more; otherwise its parts read "some".
+  const [newlyShown, alreadyShown] = partitionCounts([newly, already, size - newly - already]);
+  const [crossingShown] = partitionCounts([crossing, size - crossing]);
+  const words = (shown: number | null) => (shown === null ? 'some' : String(shown));
+  const [newlyText, alreadyText, crossingText] = [newlyShown, alreadyShown, crossingShown].map(words);
+  const topSentence = `${newly > 0 ? (newlyShown === null ? 'some of them' : `${newlyText} more of them`) : 'none of them'} would newly have it in their ${top}${already > 0 ? ` (${alreadyText} already do)` : ''}`;
   const crossSentence = crossing > 0 ? `${crossingText} would rise to fit ${STRONG_FIT} or more` : `none would rise to fit ${STRONG_FIT}`;
   const impact =
     newly > 0 && crossing > 0

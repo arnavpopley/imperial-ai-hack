@@ -4,7 +4,7 @@ import { schemas } from '@modulematch/shared';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../src/app.ts';
 import { seedIfEmpty } from '../src/bootstrap.ts';
-import { countText, staffFitBands, withheld } from '../src/engines/index.ts';
+import { countText, partitionCounts, staffFitBands, withheld } from '../src/engines/index.ts';
 import { staffRoutes } from '../src/routes/staff.ts';
 
 const app = createApp();
@@ -52,6 +52,15 @@ describe('withheld and countText', () => {
   it('withhold one to four students and keep zero and five or more', () => {
     expect([0, 1, 4, 5, 12].map(withheld)).toEqual([0, null, null, 5, 12]);
     expect([0, 3, 5].map(countText)).toEqual(['0', 'fewer than 5', '5']);
+  });
+});
+
+describe('partitionCounts', () => {
+  it('shows a split exactly only when every part is zero or five or more', () => {
+    expect(partitionCounts([12, 7, 0])).toEqual([12, 7, 0]);
+    // 5 + 1 of a published 6: the 5 would pin the 1, so both are withheld; the zero part stays.
+    expect(partitionCounts([5, 1, 0])).toEqual([null, null, 0]);
+    expect(partitionCounts([17, 2])).toEqual([null, null]);
   });
 });
 

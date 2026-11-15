@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { firstModule } from '../components/ModulePicker.tsx';
-import { groupRows, hasOffers, inView, shortlistFigure, shortlistLabel, strongFitShare } from './moduleList.ts';
+import { groupRows, hasOffers, inView, shortlistFigure, shortlistLabel, strongFitShare, strongFitText } from './moduleList.ts';
 import type { StaffModuleSummary } from '@modulematch/shared';
 
 const row = (moduleId: string, patch: Partial<StaffModuleSummary> = {}): StaffModuleSummary => ({
@@ -25,8 +25,12 @@ const row = (moduleId: string, patch: Partial<StaffModuleSummary> = {}): StaffMo
 describe('staff module list', () => {
   it('takes the strong-fit share from the server, since withheld bands cannot be summed', () => {
     expect(strongFitShare(row('A'))).toBeCloseTo(10 / 50);
-    // One to four strong fits: withheld, and sorted as none.
-    expect(strongFitShare(row('B', { strongFitShare: null }))).toBe(0);
+    // Withheld (one to four students on either side of the line): unknown, so it sorts after every known share,
+    // even a share of zero, and reads as a neutral mark rather than a small number.
+    const withheldRow = row('B', { strongFitShare: null });
+    expect(strongFitShare(withheldRow)).toBeLessThan(strongFitShare(row('C', { strongFitShare: 0 })));
+    expect(strongFitText(withheldRow, (f) => `${Math.round(f * 100)}%`)).toBe('—');
+    expect(strongFitText(row('A'), (f) => `${Math.round(f * 100)}%`)).toBe('20%');
   });
 
   it('labels demand honestly: compulsory, not offered, none yet, and counts under five as a band', () => {

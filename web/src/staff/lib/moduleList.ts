@@ -31,9 +31,14 @@ export const STRONG_FIT = STRONG_FIT_FLOOR;
 
 /**
  * Share of the cohort whose fit is strong, from the server's exact counts. It separates modules far better than
- * the mean, which sits at 25 to 42. Null (one to four students) sorts as none.
+ * the mean, which sits at 25 to 42. A withheld share (null: one to four students on either side of the line) is
+ * unknown, not small, so it sorts after every known share rather than among the weakest.
  */
-export const strongFitShare = (row: StaffModuleSummary): number => row.strongFitShare ?? 0;
+export const strongFitShare = (row: StaffModuleSummary): number => row.strongFitShare ?? -1;
+
+/** The strong-fit share for display: a percentage, or a neutral mark when it is withheld. */
+export const strongFitText = (row: StaffModuleSummary, percent: (fraction: number) => string): string =>
+  row.strongFitShare === null ? '—' : percent(row.strongFitShare);
 
 /**
  * The server withholds counts of one to four students (spec 20.4, null), so they are shown as a band, the same

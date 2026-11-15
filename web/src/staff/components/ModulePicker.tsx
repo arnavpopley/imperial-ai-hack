@@ -16,6 +16,7 @@ import {
   shortlistFigure,
   shortlistLabel,
   strongFitShare,
+  strongFitText,
 } from '../lib/moduleList.ts';
 import type { ListView } from '../lib/moduleList.ts';
 import { byCohortFigure, isCohortVisible } from '../lib/privacy.ts';
@@ -187,8 +188,12 @@ function FitSpark({ bands }: { bands: StaffModuleSummary['fitBands'] }) {
 function ModuleFigures({ module: m }: { module: StaffModuleSummary }) {
   const status = capacityStatus(knownShortlisted(m), m.capacity);
   const share = strongFitShare(m);
-  // A share made of one to four students is withheld by the server: shown as a band, never a percentage.
-  const shareText = m.strongFitShare === null ? `<${MIN_COHORT}` : percent(share);
+  // The server withholds the share when one to four students sit on either side of the line: unknown, not weak.
+  const withheldShare = m.strongFitShare === null;
+  const shareText = strongFitText(m, percent);
+  const shareWords = withheldShare
+    ? `Share with a fit of ${STRONG_FIT} or more withheld: fewer than ${MIN_COHORT} students on one side of it`
+    : `${percent(share)} of the cohort with a fit of ${STRONG_FIT} or more`;
   const counted = isOption(m) && (m.shortlisted ?? 0) >= MIN_COHORT;
   return (
     <>
@@ -199,11 +204,7 @@ function ModuleFigures({ module: m }: { module: StaffModuleSummary }) {
           className={`grid h-7 min-w-11 shrink-0 place-items-center rounded-full px-2 text-xs font-semibold tabular-nums ring-1 ${
             share > 0 ? 'bg-fit-high/10 text-fit-high ring-fit-high/30' : 'bg-surface text-muted ring-line'
           }`}
-          title={
-            m.strongFitShare === null
-              ? `Fewer than ${MIN_COHORT} students with a fit of ${STRONG_FIT} or more`
-              : `Share of the cohort with a fit of ${STRONG_FIT} or more`
-          }
+          title={withheldShare ? shareWords : `Share of the cohort with a fit of ${STRONG_FIT} or more`}
         >
           {shareText}
         </span>
@@ -221,10 +222,7 @@ function ModuleFigures({ module: m }: { module: StaffModuleSummary }) {
       </span>
       {counted && <DemandMiniBar shortlisted={knownShortlisted(m)} capacity={m.capacity} />}
       <span className="sr-only">
-        {m.strongFitShare === null
-          ? `Fewer than ${MIN_COHORT} students with a fit of ${STRONG_FIT} or more`
-          : `${percent(share)} of the cohort with a fit of ${STRONG_FIT} or more`}
-        ; average fit {Math.round(m.averageFit)}.
+        {shareWords}; average fit {Math.round(m.averageFit)}.
       </span>
     </>
   );
