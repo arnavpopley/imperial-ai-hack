@@ -133,11 +133,18 @@ export function installHelpers() {
     return { scrollWidth: doc.scrollWidth, viewport: vw, offenders };
   }
 
-  /** The nearest fixed or sticky ancestor-or-self, if any. */
+  /**
+   * The nearest fixed ancestor-or-self, or sticky one that is currently stuck, if any. A sticky element that
+   * is taller than its room scrolls like normal content, so it does not count.
+   */
   function floating(el) {
     for (let p = el; p && p !== document.documentElement; p = p.parentElement) {
-      const pos = getComputedStyle(p).position;
-      if (pos === 'fixed' || pos === 'sticky') return p;
+      const cs = getComputedStyle(p);
+      if (cs.position === 'fixed') return p;
+      if (cs.position === 'sticky') {
+        const top = parseFloat(cs.top);
+        if (Number.isNaN(top) || Math.abs(p.getBoundingClientRect().top - top) < 1) return p;
+      }
     }
     return null;
   }

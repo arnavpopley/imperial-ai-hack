@@ -19,6 +19,12 @@ import { parseEnv } from 'node:util';
 import { Cdp, Page, sleep } from './cdp.mjs';
 import { STEPS } from './steps.mjs';
 
+/** Demo steps are numbered 1 to 8 as in spec 18.2; an optional step takes the number before it plus "b". */
+const LABELS = (() => {
+  let n = 0;
+  return STEPS.map((step) => (step.optional ? `${n}b` : String((n += 1))));
+})();
+
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 
@@ -330,12 +336,11 @@ async function runCombo(cdp, comboName, ports) {
       continue;
     }
     const started = Date.now();
-    process.stdout.write(`  ${comboName}  ${i + 1}. ${step.title} ... `);
+    process.stdout.write(`  ${comboName}  ${LABELS[i]}. ${step.title} ... `);
     try {
       await step.run(ctx);
     } catch (error) {
       result.error = String(error?.message ?? error);
-      blocked = `step ${i + 1}`;
       try {
         const page = ctx.active ?? ctx.student;
         shot += 1;
@@ -344,6 +349,12 @@ async function runCombo(cdp, comboName, ports) {
         result.screenshots.push(`${comboName}/${file}`);
       } catch {
         // the page may be gone
+      }
+      if (step.optional) {
+        // An optional step reports its failure but does not stop the demo steps; put the student back on the catalogue.
+        await ctx.student.goto(`${ctx.web}/catalogue`).catch(() => {});
+      } else {
+        blocked = `step ${LABELS[i]}`;
       }
     }
     // Let late console errors and request failures from this step land before scoring it.
@@ -370,7 +381,7 @@ function summarise(all) {
   lines.push(`| ${header.join(' | ')} |`, `|${header.map(() => '---').join('|')}|`);
   const mark = { pass: 'pass', issues: 'issues', fail: 'FAIL', skipped: 'skipped', pending: '-' };
   STEPS.forEach((step, i) => {
-    lines.push(`| ${i + 1}. ${step.title} | ${combos.map((c) => mark[all[c][i].status]).join(' | ')} |`);
+    lines.push(`| ${LABELS[i]}. ${step.title} | ${combos.map((c) => mark[all[c][i].status]).join(' | ')} |`);
   });
   const details = [];
   for (const c of combos) {

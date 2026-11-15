@@ -1,6 +1,9 @@
 // The eight demo steps from spec 18.2. Each step drives the UI the way the presenter would and asserts what
 // the audience should see. Steps share `ctx.state` (the judge's answers, the shortlist, the reply sent).
+import { readFileSync } from 'node:fs';
 import { sleep } from './cdp.mjs';
+
+const TRANSCRIPT = new URL('../../data/demo/synthetic-transcript.txt', import.meta.url);
 
 /** The judge's answers, chosen by what the interviewer asks so the same script works with live wording. */
 const ANSWERS = {
@@ -122,6 +125,9 @@ export const STEPS = [
       await ctx.checkpoint(page, 'onboard');
       await page.click({ css: 'button[type="submit"]', text: 'Start the interview' });
       await pathIs(page, '/interview');
+      // "Your results" (spec 23) opens over the chat at the start. The demo skips it here; the optional step
+      // after the interview adds the marks from Your data instead.
+      await page.click({ css: 'button', text: { exact: 'Skip for now' } }, { desc: 'Skip for now on the results panel' });
       const scope = 'section[aria-label="Interview conversation"]';
       await page.waitFor((s) => Boolean(document.querySelector(`${s} ol[aria-label="Conversation"] li[aria-busy="false"] p`)), [scope], {
         desc: 'the first interview question',
@@ -178,6 +184,78 @@ export const STEPS = [
       await ctx.checkpoint(page, 'what-i-heard');
       await page.click({ css: 'button', text: 'That is me, show my modules' });
       await pathIs(page, '/catalogue');
+    },
+  },
+  {
+    id: 'results',
+    title: 'Optional: results upload, nudge, feedback, withdraw',
+    // Spec 23 is not in the three-minute script, so a failure here is reported but does not stop the demo steps.
+    optional: true,
+    async run(ctx) {
+      const page = ctx.student;
+      ctx.active = page;
+      const transcript = readFileSync(TRANSCRIPT, 'utf8');
+      await page.click(STUDENT_TAB('Your data'));
+      await pathIs(page, '/your-data');
+      await page.click({ css: 'button', text: 'Add your results' });
+      await pathIs(page, '/interview');
+      await page.waitForElement({ css: 'h2', text: { exact: 'Your results' } }, { desc: 'the results panel' });
+      await page.click({ css: 'label', text: { exact: 'Paste text' } });
+      // Pasting: the whole transcript arrives in one input event, as it does from the clipboard.
+      await page.type({ forLabel: 'Paste your marks' }, transcript, { desc: 'the marks box' });
+      await page.click({ forLabel: 'I agree to share these marks' }, { desc: 'the consent box' });
+      await page.click({ css: 'button[type="submit"]', text: 'Read my results' });
+      const read = await page.waitFor(
+        () => {
+          const status = [...document.querySelectorAll('[role="status"]')].map((s) => s.innerText).find((t) => /(Read|Shared) \d+ modules?/.test(t));
+          return status ?? false;
+        },
+        [],
+        { desc: 'the marks to be read', timeout: ctx.timeout },
+      );
+      ctx.note(`results: ${read}`);
+      await ctx.checkpoint(page, 'results-read');
+      await page.click({ css: 'button', text: 'Back to the conversation' });
+
+      await page.click(STUDENT_TAB('Catalogue'));
+      await pathIs(page, '/catalogue');
+      const nudge = { css: 'section[aria-labelledby="ranked-heading"] ol > li', text: 'Keep in mind' };
+      await page.waitForElement(nudge, { desc: 'a "Keep in mind" note on a catalogue card', timeout: ctx.timeout });
+      const nudged = await page.eval(
+        () => [...document.querySelectorAll('section[aria-labelledby="ranked-heading"] ol > li')].filter((li) => li.textContent.includes('Keep in mind')).length,
+      );
+      ctx.note(`${nudged} catalogue card(s) carry a "Keep in mind" note`);
+      await page.scrollIntoView(nudge);
+      await ctx.checkpoint(page, 'nudge');
+
+      // The Exam feedback tab appears once there is feedback; the page must render either way.
+      const tab = await page.eval(() => [...document.querySelectorAll('nav[aria-label="Student sections"] a')].some((a) => /Exam feedback/.test(a.textContent)));
+      if (tab) await page.click(STUDENT_TAB('Exam feedback'));
+      else await page.goto(`${ctx.web}/feedback`);
+      await pathIs(page, '/feedback');
+      await page.waitForElement({ css: 'h1, h2', text: { re: 'exam feedback|feedback' } }, { desc: 'the exam feedback page' });
+      const failed = await page.eval(() => document.body.textContent.includes('Your feedback did not load'));
+      if (failed) fail('The exam feedback page shows "Your feedback did not load"');
+      ctx.note(`feedback page: ${tab ? 'reached from its tab' : 'opened by URL (no tab yet)'}`);
+      await ctx.checkpoint(page, 'feedback');
+
+      await page.click(STUDENT_TAB('Your data'));
+      await pathIs(page, '/your-data');
+      await page.click({ css: 'button', text: 'Withdraw consent and delete my marks' });
+      await page.click({ css: 'button', text: 'Yes, delete my marks' });
+      await page.waitForElement({ css: '[role="status"]', text: 'Consent withdrawn' }, { desc: 'consent to be withdrawn' });
+      await ctx.checkpoint(page, 'withdrawn');
+      await page.click(STUDENT_TAB('Catalogue'));
+      await pathIs(page, '/catalogue');
+      await page.waitFor(() => /\d+ modules · \d+ open to you/.test(document.getElementById('ranked-heading')?.innerText ?? ''), [], {
+        desc: 'the ranked catalogue',
+      });
+      await page.waitFor(
+        () => ![...document.querySelectorAll('section[aria-labelledby="ranked-heading"] ol > li')].some((li) => li.textContent.includes('Keep in mind')),
+        [],
+        { desc: 'the "Keep in mind" notes to disappear after withdrawing consent' },
+      );
+      await page.scrollTo('top');
     },
   },
   {
