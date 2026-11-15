@@ -173,7 +173,10 @@ function styleCues(sentence: string, targetSlots: string[]): ExtractedUpdate[] {
   } else if (/\b(light|lighter|not too (much|heavy)|nothing too heavy)\b/.test(s)) add('style.workloadTolerance', 0.25);
   // "Moderate" answers the workload question; vaguer words ("normal", "fine") only count when the sentence names the
   // workload, because the team question also asks about working style ("Working alone is fine").
-  else if (/\b(moderate|medium|average)\b/.test(s) && aboutWorkload) add('style.workloadTolerance', 0.5);
+  // An unsure answer ("I don't know what's normal") states no workload at all.
+  else if (UNSURE.test(s)) {
+    // No preference given.
+  } else if (/\b(moderate|medium|average)\b/.test(s) && aboutWorkload) add('style.workloadTolerance', 0.5);
   else if ((namesWorkload || workloadOnly) && /\b(normal|standard|reasonable|manageable|fine|ok|okay|either|whatever)\b/.test(s)) add('style.workloadTolerance', 0.5);
   return out;
 }
