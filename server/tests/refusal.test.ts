@@ -95,6 +95,19 @@ describe('the refusal wording', () => {
     expect(text.trim().split(/\s+/).length).toBeLessThanOrEqual(HOLD_WORD_BUDGET);
     expect(text).toContain("I can't approve Machine Dynamics and Vibrations A myself");
     expect(text).toContain('drafted a request below');
+    // Trimming never claims there is nothing else.
+    expect(text).not.toContain('Nothing else');
+  });
+
+  it('shortens its own wording before dropping a suggestion that fits', () => {
+    const one = makeModule('X', { title: 'Robot dynamics and control' });
+    const clauses = ["it isn't open to Year 3 students on your programme", "it needs 3 prerequisites you haven't completed"];
+    const open = [{ title: 'Mechatronics 3A and Its Extended Laboratory Companion Course for Third Year Students', fit: 60, prerequisite: false }];
+    const full = holdTemplate({ module: one, clauses, open, shortlisted: [] });
+    expect(full.trim().split(/\s+/).length).toBeLessThanOrEqual(HOLD_WORD_BUDGET);
+    expect(full).toContain('Open to you instead: Mechatronics 3A and Its Extended Laboratory Companion Course for Third Year Students (good fit).');
+    expect(full).toContain("The Senior Tutor can, so I've drafted a request below.");
+    expect(full).not.toContain('Nothing else');
   });
 
   it('says so when nothing else fits, and names shortlisted modules instead of padding', () => {

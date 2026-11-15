@@ -325,9 +325,10 @@ export const HOLD_WORD_BUDGET = 60;
 const wordCount = (text: string) => text.trim().split(/\s+/).length;
 
 /**
- * The reply when the student asks to break a rule: the agent holds its position (demo step 5, issue 112). It is built
- * from the fullest version down, dropping the last alternative, then the shortlisted names, then the alternatives line,
- * then the longer lead, until it fits HOLD_WORD_BUDGET. The rule and the drafted request always stay.
+ * The reply when the student asks to break a rule: the agent holds its position (demo step 5, issue 112). Content comes
+ * before wording: for each set of alternatives, from the fullest down, the longer lead is tried and then the shorter
+ * one, and the first version within HOLD_WORD_BUDGET wins. The rule and the drafted request always stay. "Nothing
+ * else open to you" is said only when there were no alternatives at all, never because they were trimmed.
  */
 export function holdTemplate(args: {
   module: Module;
@@ -344,23 +345,25 @@ export function holdTemplate(args: {
   // Fit in words, on the shared scale (#105).
   const named = (a: (typeof args.open)[number]) =>
     a.prerequisite ? `${a.title} (its prerequisite)` : `${a.title} (${FIT_BAND_LABELS[fitBand(a.fit)].toLowerCase()})`;
+  const noneFound = args.open.length === 0 && args.shortlisted.length === 0;
   const tail = (open: typeof args.open, shortlisted: string[]) => {
     const alternatives = open.length
       ? ` Open to you instead: ${andList(open.map(named))}.`
-      : shortlisted.length
-        ? ''
-        : ' Nothing else open to you covers this closely.';
+      : noneFound
+        ? ' Nothing else open to you covers this closely.'
+        : '';
     const already = shortlisted.length
       ? ` ${andList(shortlisted)}, already on your shortlist, ${shortlisted.length > 1 ? 'cover' : 'covers'} similar ground.`
       : '';
     return `${alternatives}${already}`;
   };
-  const versions: string[] = [];
-  for (const lead of leads) {
-    for (let k = args.open.length; k >= 0; k -= 1) versions.push(`${lead}${tail(args.open.slice(0, k), args.shortlisted)}`);
-    if (args.shortlisted.length > 1) versions.push(`${lead}${tail([], args.shortlisted.slice(0, 1))}`);
-    versions.push(lead);
-  }
+  // Tails from the richest down: every suggestion, then fewer, then only the shortlisted names, then one, then none.
+  const tails: string[] = [];
+  for (let k = args.open.length; k >= 1; k -= 1) tails.push(tail(args.open.slice(0, k), args.shortlisted));
+  if (args.shortlisted.length) tails.push(tail([], args.shortlisted));
+  if (args.shortlisted.length > 1) tails.push(tail([], args.shortlisted.slice(0, 1)));
+  tails.push(tail([], []));
+  const versions = tails.flatMap((t) => leads.map((lead) => `${lead}${t}`));
   return versions.find((v) => wordCount(v) <= HOLD_WORD_BUDGET) ?? versions.at(-1)!;
 }
 
