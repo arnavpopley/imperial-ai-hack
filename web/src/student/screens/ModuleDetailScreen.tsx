@@ -132,7 +132,7 @@ export function ModuleDetailScreen() {
               {rec && <ConfidenceBadge variant={rec.confidence} />}
               {rec?.exception && <ExceptionChip decision={rec.exception} />}
               {rec && scored && (
-                <Badge tone={FIT_BAND_TONE[fitBand(rec.fit)]}>
+                <Badge tone={dimmed ? 'neutral' : FIT_BAND_TONE[fitBand(rec.fit)]}>
                   {FIT_BAND_LABELS[fitBand(rec.fit)]} · {rec.rank === 1 ? 'your best match' : `ranked #${rec.rank}`}
                 </Badge>
               )}

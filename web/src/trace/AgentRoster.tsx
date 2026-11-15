@@ -77,7 +77,7 @@ function AgentCard({ agent, index, used, live }: { agent: Agent; index: number; 
           <div className="min-w-0 flex-1">
             <h4 className="truncate font-semibold tracking-tight">{agent.name}</h4>
             {template ? (
-              <Chip title={`Runs on ${tier.model} when the models are switched on`} className="mt-0.5">
+              <Chip wrap title={`Runs on ${tier.model} when the models are switched on`} className="mt-0.5">
                 {agent.offlineLabel ?? 'Template (offline)'}
                 <span className="sr-only">; runs on {tier.model} when the models are switched on</span>
               </Chip>
