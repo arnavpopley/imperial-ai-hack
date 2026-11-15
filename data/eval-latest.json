@@ -1,6 +1,6 @@
 {
-  "id": "e2d118d2-1650-4f22-82a1-36b555dd6e05",
-  "at": "2026-11-15T01:11:10.909Z",
+  "id": "61d7848a-6865-40f1-935f-f76b4811100a",
+  "at": "2026-11-15T01:16:08.787Z",
   "results": [
     {
       "name": "Ranking quality",
@@ -315,8 +315,8 @@
     },
     {
       "name": "Extraction (hard cases)",
-      "passed": 32,
-      "total": 32,
+      "passed": 33,
+      "total": 33,
       "target": 0.9,
       "details": [
         {
@@ -443,6 +443,11 @@
           "case": "rather a portfolio than tests: style.examPreference",
           "pass": true,
           "note": "expected 0.2, got 0.2"
+        },
+        {
+          "case": "unsure about workload: no style.workloadTolerance",
+          "pass": true,
+          "note": "expected nothing, got null"
         },
         {
           "case": "torn between two careers: pathways",
