@@ -260,14 +260,23 @@ function ExamFormWorkspace({ moduleId, initial }: { moduleId: string; initial: E
   // Publishing always saves first, so students get exactly the form the examiner is looking at.
   const publish = async () => {
     setBusy('publishing');
+    let savedFirst = false;
     try {
-      await api.staff.saveExamForm(moduleId, saveBody(draft));
+      // The save takes a published form back to draft, so adopt it at once: if publishing then fails, the page
+      // shows the draft students can no longer see rather than a stale "published".
+      adopt(await api.staff.saveExamForm(moduleId, saveBody(draft)));
+      savedFirst = true;
       adopt(await api.staff.publishExamForm(moduleId));
       setPublishOpen(false);
       setNotice({ tone: 'success', text: 'Published.' });
     } catch (e) {
       setPublishOpen(false);
-      setNotice({ tone: 'error', text: `Could not publish: ${errorMessage(e)}` });
+      setNotice({
+        tone: 'error',
+        text: savedFirst
+          ? `Saved as a draft, but could not publish: ${errorMessage(e)}. Students do not see it yet.`
+          : `Could not publish: ${errorMessage(e)}`,
+      });
     } finally {
       setBusy('idle');
     }
