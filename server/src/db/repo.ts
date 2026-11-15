@@ -395,6 +395,11 @@ export function listInsights(moduleId: string, db: Db = getDb()): Insight[] {
     .map((r) => S.Insight.parse(r));
 }
 
+/** Removes insight cards by id, for example rows left under an id scheme the engine no longer uses. */
+export function deleteInsights(ids: readonly string[], db: Db = getDb()): void {
+  if (ids.length > 0) db.delete(insights).where(inArray(insights.id, [...ids])).run();
+}
+
 export function setInsightDecision(id: string, decision: InsightDecision, db: Db = getDb()): Insight | null {
   db.update(insights).set({ decision: S.InsightDecision.parse(decision) }).where(eq(insights.id, id)).run();
   const row = db.select().from(insights).where(eq(insights.id, id)).get();
