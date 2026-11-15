@@ -710,6 +710,8 @@ export const EscalationRespondBody = z
 
 export const RecommendationsResponse = z.object({
   weights: Weights,
+  /** PUT /weights only: the session as stored after the change, so the client's copy stays complete (spec 13). */
+  session: SessionState.optional(),
   confidence: Confidence,
   completeness: Fraction,
   /**

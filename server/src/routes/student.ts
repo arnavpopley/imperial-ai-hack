@@ -13,7 +13,7 @@ import { answerModuleQuestion, moduleFacts } from '../agents/knowledge.ts';
 import { asksForGuarantee, guaranteeReply } from '../agents/outcomes.ts';
 import { emitWords } from '../agents/llm.ts';
 import { applyShortlistEdit, catalogue, clearExplanationCache, explanationFor, moduleTitle, newSessionState, ranked, recommendationsResponse, rulesForProfile, saveProfile, setMode, timetableView, tracerSink } from '../agents/session.ts';
-import { confirmProfile, handleTurn, resumeInterview } from '../agents/supervisor.ts';
+import { confirmProfile, handleTurn, inSessionQueue, resumeInterview } from '../agents/supervisor.ts';
 import { rawModule } from '../db/catalogue.ts';
 import * as repo from '../db/repo.ts';
 import { SCOPE_REDIRECT } from '../guardrails/g1-scope.ts';
@@ -97,24 +97,30 @@ export const studentRoutes = new Hono()
     '/:id/restore',
     bodyLimit({ maxSize: RESTORE_BODY_MAX_BYTES, onError: (c) => c.json({ error: 'snapshot too large' }, 413) }),
     body(schemas.RestoreSessionBody),
-    (c) => {
+    async (c) => {
       const id = c.req.param('id');
       const snapshot = c.req.valid('json');
-      const existing = repo.getSession(id);
-      if (existing && existing.updatedAt >= snapshot.updatedAt) return c.json(existing, 200);
       if (!SESSION_ID.test(id)) return c.json({ error: 'invalid session id' }, 400);
       const moduleIds = new Set(catalogue.modules().map((m) => m.id));
       const { state, cleaned, droppedModules } = restoredSession(id, snapshot, moduleIds);
-      try {
-        if (existing) repo.replaceSession(state);
-        else repo.createSession(state);
-      } catch (error) {
-        // Another request restored it first, or the snapshot's ids clash with stored rows; never overwrite either.
-        const now = repo.getSession(id);
-        if (now) return c.json(now, 200);
-        console.error(error);
-        return c.json({ error: 'snapshot could not be restored' }, 400);
-      }
+      // In the session's turn queue, and the versions compared there: a chat turn that loaded the older copy finishes
+      // first, and whatever it saved counts in the comparison.
+      const outcome = await inSessionQueue(id, (): 'kept' | 'created' | 'replaced' | 'failed' => {
+        const existing = repo.getSession(id);
+        if (existing && existing.updatedAt >= snapshot.updatedAt) return 'kept';
+        try {
+          if (existing) repo.replaceSession(state);
+          else repo.createSession(state);
+          return existing ? 'replaced' : 'created';
+        } catch (error) {
+          // The snapshot's ids clash with stored rows; nothing is overwritten.
+          console.error(error);
+          return 'failed';
+        }
+      });
+      if (outcome === 'failed') return c.json({ error: 'snapshot could not be restored' }, 400);
+      if (outcome === 'kept') return c.json(fresh(id), 200);
+      const existing = outcome === 'replaced';
       const tracer = createTracer(id, tracerSink);
       if (cleaned > 0) {
         tracer.record({ actor: 'G2+G3', kind: 'guardrail', input: `restore snapshot: ${cleaned} stored text(s)`, output: 'pattern rules removed text before storing', verdict: 'redact' });
@@ -189,7 +195,8 @@ export const studentRoutes = new Hono()
     if (session instanceof Response) return session;
     session.weights = c.req.valid('json');
     repo.updateSession(session.id, { weights: session.weights });
-    return c.json(recommendationsResponse(session));
+    // The stored session too, so the client's copy (which restores other demo instances) keeps the new weights.
+    return c.json({ ...recommendationsResponse(session), session: fresh(session.id) });
   })
   .get('/:id/recommendations', (c) => {
     const session = load(c);

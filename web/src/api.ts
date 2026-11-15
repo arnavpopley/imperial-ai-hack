@@ -95,8 +95,6 @@ export interface SessionCopy {
   version: (sessionId: string) => string | null;
   /** The restore snapshot of the client's copy, or null when it holds none. */
   snapshot: (sessionId: string) => RestoreSessionBody | null;
-  /** A response said an instance holds this version; a newer one becomes the client's version. */
-  seen: (sessionId: string, version: string) => void;
 }
 let sessionCopy: SessionCopy | null = null;
 
@@ -127,16 +125,10 @@ async function restore(sessionId: string): Promise<boolean> {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(snapshot),
     });
-    if (res.ok) noteVersion(sessionId, res);
     return res.ok;
   } catch {
     return false;
   }
-}
-
-function noteVersion(sessionId: string, res: Response): void {
-  const version = res.headers.get(SESSION_VERSION_HEADER);
-  if (version) sessionCopy?.seen(sessionId, version);
 }
 
 /** The request with the client's version of the session added, so an instance with an older copy can say so. */
@@ -160,7 +152,6 @@ async function send(path: string, init: RequestInit): Promise<Response> {
     if (!(await restore(sessionId))) break;
     res = await fetch(`/api${path}`, withVersion(sessionId, init));
   }
-  if (sessionId && res.ok) noteVersion(sessionId, res);
   return res;
 }
 

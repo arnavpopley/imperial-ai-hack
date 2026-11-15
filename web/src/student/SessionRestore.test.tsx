@@ -131,7 +131,7 @@ describe('restoring a session on an instance that does not have it', () => {
     await done();
   });
 
-  it('sends its version, refreshes an instance with an older copy (409) the same way, and adopts newer versions', async () => {
+  it('sends its version, and refreshes an instance with an older copy (409) the same way', async () => {
     let refreshed = false;
     const calls = mockFetch((call) => {
       if (call.path.endsWith('/restore')) {
@@ -140,6 +140,7 @@ describe('restoring a session on an instance that does not have it', () => {
       }
       // This instance holds an older copy until the client's copy replaces it; then it reports a newer version.
       if (!refreshed) return json({ error: 'session stale' }, 409);
+      // A version header never changes the client's version: only a whole session it adopts does.
       return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { 'x-session-version': '2026-11-15T09:30:00.000Z' } });
     });
     const versions: (string | null)[] = [];
@@ -156,11 +157,10 @@ describe('restoring a session on an instance that does not have it', () => {
     expect(snapshot.updatedAt).toBe(session.updatedAt);
     expect(status()).toBe('ready');
 
-    // The newer version that instance reported is now the client's, so the next request carries it.
     await act(async () => {
       await api.timetable(ID);
     });
-    expect(new Headers(spy.mock.calls.at(-1)![1]?.headers).get('x-session-version')).toBe('2026-11-15T09:30:00.000Z');
+    expect(new Headers(spy.mock.calls.at(-1)![1]?.headers).get('x-session-version')).toBe(session.updatedAt);
     await done();
   });
 

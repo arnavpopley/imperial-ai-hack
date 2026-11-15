@@ -4,6 +4,7 @@ import { RESTORE_BODY_MAX_BYTES, SESSION_VERSION_HEADER, schemas as S, type Rest
 import { randomUUID } from 'node:crypto';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../src/app.ts';
+import { inSessionQueue } from '../src/agents/supervisor.ts';
 import { seedIfEmpty } from '../src/bootstrap.ts';
 import * as repo from '../src/db/repo.ts';
 
@@ -106,6 +107,37 @@ describe('POST /sessions/:id/restore', () => {
     expect(after).toMatchObject({ mode: 'PLAN', shortlist: [a, b], updatedAt: newer, escalations: [] });
     expect(repo.listTraceEvents(live.id).some((e) => e.output.includes('replacing an older copy'))).toBe(true);
     expect((await app.request(`/api/sessions/${live.id}/recommendations`, { headers: { [SESSION_VERSION_HEADER]: newer } })).status).toBe(200);
+  });
+
+  it('waits for a running turn on the session, then compares versions with what that turn saved', async () => {
+    const live = await newSession();
+    const order: string[] = [];
+    const newer = new Date(Date.parse(live.updatedAt) + 60_000).toISOString();
+    // A turn still running in the session's queue, which saves a change before it finishes.
+    const turn = inSessionQueue(live.id, async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      repo.updateSession(live.id, { weights: { ...live.weights, interest: 0.9 } });
+      order.push('turn');
+    });
+    const restore = Promise.resolve(post(`/api/sessions/${live.id}/restore`, snapshotOf(live, { updatedAt: newer, messages: [] }))).then((res) => {
+      order.push('restore');
+      return res;
+    });
+    await turn;
+    const res = await restore;
+    expect(order).toEqual(['turn', 'restore']);
+    // The snapshot is still the newer copy after the turn's save, so it replaced the session once the turn was done.
+    expect(res.status).toBe(200);
+    expect(repo.getSession(live.id)!).toMatchObject({ updatedAt: newer, weights: live.weights });
+  });
+
+  it('returns the stored session with a weights change, so the client copy keeps the new weights', async () => {
+    const live = await newSession();
+    const weights = { ...live.weights, interest: 0.8 };
+    const res = await app.request(`/api/sessions/${live.id}/weights`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(weights) });
+    const body = S.RecommendationsResponse.parse(await res.json());
+    expect(body.session?.weights).toEqual(weights);
+    expect(body.session?.updatedAt).toBe(res.headers.get(SESSION_VERSION_HEADER));
   });
 
   it('applies the stored-text guardrails and the mode machine, and keeps only catalogue modules', async () => {

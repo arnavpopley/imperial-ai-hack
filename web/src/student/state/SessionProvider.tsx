@@ -87,17 +87,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     const mine = (id: string) => (latest.current?.id === id ? latest.current : null);
     setSessionCopy({
       version: (id) => mine(id)?.updatedAt ?? null,
+      // The version is always that of a whole session the client adopted, so it never claims state it does not hold.
       snapshot: (id) => {
         const copy = mine(id);
         return copy ? sessionSnapshot(copy) : null;
-      },
-      // The newest version any instance reported becomes this copy's version, so older copies elsewhere get refreshed.
-      seen: (id, version) => {
-        const copy = mine(id);
-        if (copy && version > copy.updatedAt) {
-          latest.current = { ...copy, updatedAt: version };
-          setSession((s) => (s && s.id === id && version > s.updatedAt ? { ...s, updatedAt: version } : s));
-        }
       },
     });
     return () => setSessionCopy(null);
