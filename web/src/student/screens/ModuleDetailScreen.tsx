@@ -219,7 +219,7 @@ export function ModuleDetailScreen() {
             aria-labelledby="why-heading"
             className="rounded-[1.25rem] border border-line bg-surface p-5 shadow-soft sm:p-6"
           >
-            <h2 id="why-heading" className="flex items-center gap-2 text-sm font-semibold">
+            <h2 id="why-heading" className="flex items-center gap-2 text-subheading">
               <span className="grid size-7 place-items-center rounded-full bg-fit-high/12 text-fit-high" aria-hidden="true">
                 <Icon name="heart" size={14} />
               </span>
@@ -333,7 +333,7 @@ export function ModuleDetailScreen() {
           <AskModulePanel sessionId={sessionId} moduleId={module.id} moduleTitle={module.title} />
           {rec && scored && (
             <section aria-labelledby="sub-heading" className="rounded-card border border-line bg-surface p-5 shadow-soft">
-              <h2 id="sub-heading" className="mb-3 text-sm font-semibold">
+              <h2 id="sub-heading" className="mb-3 text-subheading">
                 How the score breaks down
               </h2>
               <SubScoreBars sub={rec.sub} dimmed={dimmed} />

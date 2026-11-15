@@ -57,7 +57,7 @@ export function CapacityBackupPanel({ backups, titleFor }: CapacityBackupPanelPr
   if (live.length === 0) return null;
   return (
     <section aria-labelledby="backup-heading" className="rounded-card border border-line bg-surface p-4 shadow-soft">
-      <h2 id="backup-heading" className="flex items-center gap-1.5 text-sm font-semibold">
+      <h2 id="backup-heading" className="flex items-center gap-1.5 text-subheading">
         <Icon name="lifebuoy" size={15} className="text-muted" />
         Keep a backup in mind
       </h2>

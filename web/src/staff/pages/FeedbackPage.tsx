@@ -23,7 +23,7 @@ export function FeedbackPage() {
     <div className="grid grid-cols-1 gap-8">
       <header className="grid gap-4">
         <div className="flex flex-wrap items-end justify-between gap-3">
-          <h2 className="text-3xl font-semibold tracking-tight">Student feedback</h2>
+          <h2 className="text-heading">Student feedback</h2>
           <a
             href={api.staff.feedbackExportUrl}
             download

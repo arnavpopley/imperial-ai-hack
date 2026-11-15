@@ -69,7 +69,7 @@ function EscalationCase({ escalation: e }: { escalation: StaffEscalation }) {
         <Avatar seed={e.sessionId} size={40} />
         <div className="grid min-w-0 flex-1 gap-1">
           <div className="flex items-start justify-between gap-3">
-            <h2 id={ids.title} className="min-w-0 text-xl leading-snug font-semibold tracking-tight">
+            <h2 id={ids.title} className="min-w-0 text-heading">
               {escalationTitle(e, moduleByIdForTitle)}
             </h2>
             <span className="mt-0.5 shrink-0">

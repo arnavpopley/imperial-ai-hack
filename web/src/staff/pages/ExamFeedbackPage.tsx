@@ -66,7 +66,7 @@ function ExamIntro({ status, children }: { status?: ExamStatus; children: ReactN
       <div className="grid gap-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="grid gap-1">
-            <h2 className="inline-flex items-center gap-2 text-xl font-semibold tracking-tight">
+            <h2 className="inline-flex items-center gap-2 text-heading">
               <ExamIcon className="size-5 text-brand" /> Exam feedback
             </h2>
             <p className="max-w-2xl text-sm text-muted text-pretty">
@@ -387,7 +387,7 @@ function ExamFormWorkspace({ moduleId, initial }: { moduleId: string; initial: E
 
             <section aria-labelledby="exam-questions-heading" className="grid gap-5">
               <div className="flex flex-wrap items-baseline justify-between gap-2 px-1">
-                <h2 id="exam-questions-heading" className="text-lg font-semibold tracking-tight">
+                <h2 id="exam-questions-heading" className="text-heading">
                   Questions
                 </h2>
                 <p className="text-sm text-muted tabular-nums">

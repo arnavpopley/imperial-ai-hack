@@ -46,7 +46,7 @@ export function ResultsPanel({ onClose, onSkip }: ResultsPanelProps) {
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 id={headingId} className="text-xl font-semibold tracking-tight">
+            <h2 id={headingId} className="text-heading">
               Your results
             </h2>
             <span className="rounded-full bg-brand-soft px-2 py-0.5 text-2xs font-semibold text-brand">Optional · recommended</span>

@@ -17,7 +17,7 @@ export function TimetablePage() {
   return (
     <div className="grid grid-cols-1 gap-8">
       <header className="grid gap-4">
-        <h2 className="text-3xl font-semibold tracking-tight">Timetabling</h2>
+        <h2 className="text-heading">Timetabling</h2>
         <p className="max-w-2xl text-base text-muted">
           Module pairs that students want together but that may clash, worst first. Fix the top of this list before
           the timetable is published.

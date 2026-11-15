@@ -94,7 +94,7 @@ function ConfirmDialog({
           <span aria-hidden="true" className="grid size-12 place-items-center rounded-2xl bg-brand-soft text-brand">
             {icon}
           </span>
-          <h2 id={titleId} className="text-xl font-semibold tracking-tight">
+          <h2 id={titleId} className="text-heading">
             {title}
           </h2>
           <div id={bodyId} className="-mt-3 grid gap-2 text-sm leading-relaxed text-muted">

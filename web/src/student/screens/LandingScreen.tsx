@@ -160,7 +160,7 @@ export function LandingScreen({ resumeTo }: LandingScreenProps) {
         className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-brand via-mode-explain to-mode-plan px-6 py-14 text-center text-on-brand shadow-lift sm:px-12 sm:py-20"
       >
         <GlowField className="opacity-40 mix-blend-overlay" />
-        <h2 className="relative text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+        <h2 className="relative text-title text-balance">
           Your next year, matched to you.
         </h2>
         <p className="relative mx-auto mt-3 max-w-md text-on-brand/85">Three minutes now saves a term of second-guessing.</p>
@@ -317,7 +317,7 @@ function Section({ eyebrow, title, children }: { eyebrow: string; title: string;
     <section className="mx-auto w-full max-w-6xl">
       <motion.header {...IN_VIEW} variants={RISE} className="mb-8 max-w-2xl">
         <p className="text-sm font-semibold tracking-wide text-brand uppercase">{eyebrow}</p>
-        <h2 className="mt-2 text-3xl font-semibold tracking-tight text-balance sm:text-4xl">{title}</h2>
+        <h2 className="mt-2 text-title text-balance">{title}</h2>
       </motion.header>
       {children}
     </section>

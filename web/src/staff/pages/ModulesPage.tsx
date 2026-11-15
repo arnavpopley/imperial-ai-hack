@@ -108,7 +108,7 @@ export function ModuleLayout() {
             </span>
           )}
         </div>
-        <h2 className="text-3xl font-semibold tracking-tight text-balance">{summary.title}</h2>
+        <h2 className="text-heading text-balance">{summary.title}</h2>
         <nav aria-label={`${summary.title} views`} className="mt-2 flex gap-6 border-b border-line">
           <NavLink to={base} end className={tab}>
             Dashboard

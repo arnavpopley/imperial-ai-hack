@@ -191,7 +191,7 @@ function TimetableBody({ view, onChanged, refreshing, stale }: TimetableBodyProp
 
       <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4">
         <section aria-labelledby="clash-heading">
-          <h2 id="clash-heading" className="mb-2 text-sm font-semibold">
+          <h2 id="clash-heading" className="mb-2 text-subheading">
             {view.clashes.length === 0 ? 'No clashes' : `${view.clashes.length} clash${view.clashes.length > 1 ? 'es' : ''} to resolve`}
           </h2>
           <AnimatePresence initial={false}>
@@ -239,7 +239,7 @@ function TimetableBody({ view, onChanged, refreshing, stale }: TimetableBodyProp
 
         <section aria-labelledby="shortlist-heading" className="rounded-card border border-line bg-surface p-4 shadow-soft">
           <div className="mb-2 flex items-baseline justify-between">
-            <h2 id="shortlist-heading" className="text-sm font-semibold">
+            <h2 id="shortlist-heading" className="text-subheading">
               Your plan
             </h2>
           </div>
@@ -400,7 +400,7 @@ function KeepFreePanel({ view, titleFor }: { view: TimetableView; titleFor: (id:
   const shown = conflicts.slice(0, 4);
   return (
     <section aria-labelledby="keep-free-heading" className="rounded-card border border-mode-explain/30 bg-mode-explain/[0.05] p-4">
-      <h2 id="keep-free-heading" className="flex items-center gap-2 text-sm font-semibold">
+      <h2 id="keep-free-heading" className="flex items-center gap-2 text-subheading">
         <Icon name="moon" size={15} className="text-mode-explain" />
         {conflicts.length === 0
           ? 'Your kept-free time stays free'
@@ -462,7 +462,7 @@ function RulesPanel({ view }: { view: TimetableView }) {
   const { ok, violations, warnings } = view.rules;
   return (
     <section aria-labelledby="rules-heading" className="rounded-card border border-line bg-surface p-4 shadow-soft">
-      <h2 id="rules-heading" className="flex items-center gap-2 text-sm font-semibold">
+      <h2 id="rules-heading" className="flex items-center gap-2 text-subheading">
         <Icon name="shield" size={15} className={ok ? 'text-fit-high' : 'text-fit-low'} />
         Programme rules
       </h2>
