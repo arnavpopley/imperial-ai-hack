@@ -9,7 +9,8 @@ export function fitBands(fits: readonly number[]): number[] {
   return bands;
 }
 
-export function FitSpark({ fits }: { fits: readonly number[] }) {
+/** `muted` greys every band, for scores that are only rough while the profile is incomplete. */
+export function FitSpark({ fits, muted = false }: { fits: readonly number[]; muted?: boolean }) {
   const bands = fitBands(fits);
   const max = Math.max(1, ...bands);
   return (
@@ -17,7 +18,7 @@ export function FitSpark({ fits }: { fits: readonly number[] }) {
       {bands.map((count, i) => (
         <span
           key={i}
-          className={`flex-1 rounded-t-[2px] ${i * 10 >= FIT_BAND_FLOORS.good ? 'bg-fit-high' : 'bg-line-strong'}`}
+          className={`flex-1 rounded-t-[2px] ${!muted && i * 10 >= FIT_BAND_FLOORS.good ? 'bg-fit-high' : 'bg-line-strong'}`}
           style={{ height: `${count > 0 ? Math.max(14, (count / max) * 100) : 6}%` }}
         />
       ))}

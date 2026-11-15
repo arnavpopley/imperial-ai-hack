@@ -108,7 +108,7 @@ export function CatalogueScreen() {
             : 'Your year’s modules first. Tell us what you enjoy to rank them by fit.'
         }
         label={<SampleDataLabel />}
-        glance={recs.data && ranked.length > 0 && <CatalogueGlance ranked={ranked} scored={scored} rulesLoaded={recs.data.rules.loaded} />}
+        glance={recs.data && ranked.length > 0 && <CatalogueGlance ranked={ranked} scored={scored} rulesLoaded={recs.data.rules.loaded} lowConfidence={recs.data.confidence === 'low'} />}
       />
 
       {recs.data && !recs.data.rules.loaded && <RulesNotice note={recs.data.rules.note} />}
@@ -396,7 +396,18 @@ function CardSkeletons() {
 }
 
 /** The catalogue at a glance: how many modules, how many are open, the best fit and the spread of fits. */
-function CatalogueGlance({ ranked, scored, rulesLoaded }: { ranked: readonly RankedModule[]; scored: boolean; rulesLoaded: boolean }) {
+function CatalogueGlance({
+  ranked,
+  scored,
+  rulesLoaded,
+  lowConfidence,
+}: {
+  ranked: readonly RankedModule[];
+  scored: boolean;
+  rulesLoaded: boolean;
+  /** Low profile confidence greys every score on the cards (spec 8.6), so the glance greys its best fit and spread too. */
+  lowConfidence: boolean;
+}) {
   const open = ranked.filter((r) => r.eligible).length;
   const fits = ranked.map((r) => r.fit);
   // The best fit among modules the student can take, matching the top card; every fit when none is open.
@@ -405,11 +416,13 @@ function CatalogueGlance({ ranked, scored, rulesLoaded }: { ranked: readonly Ran
   const items = [
     { label: 'modules', value: ranked.length },
     ...(rulesLoaded ? [{ label: 'open to you', value: open }] : []),
-    ...(scored ? [{ label: 'best fit', value: best }] : []),
+    ...(scored
+      ? [{ label: lowConfidence ? 'best fit, rough' : 'best fit', value: <span className={lowConfidence ? 'text-muted' : undefined}>{best}</span>, valueText: lowConfidence ? `${best}, a rough score while the profile is incomplete` : String(best) }]
+      : []),
   ];
   return (
     <GlanceStats label="Your catalogue at a glance" items={items}>
-      {scored ? <FitSpark fits={fits} /> : null}
+      {scored ? <FitSpark fits={fits} muted={lowConfidence} /> : null}
     </GlanceStats>
   );
 }
