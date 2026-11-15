@@ -1,6 +1,6 @@
 // Building blocks shared by every staff screen: panels, buttons and the loading, empty and error states.
 import { useId } from 'react';
-import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import type { ComponentPropsWithRef, ReactNode } from 'react';
 import { focusRing } from '../lib/format.ts';
 import { AlertIcon } from './icons.tsx';
 
@@ -54,7 +54,7 @@ export function Button({
   className = '',
   type = 'button',
   ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: ButtonVariant }) {
+}: ComponentPropsWithRef<'button'> & { variant?: ButtonVariant }) {
   return (
     <button
       type={type}

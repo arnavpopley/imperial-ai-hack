@@ -1,0 +1,353 @@
+// Editable copy of an exam feedback form (spec 23), the request body it saves to, and the client-side
+// preview of the tailored feedback a student would get from it.
+import type { ExamFeedbackForm, ExamFormSaveBody, Module, TailoredFeedback } from '@modulematch/shared';
+import demoNotes from '../../../../data/demo/synthetic-marking-notes.txt?raw';
+import { plural, topicLabel } from './format.ts';
+
+const DEMO_NOTES_MODULE = 'MECH50008';
+
+/** The notes field accepts this many characters, matching ExamFormDraftBody. */
+export const NOTES_LIMIT = 20000;
+
+export interface QuestionDraft {
+  /** Stable React key for the editor; never sent to the server. */
+  key: string;
+  /**
+   * The question's number as students' mark sheets give it, such as "Q2" or "Q3a". Student marks are matched
+   * to questions by this id, so it is kept as saved through reorders and must be unique within the form.
+   */
+  id: string;
+  label: string;
+  /** Kept as typed so the field can be cleared while editing; parsed on save. */
+  maxMarks: string;
+  topics: string[];
+  whatGoodAnswersDid: string;
+  commonMistakes: string[];
+  revisionPointers: string[];
+}
+
+export interface ExamDraft {
+  examLabel: string;
+  generalComments: string;
+  questions: QuestionDraft[];
+}
+
+export type ExamStatus = 'unsaved' | 'draft' | 'ai-draft' | 'published';
+
+export function examStatus(form: ExamFeedbackForm | null): ExamStatus {
+  if (!form) return 'unsaved';
+  if (form.status === 'published') return 'published';
+  return form.authoredBy === 'ai-draft' ? 'ai-draft' : 'draft';
+}
+
+let keySeed = 0;
+const nextKey = () => `question-${++keySeed}`;
+
+/** The question's id for display, falling back to its position while the examiner has left it blank. */
+export const questionNumber = (q: QuestionDraft, index: number) => q.id.trim() || `Q${index + 1}`;
+
+const sameId = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+
+/** The first of Q1, Q2 and so on that no question in the form uses yet. */
+export function nextQuestionId(questions: readonly QuestionDraft[]): string {
+  for (let n = questions.length + 1; ; n++) {
+    const id = `Q${n}`;
+    if (!questions.some((q) => sameId(q.id, id))) return id;
+  }
+}
+
+/** The label shown for a question, falling back to its number when the examiner left it blank. */
+export const questionTitle = (q: QuestionDraft, index: number) => q.label.trim() || `Question ${index + 1}`;
+
+/**
+ * The title for display beside the question's own number. Drafted labels often repeat it ("Q2: Rigid body
+ * dynamics"), so a leading copy of the number is dropped on screen; the saved label is left as written.
+ */
+export function questionDisplayTitle(q: QuestionDraft, index: number): string {
+  const title = questionTitle(q, index);
+  const id = questionNumber(q, index).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const stripped = title.replace(new RegExp(`^${id}\\b[\\s:.)\\-–]*`, 'i'), '');
+  return stripped || title;
+}
+
+export function blankQuestion(existing: readonly QuestionDraft[] = []): QuestionDraft {
+  return {
+    key: nextKey(),
+    id: nextQuestionId(existing),
+    label: '',
+    maxMarks: '',
+    topics: [],
+    whatGoodAnswersDid: '',
+    commonMistakes: [''],
+    revisionPointers: [''],
+  };
+}
+
+export const blankDraft = (examLabel: string): ExamDraft => ({
+  examLabel,
+  generalComments: '',
+  questions: [blankQuestion()],
+});
+
+export function draftFromForm(form: ExamFeedbackForm): ExamDraft {
+  return {
+    examLabel: form.examLabel,
+    generalComments: form.generalComments,
+    questions: form.questions.map((q) => ({
+      key: nextKey(),
+      id: q.id,
+      label: q.label,
+      maxMarks: String(q.maxMarks),
+      topics: [...q.topics],
+      whatGoodAnswersDid: q.whatGoodAnswersDid,
+      commonMistakes: [...q.commonMistakes],
+      revisionPointers: [...q.revisionPointers],
+    })),
+  };
+}
+
+/** True when two drafts would save the same form, ignoring editor keys and blank list rows. */
+export function sameDraft(a: ExamDraft, b: ExamDraft): boolean {
+  return JSON.stringify(saveBody(a)) === JSON.stringify(saveBody(b));
+}
+
+const cleanList = (items: string[]) => items.map((s) => s.trim()).filter(Boolean);
+
+export const parseMarks = (raw: string): number => (raw.trim() === '' ? Number.NaN : Number(raw));
+
+/** The PUT body: trimmed text and no blank list rows. Ids are sent as saved, so student marks still match. */
+export function saveBody(draft: ExamDraft): ExamFormSaveBody {
+  return {
+    examLabel: draft.examLabel.trim(),
+    generalComments: draft.generalComments.trim(),
+    questions: draft.questions.map((q, i) => ({
+      id: q.id.trim(),
+      label: questionTitle(q, i),
+      maxMarks: parseMarks(q.maxMarks),
+      topics: [...q.topics],
+      whatGoodAnswersDid: q.whatGoodAnswersDid.trim(),
+      commonMistakes: cleanList(q.commonMistakes),
+      revisionPointers: cleanList(q.revisionPointers),
+    })),
+  };
+}
+
+export interface DraftIssue {
+  /** Element id of the field to focus, built with fieldId. */
+  field: string;
+  message: string;
+}
+
+export const fieldId = (key: string, field: string) => `exam-${key}-${field}`;
+
+export const EXAM_LABEL_FIELD = 'exam-label';
+
+/** Problems that would make the server reject the form, in the order they appear on screen. */
+export function draftIssues(draft: ExamDraft): DraftIssue[] {
+  const issues: DraftIssue[] = [];
+  if (!draft.examLabel.trim()) issues.push({ field: EXAM_LABEL_FIELD, message: 'Give the exam a name.' });
+  draft.questions.forEach((q, i) => {
+    const name = questionNumber(q, i);
+    if (!q.id.trim()) issues.push({ field: fieldId(q.key, 'id'), message: `Question ${i + 1} needs a number, such as Q${i + 1}.` });
+    else if (draft.questions.some((other, j) => j < i && sameId(other.id, q.id)))
+      issues.push({ field: fieldId(q.key, 'id'), message: `${name} is already used by another question.` });
+    const marks = parseMarks(q.maxMarks);
+    if (!Number.isFinite(marks) || marks <= 0)
+      issues.push({ field: fieldId(q.key, 'marks'), message: `${name} needs a maximum mark above 0.` });
+  });
+  return issues;
+}
+
+export function moveItem<T>(list: readonly T[], from: number, to: number): T[] {
+  if (to < 0 || to >= list.length || from === to) return [...list];
+  const next = [...list];
+  const [item] = next.splice(from, 1);
+  next.splice(to, 0, item as T);
+  return next;
+}
+
+export const totalMarks = (draft: ExamDraft) =>
+  draft.questions.reduce((sum, q) => {
+    const marks = parseMarks(q.maxMarks);
+    return Number.isFinite(marks) && marks > 0 ? sum + marks : sum;
+  }, 0);
+
+// ---------- preview ----------
+
+/** Share of the marks the sample student gets on the question they struggled with, and on the rest. */
+const WEAK_SHARE = 0.35;
+const STRONG_SHARE = 0.8;
+/** A later module counts as building on a topic when it weights that topic at least this much (spec 23). */
+const MAIN_TOPIC_WEIGHT = 0.5;
+const MAX_AFFECTED = 3;
+
+export interface SampleMark {
+  questionId: string;
+  label: string;
+  mark: number;
+  maxMarks: number;
+  weak: boolean;
+}
+
+export interface FeedbackPreview {
+  feedback: TailoredFeedback;
+  marks: SampleMark[];
+  /** The question the sample student lost marks on: the one asked for, or the first with marks set. */
+  weakIndex: number;
+}
+
+const roundHalf = (n: number) => Math.round(n * 2) / 2;
+
+const listTopics = (topics: readonly string[]) => topics.map(topicLabel).join(', ');
+
+/**
+ * Builds, in the browser, the template version of the tailored feedback a sample student would get after
+ * losing marks on one question. It mirrors the offline template in spec 23 so staff can see the effect of
+ * their form before publishing. The marks are invented; no real student's marks are involved.
+ */
+export function previewFeedback({
+  draft,
+  weakIndex,
+  moduleId,
+  catalogue,
+}: {
+  draft: ExamDraft;
+  weakIndex: number;
+  moduleId: string;
+  catalogue: readonly Module[];
+}): FeedbackPreview | null {
+  const scored = draft.questions
+    .map((q, i) => ({ q, i, max: parseMarks(q.maxMarks) }))
+    .filter(({ max }) => Number.isFinite(max) && max > 0);
+  if (scored.length === 0) return null;
+  const weak = scored.find(({ i }) => i === weakIndex) ?? scored[0]!;
+
+  const marks: SampleMark[] = scored.map(({ q, i, max }) => ({
+    questionId: questionNumber(q, i),
+    label: questionTitle(q, i),
+    mark: Math.min(max, roundHalf(max * (i === weak.i ? WEAK_SHARE : STRONG_SHARE))),
+    maxMarks: max,
+    weak: i === weak.i,
+  }));
+  const weakMark = marks.find((m) => m.weak)!;
+  const lostMarks = weakMark.maxMarks - weakMark.mark;
+  const total = marks.reduce((s, m) => s + m.mark, 0);
+  const outOf = marks.reduce((s, m) => s + m.maxMarks, 0);
+  const weakTopics = weak.q.topics;
+  // The sample marks are proportional, so a small question can lose fewer marks than a large one done well.
+  const lostMost = marks.every((m) => m.maxMarks - m.mark <= lostMarks);
+
+  const mistakes = cleanList(weak.q.commonMistakes);
+  const pointers = cleanList(weak.q.revisionPointers);
+  const adviceParts = [
+    mistakes.length > 0 && `The examiner saw these mistakes most often: ${mistakes.map(lowerInitial).join('; ')}.`,
+    weak.q.whatGoodAnswersDid.trim() && `Good answers ${lowerFirst(weak.q.whatGoodAnswersDid.trim())}`,
+  ].filter(Boolean);
+
+  const strengths = scored
+    .filter(({ i }) => i !== weak.i)
+    .slice(0, 2)
+    .map(({ q, i }) => {
+      const m = marks.find((x) => x.questionId === questionNumber(q, i))!;
+      const on = q.topics.length > 0 ? ` on ${listTopics(q.topics).toLowerCase()}` : '';
+      return `${questionNumber(q, i)}${on}: ${m.mark} of ${m.maxMarks}.`;
+    });
+
+  const revisionPlan = [
+    ...pointers,
+    ...weakTopics.slice(0, 2).map((t) => `Try a past-paper question on ${topicLabel(t).toLowerCase()} under timed conditions.`),
+  ];
+  if (revisionPlan.length === 0) revisionPlan.push(`Rework ${weakMark.questionId} from the model answer, then try it again unseen.`);
+
+  return {
+    marks,
+    weakIndex: weak.i,
+    feedback: {
+      moduleId,
+      examLabel: draft.examLabel.trim() || 'This exam',
+      overall: `You scored ${total} of ${outOf}. ${
+        lostMost ? 'Most of the marks you lost were on' : 'This feedback focuses on the marks you lost on'
+      } ${weakMark.questionId}${weakTopics.length > 0 ? ` (${listTopics(weakTopics).toLowerCase()})` : ''}${
+        lostMost ? ', so that is the best place to start' : ''
+      }.`,
+      strengths,
+      weakPoints: [
+        {
+          questionId: weakMark.questionId,
+          topics: weakTopics,
+          lostMarks,
+          advice: adviceParts.join(' ') || 'The examiner has not added mistakes or pointers for this question yet.',
+        },
+      ],
+      revisionPlan,
+      affectsModules: affectedModules(moduleId, weakTopics, catalogue),
+      source: 'template',
+    },
+  };
+}
+
+/** Lower-cases a leading capital unless the next letter is a capital too, so acronyms such as "CFD" survive. */
+function lowerInitial(text: string): string {
+  return /^[A-Z][a-z]/.test(text) ? text.charAt(0).toLowerCase() + text.slice(1) : text;
+}
+
+function lowerFirst(text: string): string {
+  const sentence = /[.!?]$/.test(text) ? text : `${text}.`;
+  return lowerInitial(sentence);
+}
+
+/** Later modules that list this one as a prerequisite or weight a weak topic as a main topic. */
+export function affectedModules(
+  moduleId: string,
+  topics: readonly string[],
+  catalogue: readonly Module[],
+): TailoredFeedback['affectsModules'] {
+  return catalogue
+    .filter((m) => m.id !== moduleId)
+    .map((m) => {
+      const shared = topics.filter((t) => (m.topics[t] ?? 0) >= MAIN_TOPIC_WEIGHT);
+      const prereq = m.prerequisites.includes(moduleId);
+      const score = (prereq ? 2 : 0) + shared.reduce((s, t) => s + (m.topics[t] ?? 0), 0);
+      return { m, shared, prereq, score };
+    })
+    .filter(({ shared, prereq }) => prereq || shared.length > 0)
+    .sort((a, b) => b.score - a.score || a.m.code.localeCompare(b.m.code))
+    .slice(0, MAX_AFFECTED)
+    .map(({ m, shared, prereq }) => ({
+      moduleId: m.id,
+      note: prereq
+        ? `${m.code} ${m.title} lists this module as a prerequisite.`
+        : `${m.code} ${m.title} builds on ${listTopics(shared).toLowerCase()}.`,
+    }));
+}
+
+// ---------- example notes ----------
+
+/**
+ * Synthetic marking notes for the demo, written around the module's own main topics so the AI draft has
+ * something realistic to work from. Labelled as synthetic wherever it is offered.
+ */
+export function exampleNotes(module: Pick<Module, 'id' | 'title' | 'topics'> | undefined): string {
+  // The demo script drafts MECH50008 Dynamics from the shared synthetic notes in data/demo.
+  if (module?.id === DEMO_NOTES_MODULE) return demoNotes.trim();
+  const topics = Object.entries(module?.topics ?? {})
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 3)
+    .map(([t]) => topicLabel(t).toLowerCase());
+  while (topics.length < 3) topics.push(['core theory', 'worked problems', 'applications'][topics.length]!);
+  const [a, b, c] = topics as [string, string, string];
+  return [
+    `Synthetic marking notes for the ${module?.title ?? 'module'} exam.`,
+    '',
+    `Q1 (20 marks), ${a}. Best answers stated their assumptions before starting and checked units at the end. Common mistakes: skipped the assumptions, sign errors in the second part. Revise the derivation in lecture 3 and problem sheet 2.`,
+    '',
+    `Q2 (30 marks), ${b}. Weakest question overall. Strong scripts sketched the set-up first and justified each step. Common mistakes: applied the formula outside its range of validity, no sketch, gave up after part (b). Pointers: worked examples 4.2 to 4.5, and the 2024 paper Q3.`,
+    '',
+    `Q3 (25 marks), ${c}. Mostly well done. Good answers linked the result back to the physical system. Common mistake: numerical answer with no interpretation. Revise the case study in week 8.`,
+    '',
+    'General: time management was an issue, as many scripts left the last part blank. Show working, since method marks are generous.',
+  ].join('\n');
+}
+
+export const describeQuestions = (draft: ExamDraft) =>
+  `${plural(draft.questions.length, 'question')}, ${plural(totalMarks(draft), 'mark')}`;

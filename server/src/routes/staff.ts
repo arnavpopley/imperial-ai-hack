@@ -15,14 +15,16 @@ import { body } from './validate.ts';
 function insightContext(): InsightContext {
   const cohort = repo.listCohort();
   const first = cohort[0]?.profile;
-  const homeTopics = first ? (rulesFor(first.programme, first.yearOfStudy) ?? rulesForProfile(first)).homeTopics : {};
+  const rules = first ? (rulesFor(first.programme, first.yearOfStudy) ?? rulesForProfile(first)) : undefined;
   return {
     modules: catalogue.modules(),
     cohort: cohort.map((s) => s.profile),
     shortlists: cohort.map((s) => s.shortlist),
     weights: DEFAULT_WEIGHTS,
-    homeTopics,
+    homeTopics: rules?.homeTopics ?? {},
     slots: catalogue.slots(),
+    // A student's top five counts only the modules they may take, as on their own recommendations.
+    ...(rules ? { rules } : {}),
   };
 }
 
