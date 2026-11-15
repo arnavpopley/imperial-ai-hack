@@ -17,7 +17,7 @@ import { emitWords, type ChatMessage } from './llm.ts';
 import { alternativesTo, holdPosition } from './matcher.ts';
 import { RESTING_MODE } from './modes.ts';
 import { checkShortlist } from '../engines/index.ts';
-import { catalogue, explanationFor, moduleTitle, precomputeTopExplanations, ranked, rulesForProfile, saveProfile, setMode, timetableView, tracerSink } from './session.ts';
+import { applyShortlistEdit, catalogue, explanationFor, moduleTitle, precomputeTopExplanations, ranked, rulesForProfile, saveProfile, setMode, syncPlanMode, timetableView, tracerSink } from './session.ts';
 import { describeTimetable, explainTimetable } from './timetabler.ts';
 
 export type Emit = (event: SseEvent) => Promise<void>;
@@ -60,8 +60,12 @@ const say = (turn: Turn, agent: string, text: string, widget: Widget = null) =>
   }, widget);
 
 async function changeMode(turn: Turn, to: SessionState['mode'], reason: string) {
-  const from = setMode(turn.session, to, turn.tracer, reason);
-  if (from) await turn.emit({ type: 'mode', mode: to, from });
+  await emitModeChange(turn, setMode(turn.session, to, turn.tracer, reason));
+}
+
+/** Tells the client about a mode change made elsewhere (setMode, syncPlanMode); nothing when from is null. */
+async function emitModeChange(turn: Turn, from: SessionState['mode'] | null) {
+  if (from) await turn.emit({ type: 'mode', mode: turn.session.mode, from });
 }
 
 async function offerDraft(turn: Turn, draft: NonNullable<SessionState['escalationDraft']>) {
@@ -256,14 +260,14 @@ async function shortlistTurn(turn: Turn, moduleIds: string[]) {
   const recs = ranked(session);
   const added: string[] = [];
   const blocked: string[] = [];
+  // Each edit goes through the same helper as the shortlist POST, so the mode and trace match the button path.
   for (const id of moduleIds) {
-    if (remove) repo.removeFromShortlist(session.id, id);
+    if (remove) await emitModeChange(turn, applyShortlistEdit(session, id, 'remove', turn.tracer));
     else if (recs.find((r) => r.moduleId === id)?.eligible) {
-      repo.addToShortlist(session.id, id);
+      await emitModeChange(turn, applyShortlistEdit(session, id, 'add', turn.tracer));
       added.push(id);
     } else blocked.push(id);
   }
-  session.shortlist = repo.listShortlist(session.id);
   const parts = [
     remove ? `Removed ${moduleIds.map(moduleTitle).join(', ')}.` : added.length ? `Added ${added.map(moduleTitle).join(', ')}.` : '',
     blocked.length ? `${blocked.map(moduleTitle).join(', ')} is not open to you. ${RULES_NOTICE}` : '',
@@ -275,16 +279,16 @@ async function shortlistTurn(turn: Turn, moduleIds: string[]) {
 async function timetableTurn(turn: Turn) {
   const { session, tracer } = turn;
   if (session.shortlist.length < 2) return say(turn, 'timetabler', 'Shortlist at least two modules and I will check them for clashes.');
-  await changeMode(turn, 'PLAN', 'timetable requested');
+  // Normally already in PLAN from the shortlist edit; this catches a session that reached two modules earlier.
+  await emitModeChange(turn, syncPlanMode(session, tracer));
   const view = timetableView(session);
   tracer.record({ actor: 'timetabler', kind: 'tool', input: `find_clashes(${session.shortlist.length} modules)`, output: `${view.clashes.length} clash(es), ${view.swaps.length} swap(s)`, verdict: null });
   const summary = describeTimetable(view.clashes, view.swaps, moduleTitle);
   await reply(turn, 'timetabler', (onToken) => explainTimetable(summary, onToken));
   if (view.clashes.some((c) => c.label === 'certain') && view.swaps.length === 0) {
     await offerDraft(turn, draftLowConfidence(session.profile, 'the shortlist has a certain clash and no valid swap.'));
-    return;
   }
-  await changeMode(turn, RESTING_MODE, 'timetable explained');
+  // The session stays in PLAN: it rests there while the shortlist has two or more modules (spec 12).
 }
 
 async function pathwayTurn(turn: Turn) {
