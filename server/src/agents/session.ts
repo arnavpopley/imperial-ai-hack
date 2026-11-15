@@ -5,6 +5,7 @@ import {
   DEFAULT_WEIGHTS,
   INTERVIEW_BUDGET,
   type CreateSessionBody,
+  type ExceptionDecision,
   type Explanation,
   type Mode,
   type ProgrammeRules,
@@ -104,6 +105,7 @@ export function newSessionState(input: CreateSessionBody): SessionState {
     },
     escalations: [],
     escalationDraft: null,
+    exceptions: [],
     createdAt: now,
     updatedAt: now,
   };
@@ -117,15 +119,32 @@ export function saveProfile(session: SessionState, profile: StudentProfile): Stu
 }
 
 /**
+ * The Senior Tutor's latest decision per module (spec 11.1). An approval stored in the session's exceptions always
+ * wins, so a later decline on a duplicate request never hides a module that was already approved.
+ */
+export function exceptionDecisions(session: SessionState): Map<string, ExceptionDecision> {
+  const decisions = new Map<string, ExceptionDecision>();
+  for (const e of session.escalations) {
+    if (e.decision && e.request?.moduleId) decisions.set(e.request.moduleId, e.decision);
+  }
+  for (const moduleId of session.exceptions) decisions.set(moduleId, 'approved');
+  return decisions;
+}
+
+/**
  * The catalogue as the student sees it: completed modules are left out, and eligible modules are listed
  * before ineligible ones, which stay visible with their reasons (spec 8.7). Order within each group is the
- * engine's ranking.
+ * engine's ranking. Modules with a Senior Tutor decision carry it, and approved ones are eligible.
  */
 export function ranked(session: SessionState): Recommendation[] {
   const completed = new Set(session.profile.completedModuleIds);
-  const all = rankModules(session.profile, catalogue.modules(), session.weights, rulesForProfile(session.profile)).filter(
-    (r) => !completed.has(r.moduleId),
-  );
+  const decisions = exceptionDecisions(session);
+  const all = rankModules(session.profile, catalogue.modules(), session.weights, rulesForProfile(session.profile), session.exceptions)
+    .filter((r) => !completed.has(r.moduleId))
+    .map((r) => {
+      const exception = decisions.get(r.moduleId);
+      return exception ? { ...r, exception } : r;
+    });
   return [...all.filter((r) => r.eligible), ...all.filter((r) => !r.eligible)];
 }
 
@@ -156,7 +175,7 @@ export function timetableView(session: SessionState, recs = ranked(session)): Ti
     grids: buildTimetable(session.shortlist, slots),
     clashes,
     swaps,
-    rules: checkShortlist(session.shortlist, session.profile, catalogue.modules(), rulesForProfile(session.profile)),
+    rules: checkShortlist(session.shortlist, session.profile, catalogue.modules(), rulesForProfile(session.profile), session.exceptions),
   };
 }
 

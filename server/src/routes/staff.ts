@@ -1,13 +1,14 @@
 // Staff routes (spec 13). Aggregate views only, with a minimum cohort of five (spec 20.4).
-import { DEFAULT_WEIGHTS, MIN_COHORT, schemas, type Insight, type StaffEscalation, type StaffModuleSummary } from '@modulematch/shared';
+import { DEFAULT_WEIGHTS, MIN_COHORT, schemas, type Escalation, type Insight, type SessionState, type StaffEscalation, type StaffModuleSummary } from '@modulematch/shared';
 import { Hono } from 'hono';
+import { decisionReply } from '../agents/escalation.ts';
 import { wordInsight } from '../agents/insights.ts';
 import { clearSummaryCache } from '../agents/knowledge.ts';
 import { catalogue, clearExplanationCache, rulesForProfile, setMode, tracerSink } from '../agents/session.ts';
 import { rulesFor } from '../db/catalogue.ts';
 import * as repo from '../db/repo.ts';
 import { buildInsights, clashPriorities, cohortStats, feedbackJsonl, summariseFeedback, type InsightContext } from '../engines/index.ts';
-import { createTracer } from '../trace/tracer.ts';
+import { createTracer, type Tracer } from '../trace/tracer.ts';
 import { body } from './validate.ts';
 
 /** The synthetic cohort plus its programme's home topics, shared by every staff view. */
@@ -84,16 +85,52 @@ export const staffRoutes = new Hono()
     return c.body(feedbackJsonl(repo.listFeedback()));
   })
   .post('/escalations/:id/respond', body(schemas.EscalationRespondBody), (c) => {
-    const { response, resolve } = c.req.valid('json');
-    const escalation = repo.updateEscalation(c.req.param('id'), { staffResponse: response, status: resolve ? 'resolved' : 'claimed' });
+    const { response, decision, resolve: resolveAsked } = c.req.valid('json');
+    const current = repo.getEscalation(c.req.param('id'));
+    if (!current) return c.json({ error: 'escalation not found' }, 404);
+    if (decision && current.type !== 'RULE_EXCEPTION') return c.json({ error: 'only rule exceptions can be approved or declined' }, 400);
+    if (decision && current.decision) return c.json({ error: `this exception was already ${current.decision}` }, 409);
+    // A decision always resolves the case; the tutor's message is optional and follows the decision.
+    const resolve = decision ? true : resolveAsked;
+    const module = current.request?.moduleId ? catalogue.modules().find((m) => m.id === current.request?.moduleId) : undefined;
+    const reply = decision ? decisionReply(decision, module, response) : response;
+    const escalation = repo.updateEscalation(current.id, {
+      staffResponse: reply,
+      status: resolve ? 'resolved' : 'claimed',
+      ...(decision && { decision: decision === 'approve' ? ('approved' as const) : ('declined' as const) }),
+    });
     if (!escalation) return c.json({ error: 'escalation not found' }, 404);
     const session = repo.getSession(escalation.sessionId);
     if (session) {
       const tracer = createTracer(session.id, tracerSink);
+      if (decision) recordDecision(session, escalation, tracer);
       tracer.record({ actor: 'staff', kind: 'escalation', input: escalation.type, output: resolve ? 'staff responded and resolved' : 'staff claimed', verdict: null });
       // The reply returns to the student's session (spec 11.1), and the session leaves ESCALATED.
-      repo.addMessage({ id: crypto.randomUUID(), sessionId: session.id, role: 'assistant', agent: 'staff', content: `Reply from staff: ${response}`, at: new Date().toISOString() });
+      repo.addMessage({ id: crypto.randomUUID(), sessionId: session.id, role: 'assistant', agent: 'staff', content: `Reply from staff: ${reply}`, at: new Date().toISOString() });
       if (resolve) setMode(session, 'RECOMMEND', tracer, 'staff responded');
     }
     return c.json(escalation);
   });
+
+/**
+ * Applies a Senior Tutor decision to the student's session and traces it (spec 11.1). An approval adds the module to
+ * the session's exceptions, which the rules engine honours, so the module becomes eligible and shortlistable.
+ */
+function recordDecision(session: SessionState, escalation: Escalation, tracer: Tracer): void {
+  const moduleId = escalation.request?.moduleId ?? null;
+  const approved = escalation.decision === 'approved';
+  if (approved && moduleId && !session.exceptions.includes(moduleId)) {
+    session.exceptions = [...session.exceptions, moduleId];
+    repo.updateSession(session.id, { exceptions: session.exceptions });
+    // Explanations mention eligibility, so cached ones are stale now.
+    clearExplanationCache();
+  }
+  const subject = moduleId ?? 'programme rule';
+  tracer.record({
+    actor: 'Senior Tutor',
+    kind: 'escalation',
+    input: `rule exception for ${subject}`,
+    output: approved ? `approved${moduleId ? `: ${moduleId} is now eligible for this student` : ''}` : `declined${moduleId ? `: ${moduleId} stays ineligible` : ''}`,
+    verdict: null,
+  });
+}

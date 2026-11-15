@@ -25,7 +25,8 @@ export function EscalationTray({ scope = 'all', className }: EscalationTrayProps
           variant="draft"
           escalationType={draft.type}
           summary={draft.summary}
-          onSend={(summary) => void approve(summary)}
+          reason={draft.reason}
+          onSend={(summary, reason) => void approve(summary, reason)}
           onDiscard={discard}
           sending={sending}
           error={error}
@@ -40,6 +41,7 @@ export function EscalationTray({ scope = 'all', className }: EscalationTrayProps
             summary={e.summary}
             staffResponse={e.staffResponse ?? 'This was resolved without a written reply.'}
             createdAt={e.createdAt}
+            decision={e.decision}
           />
         ) : (
           <EscalationCard

@@ -39,6 +39,11 @@ import {
 
 const now = () => new Date().toISOString();
 
+/** A parsed partial patch without the fields zod defaults filled in, so an update never resets a field it left out. */
+function onlyGiven<T extends object>(parsed: T, patch: object): Partial<T> {
+  return Object.fromEntries(Object.entries(parsed).filter(([key]) => key in patch)) as Partial<T>;
+}
+
 // ---------- modules and slots ----------
 
 type ModuleRow = typeof modules.$inferSelect;
@@ -137,6 +142,7 @@ export function createSession(state: SessionState, db: Db = getDb()): SessionSta
         weights: s.weights,
         interview: s.interview,
         escalationDraft: s.escalationDraft,
+        exceptions: s.exceptions,
         createdAt: s.createdAt,
         updatedAt: s.updatedAt,
       })
@@ -172,6 +178,7 @@ export function getSession(id: string, db: Db = getDb()): SessionState | null {
     interview: row.interview,
     escalations: listEscalations(id, db),
     escalationDraft: row.escalationDraft,
+    exceptions: row.exceptions,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   });
@@ -187,13 +194,16 @@ function touchSession(id: string, db: Db): void {
   db.update(sessions).set({ updatedAt: now() }).where(eq(sessions.id, id)).run();
 }
 
-type SessionPatch = Partial<Pick<SessionState, 'mode' | 'weights' | 'interview' | 'escalationDraft'>>;
+type SessionPatch = Partial<Pick<SessionState, 'mode' | 'weights' | 'interview' | 'escalationDraft' | 'exceptions'>>;
 
 /** Update the session-level fields; returns the new state, or null when the id is unknown. */
 export function updateSession(id: string, patch: SessionPatch, db: Db = getDb()): SessionState | null {
-  const p = S.SessionState.pick({ mode: true, weights: true, interview: true, escalationDraft: true })
-    .partial()
-    .parse(patch);
+  const p = onlyGiven(
+    S.SessionState.pick({ mode: true, weights: true, interview: true, escalationDraft: true, exceptions: true })
+      .partial()
+      .parse(patch),
+    patch,
+  );
   const result = db
     .update(sessions)
     .set({ ...p, updatedAt: now() })
@@ -248,7 +258,8 @@ export function deleteProfileAndEvidence(sessionId: string, db: Db = getDb()): S
     tx.delete(feedback).where(eq(feedback.sessionId, sessionId)).run();
     tx.delete(traceEvents).where(eq(traceEvents.sessionId, sessionId)).run();
     tx.update(profiles).set({ data: blank }).where(eq(profiles.sessionId, sessionId)).run();
-    tx.update(sessions).set({ updatedAt: blank.updatedAt }).where(eq(sessions.id, sessionId)).run();
+    // Approved exceptions belonged to the deleted escalations, so they go too.
+    tx.update(sessions).set({ updatedAt: blank.updatedAt, exceptions: [] }).where(eq(sessions.id, sessionId)).run();
   });
   return blank;
 }
@@ -328,6 +339,11 @@ export function createEscalation(e: Escalation, db: Db = getDb()): Escalation {
   return row;
 }
 
+export function getEscalation(id: string, db: Db = getDb()): Escalation | null {
+  const row = db.select().from(escalations).where(eq(escalations.id, id)).get();
+  return row ? S.Escalation.parse(row) : null;
+}
+
 /** Escalations for one session, or the whole staff queue when sessionId is omitted; oldest first. */
 export function listEscalations(sessionId?: string, db: Db = getDb()): Escalation[] {
   return db
@@ -339,13 +355,12 @@ export function listEscalations(sessionId?: string, db: Db = getDb()): Escalatio
     .map((r) => S.Escalation.parse(r));
 }
 
-type EscalationPatch = Partial<Pick<Escalation, 'status' | 'staffResponse' | 'summary'>>;
+type EscalationPatch = Partial<Pick<Escalation, 'status' | 'staffResponse' | 'summary' | 'decision'>>;
 
 export function updateEscalation(id: string, patch: EscalationPatch, db: Db = getDb()): Escalation | null {
-  const p = S.Escalation.pick({ status: true, staffResponse: true, summary: true }).partial().parse(patch);
+  const p = onlyGiven(S.Escalation.pick({ status: true, staffResponse: true, summary: true, decision: true }).partial().parse(patch), patch);
   db.update(escalations).set(p).where(eq(escalations.id, id)).run();
-  const row = db.select().from(escalations).where(eq(escalations.id, id)).get();
-  return row ? S.Escalation.parse(row) : null;
+  return getEscalation(id, db);
 }
 
 // ---------- insights ----------

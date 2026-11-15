@@ -1,21 +1,21 @@
 // Student routes (spec 13). Every body is validated with the shared zod schemas.
-import { schemas, type Evidence, type Feedback, type FeedbackBody, type ProfileEditBody, type SessionState, type SseEvent } from '@modulematch/shared';
+import { schemas, type Evidence, type ExceptionRequest, type Feedback, type FeedbackBody, type ProfileEditBody, type SessionState, type SseEvent } from '@modulematch/shared';
 import { Hono, type Context } from 'hono';
 import { streamSSE } from 'hono/streaming';
 import { randomUUID } from 'node:crypto';
-import { draftWellbeing } from '../agents/escalation.ts';
+import { draftWellbeing, exceptionRequest } from '../agents/escalation.ts';
 import { extract, mergeUpdates } from '../agents/extractor.ts';
 import { QUICK_PLAN } from '../agents/interviewer.ts';
 import { answerModuleQuestion, moduleFacts } from '../agents/knowledge.ts';
 import { emitWords } from '../agents/llm.ts';
-import { catalogue, clearExplanationCache, explanationFor, moduleTitle, newSessionState, ranked, recommendationsResponse, saveProfile, setMode, timetableView, tracerSink } from '../agents/session.ts';
+import { catalogue, clearExplanationCache, explanationFor, moduleTitle, newSessionState, ranked, recommendationsResponse, rulesForProfile, saveProfile, setMode, timetableView, tracerSink } from '../agents/session.ts';
 import { confirmProfile, handleTurn, resumeInterview } from '../agents/supervisor.ts';
 import { rawModule } from '../db/catalogue.ts';
 import * as repo from '../db/repo.ts';
 import { WELLBEING_NOTICE } from '../guardrails/g4-wellbeing.ts';
 import { runInputGuardrails } from '../guardrails/pipeline.ts';
 import { cleanForStorage } from '../guardrails/stored-text.ts';
-import { matchSocieties, pathwayProgress } from '../engines/index.ts';
+import { checkModuleEligibility, matchSocieties, pathwayProgress } from '../engines/index.ts';
 import { createTracer } from '../trace/tracer.ts';
 import { body } from './validate.ts';
 
@@ -182,15 +182,31 @@ export const studentRoutes = new Hono()
     }
     return c.json(timetableView(session));
   })
-  .post('/:id/escalations', body(schemas.CreateEscalationBody), (c) => {
+  .post('/:id/escalations', body(schemas.CreateEscalationBody), async (c) => {
     const session = load(c);
     if (session instanceof Response) return session;
-    const { type, summary } = c.req.valid('json');
-    const escalation = { id: randomUUID(), sessionId: session.id, type, summary, status: 'open' as const, staffResponse: null, createdAt: new Date().toISOString() };
+    const { type, summary, moduleId, reason } = c.req.valid('json');
+    const modules = catalogue.modules();
+    if (moduleId && !modules.some((m) => m.id === moduleId)) return c.json({ error: 'unknown module' }, 400);
+    const tracer = createTracer(session.id, tracerSink);
+    // A rule exception shares the broken rule, the student's reason (redacted first), their completed modules and
+    // their fit for the module with the Senior Tutor (spec 11.1), as the draft card told the student.
+    let request: ExceptionRequest | null = null;
+    if (type === 'RULE_EXCEPTION') {
+      const cleaned = reason === undefined ? undefined : (await cleanForStorage(reason, { mode: session.mode, tracer })).text;
+      const target = moduleId ?? (session.escalationDraft?.type === type ? session.escalationDraft.moduleId : null) ?? null;
+      const rules = rulesForProfile(session.profile);
+      request = exceptionRequest(
+        session,
+        { moduleId: target, reason: cleaned },
+        (id) => checkModuleEligibility(id, session.profile, modules, rules),
+        target ? ranked(session).find((r) => r.moduleId === target) : undefined,
+      );
+    }
+    const escalation = { id: randomUUID(), sessionId: session.id, type, summary, status: 'open' as const, staffResponse: null, createdAt: new Date().toISOString(), request, decision: null };
     repo.createEscalation(escalation);
     repo.updateSession(session.id, { escalationDraft: null });
-    const tracer = createTracer(session.id, tracerSink);
-    tracer.record({ actor: 'supervisor', kind: 'escalation', input: type, output: 'approved by student and sent', verdict: 'escalate' });
+    tracer.record({ actor: 'supervisor', kind: 'escalation', input: request?.moduleId ? `${type} ${request.moduleId}` : type, output: 'approved by student and sent', verdict: 'escalate' });
     setMode(session, 'ESCALATED', tracer, 'escalation sent');
     return c.json(escalation, 201);
   })

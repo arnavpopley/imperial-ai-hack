@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS sessions (
   weights TEXT NOT NULL,
   interview TEXT NOT NULL,
   escalation_draft TEXT,
+  exceptions TEXT NOT NULL DEFAULT '[]',
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
@@ -83,7 +84,9 @@ CREATE TABLE IF NOT EXISTS escalations (
   summary TEXT NOT NULL,
   status TEXT NOT NULL,
   staff_response TEXT,
-  created_at TEXT NOT NULL
+  created_at TEXT NOT NULL,
+  request TEXT,
+  decision TEXT
 );
 CREATE TABLE IF NOT EXISTS insights (
   id TEXT PRIMARY KEY,
@@ -140,6 +143,24 @@ CREATE INDEX IF NOT EXISTS trace_events_session ON trace_events(session_id);
 CREATE INDEX IF NOT EXISTS feedback_created ON feedback(created_at);
 `;
 
+/**
+ * Columns added after a table was first shipped. CREATE TABLE IF NOT EXISTS leaves an existing database file as it
+ * was, so openDb adds any that are missing. Each definition matches the column in CREATE_TABLES.
+ */
+const ADDED_COLUMNS: readonly [table: string, column: string, definition: string][] = [
+  ['sessions', 'exceptions', "TEXT NOT NULL DEFAULT '[]'"],
+  ['escalations', 'request', 'TEXT'],
+  ['escalations', 'decision', 'TEXT'],
+];
+
+/** Adds the columns in ADDED_COLUMNS that an older database file does not have yet. */
+function addMissingColumns(sqlite: Database.Database): void {
+  for (const [table, column, definition] of ADDED_COLUMNS) {
+    const columns = sqlite.pragma(`table_info(${table})`) as { name: string }[];
+    if (!columns.some((c) => c.name === column)) sqlite.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+  }
+}
+
 /** Default database file, relative to the repository root (spec section 5). */
 const DEFAULT_DATABASE_PATH = 'server/modulematch.db';
 
@@ -171,6 +192,7 @@ export function openDb(path: string): Db {
   sqlite.pragma('journal_mode = WAL');
   sqlite.pragma('foreign_keys = ON');
   sqlite.exec(CREATE_TABLES);
+  addMissingColumns(sqlite);
   return drizzle({ client: sqlite, schema: tables });
 }
 

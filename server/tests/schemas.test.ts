@@ -3,6 +3,27 @@ import { combineFit, DEFAULT_WEIGHTS, isAllowedSlot, PROFILE_SLOTS, schemas } fr
 import { fixtureRecommendations } from '@modulematch/shared/fixtures';
 import { describe, expect, it } from 'vitest';
 
+describe('escalation replies and exceptions', () => {
+  const respond = (body: unknown) => schemas.EscalationRespondBody.safeParse(body);
+
+  it('needs reply text unless the Senior Tutor approves or declines', () => {
+    expect(respond({ response: 'Approved.' }).success).toBe(true);
+    expect(respond({ response: '   ' }).success).toBe(false);
+    expect(respond({}).success).toBe(false);
+    expect(respond({ decision: 'approve' }).data).toEqual({ decision: 'approve', response: '', resolve: true });
+    expect(respond({ decision: 'decline', response: 'The rule stands.' }).success).toBe(true);
+    expect(respond({ decision: 'maybe' }).success).toBe(false);
+  });
+
+  it('keeps the reason to one short line and defaults old rows', () => {
+    const body = { type: 'RULE_EXCEPTION', summary: 'x', moduleId: 'MECH70057' };
+    expect(schemas.CreateEscalationBody.safeParse({ ...body, reason: 'x'.repeat(schemas.EXCEPTION_REASON_MAX) }).success).toBe(true);
+    expect(schemas.CreateEscalationBody.safeParse({ ...body, reason: 'x'.repeat(schemas.EXCEPTION_REASON_MAX + 1) }).success).toBe(false);
+    const old = { id: 'e', sessionId: 's', type: 'COMPLAINT', summary: 'x', status: 'open', staffResponse: null, createdAt: 'now' };
+    expect(schemas.Escalation.parse(old)).toMatchObject({ request: null, decision: null });
+  });
+});
+
 describe('taxonomy keys', () => {
   it('rejects an unknown topic in a profile edit', () => {
     expect(schemas.ProfileEditBody.safeParse({ interests: { 'fluid-mechanic': 0.5 } }).success).toBe(false);

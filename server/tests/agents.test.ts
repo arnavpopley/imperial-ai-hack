@@ -7,6 +7,7 @@ import { classifyByRules } from '../src/agents/intent.ts';
 import { nextQuestion, QUICK_PLAN, unfilledSlots, whatIHeard } from '../src/agents/interviewer.ts';
 import { explainByRules } from '../src/agents/matcher.ts';
 import { canTransition } from '../src/agents/modes.ts';
+import { decisionReply, draftRuleException, reasonFrom, thirdPerson } from '../src/agents/escalation.ts';
 
 const PATHWAYS = ['aerospace-motorsport', 'robotics-automation', 'startup-founder'];
 const emptyProfile = {
@@ -128,6 +129,40 @@ describe('matcher explanations', () => {
     expect(explanation.because.every((b) => b.evidenceId || b.moduleField)).toBe(true);
     expect(explanation.because[0]?.evidenceId).toBe('ev-1');
     expect(DEFAULT_WEIGHTS.interest).toBeGreaterThan(0);
+  });
+});
+
+describe('rule-exception drafts', () => {
+  const rob = fixtureModules.find((m) => m.id === 'ME3-ROB')!;
+  const violation = {
+    code: 'PREREQUISITE_MISSING' as const,
+    moduleId: rob.id,
+    prerequisiteId: 'ME2-CTRL',
+    message: 'ME3-ROB Robotics and Control requires ME2-CTRL (Control Systems), which is not among your completed modules.',
+  };
+
+  it('are written in the third person, for the Senior Tutor', () => {
+    const draft = draftRuleException(fixtureProfile, [violation], 'Can I take Robotics and Control?', rob);
+    expect(draft.summary).toContain(`The student asks to take ${rob.code} ${rob.title}`);
+    expect(draft.summary).toContain("not among the student's completed modules");
+    expect(draft.summary).not.toMatch(/\b[Yy]ou(r)?\b/);
+    expect(draft).toMatchObject({ moduleId: 'ME3-ROB', violations: [violation], reason: '' });
+  });
+
+  it('turn advice to the student into a statement of the rule', () => {
+    expect(thirdPerson('X is not open to year 3 students. You can choose the core modules.')).toBe('X is not open to year 3 students.');
+    expect(thirdPerson('Your plan totals 80 ECTS. Remove at least 5 ECTS.')).toBe("The student's plan totals 80 ECTS.");
+  });
+
+  it('suggest a reason only when the student gave one', () => {
+    expect(reasonFrom('Can I take it because I did control on placement?')).toBe('I did control on placement.');
+    expect(reasonFrom('Can I take Robotics and Control?')).toBe('');
+    expect(reasonFrom(`Please, since ${'x'.repeat(400)}`)).toHaveLength(200);
+  });
+
+  it('decision replies lead with the decision and keep the tutor message', () => {
+    expect(decisionReply('approve', rob, 'See me in week 1.')).toBe(`Exception approved: you can now take ${rob.code} Robotics and Control, and add it to your shortlist. See me in week 1.`);
+    expect(decisionReply('decline', undefined, '')).toBe('Exception declined: the programme rule still applies.');
   });
 });
 

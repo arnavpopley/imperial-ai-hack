@@ -16,7 +16,7 @@ import { askNext, nextQuestion, reflect, studentTurn, unfilledSlots, whatIHeard,
 import { emitWords, type ChatMessage } from './llm.ts';
 import { alternativesTo, holdPosition } from './matcher.ts';
 import { RESTING_MODE } from './modes.ts';
-import { checkShortlist } from '../engines/index.ts';
+import { checkModuleEligibility, checkShortlist } from '../engines/index.ts';
 import { catalogue, explanationFor, moduleTitle, precomputeTopExplanations, ranked, rulesForProfile, saveProfile, setMode, timetableView, tracerSink } from './session.ts';
 import { describeTimetable, explainTimetable } from './timetabler.ts';
 
@@ -144,13 +144,13 @@ async function ruleExceptionTurn(turn: Turn, moduleIds: string[]) {
   if (!target) {
     // The named modules are each allowed, but the whole proposed shortlist may still break a rule (the credit cap).
     const proposed = [...new Set([...session.shortlist, ...moduleIds])];
-    const result = checkShortlist(proposed, session.profile, modules, rulesForProfile(session.profile));
+    const result = checkShortlist(proposed, session.profile, modules, rulesForProfile(session.profile), session.exceptions);
     const broken = result.violations.filter((v) => EXCEPTION_CODES.has(v.code));
     tracer.record({ actor: 'matcher', kind: 'tool', input: `check_rules(${proposed.length} modules)`, output: broken.length ? `violation: ${broken.map((v) => v.code).join(', ')}` : 'no violation', verdict: broken.length ? 'block' : 'pass' });
     if (broken.length) {
       const reasons = broken.map((v) => v.message);
       await say(turn, 'matcher', `I can't approve that: ${reasons.join(' ')} The rule is set by your programme, so I can't make an exception. I have drafted a request to the Senior Tutor below, and it is only sent if you approve it.`);
-      return offerDraft(turn, draftRuleException(session.profile, reasons, turn.text, modules.find((m) => moduleIds.includes(m.id))));
+      return offerDraft(turn, draftRuleException(session.profile, broken, turn.text, modules.find((m) => moduleIds.includes(m.id))));
     }
     const named = modules.find((m) => moduleIds.includes(m.id));
     const text = named
@@ -175,7 +175,8 @@ async function ruleExceptionTurn(turn: Turn, moduleIds: string[]) {
       ),
     () => ({ output: 'held position, offered alternatives and escalation', verdict: 'block' }),
   );
-  await offerDraft(turn, draftRuleException(session.profile, reasons, turn.text, target));
+  const violations = checkModuleEligibility(target.id, session.profile, modules, rulesForProfile(session.profile), session.exceptions);
+  await offerDraft(turn, draftRuleException(session.profile, violations, turn.text, target));
 }
 
 async function explainTurn(turn: Turn, moduleIds: string[]) {

@@ -13,6 +13,7 @@ import { ModuleTypeChip } from '../../components/ModuleTypeChip.tsx';
 import { SampleDataLabel } from '../../components/SampleDataLabel.tsx';
 import { EmptyState, ErrorState, Skeleton } from '../../components/StateViews.tsx';
 import { SubScoreBars } from '../../components/SubScoreBars.tsx';
+import { ExceptionChip } from '../catalogue/ExceptionChip.tsx';
 import { reasonSource } from '../catalogue/reasonSource.ts';
 import { ScoreRing } from '../catalogue/ScoreRing.tsx';
 import { ShortlistButton } from '../catalogue/ShortlistButton.tsx';
@@ -118,6 +119,7 @@ export function ModuleDetailScreen() {
             <div className="flex flex-wrap items-center gap-1.5">
               <ModuleTypeChip variant={module.type} />
               {rec && <ConfidenceBadge variant={rec.confidence} />}
+              {rec?.exception && <ExceptionChip decision={rec.exception} />}
               {rec && (
                 <span className="text-[12px] font-medium text-muted">
                   {FIT_BAND_LABELS[fitBand(rec.fit)]} · ranked #{rec.rank}

@@ -120,17 +120,19 @@ const byFitThenId = (a: Recommendation, b: Recommendation): number =>
 
 /**
  * Spec 8.7: score every module and gate it through the rules engine. Ineligible modules stay in the
- * list with their reasons, so the catalogue can grey them out.
+ * list with their reasons, so the catalogue can grey them out. `exceptions` are modules the Senior Tutor
+ * approved for this student (spec 11.1).
  */
 export function rankModules(
   profile: StudentProfile,
   modules: readonly Module[],
   weights: Weights,
   rules: ProgrammeRules,
+  exceptions: readonly string[] = [],
 ): Recommendation[] {
   return modules
     .map((module) => {
-      const violations = checkModuleEligibility(module.id, profile, modules, rules);
+      const violations = checkModuleEligibility(module.id, profile, modules, rules, exceptions);
       return {
         ...scoreModule(profile, module, weights, rules.homeTopics),
         eligible: violations.length === 0,

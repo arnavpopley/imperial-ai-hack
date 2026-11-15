@@ -10,6 +10,7 @@ import {
 } from '@modulematch/shared';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { api } from '../../api.ts';
+import { decisionsKey } from '../../components/exceptions.ts';
 import { useAsync, type AsyncResult } from '../hooks/useAsync.ts';
 import { useDebouncedCallback } from '../hooks/useDebouncedCallback.ts';
 import { useReferenceData } from './ReferenceDataProvider.tsx';
@@ -55,7 +56,9 @@ export function CatalogueProvider({ children }: { children: ReactNode }) {
   const { session, recsVersion } = useReadySession();
   const { moduleById } = useReferenceData();
   const sessionId = session.id;
-  const recs = useAsync(() => api.recommendations(sessionId), [sessionId, recsVersion, session.profile.updatedAt]);
+  // A Senior Tutor decision changes eligibility without touching the profile, so it refetches the ranking too.
+  const decisions = decisionsKey(session);
+  const recs = useAsync(() => api.recommendations(sessionId), [sessionId, recsVersion, session.profile.updatedAt, decisions]);
   const [weights, setWeights] = useState<Weights>(session.weights);
   const [saveState, setSaveState] = useState<SaveState>('idle');
   /** Counts local slider edits, so a server refresh that started before an edit never overwrites it. */

@@ -445,7 +445,7 @@ interface ProgrammeRules {
 }
 ```
 
-Checks: prerequisites completed, module allowed for the programme and year, shortlist ECTS within the cap, elective ECTS requirement met, and a warning when more than 60% of ECTS falls in one term. Output: `{ ok, violations[], warnings[] }`. No agent can override a violation.
+Checks: prerequisites completed, module allowed for the programme and year, shortlist ECTS within the cap, elective ECTS requirement met, and a warning when more than 60% of ECTS falls in one term. Output: `{ ok, violations[], warnings[] }`. No agent can override a violation. Only a person can: the validator takes the session's `exceptions` (modules the Senior Tutor approved, see 11.1), which skip the programme and prerequisite checks and do not count towards the ECTS cap.
 
 ### 9.2 Timetable engine (`engines/timetable.ts`)
 
@@ -640,6 +640,8 @@ Stages run in order. Every verdict is written to `trace_events` and is visible o
 
 Flow: the agent drafts a summary, the student approves or edits it, the escalation is created, the mode becomes ESCALATED, staff claim and respond in the console, and the response appears in the student's session.
 
+Rule exceptions. The draft is written for the tutor, in the third person, and asks the student for a one-line reason (editable, redacted by G2 before storage). The escalation shares, fixed when it is sent: the broken rule as data (`code`, module, missing prerequisite), the reason, the completed modules and the fit for the module. Staff see that and nothing else from the profile. The Senior Tutor chooses **Approve exception** or **Decline**, each with an optional message. An approval adds the module to the session's `exceptions`, so it becomes eligible and shortlistable and its card says "Exception approved by the Senior Tutor"; a decline leaves it ineligible and says so. The decision is a trace event.
+
 ---
 
 ## 12. Session state and modes
@@ -701,7 +703,7 @@ SSE event types on `/messages`: `mode`, `token`, `profile_update`, `guardrail`, 
 | `PUT /staff/modules/:id/derived` | Correct derived tags. |
 | `GET /staff/timetable/clash-priorities` | Ranked clashing pairs. |
 | `GET /staff/escalations` | Queue. |
-| `POST /staff/escalations/:id/respond` | Claim and respond. |
+| `POST /staff/escalations/:id/respond` | Claim and respond. Rule exceptions take `decision: approve or decline`, with the message optional. |
 | `GET /staff/feedback` | Feedback totals and recent down-votes (redacted, no session ids). |
 | `GET /staff/feedback/export` | JSONL seed rows for evals or fine-tuning: redacted text from synthetic sessions only. |
 

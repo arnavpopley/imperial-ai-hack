@@ -41,6 +41,17 @@ describe('checkModuleEligibility', () => {
   it('flags unknown module ids', () => {
     expect(checkModuleEligibility('nope', profile, modules, rules).map((v) => v.code)).toEqual(['UNKNOWN_MODULE']);
   });
+
+  it('names the missing prerequisite as data', () => {
+    expect(checkModuleEligibility('cfd', makeProfile(), modules, rules)[0]?.prerequisiteId).toBe('fluids');
+  });
+
+  it('waives the programme and prerequisite checks for a Senior Tutor exception, and only for that module', () => {
+    expect(checkModuleEligibility('cfd', makeProfile(), modules, rules, ['cfd'])).toEqual([]);
+    expect(checkModuleEligibility('closed', profile, modules, rules, ['closed'])).toEqual([]);
+    expect(checkModuleEligibility('closed', profile, modules, rules, ['cfd']).map((v) => v.code)).toEqual(['NOT_ALLOWED']);
+    expect(checkModuleEligibility('nope', profile, modules, rules, ['nope']).map((v) => v.code)).toEqual(['UNKNOWN_MODULE']);
+  });
 });
 
 describe('checkShortlist', () => {
@@ -57,6 +68,13 @@ describe('checkShortlist', () => {
     expect(result.ok).toBe(false);
     expect(codes(result)).toEqual(['NOT_ALLOWED', 'UNKNOWN_MODULE', 'ELECTIVE_ECTS_SHORT', 'I_EXPLORE_MISSING']);
     expect(result.violations.find((v) => v.code === 'ELECTIVE_ECTS_SHORT')?.message).toContain('Add at least 5 ECTS');
+  });
+
+  it('honours exceptions: an approved module is allowed and left out of the ECTS cap', () => {
+    const result = checkShortlist(['closed', 'cfd', 'robots', 'iex'], profile, modules, { ...rules, maxEcts: 55 }, ['closed']);
+    expect(result).toMatchObject({ ok: true, violations: [] });
+    const over = checkShortlist(['closed', 'cfd', 'robots', 'iex'], profile, modules, { ...rules, maxEcts: 50 }, ['closed']);
+    expect(over.violations[0]?.message).toContain('55 ECTS including core modules, not counting modules with an approved exception,');
   });
 
   it('counts core modules towards the ECTS cap', () => {
