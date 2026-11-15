@@ -394,6 +394,8 @@ async function finishInterviewTurn(turn: Turn) {
   confirmProfile(session);
   if (session.mode !== from) await turn.emit({ type: 'mode', mode: session.mode, from });
   if (session.escalationDraft) await turn.emit({ type: 'escalation', draft: session.escalationDraft, escalation: null });
+  // recommendations_ready shows the chat's "See my modules" link, so the student can go straight there.
+  await turn.emit({ type: 'recommendations_ready', count: ranked(session).length });
   const note = repo.getSession(session.id)?.messages.find((m) => m.role === 'assistant' && !known.has(m.id));
   if (!note) return say(turn, 'supervisor', 'No problem, that is the end of the questions. Your modules are ranked on the catalogue page.');
   const pending: Promise<void>[] = [];

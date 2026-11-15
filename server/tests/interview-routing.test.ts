@@ -36,7 +36,7 @@ describe('wantsToFinishInterview', () => {
   });
 
   it('leaves answers that mention skipping alone', () => {
-    for (const text of ['skip this question', "I'd skip the maths-heavy ones", 'skip anything with exams', 'I want to skip exams if possible', 'I love robotics, show me something hands-on']) {
+    for (const text of ['skip this question', "I'd skip the maths-heavy ones", 'skip anything with exams', 'I want to skip exams if possible', 'I love robotics, show me something hands-on', 'Show me the modules with no exams?', 'show me my modules in spring']) {
       expect(wantsToFinishInterview(text), text).toBe(false);
     }
   });
@@ -66,6 +66,8 @@ describe('interview routing (routes)', () => {
     const after = repo.getSession(session.id)!;
     expect(after.mode).toBe('RECOMMEND');
     expect(after.interview.confirmed).toBe(true);
+    // recommendations_ready makes the chat show its "See my modules" link.
+    expect(events.some((e) => e.type === 'recommendations_ready')).toBe(true);
     // The reply is the stored note, so the rated answer exists.
     const done = events.find((e) => e.type === 'done');
     expect(after.messages.some((m) => done?.type === 'done' && m.id === done.messageId)).toBe(true);
@@ -80,6 +82,14 @@ describe('interview routing (routes)', () => {
     expect(after.evidence).toEqual([]);
     expect(after.interview.questionsAsked).toBe(session.interview.questionsAsked);
     expect(after.interview.askedSteps).toEqual(session.interview.askedSteps);
+  });
+
+  it('answers a filtered catalogue question instead of ending the interview', async () => {
+    const session = await interviewing();
+    const { events, text } = await chat(session.id, 'Show me the modules with no exams?');
+    expect(events.some((e) => e.type === 'mode')).toBe(false);
+    expect(text).toContain(`Back to the interview: ${QUICK_PLAN[0]!.question}`);
+    expect(repo.getSession(session.id)!.mode).toBe('INTERVIEW');
   });
 
   it('stores no evidence from a question about a module and a job', async () => {

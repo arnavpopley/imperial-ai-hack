@@ -404,7 +404,10 @@ async function interviewRouting(): Promise<EvalResult> {
     const before = await fresh();
     const { text } = await chatTurn(app, before.id, question);
     const after = repo.getSession(before.id)!;
+    // The catalogue agent falls back to the rules answer when the model fails; a live pass needs the model's.
+    const byModel = repo.listTraceEvents(before.id).some((e) => e.actor === 'catalogue' && e.output.startsWith('model answer'));
     const problems = [
+      byModel ? '' : 'answered by the rules fallback, not the model',
       after.evidence.length > 0 ? `stored ${after.evidence.map((e) => e.slot).join(', ')}` : '',
       after.interview.questionsAsked !== before.interview.questionsAsked ? 'used up a question' : '',
       after.mode !== 'INTERVIEW' ? `left the interview (${after.mode})` : '',

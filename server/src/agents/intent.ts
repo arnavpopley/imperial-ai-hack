@@ -39,16 +39,16 @@ export function moduleMentions(text: string, modules: Module[]): string[] {
 const LEAD_IN = String.raw`(?:(?:ok(?:ay)?|please|sorry|actually|honestly|no thanks|can (?:we|i|you)|could (?:we|you)|let'?s|i(?:'d| would) like to|i want to|just)[\s,.!]+)*`;
 /**
  * "skip", "skip the rest", "skip to my modules", "stop the questions", "show me my modules". It must open the
- * message, and a bare "skip" must stand alone (end of message, punctuation, "and", "now"), so "skip this
- * question" or "I want to skip exams" stays an answer.
+ * message and end its clause (end of message, punctuation, "and", "now", "please"), so "skip this question",
+ * "I want to skip exams" or "show me the modules with no exams?" stays an answer or a catalogue question.
  */
 const FINISH_INTERVIEW = new RegExp(
   String.raw`^\s*${LEAD_IN}(?:` +
-    String.raw`skip(?: (?:the rest|the interview|it all|(?:all )?(?:the |these |your )?questions|ahead|to (?:my |the )?(?:modules|recommendations|results|catalogue))|(?=\s*(?:$|[,.!?;]|(?:and|now|please)\b)))` +
+    String.raw`skip(?: (?:the rest|the interview|it all|(?:all )?(?:the |these |your )?questions|ahead|to (?:my |the )?(?:modules|recommendations|results|catalogue)))?` +
     String.raw`|(?:stop|end|finish)(?: with)?(?: the| these)? (?:interview|questions)` +
     String.raw`|(?:show|take) me (?:to )?(?:my |the )?(?:modules|recommendations|results|catalogue)` +
     String.raw`|go to (?:my |the )?(?:modules|recommendations|results|catalogue)` +
-    String.raw`)\b`,
+    String.raw`)(?=\s*(?:$|[,.!?;]|(?:and|now|please)\b))`,
   'i',
 );
 
