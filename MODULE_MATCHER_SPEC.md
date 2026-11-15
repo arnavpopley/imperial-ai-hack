@@ -880,6 +880,8 @@ Added on 14 November at the team's request. This reverses the earlier "no grades
 
 **Privacy.** Marks and tailored feedback are visible only to the student. Staff never see an individual's marks. Any staff view of exam performance is aggregate, with a minimum cohort of five. Demo marks and exam forms are synthetic and labelled.
 
+**Implementation details (backend).** An upload replaces the results for the modules it contains and keeps the others, so a student can upload one year at a time. Pasted transcripts pass G3's pattern rules only, not the G3 classifier, so marks reach no model except the transcript reader and the tailored-feedback agent; the live matcher is told which topics a nudge is about, never the marks. A question mark above its maximum, or a mark above 100, is rejected with a message and nothing is stored. An examiner save or a new AI draft returns the form to draft, so students stop seeing it until it is published again. The trace records counts only, never marks.
+
 ## 21. Open items
 
 | Item | Default taken in this spec | Owner |

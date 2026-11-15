@@ -7,6 +7,7 @@ import {
   type CreateSessionBody,
   type Explanation,
   type Mode,
+  type PerformanceView,
   type ProgrammeRules,
   type Recommendation,
   type RecommendationsResponse,
@@ -18,7 +19,7 @@ import {
 import { randomUUID } from 'node:crypto';
 import { loadModuleResources, loadPathways, loadSocieties, rulesFor } from '../db/catalogue.ts';
 import * as repo from '../db/repo.ts';
-import { buildTimetable, checkShortlist, completeness, findClashes, profileHash, rankModules, suggestSwaps } from '../engines/index.ts';
+import { buildTimetable, checkShortlist, completeness, findClashes, nudgeFor, performanceView, profileHash, rankModules, suggestSwaps } from '../engines/index.ts';
 import type { Tracer } from '../trace/tracer.ts';
 import { explain } from './matcher.ts';
 import { canTransition } from './modes.ts';
@@ -174,7 +175,18 @@ export function setMode(session: SessionState, to: Mode, tracer: Tracer, reason:
   return from;
 }
 
-/** Explanations are cached by profile hash and module ID (spec 5 cost control). */
+/**
+ * Topic strengths and nudges from the student's consented results (spec 23). Informational only: nothing here feeds
+ * the scoring engine, so fit scores and rankings are the same with or without results.
+ */
+export function performanceFor(session: SessionState): PerformanceView {
+  return performanceView(repo.getResults(session.id), catalogue.modules(), {
+    interests: session.profile.interests,
+    exclude: session.profile.completedModuleIds,
+  });
+}
+
+/** Explanations are cached by profile hash, results version and module ID (spec 5 cost control). */
 const explanationCache = new Map<string, Explanation>();
 
 export function clearExplanationCache(): void {
@@ -185,12 +197,14 @@ export async function explanationFor(session: SessionState, moduleId: string, tr
   const module = catalogue.modules().find((m) => m.id === moduleId);
   const rec = recs.find((r) => r.moduleId === moduleId);
   if (!module || !rec) return null;
-  const key = `${profileHash(session.profile, session.weights)}:${moduleId}`;
+  const results = repo.getResults(session.id);
+  const key = `${profileHash(session.profile, session.weights)}:${results.updatedAt ?? 'no-results'}:${moduleId}`;
   const cached = explanationCache.get(key);
   if (cached) return cached;
+  const nudge = results.consent.granted ? nudgeFor(performanceFor(session), moduleId) : undefined;
   const explanation = await tracer.timed(
-    { actor: 'matcher', kind: 'agent', input: `explain ${module.code} (fit ${rec.fit})` },
-    () => explain(session.profile, module, rec, session.evidence, tracer),
+    { actor: 'matcher', kind: 'agent', input: `explain ${module.code} (fit ${rec.fit})${nudge ? ', with a performance nudge' : ''}` },
+    () => explain(session.profile, module, rec, session.evidence, tracer, nudge),
     (e) => ({ output: `${e.because.length} reasons, ${e.watchOuts.length} watch-outs`, verdict: null }),
   );
   explanationCache.set(key, explanation);

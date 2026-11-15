@@ -6,3 +6,6 @@ export * from './insights.ts';
 export * from './pathways.ts';
 export * from './societies.ts';
 export * from './feedback.ts';
+export * from './transcript.ts';
+export * from './performance.ts';
+export * from './exam-feedback.ts';

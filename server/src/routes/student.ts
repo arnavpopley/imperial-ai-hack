@@ -17,6 +17,7 @@ import { runInputGuardrails } from '../guardrails/pipeline.ts';
 import { cleanForStorage } from '../guardrails/stored-text.ts';
 import { matchSocieties, pathwayProgress } from '../engines/index.ts';
 import { createTracer } from '../trace/tracer.ts';
+import { forgetResults } from './results.ts';
 import { body } from './validate.ts';
 
 /** Loads the session named in the path, or answers 404. */
@@ -127,9 +128,11 @@ export const studentRoutes = new Hono()
     if (session instanceof Response) return session;
     deletions.set(session.id, (deletions.get(session.id) ?? 0) + 1);
     repo.deleteProfileAndEvidence(session.id);
+    // Every stored mark went with the profile (spec 23); feedback derived from them is forgotten too.
+    forgetResults(session.id, true);
     // A pending draft can quote the student, so it goes too.
     repo.updateSession(session.id, { escalationDraft: null });
-    createTracer(session.id, tracerSink).record({ actor: 'supervisor', kind: 'agent', input: 'delete profile', output: 'profile and evidence deleted', verdict: null });
+    createTracer(session.id, tracerSink).record({ actor: 'supervisor', kind: 'agent', input: 'delete profile', output: 'profile, evidence and results deleted', verdict: null });
     clearExplanationCache();
     return c.json(fresh(session.id));
   })
