@@ -245,6 +245,11 @@ export const STEPS = [
         desc: 'the ranked list',
       });
       const before = await rankedIds(page);
+      // Below lg the weights and filters fold behind one button (issue 64), so open it first.
+      const fold = { css: 'button[aria-expanded]', text: 'Weights and filters' };
+      if (await page.eval(() => [...document.querySelectorAll('button[aria-expanded]')].some((b) => /Weights and filters/.test(b.textContent) && b.checkVisibility() && b.getAttribute('aria-expanded') === 'false'))) {
+        await page.click(fold, { desc: 'the Weights and filters button' });
+      }
       const moved = [];
       let after = before;
       for (const [label, value] of [['Career', 1], ['Learning style', 1], ['Interest', 0]]) {

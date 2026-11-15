@@ -114,7 +114,7 @@ export function StudentShell() {
           </nav>
         </div>
 
-        <EscalationTray className="max-w-3xl" />
+        <EscalationTray className="max-w-3xl" onReviewDraft={() => openAdvisor()} />
 
         {/* Each screen fades and rises in; keyed by path so the animation replays on navigation. */}
         <motion.div

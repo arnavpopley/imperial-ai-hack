@@ -29,6 +29,7 @@ import { ResultsDataSection } from '../results/ResultsDataSection.tsx';
 import { paths } from '../routes.ts';
 import { useModuleTitle, useReferenceData } from '../state/ReferenceDataProvider.tsx';
 import { useReadySession } from '../state/SessionProvider.tsx';
+import { downloadFile } from '../download.ts';
 import { DELETED_STATE } from './paths.ts';
 
 const rise = {
@@ -72,8 +73,44 @@ export function YourDataPage() {
         <ResultsDataSection />
       </section>
 
+      <DownloadData />
       <DangerZone />
     </div>
+  );
+}
+
+/**
+ * Issue 63 and spec 20.3: see, edit, delete, and take a copy. The JSON is built from what this page already holds
+ * (profile, the quotes behind it, shortlist and escalations) and saved by the browser; nothing is sent anywhere.
+ */
+function DownloadData() {
+  const { session } = useReadySession();
+  const download = () => {
+    const copy = {
+      exportedAt: new Date().toISOString(),
+      note: 'Your ModuleMatch data, saved from your own browser. Timetable times are provisional, based on previous years.',
+      profile: session.profile,
+      evidence: session.evidence.map(({ slot, value, quote, confidence }) => ({ slot, value, quote, confidence })),
+      shortlist: session.shortlist,
+      escalations: session.escalations,
+    };
+    downloadFile('modulematch-my-data.json', 'application/json', `${JSON.stringify(copy, null, 2)}\n`);
+  };
+  return (
+    <section aria-labelledby="download-heading" className="flex flex-wrap items-center gap-4 rounded-panel bg-surface p-card shadow-soft ring-1 ring-line">
+      <span aria-hidden="true" className="grid size-11 shrink-0 place-items-center rounded-2xl bg-brand/10 text-brand">
+        <Icon name="arrow-down" size={22} />
+      </span>
+      <div className="min-w-0 flex-1">
+        <h2 id="download-heading" className="text-lg font-semibold tracking-tight">
+          Download my data
+        </h2>
+        <p className="text-sm text-muted">Profile, your quotes, shortlist and tutor requests, as a JSON file on your device.</p>
+      </div>
+      <Button icon="arrow-down" onClick={download}>
+        Download JSON
+      </Button>
+    </section>
   );
 }
 

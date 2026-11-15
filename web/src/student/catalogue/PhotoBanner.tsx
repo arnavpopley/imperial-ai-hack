@@ -40,10 +40,11 @@ export function PhotoBanner({ image, alt, title, subtitle, aside, focus = 'cente
         aria-hidden="true"
         className="absolute inset-0 -z-10 bg-gradient-to-r from-[rgb(14_16_22/0.78)] via-[rgb(14_16_22/0.5)] to-[rgb(14_16_22/0.1)]"
       />
-      <div className="flex min-h-36 flex-wrap items-end justify-between gap-3 px-5 py-5 sm:min-h-40 sm:px-7 sm:py-6">
+      <div className="flex min-h-24 flex-wrap items-end justify-between gap-3 px-4 py-4 sm:min-h-40 sm:px-7 sm:py-6">
         <div className="max-w-xl min-w-0 text-white">
-          <h1 className="text-2xl font-semibold tracking-tight text-balance sm:text-[1.75rem]">{title}</h1>
-          {subtitle && <p className="mt-1.5 text-sm leading-relaxed text-white/85 text-pretty">{subtitle}</p>}
+          <h1 className="text-xl font-semibold tracking-tight text-balance sm:text-[1.75rem]">{title}</h1>
+          {/* Phones keep the banner to a title strip (issue 64), so the content starts in the first screen. */}
+          {subtitle && <p className="mt-1.5 text-sm leading-relaxed text-white/85 text-pretty max-sm:hidden">{subtitle}</p>}
         </div>
         {aside && <div className="rounded-lg bg-surface/90 px-1 py-0.5 backdrop-blur">{aside}</div>}
       </div>
