@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400..800&display=swap');
 @import 'tailwindcss';
 
 /*
@@ -6,17 +6,20 @@
  * Mirror these in the Figma file's variables so design and code stay in step.
  */
 @theme {
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Figtree', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
-  --color-canvas: #f7f7f4;
+  --color-canvas: #f6f7fb;
   --color-surface: #ffffff;
-  --color-ink: #16181d;
-  --color-muted: #5d6270;
-  --color-line: #e3e3dc;
+  --color-ink: #282e3e;
+  --color-muted: #586380;
+  --color-line: #e5e8f0;
 
-  --color-brand: #3b4fd8;
-  --color-brand-soft: #e7eafc;
+  --color-brand: #4255ff;
+  --color-brand-soft: #edefff;
+  /* One warm accent, used sparingly for highlights and badges. */
+  --color-accent: #ffcd1f;
+  --color-on-accent: #282e3e;
 
   /*
    * Fit and confidence. Light values clear 4.5:1 as text on surface and canvas, and on their own 10 to 15% tints,
@@ -99,8 +102,8 @@
   --z-launcher: 45;
 
   /* WS4 additions: secondary surfaces, emphasis lines, text on brand, status, module palette, motion. */
-  --color-surface-2: #f0f0ea;
-  --color-line-strong: #cbcbc1;
+  --color-surface-2: #eef0f6;
+  --color-line-strong: #d4d9e6;
   --color-on-brand: #ffffff;
   --color-scrim: rgb(14 16 22 / 0.42);
 
@@ -138,8 +141,8 @@
   --color-art-7: var(--color-module-7);
   --color-art-8: var(--color-module-8);
 
-  --shadow-soft: 0 1px 2px rgb(22 24 29 / 0.04), 0 4px 16px -4px rgb(22 24 29 / 0.08);
-  --shadow-lift: 0 2px 4px rgb(22 24 29 / 0.06), 0 18px 40px -12px rgb(22 24 29 / 0.22);
+  --shadow-soft: 0 1px 2px rgb(40 46 62 / 0.05), 0 2px 8px rgb(40 46 62 / 0.06);
+  --shadow-lift: 0 4px 12px rgb(40 46 62 / 0.08), 0 16px 32px -12px rgb(40 46 62 / 0.18);
 
   --ease-out-soft: cubic-bezier(0.2, 0.8, 0.2, 1);
   --animate-rise: rise 420ms var(--ease-out-soft) both;
@@ -230,21 +233,6 @@
     line-height: var(--text-base--line-height);
     text-rendering: optimizeLegibility;
   }
-  /*
-   * A soft, fixed colour wash behind every page, so the canvas never reads as a flat slab. It uses the theme's
-   * brand and mode colours, so it follows light and dark. Content sits above it because body::before is z -1.
-   */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    background:
-      radial-gradient(60rem 40rem at 0% -10%, color-mix(in oklab, var(--color-brand) 22%, transparent), transparent 70%),
-      radial-gradient(50rem 36rem at 100% 0%, color-mix(in oklab, var(--color-mode-explain) 18%, transparent), transparent 70%),
-      radial-gradient(56rem 40rem at 50% 110%, color-mix(in oklab, var(--color-mode-plan) 15%, transparent), transparent 70%);
-  }
   h1,
   h2,
   h3 {
@@ -253,16 +241,16 @@
   /* The theme comes from data-theme on <html>, set before first paint by index.html and toggled in the header. */
   :root[data-theme='dark'] {
     color-scheme: dark;
-    --color-canvas: #111318;
-    --color-surface: #1a1d24;
-    --color-ink: #eceef2;
-    --color-muted: #9aa0ad;
-    --color-line: #2b2f39;
-    --color-brand: #7c8cff;
-    --color-brand-soft: #232a52;
-    --color-surface-2: #22252e;
-    --color-line-strong: #3d4250;
-    --color-on-brand: #0c0f24;
+    --color-canvas: #0a092d;
+    --color-surface: #1b1d43;
+    --color-ink: #f6f7fb;
+    --color-muted: #a9b0c8;
+    --color-line: #2e3260;
+    --color-brand: #8f9bff;
+    --color-brand-soft: #262a63;
+    --color-surface-2: #23265a;
+    --color-line-strong: #3d4278;
+    --color-on-brand: #0a092d;
     --color-scrim: rgb(0 0 0 / 0.6);
 
     --color-fit-high: #4cc38a;
@@ -297,8 +285,8 @@
     --color-assess-coursework: #b4bac6;
     --color-assess-practical: #7d8594;
 
-    --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 16px -4px rgb(0 0 0 / 0.4);
-    --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.3), 0 18px 40px -12px rgb(0 0 0 / 0.6);
+    --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.25), 0 2px 8px rgb(0 0 0 / 0.25);
+    --shadow-lift: 0 4px 12px rgb(0 0 0 / 0.3), 0 16px 32px -12px rgb(0 0 0 / 0.5);
   }
   :focus-visible {
     outline: 2px solid var(--color-brand);

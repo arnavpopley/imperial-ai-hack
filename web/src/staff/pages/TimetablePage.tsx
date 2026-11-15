@@ -173,7 +173,7 @@ function PriorityBar({ value, max }: { value: number; max: number }) {
     <span className="flex items-center gap-3">
       <span aria-hidden="true" className="h-2.5 flex-1 overflow-hidden rounded-full bg-line/70">
         <motion.span
-          className="block h-full rounded-full bg-gradient-to-r from-brand to-mode-explain"
+          className="block h-full rounded-full bg-brand"
           initial={{ width: 0 }}
           animate={{ width: percent(value / max) }}
           transition={{ duration: 0.8, ease: [0.2, 0.8, 0.2, 1] }}
