@@ -4,9 +4,6 @@
   "buildCommand": "npm run build:vercel",
   "fluid": true,
   "git": {
-    "deploymentEnabled": {
-      "**": false,
-      "main": true
-    }
+    "deploymentEnabled": false
   }
 }
