@@ -12,3 +12,12 @@ All photos are from [Pexels](https://www.pexels.com) under the [Pexels licence](
 | `tutor-teamwork.jpg` | https://www.pexels.com/photo/3184360/ |
 | `timetable-whiteboard.jpg` | https://www.pexels.com/photo/8197530/ |
 | `advisor-video-call.jpg` | https://www.pexels.com/photo/5905709/ |
+| `tutor-one-to-one.jpg` | https://www.pexels.com/photo/5306434/ |
+| `studying-together.jpg` | https://www.pexels.com/photo/8199761/ |
+| `library-laptop.jpg` | https://www.pexels.com/photo/16420237/ |
+| `robotics-lab.jpg` | https://www.pexels.com/photo/9242834/ |
+| `lecture-hall.jpg` | https://www.pexels.com/photo/8197545/ |
+| `campus-walk.jpg` | https://www.pexels.com/photo/7973039/ |
+| `friends-campus.jpg` | https://www.pexels.com/photo/7683688/ |
+| `planner-notebook.jpg` | https://www.pexels.com/photo/4497732/ |
+| `hiking-society.jpg` | https://www.pexels.com/photo/7624875/ |
