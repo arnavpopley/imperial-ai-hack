@@ -101,7 +101,7 @@ function AppHeader({ role }: { role: Role }) {
                       <motion.span
                         layoutId="role-pill"
                         aria-hidden="true"
-                        className="absolute inset-0 rounded-full bg-brand shadow-soft"
+                        className="pointer-events-none absolute inset-0 rounded-full bg-brand shadow-soft"
                         transition={{ type: 'spring', stiffness: 420, damping: 34 }}
                       />
                     )}

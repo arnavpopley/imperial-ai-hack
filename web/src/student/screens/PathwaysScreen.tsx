@@ -121,11 +121,11 @@ export function PathwaysScreen() {
       </section>
 
       {selected.length > 0 && (
-        <section aria-labelledby="progress-heading" className="grid gap-3">
+        <section aria-labelledby="progress-heading" className="grid grid-cols-1 gap-3">
           <h2 id="progress-heading" className="text-sm font-semibold">
             Your progress
           </h2>
-          <div className="grid items-start gap-4 lg:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2 xl:grid-cols-3">
             {selected.map((id, i) => (
               <PathwayProgressCard key={id} pathwayId={id} pathway={pathways.data?.find((p) => p.id === id)} index={i} />
             ))}

@@ -11,7 +11,7 @@ import { filterClaims } from '../guardrails/g8-claims.ts';
 import { sentences } from '../guardrails/types.ts';
 import type { Tracer } from '../trace/tracer.ts';
 import { moduleFacts } from './knowledge.ts';
-import { asData, emitWords, IncompleteReplyError, isLive, modelId } from './llm.ts';
+import { asData, emitWords, IncompleteReplyError, isLive, logUsage, modelId } from './llm.ts';
 import { catalogue, moduleTitle, ranked } from './session.ts';
 
 // ---------- tool inputs ----------
@@ -504,6 +504,7 @@ async function answerLive(question: string, session: SessionState, tracer: Trace
       messages,
       ...(FALLBACK_MODELS.has(model) ? { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' as const } : {}),
     });
+    logUsage(response.model, response.usage);
     if (response.stop_reason === 'max_tokens' || response.stop_reason === 'refusal') throw new IncompleteReplyError(response.stop_reason);
     const calls = response.content.filter((b): b is Anthropic.Beta.BetaToolUseBlock => b.type === 'tool_use');
     if (calls.length === 0) {

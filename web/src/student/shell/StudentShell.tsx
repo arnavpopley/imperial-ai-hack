@@ -85,7 +85,7 @@ export function StudentShell() {
                               layoutId="student-tab"
                               aria-hidden="true"
                               transition={{ type: 'spring', stiffness: 420, damping: 36 }}
-                              className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-brand lg:inset-0 lg:h-auto lg:bg-surface lg:shadow-soft lg:ring-1 lg:ring-line"
+                              className="pointer-events-none absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-brand lg:inset-0 lg:h-auto lg:bg-surface lg:shadow-soft lg:ring-1 lg:ring-line"
                             />
                           )}
                           <span className="relative flex items-center gap-2">
