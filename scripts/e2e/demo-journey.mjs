@@ -350,6 +350,9 @@ async function runCombo(cdp, comboName, ports) {
         }
         for (const o of audit.overlaps) current.overlap.push(`${label} (${o.where}): ${o.control} is covered by ${o.coveredBy}`);
       }
+      // A screenshot of a visible window briefly blanks it, which a recording shows as a black flash; video mode keeps
+      // only the screenshots of failed steps.
+      if (VIDEO) return;
       shot += 1;
       const file = `${String(shot).padStart(2, '0')}-${label}.png`;
       await page.screenshot(join(dir, file));
