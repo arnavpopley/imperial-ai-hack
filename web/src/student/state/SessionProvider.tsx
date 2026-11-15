@@ -2,13 +2,14 @@
 // local patches from the SSE stream, and polling while a member of staff owes a reply.
 import type { EscalationDraft, SessionState } from '@modulematch/shared';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { api } from '../../api.ts';
+import { api, isSessionLost, SESSION_LOST_EVENT } from '../../api.ts';
 import { draftIdentity } from '../../components/exceptions.ts';
 import { errorMessage } from '../../components/StateViews.tsx';
 import { readDismissedDraft, readStoredSessionId, writeDismissedDraft, writeStoredSessionId } from './storage.ts';
 
 export type CreateSessionInput = Parameters<typeof api.createSession>[0];
-export type SessionStatus = 'loading' | 'none' | 'ready' | 'error';
+/** lost: the server no longer knows the stored session (a demo server restarted); the student starts again. */
+export type SessionStatus = 'loading' | 'none' | 'ready' | 'error' | 'lost';
 
 /** Demo step 6: the staff reply appears live, so poll while an escalation is open or claimed. */
 const STAFF_POLL_MS = 4000;
@@ -61,13 +62,23 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       (err: unknown) => {
         if (!live) return;
         setError(errorMessage(err));
-        setStatus('error');
+        setStatus(isSessionLost(err) ? 'lost' : 'error');
       },
     );
     return () => {
       live = false;
     };
   }, [resumeId, attempt]);
+
+  // Any request that finds the session gone (404 "session not found") ends the session in one place, so no screen
+  // waits on data that will never come.
+  useEffect(() => {
+    const onLost = () => {
+      if (readStoredSessionId() !== null) setStatus('lost');
+    };
+    window.addEventListener(SESSION_LOST_EVENT, onLost);
+    return () => window.removeEventListener(SESSION_LOST_EVENT, onLost);
+  }, []);
 
   const sessionId = session?.id ?? null;
   const awaitingStaff = session?.escalations.some((e) => e.status !== 'resolved') ?? false;

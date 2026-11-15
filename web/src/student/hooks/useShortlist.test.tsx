@@ -11,7 +11,10 @@ import { SessionProvider, useReadySession, useSession } from '../state/SessionPr
 import { writeStoredSessionId } from '../state/storage.ts';
 import { useShortlist } from './useShortlist.ts';
 
-vi.mock('../../api.ts', () => ({ api: { getSession: vi.fn(), shortlist: vi.fn(), timetable: vi.fn() } }));
+vi.mock('../../api.ts', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../api.ts')>()),
+  api: { getSession: vi.fn(), shortlist: vi.fn(), timetable: vi.fn() },
+}));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 

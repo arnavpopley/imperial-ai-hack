@@ -47,13 +47,32 @@ import type { z } from 'zod';
 type CreateSessionInput = z.input<typeof schemas.CreateSessionBody>;
 type RespondInput = z.input<typeof schemas.EscalationRespondBody>;
 
+/**
+ * Fired on `window` when the API answers that it does not know the stored session. On the public demo each server
+ * instance keeps its own database, so a session can vanish if a request lands on another instance or after a
+ * restart. The session provider turns this into a "start again" screen instead of a dead end.
+ */
+export const SESSION_LOST_EVENT = 'modulematch:session-lost';
+
+/** True for the error a request throws when the API does not know the session. */
+export function isSessionLost(err: unknown): boolean {
+  return err instanceof Error && err.message.startsWith('404 ') && err.message.includes('session not found');
+}
+
+/** Reads a failed response's text and announces a lost session (404 "session not found"). */
+async function failure(res: Response): Promise<Error> {
+  const err = new Error(`${res.status} ${await res.text()}`);
+  if (isSessionLost(err)) window.dispatchEvent(new Event(SESSION_LOST_EVENT));
+  return err;
+}
+
 async function call<T>(path: string, init?: { method?: string; body?: unknown }): Promise<T> {
   const res = await fetch(`/api${path}`, {
     method: init?.method ?? (init?.body === undefined ? 'GET' : 'POST'),
     headers: init?.body === undefined ? undefined : { 'content-type': 'application/json' },
     body: init?.body === undefined ? undefined : JSON.stringify(init.body),
   });
-  if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
+  if (!res.ok) throw await failure(res);
   return (await res.json()) as T;
 }
 
@@ -140,7 +159,7 @@ async function streamEvents(path: string, body: unknown, onEvent: (event: SseEve
     body: JSON.stringify(body),
     signal,
   });
-  if (!res.ok || !res.body) throw new Error(`${res.status} ${await res.text()}`);
+  if (!res.ok || !res.body) throw await failure(res);
   const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
   let buffer = '';
   for (;;) {

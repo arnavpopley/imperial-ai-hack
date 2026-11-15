@@ -20,8 +20,9 @@ How to run the live demo at judging (spec 18.2): about three minutes, with a jud
 | Tabs | Tab 1: http://localhost:5173 (student). Tab 2: http://localhost:5173/staff/escalations (staff). Tab 3, standby: http://localhost:5173/trace. |
 | Fresh student | In tab 1, if a session exists, open **Your data** and delete it, or open all three tabs in one new private window. Keep them in the same window: the How it works page finds the student's session through the browser's storage. |
 | Network | Venue wifi plus a phone hotspot. Without internet the app still works offline, but the Inter font falls back to the system font. |
+| **Production pass** | **Before judging, open https://modulematch.vercel.app and do one full student pass (start, interview, catalogue, shortlist). If anything 404s or shows "This demo server restarted", present from `npm run dev` locally and keep the video as backup.** |
 
-Run locally rather than on https://modulematch.vercel.app: on Vercel each function instance has its own SQLite in `/tmp`, so an escalation sent from one instance may not reach the staff queue on another.
+Run locally rather than on https://modulematch.vercel.app: on Vercel each function instance has its own SQLite in `/tmp`, so an escalation sent from one instance may not reach the staff queue on another, and if requests land on more than one instance the student's session itself can 404. `vercel.json` asks for Fluid compute (one instance serves concurrent requests), which makes this rare but not impossible; when it happens the app shows "This demo server restarted" with a **Start again** button rather than hanging.
 
 ## The clicks
 
