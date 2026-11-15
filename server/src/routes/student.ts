@@ -8,15 +8,17 @@ import { draftWellbeing, exceptionRequest } from '../agents/escalation.ts';
 import { extract, mergeUpdates } from '../agents/extractor.ts';
 import { QUICK_PLAN } from '../agents/interviewer.ts';
 import { answerModuleQuestion, moduleFacts } from '../agents/knowledge.ts';
+import { asksForGuarantee, guaranteeReply } from '../agents/outcomes.ts';
 import { emitWords } from '../agents/llm.ts';
 import { applyShortlistEdit, catalogue, clearExplanationCache, explanationFor, moduleTitle, newSessionState, ranked, recommendationsResponse, rulesForProfile, saveProfile, setMode, timetableView, tracerSink } from '../agents/session.ts';
 import { confirmProfile, handleTurn, resumeInterview } from '../agents/supervisor.ts';
 import { rawModule } from '../db/catalogue.ts';
 import * as repo from '../db/repo.ts';
+import { SCOPE_REDIRECT } from '../guardrails/g1-scope.ts';
 import { WELLBEING_NOTICE } from '../guardrails/g4-wellbeing.ts';
 import { runInputGuardrails } from '../guardrails/pipeline.ts';
 import { cleanForStorage } from '../guardrails/stored-text.ts';
-import { checkModuleEligibility, coreInPlan, matchSocieties, pathwayProgress } from '../engines/index.ts';
+import { checkModuleEligibility, coreInPlan, hasFitSignal, matchSocieties, pathwayProgress } from '../engines/index.ts';
 import { createTracer } from '../trace/tracer.ts';
 import { forgetResults } from './results.ts';
 import { body } from './validate.ts';
@@ -246,8 +248,14 @@ export const studentRoutes = new Hono()
       const pending: Promise<void>[] = [];
       const onToken = (text: string) => pending.push(emit({ type: 'token', text, agent: 'knowledge' }));
       if (guarded.action === 'wellbeing') emitWords(WELLBEING_NOTICE, onToken);
+      else if (guarded.action === 'redirect') emitWords(guarded.events.find((e) => e.stage === 'G1 scope')?.notice ?? SCOPE_REDIRECT, onToken);
       else if (!guarded.text.trim()) emitWords('Ask me anything about this module: how it is assessed, what it covers, or what you need beforehand.', onToken);
-      else {
+      else if (asksForGuarantee(guarded.text)) {
+        // Spec 10.5 and issue #113: the same no-promise reply as the advisor chat, then what the module data says.
+        const rec = ranked(session).find((r) => r.moduleId === module.id) ?? null;
+        tracer.record({ actor: 'G8 claims', kind: 'guardrail', input: `guarantee question about ${module.code}`, output: 'no outcome promised; answered from module data', verdict: 'block' });
+        emitWords(guaranteeReply(module, catalogue.pathways(), rec, hasFitSignal(session.profile)), onToken);
+      } else {
         const facts = moduleFacts(module, rawModule(module.id), moduleTitle);
         const rec = ranked(session).find((r) => r.moduleId === module.id);
         await tracer.timed(
