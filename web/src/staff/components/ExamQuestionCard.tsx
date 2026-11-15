@@ -1,7 +1,7 @@
 // One exam question in the feedback editor: label, marks, topics, what good answers did, mistakes and pointers.
 import { useId } from 'react';
 import type { Ref } from 'react';
-import { fieldId, questionDisplayTitle, questionId } from '../lib/examForm.ts';
+import { fieldId, questionDisplayTitle, questionNumber } from '../lib/examForm.ts';
 import type { QuestionDraft } from '../lib/examForm.ts';
 import { Field, ListEditor, TextArea, TextInput, TopicPicker } from './ExamFields.tsx';
 import { ArrowDownIcon, ArrowUpIcon, TrashIcon } from './icons.tsx';
@@ -15,6 +15,8 @@ export interface QuestionCardProps {
   count: number;
   /** Inline error for the max marks field, shown after a save attempt. */
   marksError?: string;
+  /** Inline error for the question number: missing or used twice. */
+  idError?: string;
   onChange: (next: QuestionDraft) => void;
   onMove: (direction: MoveDirection) => void;
   onRemove: () => void;
@@ -27,13 +29,14 @@ export function ExamQuestionCard({
   index,
   count,
   marksError,
+  idError,
   onChange,
   onMove,
   onRemove,
   headingRef,
 }: QuestionCardProps) {
   const headingId = useId();
-  const id = questionId(index);
+  const id = questionNumber(q, index);
   const title = questionDisplayTitle(q, index);
   const set = (patch: Partial<QuestionDraft>) => onChange({ ...q, ...patch });
 
@@ -91,15 +94,30 @@ export function ExamQuestionCard({
       </header>
 
       <div className="grid gap-6">
-        <div className="grid gap-4 @md:grid-cols-[minmax(0,1fr)_8.5rem]">
-          <Field id={fieldId(q.key, 'label')} label="Question label" hint="What the question was about.">
+        <div className="grid grid-cols-2 items-start gap-4 @md:grid-cols-[minmax(0,1fr)_6.5rem_8.5rem]">
+          <div className="col-span-2 @md:col-span-1">
+            <Field id={fieldId(q.key, 'label')} label="Question label">
+              {(describedBy) => (
+                <TextInput
+                  id={fieldId(q.key, 'label')}
+                  aria-describedby={describedBy}
+                  value={q.label}
+                  placeholder={`Question ${index + 1}`}
+                  onChange={(e) => set({ label: e.target.value })}
+                />
+              )}
+            </Field>
+          </div>
+          <Field id={fieldId(q.key, 'id')} label="Number" error={idError}>
             {(describedBy) => (
               <TextInput
-                id={fieldId(q.key, 'label')}
+                id={fieldId(q.key, 'id')}
                 aria-describedby={describedBy}
-                value={q.label}
-                placeholder={`Question ${index + 1}`}
-                onChange={(e) => set({ label: e.target.value })}
+                invalid={Boolean(idError)}
+                value={q.id}
+                placeholder={`Q${index + 1}`}
+                onChange={(e) => set({ id: e.target.value })}
+                className="font-mono"
               />
             )}
           </Field>

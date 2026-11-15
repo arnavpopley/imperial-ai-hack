@@ -59,17 +59,33 @@ describe('exam form drafts', () => {
     expect(body.questions[1]?.maxMarks).toBe(30);
   });
 
-  it('numbers question ids by position, so they stay unique after reorder and delete', () => {
-    const draft = draftFromForm(form);
+  it('keeps saved question ids through reorders, so student marks still match', () => {
+    const draft = draftFromForm({ ...form, questions: form.questions.map((q, i) => ({ ...q, id: ['Q3a', 'Q3b'][i]! })) });
     const reordered: ExamDraft = { ...draft, questions: moveItem(draft.questions, 0, 1) };
-    const body = saveBody(reordered);
-    expect(body.questions.map((q) => [q.id, q.label])).toEqual([
-      ['Q1', 'Pipe flow'],
-      ['Q2', 'Control volumes'],
+    expect(saveBody(reordered).questions.map((q) => [q.id, q.label])).toEqual([
+      ['Q3b', 'Pipe flow'],
+      ['Q3a', 'Control volumes'],
     ]);
-    const added = saveBody({ ...reordered, questions: [...reordered.questions, { ...blankQuestion(), maxMarks: '5' }] });
-    expect(new Set(added.questions.map((q) => q.id)).size).toBe(3);
-    expect(schemas.ExamFormSaveBody.safeParse(added).success).toBe(true);
+  });
+
+  it('gives a new question the first free number', () => {
+    const draft = draftFromForm(form);
+    const added = blankQuestion(draft.questions);
+    expect(added.id).toBe('Q3');
+    draft.questions[1]!.id = 'Q3';
+    expect(blankQuestion(draft.questions).id).toBe('Q4');
+    const body = saveBody({ ...draft, questions: [...draft.questions, { ...blankQuestion(draft.questions), maxMarks: '5' }] });
+    expect(schemas.ExamFormSaveBody.safeParse(body).success).toBe(true);
+  });
+
+  it('flags a missing or repeated question number', () => {
+    const draft = draftFromForm(form);
+    draft.questions[1]!.id = ' q1 ';
+    expect(draftIssues(draft)).toEqual([
+      { field: fieldId(draft.questions[1]!.key, 'id'), message: 'q1 is already used by another question.' },
+    ]);
+    draft.questions[1]!.id = '';
+    expect(draftIssues(draft)[0]?.message).toBe('Question 2 needs a number, such as Q2.');
   });
 
   it('trims text, drops blank list rows and falls back to a numbered label', () => {
@@ -87,7 +103,7 @@ describe('exam form drafts', () => {
 
   it('flags a missing exam name and missing or zero marks', () => {
     const draft = blankDraft('');
-    draft.questions.push({ ...blankQuestion(), maxMarks: '0' });
+    draft.questions.push({ ...blankQuestion(draft.questions), maxMarks: '0' });
     const issues = draftIssues(draft);
     expect(issues.map((i) => i.field)).toEqual([
       'exam-label',
@@ -108,9 +124,9 @@ describe('exam form drafts', () => {
   });
 
   it('drops a repeated question number from the displayed title only', () => {
-    const q = { ...blankQuestion(), label: 'Q2: Rigid body dynamics' };
+    const q = { ...blankQuestion(), id: 'Q2', label: 'Q2: Rigid body dynamics' };
     expect(questionDisplayTitle(q, 1)).toBe('Rigid body dynamics');
-    expect(questionDisplayTitle(q, 0)).toBe('Q2: Rigid body dynamics');
+    expect(questionDisplayTitle({ ...q, id: 'Q1' }, 0)).toBe('Q2: Rigid body dynamics');
     expect(questionDisplayTitle({ ...q, label: 'Q2' }, 1)).toBe('Q2');
     expect(questionDisplayTitle({ ...q, label: 'Q21 Fluids' }, 1)).toBe('Q21 Fluids');
   });

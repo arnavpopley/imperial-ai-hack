@@ -12,6 +12,11 @@ export const NOTES_LIMIT = 20000;
 export interface QuestionDraft {
   /** Stable React key for the editor; never sent to the server. */
   key: string;
+  /**
+   * The question's number as students' mark sheets give it, such as "Q2" or "Q3a". Student marks are matched
+   * to questions by this id, so it is kept as saved through reorders and must be unique within the form.
+   */
+  id: string;
   label: string;
   /** Kept as typed so the field can be cleared while editing; parsed on save. */
   maxMarks: string;
@@ -38,11 +43,18 @@ export function examStatus(form: ExamFeedbackForm | null): ExamStatus {
 let keySeed = 0;
 const nextKey = () => `question-${++keySeed}`;
 
-/**
- * Student mark sheets refer to questions by number, so a question's id is its position on the paper:
- * Q1, Q2 and so on. Ids are re-derived on every save, which keeps them unique through reorders and deletes.
- */
-export const questionId = (index: number) => `Q${index + 1}`;
+/** The question's id for display, falling back to its position while the examiner has left it blank. */
+export const questionNumber = (q: QuestionDraft, index: number) => q.id.trim() || `Q${index + 1}`;
+
+const sameId = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+
+/** The first of Q1, Q2 and so on that no question in the form uses yet. */
+export function nextQuestionId(questions: readonly QuestionDraft[]): string {
+  for (let n = questions.length + 1; ; n++) {
+    const id = `Q${n}`;
+    if (!questions.some((q) => sameId(q.id, id))) return id;
+  }
+}
 
 /** The label shown for a question, falling back to its number when the examiner left it blank. */
 export const questionTitle = (q: QuestionDraft, index: number) => q.label.trim() || `Question ${index + 1}`;
@@ -53,13 +65,15 @@ export const questionTitle = (q: QuestionDraft, index: number) => q.label.trim()
  */
 export function questionDisplayTitle(q: QuestionDraft, index: number): string {
   const title = questionTitle(q, index);
-  const stripped = title.replace(new RegExp(`^${questionId(index)}\\b[\\s:.)\\-–]*`, 'i'), '');
+  const id = questionNumber(q, index).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const stripped = title.replace(new RegExp(`^${id}\\b[\\s:.)\\-–]*`, 'i'), '');
   return stripped || title;
 }
 
-export function blankQuestion(): QuestionDraft {
+export function blankQuestion(existing: readonly QuestionDraft[] = []): QuestionDraft {
   return {
     key: nextKey(),
+    id: nextQuestionId(existing),
     label: '',
     maxMarks: '',
     topics: [],
@@ -81,6 +95,7 @@ export function draftFromForm(form: ExamFeedbackForm): ExamDraft {
     generalComments: form.generalComments,
     questions: form.questions.map((q) => ({
       key: nextKey(),
+      id: q.id,
       label: q.label,
       maxMarks: String(q.maxMarks),
       topics: [...q.topics],
@@ -100,13 +115,13 @@ const cleanList = (items: string[]) => items.map((s) => s.trim()).filter(Boolean
 
 export const parseMarks = (raw: string): number => (raw.trim() === '' ? Number.NaN : Number(raw));
 
-/** The PUT body: trimmed text, no blank list rows, and ids by position. */
+/** The PUT body: trimmed text and no blank list rows. Ids are sent as saved, so student marks still match. */
 export function saveBody(draft: ExamDraft): ExamFormSaveBody {
   return {
     examLabel: draft.examLabel.trim(),
     generalComments: draft.generalComments.trim(),
     questions: draft.questions.map((q, i) => ({
-      id: questionId(i),
+      id: q.id.trim(),
       label: questionTitle(q, i),
       maxMarks: parseMarks(q.maxMarks),
       topics: [...q.topics],
@@ -132,9 +147,13 @@ export function draftIssues(draft: ExamDraft): DraftIssue[] {
   const issues: DraftIssue[] = [];
   if (!draft.examLabel.trim()) issues.push({ field: EXAM_LABEL_FIELD, message: 'Give the exam a name.' });
   draft.questions.forEach((q, i) => {
+    const name = questionNumber(q, i);
+    if (!q.id.trim()) issues.push({ field: fieldId(q.key, 'id'), message: `Question ${i + 1} needs a number, such as Q${i + 1}.` });
+    else if (draft.questions.some((other, j) => j < i && sameId(other.id, q.id)))
+      issues.push({ field: fieldId(q.key, 'id'), message: `${name} is already used by another question.` });
     const marks = parseMarks(q.maxMarks);
     if (!Number.isFinite(marks) || marks <= 0)
-      issues.push({ field: fieldId(q.key, 'marks'), message: `${questionId(i)} needs a maximum mark above 0.` });
+      issues.push({ field: fieldId(q.key, 'marks'), message: `${name} needs a maximum mark above 0.` });
   });
   return issues;
 }
@@ -204,7 +223,7 @@ export function previewFeedback({
   const weak = scored.find(({ i }) => i === weakIndex) ?? scored[0]!;
 
   const marks: SampleMark[] = scored.map(({ q, i, max }) => ({
-    questionId: questionId(i),
+    questionId: questionNumber(q, i),
     label: questionTitle(q, i),
     mark: Math.min(max, roundHalf(max * (i === weak.i ? WEAK_SHARE : STRONG_SHARE))),
     maxMarks: max,
@@ -229,9 +248,9 @@ export function previewFeedback({
     .filter(({ i }) => i !== weak.i)
     .slice(0, 2)
     .map(({ q, i }) => {
-      const m = marks.find((x) => x.questionId === questionId(i))!;
+      const m = marks.find((x) => x.questionId === questionNumber(q, i))!;
       const on = q.topics.length > 0 ? ` on ${listTopics(q.topics).toLowerCase()}` : '';
-      return `${questionId(i)}${on}: ${m.mark} of ${m.maxMarks}.`;
+      return `${questionNumber(q, i)}${on}: ${m.mark} of ${m.maxMarks}.`;
     });
 
   const revisionPlan = [

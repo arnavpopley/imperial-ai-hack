@@ -25,7 +25,8 @@ import {
   exampleNotes,
   fieldId,
   moveItem,
-  questionId,
+  nextQuestionId,
+  questionNumber,
   sameDraft,
   saveBody,
 } from '../lib/examForm.ts';
@@ -192,7 +193,7 @@ function ExamFormWorkspace({ moduleId, initial }: { moduleId: string; initial: E
     edit({ ...draft, questions: moveItem(draft.questions, index, to) });
     setRemoved(null);
     setPendingFocus({ question: question.key });
-    setAnnouncement(`${questionId(index)} moved ${direction}. It is now ${questionId(to)}.`);
+    setAnnouncement(`${questionNumber(question, index)} moved ${direction}, to position ${to + 1}.`);
   };
 
   const remove = (index: number) => {
@@ -202,7 +203,7 @@ function ExamFormWorkspace({ moduleId, initial }: { moduleId: string; initial: E
     setRemoved({ question, index });
     const neighbour = questions[Math.min(index, questions.length - 1)];
     setPendingFocus(neighbour ? { question: neighbour.key } : null);
-    setAnnouncement(`${questionId(index)} deleted. Undo is available in the action bar.`);
+    setAnnouncement(`${questionNumber(question, index)} deleted. Undo is available in the action bar.`);
   };
 
   const undoRemove = () => {
@@ -211,15 +212,15 @@ function ExamFormWorkspace({ moduleId, initial }: { moduleId: string; initial: E
     questions.splice(Math.min(removed.index, questions.length), 0, removed.question);
     edit({ ...draft, questions });
     setPendingFocus({ question: removed.question.key });
-    setAnnouncement(`${questionId(removed.index)} restored.`);
+    setAnnouncement(`${questionNumber(removed.question, removed.index)} restored.`);
     setRemoved(null);
   };
 
   const addQuestion = () => {
-    const question = blankQuestion();
+    const question = blankQuestion(draft.questions);
     edit({ ...draft, questions: [...draft.questions, question] });
     setPendingFocus({ field: fieldId(question.key, 'label') });
-    setAnnouncement(`${questionId(draft.questions.length)} added.`);
+    setAnnouncement(`${question.id} added.`);
   };
 
   /** Shows inline errors and focuses the first one; true when the draft is ready to send. */
@@ -391,6 +392,7 @@ function ExamFormWorkspace({ moduleId, initial }: { moduleId: string; initial: E
                   index={index}
                   count={draft.questions.length}
                   marksError={issueFor(fieldId(q.key, 'marks'))}
+                  idError={issueFor(fieldId(q.key, 'id'))}
                   onChange={(next) => editQuestion(index, next)}
                   onMove={(direction) => move(index, direction)}
                   onRemove={() => remove(index)}
@@ -406,7 +408,7 @@ function ExamFormWorkspace({ moduleId, initial }: { moduleId: string; initial: E
                 className={`flex min-h-16 items-center justify-center gap-2 rounded-panel border-2 border-dashed border-line-strong text-sm font-semibold text-muted transition-colors hover:border-brand hover:bg-brand-soft/40 hover:text-brand ${focusRing}`}
               >
                 <PlusIcon className="size-5" />
-                Add question {questionId(draft.questions.length)}
+                Add question {nextQuestionId(draft.questions)}
               </button>
             </section>
           </fieldset>
@@ -422,7 +424,7 @@ function ExamFormWorkspace({ moduleId, initial }: { moduleId: string; initial: E
                 issues={shownIssues}
                 dirty={dirty}
                 published={published}
-                removed={removed ? questionId(removed.index) : null}
+                removed={removed ? questionNumber(removed.question, removed.index) : null}
                 onUndo={undoRemove}
               />
             </div>

@@ -1,7 +1,7 @@
 // A sample of the tailored feedback card a student would see, built in the browser from the draft form.
 import type { Module } from '@modulematch/shared';
 import { useId, useMemo, useState } from 'react';
-import { previewFeedback, questionDisplayTitle, questionId } from '../lib/examForm.ts';
+import { previewFeedback, questionDisplayTitle, questionNumber } from '../lib/examForm.ts';
 import type { ExamDraft } from '../lib/examForm.ts';
 import { focusRing, topicLabel } from '../lib/format.ts';
 import { inputClass } from './ExamFields.tsx';
@@ -26,7 +26,8 @@ export function FeedbackPreview({
     () => previewFeedback({ draft, weakIndex, moduleId, catalogue }),
     [draft, weakIndex, moduleId, catalogue],
   );
-  const weakId = questionId(preview?.weakIndex ?? weakIndex);
+  const weakAt = preview?.weakIndex ?? weakIndex;
+  const weakId = questionNumber(draft.questions[weakAt]!, weakAt);
 
   return (
     <section aria-labelledby={`${selectId}-heading`} className="grid gap-4">
@@ -50,7 +51,7 @@ export function FeedbackPreview({
             >
               {draft.questions.map((q, i) => (
                 <option key={q.key} value={i}>
-                  {questionId(i)}: {questionDisplayTitle(q, i)}
+                  {questionNumber(q, i)}: {questionDisplayTitle(q, i)}
                 </option>
               ))}
             </select>
