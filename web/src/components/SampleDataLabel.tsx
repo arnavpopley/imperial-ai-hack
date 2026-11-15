@@ -5,7 +5,11 @@ const copy = {
   modules: 'Sample of public module descriptions, not an official catalogue',
   synthetic: 'Synthetic timetable data',
   pathways: 'Sample pathways and societies',
+  marks: 'Synthetic marks and exam forms',
 } as const;
+
+/** Variants that describe invented data rather than a sample of real data. */
+const SYNTHETIC: ReadonlySet<keyof typeof copy> = new Set(['synthetic', 'marks']);
 
 /** Spec 15: every sample or synthetic dataset is labelled wherever it appears. */
 export function SampleDataLabel({ variant = 'modules', className }: { variant?: keyof typeof copy; className?: string }) {
@@ -19,7 +23,7 @@ export function SampleDataLabel({ variant = 'modules', className }: { variant?: 
     >
       <Icon name="info" size={12} />
       <span>
-        <span className="font-semibold">{variant === 'synthetic' ? 'Synthetic data' : 'Sample data'}</span>
+        <span className="font-semibold">{SYNTHETIC.has(variant) ? 'Synthetic data' : 'Sample data'}</span>
         <span className="hidden sm:inline">: {copy[variant]}</span>
       </span>
     </p>

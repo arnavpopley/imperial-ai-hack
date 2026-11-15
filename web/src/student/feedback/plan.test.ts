@@ -1,7 +1,19 @@
 // Guards the exam feedback page's lost-mark bars and revision checklist logic.
-import type { ModuleResult } from '@modulematch/shared';
+import type { ModuleResult, TailoredFeedback } from '@modulematch/shared';
 import { describe, expect, it, vi } from 'vitest';
-import { clearRevisionChecklists, lostMarksRows, questionLabel, readChecked, revisionKey, toggleItem, writeChecked } from './plan.ts';
+import {
+  byGap,
+  clearRevisionChecklists,
+  examAnchor,
+  examGap,
+  examMark,
+  questionBars,
+  questionLabel,
+  readChecked,
+  revisionKey,
+  toggleItem,
+  writeChecked,
+} from './plan.ts';
 
 const result: ModuleResult = {
   moduleId: 'MECH50010',
@@ -16,31 +28,47 @@ const result: ModuleResult = {
   source: 'pasted-text',
 };
 
-describe('lostMarksRows', () => {
-  const weak = [
-    { questionId: 'Q3', topics: ['fluid-mechanics'], lostMarks: 13, advice: '' },
-    { questionId: 'Q4', topics: [], lostMarks: 6.5, advice: '' },
-  ];
-
-  it('uses the question maximum from the student mark sheet when it has one', () => {
-    const [q3] = lostMarksRows(weak, result);
-    expect(q3).toMatchObject({ maxMarks: 20, lostShare: 13 / 20, scoredShare: 7 / 20 });
+describe('questionBars', () => {
+  const feedback = (extra: Partial<TailoredFeedback> = {}): TailoredFeedback => ({
+    moduleId: 'MECH50010',
+    examLabel: 'Summer 2026 exam',
+    overall: 'Most marks went on Q3.',
+    strengths: [],
+    weakPoints: [{ questionId: 'Q3', label: 'Boundary layers', topics: ['fluid-mechanics'], lostMarks: 13, advice: '' }],
+    revisionPlan: [],
+    affectsModules: [],
+    source: 'template',
+    ...extra,
   });
 
-  it('matches question ids ignoring case and spaces, as the server does', () => {
-    const [row] = lostMarksRows([{ questionId: ' q3 ', topics: [], lostMarks: 13, advice: '' }], result);
-    expect(row?.maxMarks).toBe(20);
+  it('charts every question from the student mark sheet, marking the weak ones (ignoring case and spaces)', () => {
+    const bars = questionBars(feedback({ weakPoints: [{ questionId: ' q3 ', topics: [], lostMarks: 13, advice: '' }] }), result);
+    expect(bars.map((b) => [b.questionId, b.weak])).toEqual([
+      ['Q1', false],
+      ['Q3', true],
+    ]);
+    expect(bars[1]).toMatchObject({ scoredShare: 7 / 20, lostShare: 13 / 20 });
   });
 
-  it('scales to the largest loss when the maximum is unknown', () => {
-    const rows = lostMarksRows(weak, undefined);
-    expect(rows.map((r) => r.lostShare)).toEqual([1, 0.5]);
-    expect(rows.every((r) => r.maxMarks === null && r.scoredShare === 0)).toBe(true);
+  it('prefers the questions and labels the server sends', () => {
+    const bars = questionBars(feedback({ questions: [{ questionId: 'Q3', label: 'Boundary layers', mark: 6, maxMarks: 20 }] }), result);
+    expect(bars).toEqual([{ questionId: 'Q3', label: 'Boundary layers', mark: 6, maxMarks: 20, scoredShare: 0.3, lostShare: 0.7, weak: true }]);
   });
 
   it('never draws more than a full bar', () => {
-    const [row] = lostMarksRows([{ questionId: 'Q1', topics: [], lostMarks: 30, advice: '' }], result);
-    expect((row?.lostShare ?? 0) + (row?.scoredShare ?? 0)).toBeLessThanOrEqual(1);
+    const [bar] = questionBars(feedback({ questions: [{ questionId: 'Q1', label: '', mark: 30, maxMarks: 20 }] }), undefined);
+    expect((bar?.scoredShare ?? 0) + (bar?.lostShare ?? 0)).toBe(1);
+  });
+
+  it('puts the exam with most marks lost first, falling back to the overall mark', () => {
+    const bars = questionBars(feedback(), result);
+    expect(examGap(bars, 58)).toBeCloseTo(17 / 40);
+    expect(examGap([], 57)).toBeCloseTo(0.43);
+    expect(examGap([], null)).toBe(0);
+    expect(byGap([{ id: 'a', gap: 0.2 }, { id: 'b', gap: 0.4 }, { id: 'c', gap: 0.2 }]).map((x) => x.id)).toEqual(['b', 'a', 'c']);
+    expect(examMark(feedback({ mark: 57 }), result)).toBe(57);
+    expect(examMark(feedback(), result)).toBe(58);
+    expect(examAnchor('MECH50010', 'Summer 2026 exam')).toBe('exam-mech50010-summer-2026-exam');
   });
 });
 
