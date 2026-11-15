@@ -1,5 +1,5 @@
 // Screen 8 shell: module picker beside the selected module's dashboard, tag editor or exam feedback form.
-import type { StaffModuleSummary } from '@modulematch/shared';
+import type { CohortOffer, StaffModuleSummary } from '@modulematch/shared';
 import { useEffect } from 'react';
 import { NavLink, Outlet, useNavigate, useOutletContext, useParams } from 'react-router';
 import { api } from '../../api.ts';
@@ -8,15 +8,14 @@ import { EmptyState, ErrorState, LoadingState } from '../components/ui.tsx';
 import { InboxIcon } from '../components/icons.tsx';
 import { useResource } from '../hooks/useResource.ts';
 import { focusRing, plural } from '../lib/format.ts';
-import type { CohortOffer, StaffModuleRow } from '../lib/moduleList.ts';
 import { isCohortVisible } from '../lib/privacy.ts';
 
 interface ModulesOutlet {
-  summaries: StaffModuleRow[];
+  summaries: StaffModuleSummary[];
 }
 
 interface ModuleOutlet {
-  summary: StaffModuleRow;
+  summary: StaffModuleSummary;
   /** False when the cohort is below the privacy minimum (spec 20.4), so no aggregate may be shown. */
   cohortVisible: boolean;
 }
@@ -36,8 +35,7 @@ export function ModulesPage() {
       </EmptyState>
     );
 
-  // The route may add each module's offer to the cohort beside the shared summary fields.
-  const summaries: StaffModuleRow[] = state.data;
+  const summaries = state.data;
   return (
     <div className="grid items-start gap-8 lg:grid-cols-[20rem_minmax(0,1fr)]">
       <div className="min-w-0 lg:sticky lg:top-24">

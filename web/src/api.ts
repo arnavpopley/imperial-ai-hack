@@ -14,6 +14,7 @@ import type {
   Insight,
   InsightDecisionBody,
   Module,
+  ModuleDemandSignal,
   ModuleSummary,
   CvResponse,
   ExamFeedbackForm,
@@ -115,6 +116,8 @@ export const api = {
   },
 
   modules: () => call<Module[]>('/modules'),
+  /** Near-full and oversubscribed modules from the synthetic cohort's shortlists; informational, never a score. */
+  moduleDemand: () => call<ModuleDemandSignal[]>('/modules/demand'),
   /** Short AI summary of a module's public description, cached on the server. */
   moduleSummary: (moduleId: string) => call<ModuleSummary>(`/modules/${encodeURIComponent(moduleId)}/summary`),
   pathways: () => call<Pathway[]>('/pathways'),

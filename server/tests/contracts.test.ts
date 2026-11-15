@@ -104,6 +104,16 @@ describe('every route returns a valid response', () => {
     expect(offer('MECH70007')).toBe('not-offered');
   });
 
+  it('tells students which modules are near or over capacity, from the cohort', async () => {
+    const signals = (await check('/api/modules/demand', undefined, S.ModuleDemandSignal.array())) as {
+      moduleId: string;
+      status: string;
+      shortlisted: number;
+    }[];
+    expect(signals.find((d) => d.moduleId === 'MECH60009')).toMatchObject({ status: 'over' });
+    expect(signals.every((d) => d.shortlisted >= 5)).toBe(true);
+  });
+
   it('shared routes', async () => {
     await check('/api/modules', undefined, S.Module.array());
     await check('/api/pathways', undefined, S.Pathway.array());

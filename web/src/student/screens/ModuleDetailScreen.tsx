@@ -33,6 +33,7 @@ import { useFeedbackAffecting, useNudge } from '../results/ResultsProvider.tsx';
 import { paths } from '../routes.ts';
 import { useCatalogue } from '../state/CatalogueProvider.tsx';
 import { useReferenceData } from '../state/ReferenceDataProvider.tsx';
+import { DemandNote } from '../catalogue/DemandChip.tsx';
 import { useReadySession } from '../state/SessionProvider.tsx';
 
 const EASE = [0.2, 0.8, 0.2, 1] as const;
@@ -40,7 +41,7 @@ const EASE = [0.2, 0.8, 0.2, 1] as const;
 export function ModuleDetailScreen() {
   const { moduleId = '' } = useParams();
   const { session } = useReadySession();
-  const { moduleById, pathwayById, modules } = useReferenceData();
+  const { moduleById, pathwayById, modules, demandById } = useReferenceData();
   const { byId, scored } = useCatalogue();
   const shortlist = useShortlist();
   const reduce = useReducedMotion();
@@ -55,6 +56,7 @@ export function ModuleDetailScreen() {
   );
   const module = moduleById.get(moduleId);
   const rec = byId.get(moduleId);
+  const demand = demandById.get(moduleId);
   const pathwayTitle = (id: string) => pathwayById.get(id)?.title ?? id;
 
   if (modules.data && !module) {
@@ -143,6 +145,11 @@ export function ModuleDetailScreen() {
                 </li>
               ))}
             </ul>
+            {demand && (
+              <div className="mt-3">
+                <DemandNote signal={demand} />
+              </div>
+            )}
           </div>
           <div className="flex flex-wrap items-center gap-3 sm:flex-col sm:items-end">
             <ShortlistButton
