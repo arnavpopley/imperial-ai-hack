@@ -227,6 +227,7 @@ export function CatalogueScreen() {
         scored={scored}
         lowConfidence={confidence === 'low'}
         isShortlisted={shortlist.isShortlisted}
+        shortlistKey={session.shortlist.join(',')}
         onAsk={openAdvisor}
       />
     </div>

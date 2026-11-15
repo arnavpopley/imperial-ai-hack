@@ -2,7 +2,7 @@
 // match the cards; assessment, load, topics, prerequisites, timetable and clashes come from the module records
 // and the timetable engine. No model is called.
 import type { CompareModule } from '@modulematch/shared';
-import type { ReactNode } from 'react';
+import { useId, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import { api } from '../../api.ts';
 import { Button } from '../../components/Button.tsx';
@@ -33,6 +33,8 @@ interface CompareDrawerProps {
   /** Low profile confidence greys every score, as on the cards (spec 8.6). */
   lowConfidence: boolean;
   isShortlisted: (moduleId: string) => boolean;
+  /** Changes whenever the shortlist does, so the clashes are fetched again while the drawer is open. */
+  shortlistKey: string;
   onAsk: (question: string) => void;
 }
 
@@ -40,11 +42,12 @@ const FIT_TEXT = { high: 'text-fit-high', mid: 'text-fit-mid', low: 'text-fit-lo
 const FIT_TONE: Record<'high' | 'mid' | 'low', MeterTone> = { high: 'high', mid: 'mid', low: 'low' };
 
 export function CompareDrawer(props: CompareDrawerProps) {
-  const { open, onClose, sessionId, moduleIds, onAsk } = props;
+  const { open, onClose, sessionId, moduleIds, shortlistKey, onAsk } = props;
   const key = moduleIds.join(',');
-  const view = useAsync(() => api.compare(sessionId, moduleIds), [sessionId, key], open && moduleIds.length >= 2);
+  const view = useAsync(() => api.compare(sessionId, moduleIds), [sessionId, key, shortlistKey], open && moduleIds.length >= 2);
   const modules = view.data?.modules.filter((m) => moduleIds.includes(m.moduleId)) ?? [];
-  const current = modules.length === moduleIds.length && !view.loading;
+  // Only a successful, finished fetch is shown: after a failed refresh the old clashes may be out of date.
+  const current = modules.length === moduleIds.length && !view.loading && !view.error;
 
   return (
     <Drawer
@@ -71,7 +74,7 @@ export function CompareDrawer(props: CompareDrawerProps) {
       }
     >
       <div className="h-full overflow-y-auto overscroll-contain px-5 pb-6">
-        {view.error && !current ? (
+        {view.error ? (
           <div className="py-6">
             <ErrorState message={view.error} onRetry={view.reload} />
           </div>
@@ -261,21 +264,32 @@ function CompareTable({ modules, byId, scored, lowConfidence, isShortlisted }: C
   );
 }
 
-/** One attribute across the modules: side by side from sm up, one line per module on a phone. */
+/**
+ * One attribute across the modules: side by side from sm up, one line per module on a phone. Each value starts
+ * with its module's name for screen readers, since the letters and the column order are visual only.
+ */
 function Row({ label, modules, render }: { label: string; modules: CompareModule[]; render: (m: CompareModule, i: number) => ReactNode }) {
+  const headingId = useId();
   return (
-    <section className="border-b border-line py-3.5 last:border-b-0">
-      <h3 className="mb-2.5 text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">{label}</h3>
-      <div className={cx('grid gap-3 sm:gap-4', modules.length === 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2')}>
+    <section aria-labelledby={headingId} className="border-b border-line py-3.5 last:border-b-0">
+      <h3 id={headingId} className="mb-2.5 text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">
+        {label}
+      </h3>
+      <ul className={cx('grid gap-3 sm:gap-4', modules.length === 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2')}>
         {modules.map((m, i) => (
-          <div key={m.moduleId} className="flex min-w-0 gap-2 sm:block">
+          <li key={m.moduleId} className="flex min-w-0 gap-2 sm:block">
             <span className="shrink-0 pt-0.5 sm:hidden">
               <Letter index={i} />
             </span>
-            <div className="min-w-0 flex-1">{render(m, i)}</div>
-          </div>
+            <div className="min-w-0 flex-1">
+              <span className="sr-only">
+                {m.code} {m.title}:{' '}
+              </span>
+              {render(m, i)}
+            </div>
+          </li>
         ))}
-      </div>
+      </ul>
     </section>
   );
 }
