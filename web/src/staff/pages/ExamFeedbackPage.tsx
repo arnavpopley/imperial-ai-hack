@@ -8,9 +8,9 @@ import { DraftProgress } from '../components/DraftProgress.tsx';
 import { Field, TextArea, TextInput } from '../components/ExamFields.tsx';
 import { ExamQuestionCard } from '../components/ExamQuestionCard.tsx';
 import type { MoveDirection } from '../components/ExamQuestionCard.tsx';
-import { CohortOnlyNote, ExamStatusChip, PublishDialog } from '../components/ExamStatus.tsx';
+import { CohortOnlyNote, ExamStatusChip, PublishDialog, UnpublishDialog } from '../components/ExamStatus.tsx';
 import { FeedbackPreview } from '../components/FeedbackPreview.tsx';
-import { AlertIcon, CheckIcon, ExamIcon, PencilIcon, PlusIcon, SendIcon, SparkIcon, UndoIcon } from '../components/icons.tsx';
+import { AlertIcon, CheckIcon, ExamIcon, InfoIcon, PencilIcon, PlusIcon, SendIcon, SparkIcon, UndoIcon } from '../components/icons.tsx';
 import { Button, ErrorState, LoadingState, Panel } from '../components/ui.tsx';
 import { useResource } from '../hooks/useResource.ts';
 import {
@@ -95,7 +95,10 @@ window.addEventListener('beforeunload', (e) => {
 });
 
 type Busy = 'idle' | 'saving' | 'publishing';
-type Notice = { tone: 'success' | 'error'; text: string } | null;
+type Notice = { tone: 'success' | 'info' | 'error'; text: string } | null;
+
+/** The draft route answers 409 when the form was saved or published while the AI was still writing. */
+const isConflict = (e: unknown) => errorMessage(e).startsWith('409');
 
 function ExamFormWorkspace({ moduleId, initial }: { moduleId: string; initial: ExamFeedbackForm | null }) {
   const { catalogue, moduleTitle } = useStaffData();
@@ -111,6 +114,7 @@ function ExamFormWorkspace({ moduleId, initial }: { moduleId: string; initial: E
   const [showIssues, setShowIssues] = useState(false);
   const [removed, setRemoved] = useState<{ question: QuestionDraft; index: number } | null>(null);
   const [publishOpen, setPublishOpen] = useState(false);
+  const [unpublishOpen, setUnpublishOpen] = useState(false);
   const [announcement, setAnnouncement] = useState('');
 
   // Where focus goes after the next render: a field id, or a question key whose heading should take focus.
@@ -154,10 +158,22 @@ function ExamFormWorkspace({ moduleId, initial }: { moduleId: string; initial: E
             setPendingFocus({ field: fieldId(next.questions[0]!.key, 'label') });
           }}
           onDraft={async (body) => {
-            const form = await api.staff.draftExamForm(moduleId, body);
-            setSaved(form);
-            setDraft(draftFromForm(form));
-            setFocusBanner(true);
+            try {
+              const form = await api.staff.draftExamForm(moduleId, body);
+              setSaved(form);
+              setDraft(draftFromForm(form));
+              setFocusBanner(true);
+            } catch (e) {
+              // The examiner's own save wins over a late AI draft: load what they saved instead.
+              const current = isConflict(e) ? await api.staff.examForm(moduleId) : null;
+              if (!current) throw e;
+              setSaved(current);
+              setDraft(draftFromForm(current));
+              setNotice({
+                tone: 'info',
+                text: 'The form was saved while the AI was drafting, so your edits were kept and the AI draft was dropped.',
+              });
+            }
           }}
         />
       </ExamIntro>
@@ -221,15 +237,22 @@ function ExamFormWorkspace({ moduleId, initial }: { moduleId: string; initial: E
     setShowIssues(false);
   };
 
-  const save = async () => {
+  // Saving a published form takes it back to draft on the server, so ask first.
+  const requestSave = () => {
     if (!validate()) return;
+    if (status === 'published') setUnpublishOpen(true);
+    else void save();
+  };
+
+  const save = async () => {
     setBusy('saving');
     try {
       adopt(await api.staff.saveExamForm(moduleId, saveBody(draft)));
-      setNotice({ tone: 'success', text: 'Saved.' });
+      setNotice({ tone: 'success', text: published ? 'Saved as a draft. Publish again when you are ready.' : 'Saved.' });
     } catch (e) {
       setNotice({ tone: 'error', text: `Could not save: ${errorMessage(e)}` });
     } finally {
+      setUnpublishOpen(false);
       setBusy('idle');
     }
   };
@@ -272,7 +295,7 @@ function ExamFormWorkspace({ moduleId, initial }: { moduleId: string; initial: E
           className="grid min-w-0 grid-cols-1 gap-6"
           onSubmit={(e) => {
             e.preventDefault();
-            void save();
+            requestSave();
           }}
         >
           {status === 'ai-draft' && (
@@ -389,6 +412,7 @@ function ExamFormWorkspace({ moduleId, initial }: { moduleId: string; initial: E
                 notice={notice}
                 issues={shownIssues}
                 dirty={dirty}
+                published={published}
                 removed={removed ? questionId(removed.index) : null}
                 onUndo={undoRemove}
               />
@@ -398,7 +422,7 @@ function ExamFormWorkspace({ moduleId, initial }: { moduleId: string; initial: E
                 Discard
               </Button>
               <Button type="submit" disabled={!dirty || locked}>
-                {busy === 'saving' ? 'Saving…' : published ? 'Save changes' : 'Save draft'}
+                {busy === 'saving' ? 'Saving…' : published ? 'Save as draft' : 'Save draft'}
               </Button>
               <Button
                 variant="primary"
@@ -429,6 +453,12 @@ function ExamFormWorkspace({ moduleId, initial }: { moduleId: string; initial: E
         </aside>
       </div>
 
+      <UnpublishDialog
+        open={unpublishOpen}
+        busy={busy === 'saving'}
+        onConfirm={() => void save()}
+        onClose={() => setUnpublishOpen(false)}
+      />
       <PublishDialog
         open={publishOpen}
         examLabel={draft.examLabel.trim() || 'this exam'}
@@ -447,6 +477,7 @@ function StatusLine({
   notice,
   issues,
   dirty,
+  published,
   removed,
   onUndo,
 }: {
@@ -454,6 +485,7 @@ function StatusLine({
   notice: Notice;
   issues: number;
   dirty: boolean;
+  published: boolean;
   removed: string | null;
   onUndo: () => void;
 }) {
@@ -485,6 +517,13 @@ function StatusLine({
         <CheckIcon /> {notice.text}
       </span>
     );
+  if (notice?.tone === 'info')
+    return (
+      <span role="status" className="inline-flex items-start gap-1.5 text-ink">
+        <InfoIcon className="mt-1 size-4" /> {notice.text}
+      </span>
+    );
+  if (dirty && published) return <span className="text-muted">Unsaved changes. Students still see the published version.</span>;
   return <span className="text-muted">{dirty ? 'Unsaved changes' : 'All changes saved'}</span>;
 }
 
@@ -601,7 +640,7 @@ function StartPanel({
             </Field>
             {error && (
               <p role="alert" className="inline-flex items-start gap-1.5 text-sm text-fit-low">
-                <AlertIcon className="mt-1" /> Could not draft the form: {error}
+                <AlertIcon className="mt-1 size-4" /> Could not draft the form: {error}
               </p>
             )}
             {drafting ? (

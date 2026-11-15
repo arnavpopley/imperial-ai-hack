@@ -1,7 +1,7 @@
 // A sample of the tailored feedback card a student would see, built in the browser from the draft form.
 import type { Module } from '@modulematch/shared';
 import { useId, useMemo, useState } from 'react';
-import { previewFeedback, questionId, questionTitle } from '../lib/examForm.ts';
+import { previewFeedback, questionDisplayTitle, questionId } from '../lib/examForm.ts';
 import type { ExamDraft } from '../lib/examForm.ts';
 import { focusRing, topicLabel } from '../lib/format.ts';
 import { inputClass } from './ExamFields.tsx';
@@ -50,7 +50,7 @@ export function FeedbackPreview({
             >
               {draft.questions.map((q, i) => (
                 <option key={q.key} value={i}>
-                  {questionId(i)}: {questionTitle(q, i)}
+                  {questionId(i)}: {questionDisplayTitle(q, i)}
                 </option>
               ))}
             </select>

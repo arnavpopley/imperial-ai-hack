@@ -12,6 +12,7 @@ import {
   fieldId,
   moveItem,
   previewFeedback,
+  questionDisplayTitle,
   sameDraft,
   saveBody,
 } from './examForm.ts';
@@ -106,6 +107,14 @@ describe('exam form drafts', () => {
     expect(sameDraft(a, b)).toBe(false);
   });
 
+  it('drops a repeated question number from the displayed title only', () => {
+    const q = { ...blankQuestion(), label: 'Q2: Rigid body dynamics' };
+    expect(questionDisplayTitle(q, 1)).toBe('Rigid body dynamics');
+    expect(questionDisplayTitle(q, 0)).toBe('Q2: Rigid body dynamics');
+    expect(questionDisplayTitle({ ...q, label: 'Q2' }, 1)).toBe('Q2');
+    expect(questionDisplayTitle({ ...q, label: 'Q21 Fluids' }, 1)).toBe('Q21 Fluids');
+  });
+
   it('labels the status from the saved form', () => {
     expect(examStatus(null)).toBe('unsaved');
     expect(examStatus(form)).toBe('ai-draft');
@@ -172,5 +181,16 @@ describe('student preview', () => {
     expect(notes).toMatch(/^Synthetic/);
     expect(notes).toContain('fluid mechanics');
     expect(exampleNotes(undefined)).toContain('Q3');
+  });
+
+  it('uses the shared demo notes for MECH50008 Dynamics', () => {
+    expect(exampleNotes(mod('MECH50008', {}))).toMatch(/^SYNTHETIC DEMO MARKING NOTES for MECH50008 Dynamics/);
+  });
+
+  it('never gives a sample mark above the maximum', () => {
+    const draft = draftFromForm(form);
+    draft.questions[0]!.maxMarks = '0.4';
+    const marks = previewFeedback({ draft, weakIndex: 1, moduleId: 'fluids-2', catalogue })!.marks;
+    expect(marks.every((m) => m.mark <= m.maxMarks)).toBe(true);
   });
 });

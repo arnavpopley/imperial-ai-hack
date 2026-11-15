@@ -1,7 +1,7 @@
 // One exam question in the feedback editor: label, marks, topics, what good answers did, mistakes and pointers.
 import { useId } from 'react';
 import type { Ref } from 'react';
-import { fieldId, questionId, questionTitle } from '../lib/examForm.ts';
+import { fieldId, questionDisplayTitle, questionId } from '../lib/examForm.ts';
 import type { QuestionDraft } from '../lib/examForm.ts';
 import { Field, ListEditor, TextArea, TextInput, TopicPicker } from './ExamFields.tsx';
 import { ArrowDownIcon, ArrowUpIcon, TrashIcon } from './icons.tsx';
@@ -34,7 +34,7 @@ export function ExamQuestionCard({
 }: QuestionCardProps) {
   const headingId = useId();
   const id = questionId(index);
-  const title = questionTitle(q, index);
+  const title = questionDisplayTitle(q, index);
   const set = (patch: Partial<QuestionDraft>) => onChange({ ...q, ...patch });
 
   return (

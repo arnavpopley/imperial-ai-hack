@@ -222,3 +222,10 @@ export const ExamIcon = (p: IconProps) => (
     <path d="M11.5 13.5l1.25 1.25 2.25-2.5" />
   </Icon>
 );
+
+export const InfoIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <circle cx="10" cy="10" r="7" />
+    <path d="M10 9v4.5M10 6.5v.01" />
+  </Icon>
+);

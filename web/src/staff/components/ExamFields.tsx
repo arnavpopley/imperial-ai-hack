@@ -259,6 +259,10 @@ export function TopicPicker({
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              // Enter would otherwise submit, and save, the whole exam form.
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') e.preventDefault();
+              }}
               placeholder="Filter topics"
               className="h-10 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted"
             />

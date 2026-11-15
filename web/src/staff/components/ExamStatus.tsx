@@ -1,5 +1,6 @@
 // Status chip, privacy note and the publish confirmation for the exam feedback form (spec 23).
 import { useEffect, useId, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import type { ExamStatus } from '../lib/examForm.ts';
 import { CheckIcon, PencilIcon, SendIcon, ShieldIcon, SparkIcon } from './icons.tsx';
 import { Button } from './ui.tsx';
@@ -35,39 +36,38 @@ export function CohortOnlyNote() {
   );
 }
 
-/**
- * Confirms publishing on the native modal dialog (focus trap, Escape, inert page). An AI draft also needs
- * the examiner to confirm they checked it, so a human signs off every form students see.
- */
-export function PublishDialog({
+/** A confirmation on the native modal dialog, which supplies the focus trap, Escape and an inert page. */
+function ConfirmDialog({
   open,
-  examLabel,
-  questionCount,
-  aiDraft,
+  title,
+  icon,
+  confirmLabel,
+  busyLabel,
+  canConfirm = true,
   busy,
   onConfirm,
   onClose,
+  children,
 }: {
   open: boolean;
-  examLabel: string;
-  questionCount: number;
-  aiDraft: boolean;
+  title: string;
+  icon: ReactNode;
+  confirmLabel: ReactNode;
+  busyLabel: string;
+  canConfirm?: boolean;
   busy: boolean;
   onConfirm: () => void;
   onClose: () => void;
+  children: ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const bodyId = useId();
-  const [checked, setChecked] = useState(false);
 
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
-    if (open && !dialog.open) {
-      setChecked(false);
-      dialog.showModal();
-    }
+    if (open && !dialog.open) dialog.showModal();
     if (!open && dialog.open) dialog.close();
   }, [open]);
 
@@ -92,47 +92,107 @@ export function PublishDialog({
           }}
         >
           <span aria-hidden="true" className="grid size-12 place-items-center rounded-2xl bg-brand-soft text-brand">
-            <SendIcon className="size-6" />
+            {icon}
           </span>
-          <div className="grid gap-2">
-            <h2 id={titleId} className="text-xl font-semibold tracking-tight">
-              Publish to students?
-            </h2>
-            <div id={bodyId} className="grid gap-2 text-sm leading-relaxed text-muted">
-              <p>
-                Students who uploaded their question marks for <strong className="text-ink">{examLabel}</strong> will
-                get feedback tailored to the questions where they lost marks, built from these {questionCount}{' '}
-                questions, your mistakes and pointers, and the modules that build on those topics.
-              </p>
-              <p>Students without question marks see nothing new. Publishing never shows you anyone's marks.</p>
-            </div>
+          <h2 id={titleId} className="text-xl font-semibold tracking-tight">
+            {title}
+          </h2>
+          <div id={bodyId} className="-mt-3 grid gap-2 text-sm leading-relaxed text-muted">
+            {children}
           </div>
-          {aiDraft && (
-            <label className="flex items-start gap-3 rounded-2xl bg-mode-explain/8 p-4 text-sm ring-1 ring-mode-explain/30">
-              <input
-                type="checkbox"
-                checked={checked}
-                onChange={(e) => setChecked(e.target.checked)}
-                className="mt-0.5 size-4 accent-brand"
-                required
-              />
-              <span>
-                <strong className="font-semibold">I have checked this AI draft</strong> question by question, and it
-                matches the paper and my marking.
-              </span>
-            </label>
-          )}
           <div className="flex flex-wrap justify-end gap-2">
             <Button variant="ghost" onClick={onClose} disabled={busy}>
               Cancel
             </Button>
-            <Button type="submit" variant="primary" disabled={busy || (aiDraft && !checked)}>
-              <SendIcon />
-              {busy ? 'Publishing…' : 'Publish to students'}
+            <Button type="submit" variant="primary" disabled={busy || !canConfirm}>
+              {busy ? busyLabel : confirmLabel}
             </Button>
           </div>
         </form>
       )}
     </dialog>
+  );
+}
+
+interface DialogProps {
+  open: boolean;
+  busy: boolean;
+  onConfirm: () => void;
+  onClose: () => void;
+}
+
+/**
+ * Confirms publishing. An AI draft also needs the examiner to confirm they checked it, so a human signs off
+ * every form students see.
+ */
+export function PublishDialog({
+  examLabel,
+  questionCount,
+  aiDraft,
+  ...dialog
+}: DialogProps & { examLabel: string; questionCount: number; aiDraft: boolean }) {
+  const [checked, setChecked] = useState(false);
+  // Each opening starts unticked.
+  const [wasOpen, setWasOpen] = useState(dialog.open);
+  if (dialog.open !== wasOpen) {
+    setWasOpen(dialog.open);
+    if (dialog.open) setChecked(false);
+  }
+
+  return (
+    <ConfirmDialog
+      {...dialog}
+      title="Publish to students?"
+      icon={<SendIcon className="size-6" />}
+      confirmLabel={
+        <>
+          <SendIcon />
+          Publish to students
+        </>
+      }
+      busyLabel="Publishing…"
+      canConfirm={!aiDraft || checked}
+    >
+      <p>
+        Students who uploaded their question marks for <strong className="text-ink">{examLabel}</strong> will get
+        feedback tailored to the questions where they lost marks, built from these {questionCount} questions, your
+        mistakes and pointers, and the modules that build on those topics.
+      </p>
+      <p>Students without question marks see nothing new. Publishing never shows you anyone's marks.</p>
+      {aiDraft && (
+        <label className="mt-2 flex items-start gap-3 rounded-2xl bg-mode-explain/8 p-4 text-ink ring-1 ring-mode-explain/30">
+          <input
+            type="checkbox"
+            checked={checked}
+            onChange={(e) => setChecked(e.target.checked)}
+            className="mt-1 size-4 accent-brand"
+            required
+          />
+          <span>
+            <strong className="font-semibold">I have checked this AI draft</strong> question by question, and it
+            matches the paper and my marking.
+          </span>
+        </label>
+      )}
+    </ConfirmDialog>
+  );
+}
+
+/** Saving a published form returns it to draft on the server, so students stop seeing it until it is republished. */
+export function UnpublishDialog(props: DialogProps) {
+  return (
+    <ConfirmDialog
+      {...props}
+      title="Save as a draft?"
+      icon={<PencilIcon className="size-6" />}
+      confirmLabel="Save as draft"
+      busyLabel="Saving…"
+    >
+      <p>
+        Saving changes to a published form takes it back to draft.{' '}
+        <strong className="text-ink">Students stop seeing this feedback until you publish it again.</strong>
+      </p>
+      <p>To update what students see straight away, cancel and choose “Publish changes” instead.</p>
+    </ConfirmDialog>
   );
 }

@@ -1,7 +1,10 @@
 // Editable copy of an exam feedback form (spec 23), the request body it saves to, and the client-side
 // preview of the tailored feedback a student would get from it.
 import type { ExamFeedbackForm, ExamFormSaveBody, Module, TailoredFeedback } from '@modulematch/shared';
+import demoNotes from '../../../../data/demo/synthetic-marking-notes.txt?raw';
 import { plural, topicLabel } from './format.ts';
+
+const DEMO_NOTES_MODULE = 'MECH50008';
 
 /** The notes field accepts this many characters, matching ExamFormDraftBody. */
 export const NOTES_LIMIT = 20000;
@@ -43,6 +46,16 @@ export const questionId = (index: number) => `Q${index + 1}`;
 
 /** The label shown for a question, falling back to its number when the examiner left it blank. */
 export const questionTitle = (q: QuestionDraft, index: number) => q.label.trim() || `Question ${index + 1}`;
+
+/**
+ * The title for display beside the question's own number. Drafted labels often repeat it ("Q2: Rigid body
+ * dynamics"), so a leading copy of the number is dropped on screen; the saved label is left as written.
+ */
+export function questionDisplayTitle(q: QuestionDraft, index: number): string {
+  const title = questionTitle(q, index);
+  const stripped = title.replace(new RegExp(`^${questionId(index)}\\b[\\s:.)\\-–]*`, 'i'), '');
+  return stripped || title;
+}
 
 export function blankQuestion(): QuestionDraft {
   return {
@@ -193,7 +206,7 @@ export function previewFeedback({
   const marks: SampleMark[] = scored.map(({ q, i, max }) => ({
     questionId: questionId(i),
     label: questionTitle(q, i),
-    mark: roundHalf(max * (i === weak.i ? WEAK_SHARE : STRONG_SHARE)),
+    mark: Math.min(max, roundHalf(max * (i === weak.i ? WEAK_SHARE : STRONG_SHARE))),
     maxMarks: max,
     weak: i === weak.i,
   }));
@@ -295,7 +308,9 @@ export function affectedModules(
  * Synthetic marking notes for the demo, written around the module's own main topics so the AI draft has
  * something realistic to work from. Labelled as synthetic wherever it is offered.
  */
-export function exampleNotes(module: Pick<Module, 'title' | 'topics'> | undefined): string {
+export function exampleNotes(module: Pick<Module, 'id' | 'title' | 'topics'> | undefined): string {
+  // The demo script drafts MECH50008 Dynamics from the shared synthetic notes in data/demo.
+  if (module?.id === DEMO_NOTES_MODULE) return demoNotes.trim();
   const topics = Object.entries(module?.topics ?? {})
     .sort(([, a], [, b]) => b - a)
     .slice(0, 3)
