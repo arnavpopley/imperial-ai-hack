@@ -202,6 +202,12 @@ function Hero({
               <Icon name="globe" size={14} className="text-brand" />
               Coming to other universities
             </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-surface px-3.5 py-1.5 text-sm font-semibold text-muted ring-1 ring-line">
+              <Icon name="trophy" size={14} className="text-brand" />
+              <span>
+                2nd in the Reply track<span className="hidden sm:inline">, Imperial AI Hackathon</span>
+              </span>
+            </span>
           </motion.div>
           <motion.h1
             variants={RISE}
