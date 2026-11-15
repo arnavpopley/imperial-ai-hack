@@ -19,13 +19,17 @@ export interface QuestionBar {
 const sameQuestion = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
 
 /**
- * Every question on the paper, for the chart: from the feedback itself when the server sends them, otherwise from
- * the student's own mark sheet, with labels from the weak points.
+ * Every question the student has a mark for, for the chart: all of their uploaded question marks, including any the
+ * examiner's form does not cover, plus any the server sent that the mark sheet lacks. Labels come from the server's
+ * questions, then the weak points.
  */
 export function questionBars(feedback: TailoredFeedback, result: ModuleResult | undefined): QuestionBar[] {
-  const source = feedback.questions?.length
-    ? feedback.questions
-    : (result?.questionMarks ?? []).map((q) => ({ ...q, label: '' }));
+  const fromServer = feedback.questions ?? [];
+  const uploaded = (result?.questionMarks ?? []).map((q) => ({
+    ...q,
+    label: fromServer.find((s) => sameQuestion(s.questionId, q.questionId))?.label ?? '',
+  }));
+  const source = [...uploaded, ...fromServer.filter((s) => !uploaded.some((u) => sameQuestion(u.questionId, s.questionId)))];
   return source
     .filter((q) => q.maxMarks > 0)
     .map((q) => {

@@ -42,6 +42,7 @@ export function ExamFeedbackCard({ exam, sessionId, open, onToggle, index }: Exa
   const reduce = useReducedMotion();
   const bodyId = useId();
   const chartId = useId();
+  const ticks = useRevisionTicks(feedback, sessionId);
   const module = moduleById.get(feedback.moduleId);
   const title = module?.title ?? feedback.moduleId;
 
@@ -102,7 +103,7 @@ export function ExamFeedbackCard({ exam, sessionId, open, onToggle, index }: Exa
               </div>
               <div className="grid content-start gap-7">
                 <Strengths strengths={feedback.strengths} />
-                <RevisionPlan feedback={feedback} sessionId={sessionId} />
+                <RevisionPlan plan={feedback.revisionPlan} checked={ticks.checked} onToggle={ticks.toggle} />
                 <AffectsModules feedback={feedback} />
                 <p className="flex flex-wrap items-center justify-between gap-2 text-[12px] text-muted">
                   <SourceTag source={feedback.source} />
@@ -211,19 +212,25 @@ function Strengths({ strengths }: { strengths: readonly string[] }) {
   );
 }
 
-function RevisionPlan({ feedback, sessionId }: { feedback: TailoredFeedback; sessionId: string }) {
-  const id = useId();
+/**
+ * The checklist's ticks, held by the card rather than the collapsible body, so closing and reopening a card keeps
+ * them even when browser storage is blocked and the saved copy cannot be read back.
+ */
+function useRevisionTicks(feedback: TailoredFeedback, sessionId: string) {
   const key = revisionKey(sessionId, feedback.moduleId, feedback.examLabel);
   const [checked, setChecked] = useState(() => readChecked(key));
-  const plan = feedback.revisionPlan;
-  const done = plan.filter((item) => checked.includes(item)).length;
-  if (plan.length === 0) return null;
-
   const toggle = (item: string) => {
-    const next = toggleItem(checked, item, plan);
+    const next = toggleItem(checked, item, feedback.revisionPlan);
     setChecked(next);
     writeChecked(key, next);
   };
+  return { checked, toggle };
+}
+
+function RevisionPlan({ plan, checked, onToggle }: { plan: readonly string[]; checked: readonly string[]; onToggle: (item: string) => void }) {
+  const id = useId();
+  const done = plan.filter((item) => checked.includes(item)).length;
+  if (plan.length === 0) return null;
 
   return (
     <section aria-labelledby={id} className="grid gap-3">
@@ -244,7 +251,7 @@ function RevisionPlan({ feedback, sessionId }: { feedback: TailoredFeedback; ses
                   on ? 'bg-fit-high/8' : 'hover:bg-surface-2',
                 )}
               >
-                <input type="checkbox" checked={on} onChange={() => toggle(item)} className="sr-only" />
+                <input type="checkbox" checked={on} onChange={() => onToggle(item)} className="sr-only" />
                 <span
                   aria-hidden="true"
                   className={cx(

@@ -50,9 +50,23 @@ describe('questionBars', () => {
     expect(bars[1]).toMatchObject({ scoredShare: 7 / 20, lostShare: 13 / 20 });
   });
 
-  it('prefers the questions and labels the server sends', () => {
-    const bars = questionBars(feedback({ questions: [{ questionId: 'Q3', label: 'Boundary layers', mark: 6, maxMarks: 20 }] }), result);
-    expect(bars).toEqual([{ questionId: 'Q3', label: 'Boundary layers', mark: 6, maxMarks: 20, scoredShare: 0.3, lostShare: 0.7, weak: true }]);
+  it('uses the server labels and sends, but keeps every uploaded question, even ones the form does not cover', () => {
+    const bars = questionBars(
+      feedback({
+        questions: [
+          { questionId: 'q3', label: 'Boundary layers', mark: 7, maxMarks: 20 },
+          { questionId: 'Q5', label: 'Nozzles', mark: 11, maxMarks: 20 },
+        ],
+      }),
+      result,
+    );
+    expect(bars.map((b) => [b.questionId, b.label, b.mark])).toEqual([
+      ['Q1', '', 16],
+      ['Q3', 'Boundary layers', 7],
+      ['Q5', 'Nozzles', 11],
+    ]);
+    // Marks lost on a question outside the form still count towards the exam's place in the list.
+    expect(examGap(bars, null)).toBeCloseTo((4 + 13 + 9) / 60);
   });
 
   it('never draws more than a full bar', () => {
