@@ -18,6 +18,29 @@ describe('a miss, as the audience sees it', () => {
     expect(missTitle('structural analyst: MECH60016', titleOf)).toBe('Structural analyst: Mathematics A');
     expect(missTitle('motorsport aerodynamicist: interest:fluid-mechanics', titleOf)).toBe('Motorsport aerodynamicist: interest in fluid mechanics');
     expect(missTitle('robotics builder: style.examPreference', titleOf)).toBe('Robotics builder: exam preference');
+    expect(missTitle('focused theorist: breadthAppetite', titleOf)).toBe('Focused theorist: appetite for breadth');
+    expect(missTitle('focused theorist: pathwaysSkipped', titleOf)).toBe('Focused theorist: skipped career pathways');
+    expect(missTitle('early riser: timetablePrefs.earliestStart', titleOf)).toBe('Early riser: earliest start time');
+    expect(missTitle('vague reply: no pathways', titleOf)).toBe('Vague reply: no career pathways recorded');
+    expect(missTitle('vague reply: no interest:fluid-mechanics', titleOf)).toBe('Vague reply: no interest in fluid mechanics recorded');
+    // Text that only looks like a slot is left alone.
+    expect(missTitle('subtle grade disclosure', titleOf)).toBe('Subtle grade disclosure');
+  });
+
+  it('says which checks failed, and whether a fact was left out or a rule was broken', () => {
+    expect(missReason('missing 3 Hour exam 100%, Coursework 20%: It is all exams.')).toBe(
+      'The answer left out "3 Hour exam 100%", "Coursework 20%", which the published record states.',
+    );
+    expect(missReason('missing no contact details: Email them at someone@imperial.ac.uk.')).toBe('The answer failed a check: it gave contact details.');
+    expect(missReason('missing names nobody, invents no hours: Dr Smith says 10 hours a week.')).toBe(
+      'The answer failed a check: it named a person; it stated study hours the record does not give.',
+    );
+    expect(missReason('missing one of: Fluid Mechanics, 5th ed | Aerodynamics: Read the notes.')).toBe(
+      'The answer failed a check: it named none of "Fluid Mechanics, 5th ed" or "Aerodynamics".',
+    );
+    expect(missReason('missing one of: Aircraft: Design | Aerodynamics: Read the notes.')).toBe(
+      'The answer failed a check: it named none of "Aircraft: Design" or "Aerodynamics".',
+    );
   });
 
   it('has a one-line reason that is never cut mid-word', () => {
