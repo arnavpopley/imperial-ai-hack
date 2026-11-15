@@ -152,6 +152,8 @@
   --animate-caret: caret 1s steps(2, start) infinite;
   --animate-pulse-dot: pulse-dot 1.8s ease-in-out infinite;
   --animate-halo: halo 2.8s ease-out infinite;
+  /* A slow, endless sideways scroll for the landing photo strip (the strip holds two copies of its row). */
+  --animate-marquee: marquee 60s linear infinite;
 
   @keyframes rise {
     from {
@@ -201,6 +203,14 @@
     100% {
       transform: scale(1.2);
       opacity: 0;
+    }
+  }
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
     }
   }
   @keyframes pulse-dot {
