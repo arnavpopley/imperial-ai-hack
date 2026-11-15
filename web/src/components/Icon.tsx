@@ -2,6 +2,15 @@
 import type { ReactNode } from 'react';
 
 const paths = {
+  // Results glyphs, folded in from student/results/icons.tsx so the app has one icon set.
+  bulb: <path d="M9 18h6M10 21.5h4M12 2.5a6.5 6.5 0 0 0-4 11.6c.6.5 1 1.3 1 2.1V18h6v-1.8c0-.8.4-1.6 1-2.1a6.5 6.5 0 0 0-4-11.6z" />,
+  sheet: (
+    <>
+      <path d="M14 2.5H6.5a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V8z" />
+      <path d="M14 2.5V8h5.5M8.5 17v-2.5M12 17v-5M15.5 17v-3.5" />
+    </>
+  ),
+  upload: <path d="M12 15.5V3.5M7 8.5l5-5 5 5M3.5 15v3.5a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2V15" />,
   // Staff console glyphs (issue #142), drawn on the same 24px grid and stroke as the rest.
   alert: (
     <>

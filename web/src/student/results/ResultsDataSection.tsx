@@ -8,7 +8,6 @@ import { Icon } from '../../components/Icon.tsx';
 import { Skeleton } from '../../components/StateViews.tsx';
 import { OPEN_RESULTS_STATE, paths } from '../routes.ts';
 import { errorStatus } from './files.ts';
-import { MarkSheetIcon } from './icons.tsx';
 import { MarkChips, UnmatchedCodes } from './MarkChips.tsx';
 import { useResults } from './ResultsProvider.tsx';
 
@@ -50,7 +49,7 @@ export function ResultsDataSection({ canAdd = true }: { canAdd?: boolean }) {
     <div className="grid min-w-0 grid-cols-1 gap-5 rounded-panel bg-surface p-card shadow-soft ring-1 ring-line sm:p-card-lg">
       <header className="flex flex-wrap items-start gap-4">
         <span aria-hidden="true" className="grid size-11 shrink-0 place-items-center rounded-2xl bg-brand-soft text-brand">
-          <MarkSheetIcon size={22} />
+          <Icon name="sheet" size={22} />
         </span>
         <div className="grid min-w-0 flex-1 gap-1">
           <h3 className="text-lg font-semibold tracking-tight">Your results</h3>

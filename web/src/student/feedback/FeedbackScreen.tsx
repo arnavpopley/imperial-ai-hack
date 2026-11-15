@@ -9,7 +9,6 @@ import { Icon, type IconName } from '../../components/Icon.tsx';
 import { SampleDataLabel } from '../../components/SampleDataLabel.tsx';
 import { ErrorState, Skeleton } from '../../components/StateViews.tsx';
 import { errorStatus } from '../results/files.ts';
-import { MarkSheetIcon } from '../results/icons.tsx';
 import { useResults } from '../results/ResultsProvider.tsx';
 import { OPEN_RESULTS_STATE, paths } from '../routes.ts';
 import { useReferenceData } from '../state/ReferenceDataProvider.tsx';
@@ -158,7 +157,7 @@ function AtAGlance({ exams, onJump }: { exams: readonly ExamView[]; onJump: (anc
   );
 }
 
-const HOW: readonly { icon: IconName | 'sheet'; title: string; text: string }[] = [
+const HOW: readonly { icon: IconName; title: string; text: string }[] = [
   { icon: 'sheet', title: 'Share a mark sheet', text: 'One that shows your marks for each exam question.' },
   { icon: 'tutor', title: 'Your examiner adds notes', text: 'What good answers did, and common slips.' },
   { icon: 'sparkle', title: 'Feedback for you', text: 'Where marks went, and a short plan to revise.' },
@@ -192,7 +191,7 @@ function EmptyFeedback() {
             className="grid justify-items-center gap-2 rounded-2xl bg-surface p-5 shadow-soft ring-1 ring-line"
           >
             <span className="relative grid size-11 place-items-center rounded-full bg-mode-explain/10 text-mode-explain" aria-hidden="true">
-              {step.icon === 'sheet' ? <MarkSheetIcon size={20} /> : <Icon name={step.icon} size={20} />}
+              <Icon name={step.icon} size={20} />
               <span className="absolute -top-1 -right-1 grid size-5 place-items-center rounded-full bg-surface text-2xs font-semibold text-ink ring-1 ring-line">
                 {i + 1}
               </span>
