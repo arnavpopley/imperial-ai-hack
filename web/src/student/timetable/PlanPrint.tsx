@@ -1,6 +1,6 @@
 // "Download my plan" (issue 63): a one-page printable copy of the plan, shown only when printing. The browser's
 // print dialog saves it as a PDF, so nothing leaves the browser except through the student's own action.
-import type { Recommendation, TimetableView } from '@modulematch/shared';
+import type { Recommendation, TimetableView, Weights } from '@modulematch/shared';
 import { createPortal } from 'react-dom';
 import { SUB_SCORE_LABELS } from '../../components/SubScoreBars.tsx';
 import { CLASH_LABELS } from '../../components/ClashMarker.tsx';
@@ -14,19 +14,28 @@ interface PlanPrintProps {
   titleFor: (moduleId: string) => string;
   codeFor: (moduleId: string) => string;
   ectsOf: (moduleId: string) => number;
+  /** The weights the fit was computed with, so the top reason matches it. */
+  weights: Weights;
   /** False when the profile has nothing to score yet: no fit numbers are printed. */
   scored: boolean;
 }
 
-/** The sub-score that contributes most to a fit, as its label: the plan's one-word "top reason". */
-function topReason(sub: Recommendation['sub']): string {
-  const [key] = (Object.entries(sub) as [keyof typeof sub, number | null][])
-    .flatMap(([k, v]) => (v === null ? [] : [[k, v] as const]))
-    .sort((a, b) => b[1] - a[1])[0] ?? ['interest'];
-  return SUB_SCORE_LABELS[key];
+/**
+ * The sub-score that contributes most to the printed fit, as its label: the plan's one-word "top reason". Each
+ * score counts at the student's own weight, as the fit does, so a reason weighted to zero is never named.
+ */
+export function topReason(sub: Recommendation['sub'], weights: Weights): string | null {
+  const [best] = (Object.keys(sub) as (keyof typeof sub)[])
+    .flatMap((key) => {
+      const score = sub[key];
+      return score === null ? [] : [{ key, contribution: score * weights[key] }];
+    })
+    .filter((s) => s.contribution > 0)
+    .sort((a, b) => b.contribution - a.contribution);
+  return best ? SUB_SCORE_LABELS[best.key] : null;
 }
 
-export function PlanPrint({ view, shortlist, fitOf, titleFor, codeFor, ectsOf, scored }: PlanPrintProps) {
+export function PlanPrint({ view, shortlist, fitOf, titleFor, codeFor, ectsOf, weights, scored }: PlanPrintProps) {
   const core = new Set(view.coreModuleIds);
   const chosen = shortlist.filter((id) => !core.has(id));
   const { ects } = view;
@@ -76,7 +85,7 @@ export function PlanPrint({ view, shortlist, fitOf, titleFor, codeFor, ectsOf, s
                   </td>
                   <td className="py-0.5 pr-2">{ectsOf(id)}</td>
                   <td className="py-0.5 pr-2">{scored && rec ? rec.fit : ''}</td>
-                  <td className="py-0.5">{scored && rec ? topReason(rec.sub) : ''}</td>
+                  <td className="py-0.5">{scored && rec ? (topReason(rec.sub, weights) ?? '') : ''}</td>
                 </tr>
               );
             })}

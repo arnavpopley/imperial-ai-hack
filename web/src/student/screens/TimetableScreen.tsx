@@ -64,7 +64,12 @@ export function TimetableScreen() {
           Your timetable, clashes and programme rules check appear here.
         </EmptyState>
       ) : timetable.data ? (
-        <TimetableBody view={timetable.data} onChanged={timetable.reload} refreshing={timetable.loading} />
+        <TimetableBody
+          view={timetable.data}
+          onChanged={timetable.reload}
+          refreshing={timetable.loading}
+          stale={timetable.loading || Boolean(timetable.error)}
+        />
       ) : timetable.error ? (
         <ErrorState message={timetable.error} onRetry={timetable.reload} />
       ) : (
@@ -77,7 +82,15 @@ export function TimetableScreen() {
   );
 }
 
-function TimetableBody({ view, onChanged, refreshing }: { view: TimetableView; onChanged: () => void; refreshing: boolean }) {
+interface TimetableBodyProps {
+  view: TimetableView;
+  onChanged: () => void;
+  refreshing: boolean;
+  /** The view may not match the shortlist: a refresh is running or the last one failed. */
+  stale: boolean;
+}
+
+function TimetableBody({ view, onChanged, refreshing, stale }: TimetableBodyProps) {
   const { session, offerDraft } = useReadySession();
   const { moduleById } = useReferenceData();
   const { openAdvisor } = useAdvisor();
@@ -240,7 +253,7 @@ function TimetableBody({ view, onChanged, refreshing }: { view: TimetableView; o
               {shortlist.error}
             </p>
           )}
-          <ExportActions view={view} titleFor={titleFor} codeFor={codeFor} />
+          <ExportActions view={view} titleFor={titleFor} codeFor={codeFor} stale={stale} />
         </section>
       </div>
     </div>
@@ -252,9 +265,17 @@ function TimetableBody({ view, onChanged, refreshing }: { view: TimetableView; o
  * Issue 63: take the plan away without an account or a sharing link. "Download plan" prints a one-page copy
  * (save it as a PDF from the print dialog) and "Add to calendar" saves an .ics; both are built in the browser.
  */
-function ExportActions({ view, titleFor, codeFor }: { view: TimetableView; titleFor: (id: string) => string; codeFor: (id: string) => string }) {
+interface ExportActionsProps {
+  view: TimetableView;
+  titleFor: (id: string) => string;
+  codeFor: (id: string) => string;
+  /** Exports wait until the timetable matches the current shortlist, so a copy never mixes old and new. */
+  stale: boolean;
+}
+
+function ExportActions({ view, titleFor, codeFor, stale }: ExportActionsProps) {
   const { session } = useReadySession();
-  const { byId, scored } = useCatalogue();
+  const { byId, scored, weights } = useCatalogue();
   const { moduleById } = useReferenceData();
   const slots = view.grids.flatMap((g) => g.slots);
   const calendar = () =>
@@ -262,23 +283,27 @@ function ExportActions({ view, titleFor, codeFor }: { view: TimetableView; title
   return (
     <div className="mt-4 border-t border-line pt-3">
       <div className="grid grid-cols-2 gap-2">
-        <Button size="sm" icon="arrow-down" onClick={() => window.print()}>
+        <Button size="sm" icon="arrow-down" onClick={() => window.print()} disabled={stale}>
           Download plan
         </Button>
-        <Button size="sm" icon="calendar" onClick={calendar} disabled={slots.length === 0}>
+        <Button size="sm" icon="calendar" onClick={calendar} disabled={stale || slots.length === 0}>
           Add to calendar
         </Button>
       </div>
       <p className="mt-1.5 text-[11px] text-muted">Provisional, based on previous years. Saved on your device only.</p>
-      <PlanPrint
-        view={view}
-        shortlist={session.shortlist}
-        fitOf={(id) => byId.get(id)}
-        titleFor={titleFor}
-        codeFor={codeFor}
-        ectsOf={(id) => moduleById.get(id)?.ects ?? 0}
-        scored={scored}
-      />
+      {/* Left out while stale, so even the browser's own Print never mixes an old week with a new shortlist. */}
+      {!stale && (
+        <PlanPrint
+          view={view}
+          shortlist={session.shortlist}
+          fitOf={(id) => byId.get(id)}
+          titleFor={titleFor}
+          codeFor={codeFor}
+          ectsOf={(id) => moduleById.get(id)?.ects ?? 0}
+          weights={weights}
+          scored={scored}
+        />
+      )}
     </div>
   );
 }

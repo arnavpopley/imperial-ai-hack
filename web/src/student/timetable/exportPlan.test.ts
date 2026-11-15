@@ -1,7 +1,7 @@
 // Issue 63: the calendar file of the mock week, built in the browser and marked provisional throughout.
 import type { Slot } from '@modulematch/shared';
 import { describe, expect, it } from 'vitest';
-import { buildIcs, byDay } from './exportPlan.ts';
+import { buildIcs, byDay, fold } from './exportPlan.ts';
 
 const slot = (overrides: Partial<Slot>): Slot => ({
   moduleId: 'MECH60009',
@@ -55,6 +55,17 @@ describe('buildIcs', () => {
 
   it('folds lines longer than 75 characters', () => {
     expect(lines.every((l) => l.length <= 75)).toBe(true);
+  });
+
+  it('folds by UTF-8 bytes without splitting a character', () => {
+    const encoded = (l: string) => new TextEncoder().encode(l).length;
+    const line = `SUMMARY:${'Thermodynamique appliquée – éléments ✓ '.repeat(4)}`;
+    const folded = fold(line).split('\r\n');
+    expect(folded.length).toBeGreaterThan(1);
+    expect(folded.every((l) => encoded(l) <= 75)).toBe(true);
+    expect(folded.map((l, i) => (i === 0 ? l : l.slice(1))).join('')).toBe(line);
+    const unicode = buildIcs([slot({})], { ...opts, titleFor: () => 'Ingénierie des systèmes énergétiques – modélisation avancée ✓✓✓' });
+    expect(unicode.split('\r\n').every((l) => encoded(l) <= 75)).toBe(true);
   });
 });
 

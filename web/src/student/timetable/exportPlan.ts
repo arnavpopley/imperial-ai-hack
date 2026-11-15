@@ -29,15 +29,24 @@ const time = (hhmm: string) => `${hhmm.replace(':', '')}00`;
 /** RFC 5545 text: escape backslashes, semicolons, commas and newlines. */
 const icsText = (text: string) => text.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
 
-/** RFC 5545 folds lines longer than 75 octets; continuation lines start with a space. */
-function fold(line: string): string {
+const encoder = new TextEncoder();
+const octets = (text: string) => encoder.encode(text).length;
+
+/**
+ * RFC 5545 folds lines longer than 75 octets (UTF-8 bytes, not characters); continuation lines start with a
+ * space, which counts towards their 75. A character is never split across lines.
+ */
+export function fold(line: string): string {
   const parts: string[] = [];
-  let rest = line;
-  while (rest.length > 74) {
-    parts.push(rest.slice(0, 74));
-    rest = ` ${rest.slice(74)}`;
+  let current = '';
+  for (const char of line) {
+    if (octets(current) + octets(char) > 75) {
+      parts.push(current);
+      current = ' ';
+    }
+    current += char;
   }
-  parts.push(rest);
+  parts.push(current);
   return parts.join('\r\n');
 }
 
