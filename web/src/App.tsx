@@ -5,6 +5,7 @@ import { cx } from './components/cx.ts';
 import { Icon, type IconName } from './components/Icon.tsx';
 import { Lazy } from './components/LazyRoute.tsx';
 import { LogoMark, Wordmark } from './components/Logo.tsx';
+import { paths } from './student/routes.ts';
 import { ThemeToggle } from './components/ThemeToggle.tsx';
 import { StudentApp } from './student/StudentApp.tsx';
 
@@ -107,7 +108,7 @@ function AppHeader({ role }: { role: Role }) {
 
 /** Plain links beside the role switch. Phones keep only the icon for How it works. */
 const GUIDES: readonly { to: string; label: string; icon: IconName; role?: Role; phone: boolean }[] = [
-  { to: '/demo', label: 'Demo', icon: 'grid', phone: false },
+  { to: paths.demo, label: 'Demo', icon: 'grid', phone: false },
   { to: '/trace', label: 'How it works', icon: 'sparkle', role: 'trace', phone: true },
 ];
 
