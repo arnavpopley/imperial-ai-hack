@@ -31,9 +31,10 @@ const HEADED = flag('headed');
 
 const VIEWPORTS = {
   desktop: { width: 1440, height: 900, scale: 1, mobile: false },
+  laptop: { width: 1280, height: 720, scale: 1, mobile: false },
   phone: { width: 390, height: 844, scale: 2, mobile: true },
 };
-const ALL_COMBOS = ['desktop-light', 'desktop-dark', 'phone-light', 'phone-dark'];
+const ALL_COMBOS = ['desktop-light', 'desktop-dark', 'laptop-light', 'phone-light', 'phone-dark'];
 // Live runs cost money, so they cover one combination unless asked for more.
 const combos = (option('only')?.split(',') ?? (LIVE && !flag('matrix') ? ['desktop-light'] : ALL_COMBOS)).filter(Boolean);
 for (const c of combos) {
@@ -303,6 +304,10 @@ async function runCombo(cdp, comboName, ports) {
     latency: (entry) => current.latencies.push(entry),
     /** Screenshot plus overflow and overlap checks for the screen the page is on. */
     async checkpoint(page, label) {
+      // Issue #46: the advisor launcher must not sit on any control's centre at any scroll position.
+      for (const hit of await page.eval(() => window.__e2e.launcherSweep())) {
+        current.overlap.push(`${label}: the advisor launcher covers ${hit}`);
+      }
       const audit = await page.audit();
       if (audit.overflow) {
         current.overflow.push(`${label}: page is ${audit.overflow.scrollWidth}px wide in a ${audit.overflow.viewport}px viewport; ${audit.overflow.offenders.join('; ') || 'no single element found'}`);

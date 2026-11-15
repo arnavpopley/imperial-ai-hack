@@ -283,6 +283,13 @@ export const STEPS = [
       await page.waitFor(() => /Saved/.test(document.querySelector('section[aria-labelledby="weights-heading"]')?.innerText ?? ''), [], {
         desc: 'the reset weights to save',
       });
+      // Pathways is not in the demo script, but the presenter may open it; check its layout and controls too.
+      await page.click(STUDENT_TAB('Pathways'));
+      await pathIs(page, '/pathways');
+      await page.waitForElement({ css: '#choose-heading' }, { desc: 'the Pathways page' });
+      await ctx.checkpoint(page, 'pathways');
+      await page.click(STUDENT_TAB('Catalogue'));
+      await pathIs(page, '/catalogue');
     },
   },
   {
@@ -352,6 +359,7 @@ export const STEPS = [
     async run(ctx) {
       const page = ctx.student;
       ctx.active = page;
+      await page.scrollTo('top'); // the launcher steps aside while a control is under it
       await page.click({ css: 'button[aria-haspopup="dialog"]', label: { re: '^Ask the advisor' } }, { desc: 'the advisor launcher' });
       await page.waitForElement({ css: 'dialog[open] textarea' }, { desc: 'the advisor window' });
       const scope = 'dialog[open]';
@@ -428,6 +436,7 @@ export const STEPS = [
       await student.scrollTo('top');
       await ctx.checkpoint(student, 'reply-in-session');
       // It also lands in the advisor conversation, from "Staff".
+      await student.scrollTo('top');
       await student.click({ css: 'button[aria-haspopup="dialog"]', label: { re: '^Ask the advisor' } }, { desc: 'the advisor launcher' });
       await student.waitFor(
         (reply) => [...document.querySelectorAll('dialog[open] ol[aria-label="Conversation"] li')].some((li) => li.textContent.includes(reply)),

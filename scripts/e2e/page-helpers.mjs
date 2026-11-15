@@ -190,5 +190,40 @@ export function installHelpers() {
     return out;
   }
 
-  window.__e2e = { one, all, text, describe, prepare, overflow, overlaps, held: (id) => held.get(id), norm };
+  /**
+   * Issue #46: scrolls the page from top to bottom and, at each stop, checks every control's centre with
+   * elementFromPoint. Any control whose centre lands on the floating advisor launcher is reported, whatever
+   * the scroll position. Restores the scroll position afterwards.
+   */
+  async function launcherSweep() {
+    const button = document.querySelector('button[aria-haspopup="dialog"]');
+    const launcher = button?.closest('.fixed') ?? button;
+    if (!launcher) return [];
+    const found = new Map();
+    const start = window.scrollY;
+    const step = Math.max(160, Math.floor(window.innerHeight * 0.35));
+    const max = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+    const vw = document.documentElement.clientWidth;
+    for (let y = 0; ; y = Math.min(y + step, max)) {
+      window.scrollTo({ top: y, behavior: 'instant' });
+      // The launcher re-measures on the next animation frame after a scroll.
+      for (let i = 0; i < 3; i += 1) await frame();
+      for (const el of document.querySelectorAll(CLICKABLE)) {
+        if (launcher.contains(el) || el.disabled || !visible(el)) continue;
+        const r = el.getBoundingClientRect();
+        const x = r.left + r.width / 2;
+        const cy = r.top + r.height / 2;
+        if (r.width < 4 || r.height < 4 || x < 0 || cy < 0 || x >= vw || cy >= window.innerHeight) continue;
+        if (!insideClips(el, x, cy)) continue;
+        const top = document.elementFromPoint(x, cy);
+        if (top && launcher.contains(top) && !found.has(el)) found.set(el, `${describe(el)} at scroll ${y}px`);
+      }
+      if (y >= max) break;
+    }
+    window.scrollTo({ top: start, behavior: 'instant' });
+    await frame();
+    return [...found.values()];
+  }
+
+  window.__e2e = { one, all, text, describe, prepare, overflow, overlaps, launcherSweep, held: (id) => held.get(id), norm };
 }

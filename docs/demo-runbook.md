@@ -5,7 +5,7 @@ How to run the live demo at judging (spec 18.2): about three minutes, with a jud
 ## The night before
 
 1. Pull `main` and install: `npm ci`.
-2. Run the automated check: `npm run e2e`. It starts its own API and web server on free ports, drives the whole journey below in headless Chrome at 1440×900 and 390×844 in light and dark, and stops everything it started. All 32 cells of the table should say `pass`. Screenshots and logs go to `scripts/e2e/output/<time>/`, and each run writes a `summary.md` there.
+2. Run the automated check: `npm run e2e`. It starts its own API and web server on free ports, drives the whole journey below in headless Chrome at 1440×900 and 390×844 in light and dark, and at 1280×720 in light, and stops everything it started. All 40 cells of the table should say `pass`. Screenshots and logs go to `scripts/e2e/output/<time>/`, and each run writes a `summary.md` there.
 3. Run the check once with live models: `npm run e2e -- --live` (one viewport, about $0.50; it reports the spend at the end). Expect interview turns of 5–9 s and about 11 s for the rule-break reply.
 4. Record the backup video in offline mode (see [demo-video.md](demo-video.md)), and keep it on the laptop as well as online.
 
@@ -48,6 +48,7 @@ The judge types; you point. Suggested answers are in italics if the judge wants 
 ## Known quirks
 
 - **No swap offered.** A swap must stay within 10 fit points of the module it replaces (spec 9.2). If the third shortlisted module is the only one that close, the card says "No swap keeps your fit within 10 points." In the **Shortlist** panel on the Timetable page, remove the third module (the × button) and shortlist one from further down the catalogue. Picking the third module from about fifth or sixth place avoids this; the automated check does the same.
+- **The advisor button steps aside.** It shrinks to an icon once you scroll, and it fades out while a button sits under it, for example the Swap button or a × in the shortlist panel on a smaller screen. Scroll up a little, or to the top, and it comes back. Keyboard focus also brings it back.
 - **Career slider greyed out.** It needs a pathway in the profile. If the judge's career answer was vague, drag **Learning style** or **Interest** instead.
 - **Offline reasons can quote the slider answer.** The offline keyword extractor reads "Coding comfort: 90%." as an interest in programming, so a reason may cite it. Open a different reason. Live extraction does not do this.
 - **Counterfactual uplifts are small** (under 3 fit points in the synthetic cohort). Don't promise a big number.
