@@ -192,15 +192,15 @@ export function AdvisorLauncher({ state, onOpen, onClose, showBubble }: AdvisorL
                 whileTap={{ scale: 0.94 }}
                 transition={{ type: 'spring', stiffness: 380, damping: 26 }}
                 className={cx(
-                  'relative flex h-16 items-center gap-3 rounded-full bg-brand pr-4 pl-4 text-on-brand shadow-lift sm:h-[4.5rem]',
-                  collapsed ? 'sm:px-4' : 'sm:pr-7 sm:pl-5',
+                  'relative flex h-[4.5rem] items-center gap-3.5 rounded-full bg-brand pr-4 pl-4 text-on-brand shadow-lift sm:h-20',
+                  collapsed ? 'sm:px-4' : 'sm:pr-8 sm:pl-4',
                 )}
               >
                 {/* A gentle idle pulse; the reduced-motion rule in index.css stops it after one beat. */}
                 <span aria-hidden="true" className="pointer-events-none absolute inset-0 animate-halo rounded-full bg-brand" />
-                <span aria-hidden="true" className="relative grid size-10 place-items-center rounded-full bg-on-brand/15">
-                  <Icon name="chat" size={22} />
-                  <Icon name="sparkle" size={12} className="absolute top-1 right-1" />
+                <span aria-hidden="true" className="relative grid size-12 place-items-center rounded-full bg-on-brand/15">
+                  <Icon name="chat" size={26} />
+                  <Icon name="sparkle" size={13} className="absolute top-1 right-1" />
                 </span>
                 {/*
                  * Labelled on wider screens while the page is at the top, so the advisor is obvious; just the icon on
@@ -209,7 +209,7 @@ export function AdvisorLauncher({ state, onOpen, onClose, showBubble }: AdvisorL
                  */}
                 <span
                   aria-hidden="true"
-                  className={cx('relative text-base font-semibold whitespace-nowrap max-sm:hidden', collapsed && 'hidden')}
+                  className={cx('relative text-lg font-bold whitespace-nowrap max-sm:hidden', collapsed && 'hidden')}
                 >
                   Ask the advisor
                 </span>
