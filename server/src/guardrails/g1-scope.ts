@@ -27,7 +27,9 @@ const OUT_OF_SCOPE: { topic: ScopeTopic; pattern: RegExp }[] = [
   // request ("can you", "please", "help me", or an opening imperative) counts.
   { topic: 'writing', pattern: request(String.raw`(write|draft|rewrite|proofread|redo|fix|polish|improve)\b.{0,30}\b(my|a|an|the)\b.{0,20}\b(cover letter|cv|resume|résumé|personal statement|motivation letter|job application)\b`) },
   { topic: 'academic-work', pattern: request(String.raw`(write|do|finish|solve|answer)\b.{0,30}\b(my|the|this)\b.{0,20}\b${COURSEWORK}\b`) },
-  { topic: 'academic-work', pattern: new RegExp(String.raw`\bhelp (?:me )?(?:with|on) (?:my|the|this)\b.{0,20}\b${COURSEWORK}\b`, 'i') },
+  // "Help me with my lab report", "I need help with my homework": a request too, so "Python helped with my
+  // dissertation" stays an answer.
+  { topic: 'academic-work', pattern: request(String.raw`(?:help (?:me )?)?(?:with|on) (?:my|the|this)\b.{0,20}\b${COURSEWORK}\b`) },
   { topic: 'other', pattern: /\b(weather|recipe|football|lottery|crypto|bitcoin|horoscope)\b/i },
   { topic: 'other', pattern: /\bwho (won|is the president)\b/i },
   { topic: 'other', pattern: /\b(write|generate)\b.{0,20}\b(a poem|a story|a song|code for|a script)\b/i },

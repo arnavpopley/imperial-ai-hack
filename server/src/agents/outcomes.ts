@@ -14,8 +14,11 @@ const GUARANTEE: RegExp[] = [
   /\b(will|would|am) i\b.{0,30}\b(get|be) (a job|hired|employed|a first|a 2:1|a distinction)\b/i,
 ];
 
-/** A question: it ends with "?" or opens with an auxiliary ("will…", "is…"), so a remark about guarantees is not one. */
-const QUESTION = /\?\s*$|^\s*(will|would|does|do|did|can|could|is|are|am|should)\b/i;
+/**
+ * A question: it ends with "?" or opens like one ("will…", "is…", "which…"), punctuation or not, so a remark
+ * about guarantees is not one.
+ */
+const QUESTION = /\?\s*$|^\s*(will|would|does|do|did|can|could|is|are|am|should|which|what|how|why|who)\b/i;
 
 export function asksForGuarantee(text: string): boolean {
   return QUESTION.test(text) && GUARANTEE.some((pattern) => pattern.test(text));

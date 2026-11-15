@@ -31,7 +31,7 @@ async function chat(id: string, content: string) {
 
 describe('asksForGuarantee', () => {
   it('reads questions asking for a job or grade', () => {
-    for (const text of ['Will taking Mechatronics 3A get me a job at Boston Dynamics?', 'Will this module get me a first?', 'Is CFD guaranteed to help?', 'Would this land me an internship?']) {
+    for (const text of ['Will taking Mechatronics 3A get me a job at Boston Dynamics?', 'Will this module get me a first?', 'Is CFD guaranteed to help?', 'Would this land me an internship?', 'Which modules guarantee a job']) {
       expect(asksForGuarantee(text), text).toBe(true);
     }
   });
@@ -47,13 +47,13 @@ describe('scopeCheck request forms', () => {
   const ctx = { mode: 'RECOMMEND' as const, tracer: createTracer('t', () => {}) };
 
   it('catches ordinary ways of asking for coursework or an application to be written', async () => {
-    for (const text of ['I need help to solve my homework', 'I want you to write my essay on turbulence.', 'Help me with my lab report', 'Could someone draft my personal statement?']) {
+    for (const text of ['I need help to solve my homework', 'I want you to write my essay on turbulence.', 'Help me with my lab report', 'Could someone draft my personal statement?', 'I need help with my homework', 'Can you help with my essay?']) {
       expect((await scopeCheck(text, ctx)).verdict, text).toBe('block');
     }
   });
 
   it('leaves pasted work and ordinary answers in scope', async () => {
-    for (const text of ['Here is my CV: I improved the robotics society application process.', 'I enjoyed writing the CFD coursework report last year.']) {
+    for (const text of ['Here is my CV: I improved the robotics society application process.', 'I enjoyed writing the CFD coursework report last year.', 'I enjoyed using Python to help with my dissertation on robotics']) {
       expect((await scopeCheck(text, ctx)).verdict, text).toBe('pass');
     }
   });
