@@ -10,6 +10,7 @@ import {
 } from '@modulematch/shared';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { api } from '../../api.ts';
+import { decisionsKey } from '../../components/exceptions.ts';
 import { useAsync, type AsyncResult } from '../hooks/useAsync.ts';
 import { useDebouncedCallback } from '../hooks/useDebouncedCallback.ts';
 import { useReferenceData } from './ReferenceDataProvider.tsx';
@@ -38,14 +39,58 @@ interface CatalogueValue {
   /** Eligible modules first, each group ordered by live fit. */
   ranked: RankedModule[];
   byId: ReadonlyMap<string, RankedModule>;
+  /** False while the profile has nothing to score (ranking 'starter', spec 8.6): fit numbers and ranks are hidden. */
+  scored: boolean;
 }
 
 const CatalogueContext = createContext<CatalogueValue | null>(null);
 
-/** Eligible first (spec 8.7 keeps ineligible modules listed, greyed), then by fit, then by id for stability. */
-function order(a: Recommendation & { fit: number }, b: Recommendation & { fit: number }): number {
+export type Ordered = Recommendation & { fit: number; position: number };
+
+/**
+ * Eligible first (spec 8.7 keeps ineligible modules listed, greyed), then by fit. Equal fits keep the server's
+ * order, which breaks ties by id, or is the starter order when there is nothing to score.
+ */
+function order(a: Ordered, b: Ordered): number {
   if (a.eligible !== b.eligible) return a.eligible ? -1 : 1;
-  return b.fit - a.fit || a.moduleId.localeCompare(b.moduleId);
+  return b.fit - a.fit || a.position - b.position;
+}
+
+/** The starter order (nothing to score yet) is the server's: style or breadth alone must not re-sort it. */
+const serverOrder = (a: Ordered, b: Ordered): number => a.position - b.position;
+
+/** 1-based ranks where equal fits in the same group share a rank (1, 2, 2, 4), so a tie never looks ranked. */
+export function sharedRanks(list: readonly Ordered[]): number[] {
+  const ranks: number[] = [];
+  list.forEach((r, index) => {
+    const previous = list[index - 1];
+    ranks.push(previous && previous.fit === r.fit && previous.eligible === r.eligible ? ranks[index - 1]! : index + 1);
+  });
+  return ranks;
+}
+
+/**
+ * The list as the catalogue shows it at the given weights: eligible first, by live fit (or the server's starter
+ * order when there is nothing to score), with shared ranks and the shift against the default weights measured
+ * in those same ranks, so a tie never shows a move that did not happen.
+ */
+export function rankForView(
+  response: Pick<RecommendationsResponse, 'recommendations' | 'ranking'>,
+  weights: Weights,
+): (Recommendation & { rank: number; rankShift: number })[] {
+  const list = response.recommendations.map((r, position) => ({ ...r, position }));
+  const sort = response.ranking === 'starter' ? serverOrder : order;
+  const at = (w: Weights) => list.map((r) => ({ ...r, fit: combineFit(r.sub, w) })).sort(sort);
+  const baseline = at(DEFAULT_WEIGHTS);
+  const baselineRanks = sharedRanks(baseline);
+  const baselineRank = new Map(baseline.map((r, index) => [r.moduleId, baselineRanks[index]!]));
+  const live = at(weights);
+  const ranks = sharedRanks(live);
+  return live.map(({ position: _position, ...r }, index) => ({
+    ...r,
+    rank: ranks[index]!,
+    rankShift: (baselineRank.get(r.moduleId) ?? ranks[index]!) - ranks[index]!,
+  }));
 }
 
 const sameWeights = (a: Weights, b: Weights) =>
@@ -55,7 +100,9 @@ export function CatalogueProvider({ children }: { children: ReactNode }) {
   const { session, recsVersion } = useReadySession();
   const { moduleById } = useReferenceData();
   const sessionId = session.id;
-  const recs = useAsync(() => api.recommendations(sessionId), [sessionId, recsVersion, session.profile.updatedAt]);
+  // A Senior Tutor decision changes eligibility without touching the profile, so it refetches the ranking too.
+  const decisions = decisionsKey(session);
+  const recs = useAsync(() => api.recommendations(sessionId), [sessionId, recsVersion, session.profile.updatedAt, decisions]);
   const [weights, setWeights] = useState<Weights>(session.weights);
   const [saveState, setSaveState] = useState<SaveState>('idle');
   /** Counts local slider edits, so a server refresh that started before an edit never overwrites it. */
@@ -111,24 +158,10 @@ export function CatalogueProvider({ children }: { children: ReactNode }) {
     save(DEFAULT_WEIGHTS);
   }, [save]);
 
-  const ranked = useMemo(() => {
-    const list = recs.data?.recommendations ?? [];
-    const baseline = list
-      .map((r) => ({ ...r, fit: combineFit(r.sub, DEFAULT_WEIGHTS) }))
-      .sort(order)
-      .map((r) => r.moduleId);
-    return list
-      .map((r) => ({ ...r, fit: combineFit(r.sub, weights) }))
-      .sort(order)
-      .map(
-        (r, index): RankedModule => ({
-          ...r,
-          module: moduleById.get(r.moduleId),
-          rank: index + 1,
-          rankShift: baseline.indexOf(r.moduleId) - index,
-        }),
-      );
-  }, [recs.data, weights, moduleById]);
+  const ranked = useMemo(
+    () => (recs.data ? rankForView(recs.data, weights).map((r): RankedModule => ({ ...r, module: moduleById.get(r.moduleId) })) : []),
+    [recs.data, weights, moduleById],
+  );
 
   const byId = useMemo(() => new Map(ranked.map((r) => [r.moduleId, r])), [ranked]);
 
@@ -142,6 +175,7 @@ export function CatalogueProvider({ children }: { children: ReactNode }) {
       saveState,
       ranked,
       byId,
+      scored: recs.data?.ranking !== 'starter',
     }),
     [recs, weights, setWeight, resetWeights, saveState, ranked, byId],
   );

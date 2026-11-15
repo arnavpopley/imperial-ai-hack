@@ -48,6 +48,10 @@ export interface Transcript {
   expected: Record<string, number | string | string[] | boolean>;
 }
 
+/** The slots each plan question targets (server/src/agents/interviewer.ts QUICK_PLAN). */
+const ASSESSMENT = ['style.examPreference', 'style.appliedPreference'];
+const TEAM = ['style.groupPreference', 'style.workloadTolerance'];
+
 export const EXTRACTION_TRANSCRIPTS: Transcript[] = [
   {
     name: 'motorsport aerodynamicist',
@@ -132,4 +136,18 @@ export const EXTRACTION_TRANSCRIPTS: Transcript[] = [
       'style.examPreference': 0.5,
     },
   },
+  // Natural answers from issue #55, each asked with the plan question that targets its slots.
+  ...(
+    [
+      ['no exams please', 'No exams please.', ASSESSMENT, { 'style.examPreference': 0.2 }],
+      ['not big exams', 'Coursework and projects, definitely not big exams.', ASSESSMENT, { 'style.examPreference': 0.2 }],
+      ['exams, not coursework', 'Exams, not coursework.', ASSESSMENT, { 'style.examPreference': 0.8 }],
+      ['moderate workload', 'A moderate workload is fine.', TEAM, { 'style.workloadTolerance': 0.5 }],
+      ['small team, moderate workload', 'I like working in a small team, and a moderate workload is fine.', TEAM, { 'style.groupPreference': 0.8, 'style.workloadTolerance': 0.5 }],
+      ['heavy is fine', 'Heavy is fine, I can handle a lot.', TEAM, { 'style.workloadTolerance': 0.8 }],
+      ['light workload', 'Light, not too much.', TEAM, { 'style.workloadTolerance': 0.25 }],
+      ['explicit yes to breadth', "Yes, I'd be up for one module outside engineering.", ['breadthAppetite'], { breadthAppetite: 0.85 }],
+      ['dislikes', "I'd avoid thermodynamics, and I'm not into finance.", ['interest'], { 'interest:thermodynamics-energy': 0.1, 'interest:finance-economics': 0.1 }],
+    ] as const
+  ).map(([name, text, targetSlots, expected]): Transcript => ({ name: `#55 ${name}`, turns: [{ text, targetSlots: [...targetSlots] }], expected })),
 ];

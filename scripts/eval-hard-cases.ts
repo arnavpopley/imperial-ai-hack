@@ -162,6 +162,14 @@ export const HARD_CASES: HardCase[] = [
     expected: { 'style.examPreference': 0.2 },
     why: 'Adaption row. The offline cues knew neither "tests" nor "portfolio".',
   },
+  {
+    name: 'unsure about workload',
+    text: "I don't know what's normal.",
+    targetSlots: ['style.workloadTolerance'],
+    expected: {},
+    absent: ['style.workloadTolerance'],
+    why: 'Greptile on #83: "normal" in an unsure answer to the workload follow-up was saved as 0.5, a preference never given.',
+  },
   // ---- careers and pathways ----
   {
     name: 'torn between two careers',

@@ -7,14 +7,16 @@ import { api } from '../../api.ts';
 import { buttonClass } from '../../components/Button.tsx';
 import { ConfidenceBadge } from '../../components/ConfidenceBadge.tsx';
 import { cx } from '../../components/cx.ts';
+import { decisionsKey } from '../../components/exceptions.ts';
 import { FIT_BAND_LABELS, fitBand } from '../../components/FitScore.tsx';
 import { Icon } from '../../components/Icon.tsx';
 import { ModuleTypeChip } from '../../components/ModuleTypeChip.tsx';
 import { SampleDataLabel } from '../../components/SampleDataLabel.tsx';
 import { EmptyState, ErrorState, Skeleton } from '../../components/StateViews.tsx';
 import { SubScoreBars } from '../../components/SubScoreBars.tsx';
+import { ExceptionChip } from '../catalogue/ExceptionChip.tsx';
 import { reasonSource } from '../catalogue/reasonSource.ts';
-import { ScoreRing } from '../catalogue/ScoreRing.tsx';
+import { NoScoreRing, ScoreRing } from '../catalogue/ScoreRing.tsx';
 import { ShortlistButton } from '../catalogue/ShortlistButton.tsx';
 import { ClaimCheck } from '../claimcheck/ClaimCheck.tsx';
 import { explanationText } from '../claimcheck/claimCheck.ts';
@@ -39,15 +41,17 @@ export function ModuleDetailScreen() {
   const { moduleId = '' } = useParams();
   const { session } = useReadySession();
   const { moduleById, pathwayById, modules } = useReferenceData();
-  const { byId } = useCatalogue();
+  const { byId, scored } = useCatalogue();
   const shortlist = useShortlist();
   const reduce = useReducedMotion();
   const nudge = useNudge(moduleId);
   const relatedFeedback = useFeedbackAffecting(moduleId);
   const sessionId = session.id;
+  // A Senior Tutor decision changes the module's watch-outs, so it fetches the explanation again too.
+  const decisions = decisionsKey(session);
   const explanation = useAsync(
     () => api.explanation(sessionId, moduleId),
-    [sessionId, moduleId, session.profile.updatedAt],
+    [sessionId, moduleId, session.profile.updatedAt, decisions],
   );
   const module = moduleById.get(moduleId);
   const rec = byId.get(moduleId);
@@ -117,12 +121,13 @@ export function ModuleDetailScreen() {
           className="pointer-events-none absolute inset-y-0 right-0 w-2/3 bg-gradient-to-l from-brand-soft/70 to-transparent"
         />
         <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-7">
-          {rec && <ScoreRing value={rec.fit} size="lg" dimmed={dimmed} delay={0.15} />}
+          {rec && (scored ? <ScoreRing value={rec.fit} size="lg" dimmed={dimmed} delay={0.15} /> : <NoScoreRing size="lg" />)}
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-1.5">
               <ModuleTypeChip variant={module.type} />
               {rec && <ConfidenceBadge variant={rec.confidence} />}
-              {rec && (
+              {rec?.exception && <ExceptionChip decision={rec.exception} />}
+              {rec && scored && (
                 <span className="text-[12px] font-medium text-muted">
                   {FIT_BAND_LABELS[fitBand(rec.fit)]} · ranked #{rec.rank}
                 </span>
@@ -316,7 +321,7 @@ export function ModuleDetailScreen() {
 
         <motion.aside {...rise(0.18)} className="grid min-w-0 gap-6 lg:sticky lg:top-20">
           <AskModulePanel sessionId={sessionId} moduleId={module.id} moduleTitle={module.title} />
-          {rec && (
+          {rec && scored && (
             <section aria-labelledby="sub-heading" className="rounded-card border border-line bg-surface p-5 shadow-soft">
               <h2 id="sub-heading" className="mb-3 text-sm font-semibold">
                 How the score breaks down

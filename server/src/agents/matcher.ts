@@ -6,6 +6,7 @@ import { filterClaims } from '../guardrails/g8-claims.ts';
 import { stripInjection } from '../guardrails/g3-injection.ts';
 import { groundExplanation } from '../guardrails/g6-grounding.ts';
 import { validated } from '../guardrails/g5-schema.ts';
+import { hasFitSignal } from '../engines/index.ts';
 import type { Tracer } from '../trace/tracer.ts';
 import { asData, emitWords, isLive, streamText, structured } from './llm.ts';
 
@@ -83,12 +84,25 @@ export function explainByRules(
     const has = module.demand[map.field];
     if (want !== null && Math.abs(want - has) >= 0.5) watchOuts.push(`It is ${has >= 0.5 ? map.high : map.low}, which is not your preference.`);
   }
-  if (rec.sub.interest < 0.3) watchOuts.push('Little of its content overlaps with the interests you described.');
+  const describedInterests = Object.values(profile.interests).some((strength) => strength > 0);
+  if (describedInterests && rec.sub.interest < 0.3) watchOuts.push('Little of its content overlaps with the interests you described.');
   // Spec 8.7: compulsory modules with a low style fit get a preparation hint.
   if (module.type === 'core' && rec.sub.style < 0.6) watchOuts.push('This is a core module, so it is worth preparing for the parts above your comfort level early.');
 
+  // Never claim preferences or interests the student has not given (issue #50).
+  if (!hasFitSignal(profile)) {
+    const summary = 'There is no fit score yet: answer a few questions about what you enjoy and I can say how well this module suits you.';
+    return { moduleId: module.id, summary, because: because.slice(0, 4), watchOuts };
+  }
   const band = rec.fit >= 70 ? 'A strong fit' : rec.fit >= 50 ? 'A good fit' : rec.fit >= 35 ? 'A partial fit' : 'A weak fit';
-  const driver = overlaps[0] ? `mostly because of ${topicLabel(overlaps[0].topic).toLowerCase()}` : 'based on your learning preferences';
+  const styleGiven = Object.values(profile.style).some((value) => value !== null);
+  const driver = overlaps[0]
+    ? `mostly because of ${topicLabel(overlaps[0].topic).toLowerCase()}`
+    : goal && goal.relevance >= 0.5
+      ? `mostly because of the ${goal.pathway.replaceAll('-', ' ')} pathway you chose`
+      : styleGiven
+        ? 'based on your learning preferences'
+        : 'from what you have told me so far';
   return { moduleId: module.id, summary: `${band} at ${rec.fit}, ${driver}.`, because: because.slice(0, 4), watchOuts };
 }
 
@@ -126,7 +140,8 @@ export async function explain(
 ): Promise<Explanation> {
   const template = explainByRules(profile, module, rec, evidence);
   let result = template;
-  if (isLive()) {
+  // With no fit signal there is no score to explain, so the honest template stands without a model call.
+  if (isLive() && hasFitSignal(profile)) {
     const brief = {
       scores: { fit: rec.fit, sub: rec.sub, eligible: rec.eligible, ineligibleReasons: rec.ineligibleReasons },
       module: { id: module.id, title: module.title, type: module.type, topics: module.topics, demand: module.demand, pathwayRelevance: module.pathwayRelevance, prerequisites: module.prerequisites },

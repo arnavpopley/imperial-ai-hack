@@ -151,10 +151,25 @@ export const fixtureEscalation: Escalation = {
   id: 'esc-1',
   sessionId: SESSION_ID,
   type: 'RULE_EXCEPTION',
-  summary: 'Student asks to take Robotics and Control without the Year 2 control prerequisite.',
+  summary: 'The student asks to take Robotics and Control without the Year 2 control prerequisite.',
   status: 'open',
   staffResponse: null,
   createdAt: NOW,
+  request: {
+    moduleId: 'ME3-ROB',
+    violations: [
+      {
+        code: 'PREREQUISITE_MISSING',
+        moduleId: 'ME3-ROB',
+        prerequisiteId: 'ME2-CTRL',
+        message: "Robotics and Control requires ME2-CTRL, which is not among the student's completed modules.",
+      },
+    ],
+    reason: 'I covered control theory on my placement.',
+    completedModuleIds: [],
+    fit: { fit: 71, sub: { interest: 0.8, goal: 0.7, style: 0.6, breadth: 0.1 } },
+  },
+  decision: null,
 };
 
 export const fixtureSession: SessionState = {
@@ -180,6 +195,7 @@ export const fixtureSession: SessionState = {
   },
   escalations: [fixtureEscalation],
   escalationDraft: null,
+  exceptions: [],
   createdAt: NOW,
   updatedAt: NOW,
 };
@@ -196,6 +212,7 @@ export const fixtureRecommendations: RecommendationsResponse = {
   weights: DEFAULT_WEIGHTS,
   confidence: 'high',
   completeness: 0.82,
+  ranking: 'fit',
   recommendations: [
     rec({ moduleId: 'ME3-CFD', sub: { interest: 0.82, goal: 0.9, style: 0.86, breadth: 0.05 }, ...eligible }),
     rec({ moduleId: 'IEX-SUS', sub: { interest: 0.35, goal: 0.1, style: 0.75, breadth: 0.5 }, ...eligible }),

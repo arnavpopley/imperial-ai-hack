@@ -1,6 +1,7 @@
 // Spec 8: the deterministic scoring engine. Pure functions with no model calls: same inputs, same outputs.
 import { combineFit, confidenceLabel, isAllowedSlot, MIN_INTEREST_TOPICS, schemas, STYLE_SLOTS } from '@modulematch/shared';
 import type {
+  ModuleException,
   Evidence,
   Module,
   ModuleDemand,
@@ -120,17 +121,19 @@ const byFitThenId = (a: Recommendation, b: Recommendation): number =>
 
 /**
  * Spec 8.7: score every module and gate it through the rules engine. Ineligible modules stay in the
- * list with their reasons, so the catalogue can grey them out.
+ * list with their reasons, so the catalogue can grey them out. `exceptions` are the rule exceptions the
+ * Senior Tutor approved for this student (spec 11.1).
  */
 export function rankModules(
   profile: StudentProfile,
   modules: readonly Module[],
   weights: Weights,
   rules: ProgrammeRules,
+  exceptions: readonly ModuleException[] = [],
 ): Recommendation[] {
   return modules
     .map((module) => {
-      const violations = checkModuleEligibility(module.id, profile, modules, rules);
+      const violations = checkModuleEligibility(module.id, profile, modules, rules, exceptions);
       return {
         ...scoreModule(profile, module, weights, rules.homeTopics),
         eligible: violations.length === 0,
@@ -138,6 +141,52 @@ export function rankModules(
       };
     })
     .sort(byFitThenId);
+}
+
+/**
+ * Spec 8.6 cold start: with no interests and no pathway, interest and goal alignment are zero or unused for
+ * every module, so a fit score measures nothing about the student and is not shown.
+ */
+export function hasFitSignal(profile: StudentProfile): boolean {
+  return profile.pathways.length > 0 || Object.values(profile.interests).some((strength) => strength > 0);
+}
+
+/** Starter order by module type: electives are the real choice, core modules are compulsory anyway. */
+const STARTER_TYPE_ORDER: Record<Module['type'], number> = { elective: 0, 'i-explore': 1, core: 2 };
+
+/**
+ * The order for a profile with no fit signal (hasFitSignal false): modules at the student's year first,
+ * then electives before I-Explore before core, then how many students in the same programme and year
+ * shortlisted it (`popularity`, from the synthetic cohort), then title. Deterministic, and makes no claim
+ * about fit.
+ */
+export function starterOrder(
+  recs: readonly Recommendation[],
+  modules: readonly Module[],
+  yearOfStudy: number,
+  popularity: ReadonlyMap<string, number>,
+): Recommendation[] {
+  const byId = new Map(modules.map((module) => [module.id, module]));
+  const key = (rec: Recommendation) => {
+    const module = byId.get(rec.moduleId);
+    return {
+      offYear: module ? Math.abs(module.level - yearOfStudy) : Number.POSITIVE_INFINITY,
+      type: module ? STARTER_TYPE_ORDER[module.type] : Number.POSITIVE_INFINITY,
+      popularity: popularity.get(rec.moduleId) ?? 0,
+      title: module?.title ?? rec.moduleId,
+    };
+  };
+  return [...recs]
+    .map((rec) => ({ rec, key: key(rec) }))
+    .sort(
+      (a, b) =>
+        a.key.offYear - b.key.offYear ||
+        a.key.type - b.key.type ||
+        b.key.popularity - a.key.popularity ||
+        compareIds(a.key.title, b.key.title) ||
+        compareIds(a.rec.moduleId, b.rec.moduleId),
+    )
+    .map(({ rec }) => rec);
 }
 
 /**

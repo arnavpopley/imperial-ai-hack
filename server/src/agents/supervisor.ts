@@ -1,6 +1,6 @@
 // Supervisor (spec 10.1): owns the mode, routes each student turn to one agent, and raises escalations.
 // It is a deterministic state machine plus one intent classification. Every step is traced.
-import { confidenceLabel, type Message, type SendMessageBody, type SessionState, type SseEvent, type Weights } from '@modulematch/shared';
+import { confidenceLabel, STARTER_QUESTIONS, type Message, type SendMessageBody, type SessionState, type SseEvent, type Weights } from '@modulematch/shared';
 import { randomUUID } from 'node:crypto';
 import * as repo from '../db/repo.ts';
 import { SCOPE_REDIRECT } from '../guardrails/g1-scope.ts';
@@ -12,11 +12,11 @@ import { answerCatalogueQuestion } from './catalogue.ts';
 import { draftComplaint, draftLowConfidence, draftRuleException, draftWellbeing } from './escalation.ts';
 import { extract, mergeUpdates } from './extractor.ts';
 import { classifyIntent, needsClarification } from './intent.ts';
-import { askNext, nextQuestion, reflect, studentTurn, unfilledSlots, whatIHeard, type Widget } from './interviewer.ts';
+import { answeredSteps, askNext, followUp, nextQuestion, reflect, studentTurn, unfilledSlots, whatIHeard, type Widget } from './interviewer.ts';
 import { emitWords, type ChatMessage } from './llm.ts';
 import { alternativesTo, holdPosition } from './matcher.ts';
 import { matchModules, MAX_SUGGESTIONS } from './module-match.ts';
-import { checkShortlist } from '../engines/index.ts';
+import { checkModuleEligibility, checkShortlist, hasFitSignal } from '../engines/index.ts';
 import { applyShortlistEdit, catalogue, enterExplain, explanationFor, leaveExplain, moduleTitle, precomputeTopExplanations, ranked, rulesForProfile, saveProfile, setMode, syncPlanMode, timetableView, tracerSink } from './session.ts';
 import { describeTimetable, explainTimetable } from './timetabler.ts';
 
@@ -148,13 +148,13 @@ async function ruleExceptionTurn(turn: Turn, moduleIds: string[]) {
   if (!target) {
     // The named modules are each allowed, but the whole proposed shortlist may still break a rule (the credit cap).
     const proposed = [...new Set([...session.shortlist, ...moduleIds])];
-    const result = checkShortlist(proposed, session.profile, modules, rulesForProfile(session.profile));
+    const result = checkShortlist(proposed, session.profile, modules, rulesForProfile(session.profile), session.exceptions);
     const broken = result.violations.filter((v) => EXCEPTION_CODES.has(v.code));
     tracer.record({ actor: 'matcher', kind: 'tool', input: `check_rules(${proposed.length} modules)`, output: broken.length ? `violation: ${broken.map((v) => v.code).join(', ')}` : 'no violation', verdict: broken.length ? 'block' : 'pass' });
     if (broken.length) {
       const reasons = broken.map((v) => v.message);
       await say(turn, 'matcher', `I can't approve that: ${reasons.join(' ')} The rule is set by your programme, so I can't make an exception. I have drafted a request to the Senior Tutor below, and it is only sent if you approve it.`);
-      return offerDraft(turn, draftRuleException(session.profile, reasons, turn.text, modules.find((m) => moduleIds.includes(m.id))));
+      return offerDraft(turn, draftRuleException(session.profile, broken, turn.text, modules.find((m) => moduleIds.includes(m.id))));
     }
     const named = modules.find((m) => moduleIds.includes(m.id));
     const text = named
@@ -179,7 +179,8 @@ async function ruleExceptionTurn(turn: Turn, moduleIds: string[]) {
       ),
     () => ({ output: 'held position, offered alternatives and escalation', verdict: 'block' }),
   );
-  await offerDraft(turn, draftRuleException(session.profile, reasons, turn.text, target));
+  const violations = checkModuleEligibility(target.id, session.profile, modules, rulesForProfile(session.profile), session.exceptions);
+  await offerDraft(turn, draftRuleException(session.profile, violations, turn.text, target));
 }
 
 async function explainTurn(turn: Turn, moduleIds: string[]) {
@@ -268,6 +269,8 @@ async function shortlistTurn(turn: Turn, mentioned: string[]) {
   const { session } = turn;
   const action = /\b(remove|drop|take .* off|delete)\b/i.test(turn.text) ? 'remove' : 'add';
   session.shortlist = repo.listShortlist(session.id);
+  // A Senior Tutor may approve an exception while this turn awaits guardrails, so the gate reads the saved exceptions.
+  session.exceptions = repo.getSession(session.id)?.exceptions ?? session.exceptions;
   const recs = ranked(session);
   const eligible = new Set(recs.filter((r) => r.eligible).map((r) => r.moduleId));
   const pool = action === 'remove' ? session.shortlist : [...eligible].filter((id) => !session.shortlist.includes(id));
@@ -456,15 +459,25 @@ async function runTurn(sessionId: string, body: SendMessageBody, emit: Emit): Pr
 export function confirmProfile(session: SessionState): { tracer: Tracer; lowConfidence: boolean } {
   const tracer = createTracer(session.id, tracerSink);
   if (session.mode === 'ONBOARD') setMode(session, 'INTERVIEW', tracer, 'programme and year entered');
+  // Finished means the interviewer ran out of questions; confirming before that is a skip.
+  const interviewed = session.interview.finished;
   session.interview = { ...session.interview, finished: true, confirmed: true, targetSlots: [] };
   repo.updateSession(session.id, { interview: session.interview });
   setMode(session, 'RECOMMEND', tracer, 'profile confirmed or interview skipped');
   const lowConfidence = confidenceLabel(session.profile.completeness) === 'low';
-  if (lowConfidence) {
-    // Spec 8.6: low confidence greys the scores and the Supervisor proposes returning to the interview.
+  // Spec 8.6 and 11.1: a personal tutor is offered only when confidence is still low after a full interview,
+  // never on a skip; a skip is offered more questions instead.
+  const offerTutor = lowConfidence && interviewed;
+  const tutor = offerTutor ? ', or ask for a personal tutor to help' : '';
+  if (!hasFitSignal(session.profile)) {
+    // Cold start: nothing to score yet, so the catalogue is in a starter order without fit scores.
     repo.addMessage(
-      message(session.id, 'assistant', 'I do not know enough about you yet, so these scores are rough. Answer a few more questions for better matches, or ask for a personal tutor to help.', 'supervisor'),
+      message(session.id, 'assistant', `I do not know what you enjoy yet, so your modules are in a starter order without fit scores: your year's modules first, then the ones students like you shortlist. Answer ${STARTER_QUESTIONS} quick questions for real matches${tutor}.`, 'supervisor'),
     );
+  } else if (lowConfidence) {
+    repo.addMessage(message(session.id, 'assistant', `I do not know enough about you yet, so these scores are rough. Answer a few more questions for better matches${tutor}.`, 'supervisor'));
+  }
+  if (offerTutor) {
     const draft = draftLowConfidence(session.profile, 'the profile is less than half complete after the interview.');
     session.escalationDraft = draft;
     repo.updateSession(session.id, { escalationDraft: draft });
@@ -474,10 +487,40 @@ export function confirmProfile(session: SessionState): { tracer: Tracer; lowConf
   return { tracer, lowConfidence };
 }
 
-/** Student agrees to return to the interview from RECOMMEND (spec 12). */
+/** Questions a resumed interview may ask (spec 8.6: medium confidence "offers two more questions"). */
+export const RESUME_BUDGET = 2;
+
+/**
+ * Student agrees to answer two more questions (spec 8.6 and 12: "low confidence and student agrees"). From PLAN or
+ * ESCALATED the session first returns to RECOMMEND, since only RECOMMEND may enter the interview. The interviewer asks
+ * the first of the two highest-priority unfilled slots straight away, and the second after the student answers; then
+ * the "Here is what I heard" card returns, and confirming it goes back to RECOMMEND with a re-ranked catalogue.
+ */
 export function resumeInterview(session: SessionState): void {
   const tracer = createTracer(session.id, tracerSink);
-  session.interview = { ...session.interview, finished: false, confirmed: false, budget: session.interview.questionsAsked + 2 };
+  if (session.mode === 'PLAN' || session.mode === 'ESCALATED') setMode(session, 'RECOMMEND', tracer, 'returning to the interview for two more questions');
+  if (!setMode(session, 'INTERVIEW', tracer, 'low confidence and student agrees') && session.mode !== 'INTERVIEW') return;
+  // A student who skipped has nothing to score yet, so gets STARTER_QUESTIONS; steps that never got an answer
+  // (skipped or talked past) are asked again rather than lost.
+  const budget = hasFitSignal(session.profile) ? RESUME_BUDGET : STARTER_QUESTIONS;
+  session.interview = { ...session.interview, finished: false, confirmed: false, askedSteps: answeredSteps(session), budget: session.interview.questionsAsked + budget };
+  const found = nextQuestion(session, session.interview.askedSteps);
+  // The question goes in as a stored message, which cannot carry a widget, so a slider step is asked as its text follow-up.
+  const gaps = unfilledSlots(session.profile, session.evidence);
+  const next = found?.step.widget ? followUp(found.targetSlots.find((slot) => gaps.includes(slot)) ?? found.targetSlots[0]!) : found;
+  if (!next) {
+    // Nothing left to ask: close the interview again so the card shows.
+    session.interview = { ...session.interview, finished: true, targetSlots: [] };
+    repo.updateSession(session.id, { interview: session.interview });
+    return;
+  }
+  tracer.record({ actor: 'interviewer', kind: 'agent', input: `gaps: ${gaps.join(', ') || 'none'}; budget ${budget}`, output: `asked ${next.step.id}`, verdict: null });
+  repo.addMessage(message(session.id, 'assistant', next.step.question, 'interviewer'));
+  session.interview = {
+    ...session.interview,
+    questionsAsked: session.interview.questionsAsked + 1,
+    askedSteps: [...session.interview.askedSteps, next.step.id],
+    targetSlots: next.targetSlots,
+  };
   repo.updateSession(session.id, { interview: session.interview });
-  setMode(session, 'INTERVIEW', tracer, 'low confidence and student agrees');
 }

@@ -158,6 +158,9 @@ export const Weights = z.object({
 
 export const Confidence = z.enum(['high', 'medium', 'low']);
 
+/** The Senior Tutor's decision on a rule exception. An approval makes the module eligible for that session only. */
+export const ExceptionDecision = z.enum(['approved', 'declined']);
+
 export const Recommendation = z.object({
   moduleId: z.string(),
   fit: z.number().int().min(0).max(100),
@@ -170,6 +173,8 @@ export const Recommendation = z.object({
   eligible: z.boolean(),
   ineligibleReasons: z.array(z.string()),
   confidence: Confidence,
+  /** Set when the Senior Tutor decided a rule-exception request for this module (spec 11.1). */
+  exception: ExceptionDecision.optional(),
 });
 
 export const ExplanationReason = z.object({
@@ -188,6 +193,52 @@ export const Explanation = z.object({
 export const EscalationType = z.enum(['RULE_EXCEPTION', 'LOW_CONFIDENCE', 'WELLBEING', 'COMPLAINT']);
 export const EscalationStatus = z.enum(['open', 'claimed', 'resolved']);
 
+export const RuleViolation = z.object({
+  code: z.enum([
+    'PREREQUISITE_MISSING',
+    'NOT_ALLOWED',
+    'ECTS_CAP_EXCEEDED',
+    'ELECTIVE_ECTS_SHORT',
+    'I_EXPLORE_MISSING',
+    'UNKNOWN_MODULE',
+  ]),
+  moduleId: z.string().nullable(),
+  /** The missing module, for PREREQUISITE_MISSING, so staff can see the rule as data rather than prose. */
+  prerequisiteId: z.string().optional(),
+  message: z.string(),
+});
+
+/**
+ * One broken rule a Senior Tutor waived for one module: the programme check (NOT_ALLOWED) or one missing
+ * prerequisite. Shortlist rules such as the credit cap are never waived; the module's ECTS always count.
+ */
+export const RuleWaiver = z.object({
+  code: RuleViolation.shape.code.extract(['PREREQUISITE_MISSING', 'NOT_ALLOWED']),
+  prerequisiteId: z.string().optional(),
+});
+
+/** An approved rule exception: the module, and exactly the rules that were broken when the student asked. */
+export const ModuleException = z.object({
+  moduleId: z.string(),
+  waived: z.array(RuleWaiver).min(1),
+});
+
+/** A one-line reason from the student, asked for in every rule-exception draft. */
+export const EXCEPTION_REASON_MAX = 200;
+
+/**
+ * What a rule-exception escalation shares with the Senior Tutor, fixed when the student sends it: the broken rule as
+ * data, the student's reason, their completed modules and their fit for the module. Staff see this and nothing more.
+ */
+export const ExceptionRequest = z.object({
+  /** The module asked for, or null for a shortlist rule such as the credit cap. */
+  moduleId: z.string().nullable(),
+  violations: z.array(RuleViolation),
+  reason: z.string().max(EXCEPTION_REASON_MAX),
+  completedModuleIds: z.array(z.string()),
+  fit: Recommendation.pick({ fit: true, sub: true }).nullable(),
+});
+
 export const Escalation = z.object({
   id: z.string(),
   sessionId: z.string(),
@@ -196,6 +247,9 @@ export const Escalation = z.object({
   status: EscalationStatus,
   staffResponse: z.string().nullable(),
   createdAt: IsoDate,
+  /** Rule exceptions only. */
+  request: ExceptionRequest.nullable().default(null),
+  decision: ExceptionDecision.nullable().default(null),
 });
 
 export const InsightKind = z.enum(['COUNTERFACTUAL', 'OVERLOOKED', 'DEMAND', 'CLASH']);
@@ -245,19 +299,6 @@ export const ProgrammeRules = z.object({
   iExploreRequired: z.boolean(),
   /** h_{s,j} in spec 8.4: topic coverage of the home programme, used by the breadth score. */
   homeTopics: weightMap(TopicId),
-});
-
-export const RuleViolation = z.object({
-  code: z.enum([
-    'PREREQUISITE_MISSING',
-    'NOT_ALLOWED',
-    'ECTS_CAP_EXCEEDED',
-    'ELECTIVE_ECTS_SHORT',
-    'I_EXPLORE_MISSING',
-    'UNKNOWN_MODULE',
-  ]),
-  moduleId: z.string().nullable(),
-  message: z.string(),
 });
 
 export const RuleWarning = z.object({
@@ -364,6 +405,10 @@ export const InterviewState = z.object({
 export const EscalationDraft = z.object({
   type: EscalationType,
   summary: z.string(),
+  /** Rule exceptions: the module asked for, the rules it breaks, and a suggested reason the student can edit. */
+  moduleId: z.string().nullable().optional(),
+  violations: z.array(RuleViolation).optional(),
+  reason: z.string().max(EXCEPTION_REASON_MAX).optional(),
 });
 
 export const SessionState = z.object({
@@ -378,6 +423,8 @@ export const SessionState = z.object({
   escalations: z.array(Escalation),
   /** An escalation the agent drafted that the student has not yet approved. */
   escalationDraft: EscalationDraft.nullable(),
+  /** Rule exceptions the Senior Tutor approved; the rules engine waives exactly those rules for those modules. */
+  exceptions: z.array(ModuleException).default([]),
   createdAt: IsoDate,
   updatedAt: IsoDate,
 });
@@ -474,6 +521,9 @@ export const ShortlistBody = z.object({
 export const CreateEscalationBody = z.object({
   type: EscalationType,
   summary: z.string().min(1).max(1000),
+  /** Rule exceptions: the module asked for (the server checks the rules itself) and the student's one-line reason. */
+  moduleId: z.string().min(1).optional(),
+  reason: z.string().trim().max(EXCEPTION_REASON_MAX).optional(),
 });
 
 export const InsightDecisionBody = z.object({
@@ -482,15 +532,29 @@ export const InsightDecisionBody = z.object({
 
 export const DerivedEditBody = ModuleDerived.omit({ derivedBy: true, derivedRationale: true }).partial();
 
-export const EscalationRespondBody = z.object({
-  response: z.string().min(1).max(2000),
-  resolve: z.boolean().default(true),
-});
+export const ESCALATION_REPLY_MAX = 2000;
+
+/**
+ * A staff reply. Rule exceptions can carry a decision, and then the message is optional; any other reply needs text.
+ * A decision always resolves the escalation.
+ */
+export const EscalationRespondBody = z
+  .object({
+    response: z.string().trim().max(ESCALATION_REPLY_MAX).default(''),
+    resolve: z.boolean().default(true),
+    decision: z.enum(['approve', 'decline']).optional(),
+  })
+  .refine((b) => b.decision !== undefined || b.response.length > 0, { message: 'a reply is required', path: ['response'] });
 
 export const RecommendationsResponse = z.object({
   weights: Weights,
   confidence: Confidence,
   completeness: Fraction,
+  /**
+   * fit: ranked by fit score (spec 8.5). starter: the profile has no interests or pathway yet, so there is
+   * nothing to score; the list is in a starter order and fit numbers are not shown (spec 8.6).
+   */
+  ranking: z.enum(['fit', 'starter']),
   recommendations: z.array(Recommendation),
 });
 
