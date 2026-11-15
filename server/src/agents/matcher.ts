@@ -1,6 +1,6 @@
 // Matcher (spec 10.5): explains scores and holds the line on programme rules. It never changes a number:
 // scores come from the scoring engine, and every reason cites an evidence ID or a module field (G6).
-import { schemas, taxonomy, type Evidence, type Explanation, type Module, type Recommendation, type StudentProfile } from '@modulematch/shared';
+import { schemas, taxonomy, type Evidence, type Explanation, type Module, type Recommendation, type RuleViolation, type StudentProfile } from '@modulematch/shared';
 import { z } from 'zod';
 import { filterClaims } from '../guardrails/g8-claims.ts';
 import { stripInjection } from '../guardrails/g3-injection.ts';
@@ -205,33 +205,132 @@ function similarity(a: Module, b: Module): number {
   return na && nb ? dot / Math.sqrt(na * nb) : 0;
 }
 
-/** Eligible alternatives to a module, ranked by content similarity and then fit (spec 10.5). */
-export function alternativesTo(target: Module, modules: Module[], ranked: Recommendation[], exclude: string[], n = 3): Recommendation[] {
+/**
+ * Issue 112: an alternative must cover the same ground (topic cosine at least this, so a module that merely shares
+ * maths does not count) and, when the student's fit means something, fit them reasonably well.
+ */
+export const MIN_ALTERNATIVE_SIMILARITY = 0.6;
+export const MIN_ALTERNATIVE_FIT = 40;
+
+export interface Alternatives {
+  /** Eligible modules not on the shortlist: missing prerequisites first, then the closest by topic and fit. */
+  open: { moduleId: string; fit: number; prerequisite: boolean }[];
+  /** Close modules already on the shortlist, named so the student knows why they were not suggested. */
+  shortlisted: string[];
+}
+
+/**
+ * Relevant alternatives to a module the student cannot take (spec 10.5, issue 112). A missing prerequisite that is
+ * open to them comes first whatever its fit, since taking it is the way in. Others need topic similarity of at
+ * least MIN_ALTERNATIVE_SIMILARITY and, when the profile gives fit a meaning, a fit of at least MIN_ALTERNATIVE_FIT.
+ * Nothing is padded in: when none qualifies the lists are empty.
+ */
+export function alternativesTo(
+  target: Module,
+  modules: Module[],
+  ranked: Recommendation[],
+  shortlist: readonly string[],
+  opts: { prerequisiteIds?: readonly string[]; fitSignal?: boolean; n?: number } = {},
+): Alternatives {
+  const { prerequisiteIds = [], fitSignal = true, n = 3 } = opts;
   const byId = new Map(modules.map((m) => [m.id, m]));
-  return ranked
-    .filter((r) => r.eligible && r.moduleId !== target.id && !exclude.includes(r.moduleId))
-    .map((r) => ({ r, score: similarity(target, byId.get(r.moduleId)!) * 0.7 + (r.fit / 100) * 0.3 }))
-    .sort((a, b) => b.score - a.score || a.r.moduleId.localeCompare(b.r.moduleId))
-    .slice(0, n)
-    .map(({ r }) => r);
+  const recOf = new Map(ranked.map((r) => [r.moduleId, r]));
+  const close = (id: string) => {
+    const module = byId.get(id);
+    return module ? similarity(target, module) : 0;
+  };
+  const prerequisites = prerequisiteIds
+    .filter((id) => recOf.get(id)?.eligible && !shortlist.includes(id))
+    .map((id) => ({ moduleId: id, fit: recOf.get(id)!.fit, prerequisite: true }));
+  const similar = ranked
+    .filter(
+      (r) =>
+        r.eligible &&
+        r.moduleId !== target.id &&
+        !prerequisiteIds.includes(r.moduleId) &&
+        close(r.moduleId) >= MIN_ALTERNATIVE_SIMILARITY &&
+        (!fitSignal || r.fit >= MIN_ALTERNATIVE_FIT),
+    )
+    .map((r) => ({ r, score: close(r.moduleId) * 0.7 + (r.fit / 100) * 0.3 }))
+    .sort((a, b) => b.score - a.score || a.r.moduleId.localeCompare(b.r.moduleId));
+  const open = similar
+    .filter(({ r }) => !shortlist.includes(r.moduleId))
+    .map(({ r }) => ({ moduleId: r.moduleId, fit: r.fit, prerequisite: false }));
+  return {
+    open: [...prerequisites, ...open].slice(0, n),
+    shortlisted: similar.filter(({ r }) => shortlist.includes(r.moduleId)).slice(0, 2).map(({ r }) => r.moduleId),
+  };
+}
+
+/** "A", "A and B", "A, B and C". */
+export function andList(items: readonly string[]): string {
+  return items.length <= 1 ? (items[0] ?? '') : `${items.slice(0, -1).join(', ')} and ${items.at(-1)}`;
+}
+
+/**
+ * Each broken rule as a short clause after "I can't approve X myself:", so the rule fits on one line (issue 112).
+ * Missing prerequisites are combined into one clause.
+ */
+export function ruleClauses(
+  violations: readonly RuleViolation[],
+  module: Module,
+  year: number,
+  titleOf: (moduleId: string) => string,
+): string[] {
+  const missing = violations.flatMap((v) => (v.code === 'PREREQUISITE_MISSING' && v.prerequisiteId ? [titleOf(v.prerequisiteId)] : []));
+  const clauses = violations.flatMap((v): string[] => {
+    switch (v.code) {
+      case 'NOT_ALLOWED':
+        return [`it isn't open to Year ${year} students on your programme`];
+      case 'ABOVE_YEAR_LEVEL':
+        return [`it's taught in Year ${module.level}`];
+      case 'RULES_NOT_LOADED':
+        return [`your year's rules aren't loaded, so I can't confirm it`];
+      case 'PREREQUISITE_MISSING':
+        return [];
+      default:
+        return [v.message.replace(/\.$/, '')];
+    }
+  });
+  return missing.length ? [...clauses, `it needs ${andList(missing)} first`] : clauses;
 }
 
 const HOLD_SYSTEM = `${SYSTEM}
-You are replying in a chat. The student has asked for something the programme rules do not allow. You are given the rule,
-eligible alternatives and a drafted escalation. Write a short, warm reply (under 90 words): state the rule plainly,
-name the alternatives, and say they can send the drafted request to the Senior Tutor, who can decide on exceptions.
-Never say yes, never suggest a workaround. Reply with only the message.`;
+You are replying in a chat. The student has asked for a module the programme rules do not allow. You are given the rule
+as short clauses, the alternatives (possibly none) and the close modules already on their shortlist. Write one short,
+warm reply of at most 60 words: say you can't approve it yourself and why in one line, then that the Senior Tutor can
+make exceptions, so you have drafted a request below that is only sent if they approve it. Then name only the
+alternatives given; if there are none, say nothing else open to them covers it closely. Never say yes, never suggest a
+workaround, never contradict yourself about exceptions. Reply with only the message.`;
 
-/** The reply when the student asks to break a rule: the agent holds its position (demo step 5). */
+/** The reply when the student asks to break a rule: the agent holds its position (demo step 5, issue 112). */
+export function holdTemplate(args: {
+  module: Module;
+  clauses: string[];
+  open: { title: string; fit: number; prerequisite: boolean }[];
+  shortlisted: string[];
+}): string {
+  const rule = andList(args.clauses);
+  const lead =
+    `I can't approve ${args.module.title} myself: ${rule}. ` +
+    "The Senior Tutor can make exceptions, so I've drafted a request below; it's only sent if you approve it.";
+  const open = args.open.map((a) => (a.prerequisite ? `${a.title} (its prerequisite)` : `${a.title} (fit ${a.fit})`));
+  const alternatives = open.length
+    ? ` Open to you instead: ${andList(open)}.`
+    : args.shortlisted.length
+      ? ''
+      : ' Nothing else open to you covers this closely.';
+  const shortlisted = args.shortlisted.length
+    ? ` ${andList(args.shortlisted)}, already on your shortlist, ${args.shortlisted.length > 1 ? 'cover' : 'covers'} similar ground.`
+    : '';
+  return `${lead}${alternatives}${shortlisted}`;
+}
+
 export async function holdPosition(
-  args: { module: Module; reasons: string[]; alternatives: { title: string; fit: number }[] },
+  args: { module: Module; clauses: string[]; open: { title: string; fit: number; prerequisite: boolean }[]; shortlisted: string[] },
   onToken: (text: string) => void,
 ): Promise<string> {
-  const altText = args.alternatives.map((a) => `${a.title} (fit ${a.fit})`).join(', ');
-  const template =
-    `I can't add ${args.module.title}: ${args.reasons.join(' ')} That rule is set by your programme, so I can't make an exception. ` +
-    (altText ? `Similar modules you can take: ${altText}. ` : '') +
-    'If you think there is a good reason for an exception, I have drafted a request to the Senior Tutor below. Edit it if you like, and it is only sent when you approve it.';
+  const template = holdTemplate(args);
   // Buffered rather than streamed live, so the claims filter (G8) runs before the student sees anything.
   const drafted = isLive()
     ? await streamText(
@@ -239,7 +338,15 @@ export async function holdPosition(
           tier: 'smart',
           effort: 'low',
           system: HOLD_SYSTEM,
-          messages: [{ role: 'user', content: asData('rule-and-alternatives', JSON.stringify({ module: args.module.title, rule: args.reasons, alternatives: args.alternatives })) }],
+          messages: [
+            {
+              role: 'user',
+              content: asData(
+                'rule-and-alternatives',
+                JSON.stringify({ module: args.module.title, rule: args.clauses, alternatives: args.open, alreadyShortlisted: args.shortlisted }),
+              ),
+            },
+          ],
         },
         () => {},
       ).catch(() => template)
