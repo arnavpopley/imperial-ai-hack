@@ -2,13 +2,13 @@
 // the "Your data" link, the escalation tray, and the floating "Ask the advisor" launcher.
 import { motion } from 'motion/react';
 import { createContext, useCallback, useContext, useMemo, useState } from 'react';
-import { NavLink, Outlet, useLocation, useMatch } from 'react-router';
+import { NavLink, Outlet, useLocation, useMatch, useNavigate } from 'react-router';
 import { cx } from '../../components/cx.ts';
 import { Icon, type IconName } from '../../components/Icon.tsx';
 import { ModeChip } from '../../components/ModeChip.tsx';
 import { useAwaitingCount, useFeedbackCount } from '../results/ResultsProvider.tsx';
 import { paths } from '../routes.ts';
-import { useReadySession } from '../state/SessionProvider.tsx';
+import { useReadySession, useSession } from '../state/SessionProvider.tsx';
 import { yourDataPath } from '../yourdata/paths.ts';
 import { AdvisorLauncher, type AdvisorState } from './AdvisorLauncher.tsx';
 import { EscalationTray } from './EscalationTray.tsx';
@@ -59,6 +59,7 @@ export function StudentShell() {
   return (
     <AdvisorContext.Provider value={advisorValue}>
       <div className="grid grid-cols-1 gap-6 sm:gap-8">
+        <DemoBanner />
         <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
           <ModeChip variant={session.mode} />
           <nav
@@ -132,5 +133,31 @@ export function StudentShell() {
 
       <AdvisorLauncher state={advisor} onOpen={() => openAdvisor()} onClose={closeAdvisor} showBubble={!onInterview} />
     </AdvisorContext.Provider>
+  );
+}
+
+/** While the interactive demo is open, a reminder that this is Rosa's example account, and a way out to your own. */
+function DemoBanner() {
+  const { isDemo, forget } = useSession();
+  const navigate = useNavigate();
+  if (!isDemo) return null;
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-panel bg-accent/25 px-5 py-3 ring-1 ring-accent">
+      <p className="flex items-center gap-2 text-sm font-semibold">
+        <Icon name="user" size={16} />
+        You are exploring as Rosa, an example student. Nothing here is real.
+      </p>
+      <button
+        type="button"
+        onClick={() => {
+          forget();
+          navigate(paths.start);
+        }}
+        className="inline-flex h-9 items-center gap-1.5 rounded-full bg-ink px-4 text-sm font-bold text-canvas transition-transform hover:scale-[1.03]"
+      >
+        Start my own
+        <Icon name="arrow-right" size={14} />
+      </button>
+    </div>
   );
 }

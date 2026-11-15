@@ -19,6 +19,26 @@ export function writeStoredSessionId(id: string | null): void {
   }
 }
 
+const DEMO_KEY = 'modulematch.demoSessionId';
+
+/** The id of the interactive demo's session (Rosa's), so the app can label it as the example. */
+export function readDemoSessionId(): string | null {
+  try {
+    return window.localStorage.getItem(DEMO_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function writeDemoSessionId(id: string | null): void {
+  try {
+    if (id === null) window.localStorage.removeItem(DEMO_KEY);
+    else window.localStorage.setItem(DEMO_KEY, id);
+  } catch {
+    // Without storage the demo still works; only the example label is lost after a reload.
+  }
+}
+
 const DISMISSED_DRAFT_KEY = 'modulematch.dismissedDraft';
 
 /** The identity of the escalation draft the student dismissed in this session, so it stays dismissed on reload. */
