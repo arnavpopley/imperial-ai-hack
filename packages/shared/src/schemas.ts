@@ -550,6 +550,11 @@ export const RecommendationsResponse = z.object({
   weights: Weights,
   confidence: Confidence,
   completeness: Fraction,
+  /**
+   * fit: ranked by fit score (spec 8.5). starter: the profile has no interests or pathway yet, so there is
+   * nothing to score; the list is in a starter order and fit numbers are not shown (spec 8.6).
+   */
+  ranking: z.enum(['fit', 'starter']),
   recommendations: z.array(Recommendation),
 });
 
