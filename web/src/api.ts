@@ -78,14 +78,30 @@ async function failure(res: Response, path: string): Promise<Error> {
   return err;
 }
 
-async function call<T>(path: string, init?: { method?: string; body?: unknown }): Promise<T> {
-  const res = await fetch(`/api${path}`, {
-    method: init?.method ?? (init?.body === undefined ? 'GET' : 'POST'),
-    headers: init?.body === undefined ? undefined : { 'content-type': 'application/json' },
-    body: init?.body === undefined ? undefined : JSON.stringify(init.body),
+/**
+ * Every API call goes through one queue: at most one request in flight per tab, first in, first out. On the public demo
+ * each server instance keeps its own database, and parallel requests wake fresh instances that do not have the
+ * session (404), while one request at a time stays on the warm instance that does. A call holds its slot until its
+ * response is fully read, so a streamed chat reply holds it until the stream ends.
+ */
+let queueTail: Promise<unknown> = Promise.resolve();
+
+export function inApiQueue<T>(work: () => Promise<T>): Promise<T> {
+  const run = queueTail.then(work, work);
+  queueTail = run.catch(() => undefined);
+  return run;
+}
+
+function call<T>(path: string, init?: { method?: string; body?: unknown }): Promise<T> {
+  return inApiQueue(async () => {
+    const res = await fetch(`/api${path}`, {
+      method: init?.method ?? (init?.body === undefined ? 'GET' : 'POST'),
+      headers: init?.body === undefined ? undefined : { 'content-type': 'application/json' },
+      body: init?.body === undefined ? undefined : JSON.stringify(init.body),
+    });
+    if (!res.ok) throw await failure(res, path);
+    return (await res.json()) as T;
   });
-  if (!res.ok) throw await failure(res, path);
-  return (await res.json()) as T;
 }
 
 const s = (id: string) => `/sessions/${encodeURIComponent(id)}`;
@@ -163,8 +179,15 @@ export const api = {
   latestEval: () => call<EvalRun | null>('/eval/latest'),
 };
 
-/** POSTs a body and streams the SSE events back. POST bodies rule out EventSource, so the stream is parsed here. */
-async function streamEvents(path: string, body: unknown, onEvent: (event: SseEvent) => void, signal?: AbortSignal): Promise<void> {
+/**
+ * POSTs a body and streams the SSE events back. POST bodies rule out EventSource, so the stream is parsed here. The
+ * stream holds the API queue's slot until it ends, so other calls wait for the reply.
+ */
+function streamEvents(path: string, body: unknown, onEvent: (event: SseEvent) => void, signal?: AbortSignal): Promise<void> {
+  return inApiQueue(() => readEvents(path, body, onEvent, signal));
+}
+
+async function readEvents(path: string, body: unknown, onEvent: (event: SseEvent) => void, signal?: AbortSignal): Promise<void> {
   const res = await fetch(`/api${path}`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
