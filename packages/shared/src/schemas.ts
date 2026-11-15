@@ -408,6 +408,11 @@ export const TimetableView = z.object({
   coreModuleIds: z.array(z.string()),
   clashes: z.array(Clash),
   swaps: z.array(SwapSuggestion),
+  /**
+   * Issue 103: for a clash with no swap within the fit window, the best alternatives beyond it, each with its fit
+   * drop. They pass every other swap check; the recommended swaps above are unchanged.
+   */
+  widerSwaps: z.array(SwapSuggestion),
   /** Backups for picks near or over capacity in the synthetic cohort (issue #68); never a change to fit. */
   backups: z.array(CapacityBackup),
   keepFree: z.array(KeepFreeWindow),

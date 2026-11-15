@@ -15,6 +15,11 @@ interface ClashCardProps {
   clash: Clash;
   /** Swaps that replace either module in this clash. */
   swaps: readonly SwapSuggestion[];
+  /** Issue 103: with no swap in the fit window, the best valid alternatives beyond it, each with its fit drop. */
+  widerSwaps?: readonly SwapSuggestion[];
+  /** With no swap in the fit window, the module a one-click "Remove" takes off the shortlist (never a core one). */
+  removeTarget?: string | null;
+  onRemove?: (moduleId: string) => Promise<void>;
   titleFor: (moduleId: string) => string;
   /** Compulsory core modules, marked with a lock: they are never the one swapped out. */
   coreIds?: ReadonlySet<string>;
@@ -42,7 +47,18 @@ function ModuleName({ title, core }: { title: string; core: boolean }) {
   );
 }
 
-export function ClashCard({ clash, swaps, titleFor, coreIds, onSwap, onAsk, onEscalate }: ClashCardProps) {
+export function ClashCard({
+  clash,
+  swaps,
+  widerSwaps = [],
+  removeTarget = null,
+  onRemove,
+  titleFor,
+  coreIds,
+  onSwap,
+  onAsk,
+  onEscalate,
+}: ClashCardProps) {
   const [confirming, setConfirming] = useState<SwapSuggestion | null>(null);
   const [busy, setBusy] = useState(false);
   const reduce = useReducedMotion();
@@ -61,6 +77,26 @@ export function ClashCard({ clash, swaps, titleFor, coreIds, onSwap, onAsk, onEs
     } finally {
       setBusy(false);
     }
+  };
+  const remove = async (moduleId: string) => {
+    if (!onRemove) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await onRemove(moduleId);
+    } catch (err) {
+      setError(errorMessage(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+  const rowProps = {
+    titleFor,
+    busy,
+    confirming,
+    onAsk: setConfirming,
+    onCancel: () => setConfirming(null),
+    onConfirm: (swap: SwapSuggestion) => void apply(swap),
   };
 
   return (
@@ -91,57 +127,27 @@ export function ClashCard({ clash, swaps, titleFor, coreIds, onSwap, onAsk, onEs
       {swaps.length > 0 ? (
         <div className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-2">
           <p className="text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">Suggested swaps</p>
-          {swaps.map((swap) => {
-            const from = titleFor(swap.replaceModuleId);
-            const to = titleFor(swap.withModuleId);
-            const isConfirming = confirming === swap;
-            return (
-              <div key={`${swap.replaceModuleId}-${swap.withModuleId}`} className="rounded-xl bg-surface-2 p-3">
-                <div className="flex items-center gap-3">
-                  <FitScore value={swap.fit} variant="compact" className="text-sm" />
-                  <p className="min-w-0 flex-1 text-[13px] leading-snug">
-                    Replace <span className="font-medium">{from}</span> with <span className="font-medium">{to}</span>
-                    <span className={cx('ml-1 tabular-nums', swap.fitDelta < 0 ? 'text-muted' : 'text-fit-high')}>
-                      ({swap.fitDelta > 0 ? '+' : ''}
-                      {swap.fitDelta} fit)
-                    </span>
-                    {swap.keepFreeConflicts > 0 && (
-                      <span className="mt-0.5 flex w-fit items-center gap-1 rounded-full bg-mode-explain/10 px-1.5 text-[11px] font-medium text-mode-explain">
-                        <Icon name="moon" size={10} />
-                        Uses kept-free time
-                      </span>
-                    )}
-                  </p>
-                  {!isConfirming && (
-                    <Button size="sm" icon="swap" onClick={() => setConfirming(swap)} disabled={busy}>
-                      Swap
-                    </Button>
-                  )}
-                </div>
-                {isConfirming && (
-                  <div role="group" aria-label="Confirm swap" className="animate-rise mt-3 border-t border-line pt-3">
-                    <p className="text-[13px] font-medium">
-                      Swap {from} for {to}?
-                    </p>
-                    <p className="text-[12px] text-muted">Your shortlist changes only when you confirm.</p>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      <Button size="sm" variant="primary" icon="check" busy={busy} onClick={() => void apply(swap)}>
-                        Confirm swap
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => setConfirming(null)} disabled={busy}>
-                        Cancel
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+          {swaps.map((swap) => (
+            <SwapRow key={`${swap.replaceModuleId}-${swap.withModuleId}`} swap={swap} {...rowProps} />
+          ))}
         </div>
       ) : (
-        <div className="mt-3 rounded-xl bg-surface-2 p-3 text-[13px]">
-          <p>No valid swap: no module of the same kind fits your programme rules and keeps your fit within {SWAP_FIT_TOLERANCE} points.</p>
-          <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
+        <div className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-2">
+          <p className="text-[13px]">No swap within {SWAP_FIT_TOLERANCE} fit points that keeps your programme rules.</p>
+          {widerSwaps.length > 0 && (
+            <>
+              <p className="text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">Further from your fit</p>
+              {widerSwaps.map((swap) => (
+                <SwapRow key={`${swap.replaceModuleId}-${swap.withModuleId}`} swap={swap} beyond {...rowProps} />
+              ))}
+            </>
+          )}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px]">
+            {removeTarget && (
+              <Button size="sm" icon="x" onClick={() => void remove(removeTarget)} busy={busy} disabled={confirming !== null}>
+                Remove {titleFor(removeTarget)}
+              </Button>
+            )}
             <button
               type="button"
               onClick={() => onAsk(`${a} and ${b} clash and there is no swap. What can I do?`)}
@@ -163,9 +169,75 @@ export function ClashCard({ clash, swaps, titleFor, coreIds, onSwap, onAsk, onEs
       )}
       {error && (
         <p role="alert" className="mt-2 text-[13px] text-fit-low">
-          The swap did not go through: {error}
+          That did not go through: {error}
         </p>
       )}
     </motion.li>
+  );
+}
+
+interface SwapRowProps {
+  swap: SwapSuggestion;
+  /** Outside the fit window (issue 103): the fit drop is shown as a warning chip. */
+  beyond?: boolean;
+  titleFor: (moduleId: string) => string;
+  busy: boolean;
+  confirming: SwapSuggestion | null;
+  onAsk: (swap: SwapSuggestion) => void;
+  onCancel: () => void;
+  onConfirm: (swap: SwapSuggestion) => void;
+}
+
+/** One swap: its fit, what it replaces, and a Swap button that asks for confirmation first (spec 10.6). */
+function SwapRow({ swap, beyond = false, titleFor, busy, confirming, onAsk, onCancel, onConfirm }: SwapRowProps) {
+  const from = titleFor(swap.replaceModuleId);
+  const to = titleFor(swap.withModuleId);
+  const isConfirming = confirming === swap;
+  const delta = `${swap.fitDelta > 0 ? '+' : swap.fitDelta < 0 ? '−' : ''}${Math.abs(swap.fitDelta)} fit`;
+  return (
+    <div className="rounded-xl bg-surface-2 p-3">
+      <div className="flex items-center gap-3">
+        <FitScore value={swap.fit} variant="compact" className="text-sm" />
+        <p className="min-w-0 flex-1 text-[13px] leading-snug">
+          Replace <span className="font-medium">{from}</span> with <span className="font-medium">{to}</span>
+          {beyond ? (
+            <span className="ml-1 inline-flex rounded-full bg-fit-mid/12 px-1.5 text-[11px] font-semibold text-fit-mid tabular-nums">
+              {delta}
+            </span>
+          ) : (
+            <span className={cx('ml-1 tabular-nums', swap.fitDelta < 0 ? 'text-muted' : 'text-fit-high')}>({delta})</span>
+          )}
+          {swap.keepFreeConflicts > 0 && (
+            <span className="mt-0.5 flex w-fit items-center gap-1 rounded-full bg-mode-explain/10 px-1.5 text-[11px] font-medium text-mode-explain">
+              <Icon name="moon" size={10} />
+              Uses kept-free time
+            </span>
+          )}
+        </p>
+        {!isConfirming && (
+          <Button size="sm" icon="swap" onClick={() => onAsk(swap)} disabled={busy}>
+            Swap
+          </Button>
+        )}
+      </div>
+      {isConfirming && (
+        <div role="group" aria-label="Confirm swap" className="animate-rise mt-3 border-t border-line pt-3">
+          <p className="text-[13px] font-medium">
+            Swap {from} for {to}?
+          </p>
+          <p className="text-[12px] text-muted">
+            {beyond ? `It fits you ${Math.abs(swap.fitDelta)} points less. ` : ''}Your shortlist changes only when you confirm.
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <Button size="sm" variant="primary" icon="check" busy={busy} onClick={() => onConfirm(swap)}>
+              Confirm swap
+            </Button>
+            <Button size="sm" variant="ghost" onClick={onCancel} disabled={busy}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

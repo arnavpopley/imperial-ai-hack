@@ -120,6 +120,22 @@ function TimetableBody({ view, onChanged, refreshing, stale }: TimetableBodyProp
     onChanged();
   };
 
+  // Issue 103: a clash with no swap in the fit window can still be resolved in one click by removing the module a
+  // swap would replace: the one the alternatives replace, else the lower-fit module that is not core.
+  const { byId } = useCatalogue();
+  const removeTargetFor = (clash: Clash): string | null => {
+    const wider = view.widerSwaps.find((s) => s.replaceModuleId === clash.moduleA || s.replaceModuleId === clash.moduleB);
+    if (wider) return wider.replaceModuleId;
+    const [lower] = [clash.moduleA, clash.moduleB]
+      .filter((id) => !coreIds.has(id) && session.shortlist.includes(id))
+      .sort((x, y) => (byId.get(x)?.fit ?? 0) - (byId.get(y)?.fit ?? 0));
+    return lower ?? null;
+  };
+  const remove = async (moduleId: string) => {
+    await shortlist.toggle(moduleId);
+    onChanged();
+  };
+
   // Spec 12: a clash with no valid swap can go to a personal tutor. The student reviews the draft in the
   // escalation tray above the screen and sends it, which moves the session from PLAN to ESCALATED.
   const escalate = (clash: Clash) => {
@@ -195,6 +211,9 @@ function TimetableBody({ view, onChanged, refreshing, stale }: TimetableBodyProp
                   key={`${clash.moduleA}-${clash.moduleB}-${clash.term}`}
                   clash={clash}
                   swaps={view.swaps.filter((s) => s.replaceModuleId === clash.moduleA || s.replaceModuleId === clash.moduleB)}
+                  widerSwaps={view.widerSwaps.filter((s) => s.replaceModuleId === clash.moduleA || s.replaceModuleId === clash.moduleB)}
+                  removeTarget={removeTargetFor(clash)}
+                  onRemove={remove}
                   titleFor={titleFor}
                   coreIds={coreIds}
                   onSwap={swap}
