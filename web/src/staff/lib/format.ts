@@ -1,6 +1,6 @@
 // Small presentation helpers shared by the staff screens.
 import { LIKELY_CLASH_THRESHOLD, taxonomy } from '@modulematch/shared';
-import type { ClashLabel } from '@modulematch/shared';
+import type { CapacityStatus, ClashLabel } from '@modulematch/shared';
 
 /** Keyboard focus ring used by every interactive staff control. */
 export const focusRing =
@@ -33,7 +33,9 @@ export function clashLabel(probability: number): ClashLabel {
   return 'possible';
 }
 
-export type CapacityStatus = 'uncapped' | 'within' | 'near' | 'over';
+// The thresholds live in the shared package, so students see the same demand states as staff (issue #68).
+export type { CapacityStatus } from '@modulematch/shared';
+export { NEAR_CAPACITY, capacityStatus } from '@modulematch/shared';
 
 export const CAPACITY_LABEL: Record<CapacityStatus, string> = {
   uncapped: 'No capacity limit',
@@ -41,17 +43,6 @@ export const CAPACITY_LABEL: Record<CapacityStatus, string> = {
   near: 'Near capacity',
   over: 'Over capacity',
 };
-
-/** Share of capacity at which demand turns amber. */
-export const NEAR_CAPACITY = 0.85;
-
-export function capacityStatus(shortlisted: number, capacity: number | null): CapacityStatus {
-  if (capacity === null) return 'uncapped';
-  const ratio = shortlisted / capacity;
-  if (ratio > 1) return 'over';
-  if (ratio >= NEAR_CAPACITY) return 'near';
-  return 'within';
-}
 
 const relative = new Intl.RelativeTimeFormat('en-GB', { numeric: 'auto' });
 const absolute = new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
