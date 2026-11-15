@@ -194,12 +194,15 @@ function Hero({
         className="relative mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]"
       >
         <div>
-          <motion.p
-            variants={RISE}
-            className="inline-flex items-center rounded-full bg-accent px-3.5 py-1.5 text-sm font-bold text-on-accent"
-          >
-            For Imperial students
-          </motion.p>
+          <motion.div variants={RISE} className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center rounded-full bg-accent px-3.5 py-1.5 text-sm font-bold text-on-accent">
+              For Imperial students
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-surface px-3.5 py-1.5 text-sm font-semibold text-muted ring-1 ring-line">
+              <Icon name="globe" size={14} className="text-brand" />
+              Coming to other universities
+            </span>
+          </motion.div>
           <motion.h1
             variants={RISE}
             className="mt-6 text-5xl leading-[1.05] font-bold tracking-tight text-balance sm:text-6xl"

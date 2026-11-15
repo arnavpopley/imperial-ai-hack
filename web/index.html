@@ -11,14 +11,12 @@
     />
     <title>ModuleMatch</title>
     <script>
-      // Set the theme before first paint so the page never flashes the wrong one: a saved choice, else the system's.
-      // Storage is read on its own, so a browser that blocks it still gets the system theme.
+      // Set the theme before first paint so the page never flashes the wrong one: light unless dark was chosen.
       (function () {
-        var t = null;
+        var t = 'light';
         try {
-          t = localStorage.getItem('mm-theme');
+          if (localStorage.getItem('mm-theme') === 'dark') t = 'dark';
         } catch (e) {}
-        if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         document.documentElement.dataset.theme = t;
       })();
     </script>

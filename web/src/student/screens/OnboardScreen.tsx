@@ -26,9 +26,11 @@ const DEFAULT_PROGRAMME = 'MEng Mechanical Engineering';
 
 /** Only one programme has data so far; the disabled option makes clear more will follow. */
 const COMING_SOON = 'coming-soon';
+const OTHER_UNIVERSITIES = 'other-universities';
 const PROGRAMMES: readonly DropdownOption<string>[] = [
   { value: DEFAULT_PROGRAMME, label: DEFAULT_PROGRAMME },
   { value: COMING_SOON, label: 'More programmes', detail: 'Coming soon', disabled: true },
+  { value: OTHER_UNIVERSITIES, label: 'Other universities', detail: 'Coming soon', disabled: true },
 ];
 
 type YearValue = '1' | '2' | '3' | '4';
