@@ -195,8 +195,13 @@ export function syncPlanMode(session: SessionState, tracer: Tracer): Mode | null
  * One shortlist edit, shared by the shortlist POST and the chat's shortlist turn so both leave the same
  * trace: saves it, records it, and applies the spec 12 shortlist-size transitions. Eligibility is the
  * caller's gate. Returns the mode the session left, or null when the mode did not change.
+ *
+ * The caller's copy of the session can be stale (a chat turn awaits guardrails and intent first, and the
+ * student may approve an escalation in another tab meanwhile), so the saved mode is read back before the
+ * transition. The read, the edit and the mode write run synchronously, so nothing can slip in between.
  */
 export function applyShortlistEdit(session: SessionState, moduleId: string, action: 'add' | 'remove', tracer: Tracer): Mode | null {
+  session.mode = repo.getSession(session.id)?.mode ?? session.mode;
   if (action === 'add') repo.addToShortlist(session.id, moduleId);
   else repo.removeFromShortlist(session.id, moduleId);
   session.shortlist = repo.listShortlist(session.id);

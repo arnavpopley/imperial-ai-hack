@@ -5,7 +5,9 @@ import { schemas as S } from '@modulematch/shared';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../src/app.ts';
 import { seedIfEmpty } from '../src/bootstrap.ts';
+import { applyShortlistEdit, tracerSink } from '../src/agents/session.ts';
 import * as repo from '../src/db/repo.ts';
+import { createTracer } from '../src/trace/tracer.ts';
 
 const app = createApp();
 const send = (method: string, b: unknown) => ({ method, headers: { 'content-type': 'application/json' }, body: JSON.stringify(b) });
@@ -107,5 +109,18 @@ describe('plan mode follows the shortlist', () => {
     expect(events.filter((e) => e.type === 'mode')).toEqual([]);
     expect(repo.getSession(id)?.mode).toBe('PLAN');
     expect(modeEvents(id)).toEqual(before);
+  });
+
+  it('reads the saved mode first, so a stale chat copy cannot overwrite ESCALATED with PLAN', async () => {
+    const id = await recommendingSession();
+    await shortlist(id, 'MECH60009', 'add');
+    const stale = repo.getSession(id);
+    if (!stale) throw new Error('expected the session');
+    // The student approves an escalation in another tab while a chat turn still holds the RECOMMEND copy.
+    repo.updateSession(id, { mode: 'ESCALATED' });
+
+    expect(applyShortlistEdit(stale, 'MECH60018', 'add', createTracer(id, tracerSink))).toBeNull();
+    expect(repo.getSession(id)?.mode).toBe('ESCALATED');
+    expect(repo.getSession(id)?.shortlist).toEqual(['MECH60009', 'MECH60018']);
   });
 });
