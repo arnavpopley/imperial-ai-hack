@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { firstModule } from '../components/ModulePicker.tsx';
-import { groupRows, hasOffers, inView, shortlistFigure, shortlistLabel, strongFitShare } from './moduleList.ts';
+import { groupRows, hasOffers, inView, shortlistFigure, shortlistLabel, goodFitShare } from './moduleList.ts';
 import type { StaffModuleSummary } from '@modulematch/shared';
 
 const row = (moduleId: string, patch: Partial<StaffModuleSummary> = {}): StaffModuleSummary => ({
@@ -18,9 +18,9 @@ const row = (moduleId: string, patch: Partial<StaffModuleSummary> = {}): StaffMo
 });
 
 describe('staff module list', () => {
-  it('measures the share of the cohort with a strong fit from the histogram', () => {
-    expect(strongFitShare(row('A'))).toBeCloseTo(10 / 50);
-    expect(strongFitShare(row('B', { fitHistogram: Array(10).fill(0) }))).toBe(0);
+  it('measures the share of the cohort with a good fit or better (50+) from the histogram', () => {
+    expect(goodFitShare(row('A'))).toBeCloseTo(20 / 50);
+    expect(goodFitShare(row('B', { fitHistogram: Array(10).fill(0) }))).toBe(0);
   });
 
   it('labels demand honestly: compulsory, not offered, none yet, and counts under five as a band', () => {

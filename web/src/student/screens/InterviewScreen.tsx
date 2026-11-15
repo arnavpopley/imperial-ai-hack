@@ -19,7 +19,7 @@ import { ProfilePanel } from '../profile/ProfilePanel.tsx';
 import { useProfileActions } from '../profile/useProfileActions.ts';
 import { ResultsPanel } from '../results/ResultsPanel.tsx';
 import { useResults } from '../results/ResultsProvider.tsx';
-import { resultsStepStatus, useResultsStepMemory } from '../results/resultsStep.ts';
+import { offersResultsStep, resultsStepStatus, useResultsStepMemory } from '../results/resultsStep.ts';
 import { paths, wantsResultsPanel } from '../routes.ts';
 import { useReadySession } from '../state/SessionProvider.tsx';
 
@@ -36,11 +36,14 @@ export function InterviewScreen() {
   const location = useLocation();
   const { hasResults } = useResults();
   const resultsStep = useResultsStepMemory(session.id);
+  // Year 1 has no university marks to share, so the step is not offered at all.
+  const offerResults = offersResultsStep(session.profile.yearOfStudy);
   const [pane, setPane] = useState<Pane>('chat');
   // Opened from elsewhere ("Upload a mark sheet"), or offered once before the student's first answer.
   const [activeExtra, setActiveExtra] = useState<PanelId | null>(() =>
-    wantsResultsPanel(location.state) ||
-    (!resultsStep.memory.offered && !session.interview.finished && !session.messages.some((m) => m.role === 'student'))
+    offerResults &&
+    (wantsResultsPanel(location.state) ||
+      (!resultsStep.memory.offered && !session.interview.finished && !session.messages.some((m) => m.role === 'student')))
       ? 'results'
       : null,
   );
@@ -87,11 +90,13 @@ export function InterviewScreen() {
     extras,
     activeExtra: activeExtra === 'results' ? null : activeExtra,
     onOpenExtra: openExtra,
-    results: {
-      status: resultsStepStatus(hasResults, resultsStep.memory),
-      active: activeExtra === 'results',
-      onOpen: () => openExtra('results'),
-    },
+    results: offerResults
+      ? {
+          status: resultsStepStatus(hasResults, resultsStep.memory),
+          active: activeExtra === 'results',
+          onOpen: () => openExtra('results'),
+        }
+      : undefined,
   };
 
   return (

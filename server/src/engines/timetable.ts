@@ -284,6 +284,14 @@ export function suggestSwaps(
   slots: readonly Slot[],
   plan: SwapPlan,
 ): SwapSuggestion[] {
+  return swapTargets(clash, ranked, plan)
+    .flatMap((target) => swapCandidates(profile, shortlist, target, ranked, slots, plan, SWAP_FIT_TOLERANCE))
+    .sort(bySwapPreference)
+    .slice(0, MAX_SWAPS);
+}
+
+/** The module a swap replaces in a clash: the lower-fit one that is not core, or both when their fits are equal. */
+export function swapTargets(clash: Clash, ranked: readonly Recommendation[], plan: SwapPlan): string[] {
   const core = new Set(plan.rules.coreModuleIds);
   const byId = new Map(plan.modules.map((module) => [module.id, module]));
   const swappable = (id: string): boolean => !core.has(id) && byId.has(id) && byId.get(id)?.type !== 'core';
@@ -292,9 +300,26 @@ export function suggestSwaps(
     .filter(swappable)
     .map((id) => fitOf.get(id) ?? 0)
     .sort((x, y) => x - y);
-  const targets = [clash.moduleA, clash.moduleB].filter((id) => swappable(id) && (fitOf.get(id) ?? 0) === lowest);
-  return targets
-    .flatMap((target) => swapCandidates(profile, shortlist, target, ranked, slots, plan, SWAP_FIT_TOLERANCE))
+  return [clash.moduleA, clash.moduleB].filter((id) => swappable(id) && (fitOf.get(id) ?? 0) === lowest);
+}
+
+/**
+ * Issue 103: when a clash has no swap within SWAP_FIT_TOLERANCE, the best alternatives beyond it, so the student
+ * still has a one-click way forward. The same targets and checks as suggestSwaps (kind, eligibility, clashes with
+ * the rest of the plan and the core modules, programme rules, kept-free time first); only the fit window is
+ * lifted, and each carries its fit drop. Empty when the clash already has a recommended swap.
+ */
+export function widerSwaps(
+  profile: StudentProfile,
+  shortlist: readonly string[],
+  clash: Clash,
+  ranked: readonly Recommendation[],
+  slots: readonly Slot[],
+  plan: SwapPlan,
+): SwapSuggestion[] {
+  if (suggestSwaps(profile, shortlist, clash, ranked, slots, plan).length > 0) return [];
+  return swapTargets(clash, ranked, plan)
+    .flatMap((target) => swapCandidates(profile, shortlist, target, ranked, slots, plan, null))
     .sort(bySwapPreference)
     .slice(0, MAX_SWAPS);
 }
@@ -379,10 +404,15 @@ export function planTimetable(
   const keepFree = [...(plan.keepFree ?? keepFreeWindows(profile.timetablePrefs))];
   const clashes = findClashes(shortlist, slots, core);
   const swaps = new Map<string, SwapSuggestion>();
+  const wider = new Map<string, SwapSuggestion>();
   for (const clash of clashes) {
     for (const swap of suggestSwaps(profile, shortlist, clash, ranked, slots, { ...plan, keepFree })) {
       const key = JSON.stringify([swap.replaceModuleId, swap.withModuleId]);
       if (!swaps.has(key)) swaps.set(key, swap);
+    }
+    for (const swap of widerSwaps(profile, shortlist, clash, ranked, slots, { ...plan, keepFree })) {
+      const key = JSON.stringify([swap.replaceModuleId, swap.withModuleId]);
+      if (!wider.has(key)) wider.set(key, swap);
     }
   }
   const coreSet = new Set(core);
@@ -391,6 +421,7 @@ export function planTimetable(
     coreModuleIds: core,
     clashes,
     swaps: [...swaps.values()],
+    widerSwaps: [...wider.values()].filter((s) => !swaps.has(JSON.stringify([s.replaceModuleId, s.withModuleId]))),
     backups: capacityBackups(profile, shortlist, ranked, slots, { ...plan, keepFree }, demand),
     keepFree,
     keepFreeConflicts: keepFreeConflicts(

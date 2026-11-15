@@ -19,7 +19,8 @@ function formatDate(iso: string | null): string | null {
   return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
-export function ResultsDataSection() {
+/** `canAdd` is false in Year 1, where the interview offers no results step, so the add button would lead nowhere. */
+export function ResultsDataSection({ canAdd = true }: { canAdd?: boolean }) {
   const { results, hasResults, unmatched, withdraw } = useResults();
   const navigate = useNavigate();
   const [confirming, setConfirming] = useState(false);
@@ -56,7 +57,7 @@ export function ResultsDataSection() {
           <p className="text-sm text-muted">
             {hasResults && consentDate
               ? `Shared with your consent on ${consentDate}. Used only for gentle notes and your exam feedback.`
-              : 'Optional. Marks are only ever kept if you share them and tick the consent box.'}
+              : 'Optional. Marks are only ever kept if you share them and tick the consent box, and you can delete them here.'}
           </p>
         </div>
       </header>
@@ -132,9 +133,11 @@ export function ResultsDataSection() {
                 ? 'No marks shared.'
                 : 'Your results could not be loaded just now.'}
           </p>
-          <Button size="sm" icon="plus" onClick={() => navigate(paths.interview, { state: OPEN_RESULTS_STATE })}>
-            Add your results
-          </Button>
+          {canAdd && (
+            <Button size="sm" icon="plus" onClick={() => navigate(paths.interview, { state: OPEN_RESULTS_STATE })}>
+              Add your results
+            </Button>
+          )}
         </div>
       )}
     </div>

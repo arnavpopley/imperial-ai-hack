@@ -352,6 +352,21 @@ describe('tailored exam feedback', () => {
     expect(template.weakPoints[0]).toMatchObject({ questionId: 'Q3', lostMarks: 14, topics: ['fluid-mechanics', 'mathematics-modelling'] });
     expect(template.weakPoints[0]!.advice).toMatch(/Blasius/);
     expect(template.revisionPlan.length).toBeGreaterThan(0);
+    // Each fact once: the numbers live in the per-question chart, the headline names the weakest question,
+    // and the advice holds only the examiner's mistakes and what good answers did.
+    expect(template.mark).toBe(57);
+    expect(template.questions?.map((q) => [q.questionId, q.mark, q.maxMarks])).toEqual([
+      ['Q1', 15, 20],
+      ['Q2', 13, 20],
+      ['Q3', 6, 20],
+      ['Q4', 12, 20],
+      ['Q5', 11, 20],
+    ]);
+    expect(template.overall).toMatch(/^Most marks went on Q3 \(/);
+    expect(template.overall).not.toMatch(/57|14 of 20/);
+    expect(template.weakPoints[0]!.label).toMatch(/Blasius/i);
+    for (const w of template.weakPoints) expect(w.advice).not.toMatch(/You lost|\d+ of \d+ marks/);
+    expect(template.strengths.join(' ')).not.toMatch(/strong answer|out of/);
 
     const id = await newSession();
     await upload(id, { consent: true, text: demoTranscript });
@@ -363,5 +378,95 @@ describe('tailored exam feedback', () => {
     const other = await newSession();
     await upload(other, { consent: true, text: 'MECH50010 Fluid Mechanics 2 62' });
     expect(await (await app.request(`/api/sessions/${other}/exam-feedback`)).json()).toEqual([]);
+  });
+});
+
+// ---------- the shipped demo round trip (issues #108 and #109) ----------
+
+describe('exam feedback demo round trip', () => {
+  const notes = readFileSync(dataPath('demo/synthetic-marking-notes.txt'), 'utf8');
+
+  it('drafts clean fields from the demo notes offline: no labels, no banner, the module’s own topics', () => {
+    const draft = heuristicDraft(notes, repo.getModule('MECH50008')!);
+    expect(draft).toEqual({
+      generalComments: 'Overall the paper was answered well. Free-body diagrams were the main thing separating strong and weak scripts.',
+      questions: [
+        {
+          id: 'Q1',
+          label: 'Q1: Particle kinematics in polar coordinates',
+          maxMarks: 20,
+          topics: ['mathematics-modelling', 'solid-mechanics-materials'],
+          whatGoodAnswersDid: 'Wrote the acceleration components carefully, including the Coriolis term.',
+          commonMistakes: ['Forgot the 2 r-dot theta-dot term'],
+          revisionPointers: ['Revise the derivation of velocity and acceleration in polar coordinates'],
+        },
+        {
+          id: 'Q2',
+          label: 'Q2: Rigid body dynamics of a rolling wheel',
+          maxMarks: 25,
+          topics: ['mathematics-modelling', 'solid-mechanics-materials'],
+          whatGoodAnswersDid: 'Drew a free-body diagram and took moments about the contact point.',
+          commonMistakes: ['Assuming rolling without slip when friction was not large enough', 'Sign errors in the moment equation'],
+          revisionPointers: ['Work through the rolling and slipping tutorial sheet'],
+        },
+        {
+          id: 'Q3',
+          label: 'Q3: Single degree of freedom vibration with damping',
+          maxMarks: 25,
+          topics: ['solid-mechanics-materials', 'control-robotics'],
+          whatGoodAnswersDid: 'Found the damping ratio first and identified the regime.',
+          commonMistakes: ['Confused the damped and undamped natural frequencies'],
+          revisionPointers: ['Practise the logarithmic decrement examples from lecture 9'],
+        },
+        {
+          id: 'Q4',
+          label: 'Q4: Energy and momentum methods for a collision',
+          maxMarks: 30,
+          topics: ['solid-mechanics-materials'],
+          whatGoodAnswersDid: 'Chose conservation of momentum for the impact and energy for the motion after it.',
+          commonMistakes: ['Applied energy conservation across the impact'],
+          revisionPointers: ['Review the coefficient of restitution problems in the notes'],
+        },
+      ],
+    });
+  });
+
+  it('the demo transcript carries Dynamics question marks that match the notes', () => {
+    const dynamics = parseTranscript(demoTranscript, repo.listModules()).results.find((r) => r.moduleId === 'MECH50008')!;
+    expect(dynamics.questionMarks.map((q) => [q.questionId, q.maxMarks])).toEqual([
+      ['Q1', 20],
+      ['Q2', 25],
+      ['Q3', 25],
+      ['Q4', 30],
+    ]);
+    expect(readFileSync(dataPath('demo/synthetic-transcript.html'), 'utf8')).toContain('Q2 14/25');
+  });
+
+  it('closes the loop: publish the Dynamics draft and the student gets clean, tailored feedback', async () => {
+    const id = await newSession();
+    await upload(id, { consent: true, text: demoTranscript });
+    // A student with only an overall Dynamics mark is told what would unlock the feedback.
+    const bare = await newSession();
+    await upload(bare, { consent: true, text: 'MECH50008 Dynamics 68\nMECH50010 Fluid Mechanics 2 57' });
+    const awaiting = async (sid: string) =>
+      S.ExamAwaitingMarks.array().parse(await (await app.request(`/api/sessions/${sid}/exam-feedback/awaiting-marks`)).json());
+
+    await app.request('/api/staff/modules/MECH50008/exam-form/draft', json({ examLabel: '2026 exam (synthetic)', notes }));
+    // Drafts are never shown to students, nor announced.
+    expect((await awaiting(bare)).map((a) => a.moduleId)).not.toContain('MECH50008');
+    expect((await app.request('/api/staff/modules/MECH50008/exam-form/publish', json({}))).status).toBe(200);
+
+    const feedback = S.TailoredFeedback.array().parse(await (await app.request(`/api/sessions/${id}/exam-feedback`)).json());
+    const dynamics = feedback.find((f) => f.moduleId === 'MECH50008');
+    expect(dynamics?.weakPoints.map((w) => w.questionId)).toEqual(['Q2']);
+    const text = JSON.stringify(dynamics);
+    expect(text).not.toMatch(/\.\.|common mistakes:\s*common mistakes|good answers:?\s*(best|good|strong) answers/i);
+    expect(text).toContain('Good answers drew a free-body diagram');
+    const levels = new Map(repo.listModules().map((m) => [m.id, m.level]));
+    expect(dynamics!.affectsModules.length).toBeGreaterThan(0);
+    for (const a of dynamics!.affectsModules) expect(levels.get(a.moduleId)).toBeGreaterThan(2);
+    expect((await awaiting(id)).map((a) => a.moduleId)).not.toContain('MECH50008');
+
+    expect(await awaiting(bare)).toContainEqual({ moduleId: 'MECH50008', examLabel: '2026 exam (synthetic)', questionIds: ['Q1', 'Q2', 'Q3', 'Q4'] });
   });
 });

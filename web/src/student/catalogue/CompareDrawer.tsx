@@ -9,7 +9,7 @@ import { Button } from '../../components/Button.tsx';
 import { ClashMarker } from '../../components/ClashMarker.tsx';
 import { cx } from '../../components/cx.ts';
 import { Drawer } from '../../components/Drawer.tsx';
-import { fitBand } from '../../components/FitScore.tsx';
+import { FIT_BAND_METER, FIT_BAND_TEXT, fitBand } from '../../components/FitScore.tsx';
 import { Icon } from '../../components/Icon.tsx';
 import { Meter, type MeterTone } from '../../components/Meter.tsx';
 import { ErrorState, Skeleton } from '../../components/StateViews.tsx';
@@ -38,8 +38,6 @@ interface CompareDrawerProps {
   onAsk: (question: string) => void;
 }
 
-const FIT_TEXT = { high: 'text-fit-high', mid: 'text-fit-mid', low: 'text-fit-low' } as const;
-const FIT_TONE: Record<'high' | 'mid' | 'low', MeterTone> = { high: 'high', mid: 'mid', low: 'low' };
 
 export function CompareDrawer(props: CompareDrawerProps) {
   const { open, onClose, sessionId, moduleIds, shortlistKey, onAsk } = props;
@@ -137,13 +135,13 @@ function CompareTable({ modules, byId, scored, lowConfidence, isShortlisted }: C
         return (
           <div className={cx('grid gap-2', lowConfidence && 'grayscale')}>
             <div className="flex items-baseline gap-2">
-              <span className={cx('text-2xl leading-none font-semibold tabular-nums', FIT_TEXT[band])}>{ranked.fit}</span>
+              <span className={cx('text-2xl leading-none font-semibold tabular-nums', FIT_BAND_TEXT[band])}>{ranked.fit}</span>
               <span className="text-[12px] text-muted">/ 100</span>
               {ranked.fit === best && bestIsUnique && (
                 <span className="ml-auto rounded-md bg-fit-high/10 px-1.5 py-0.5 text-[11px] font-semibold text-fit-high">Best fit</span>
               )}
             </div>
-            <Meter value={ranked.fit / 100} tone={FIT_TONE[band]} label={`Fit for ${m.title}`} valueText={`${ranked.fit} out of 100`} />
+            <Meter value={ranked.fit / 100} tone={FIT_BAND_METER[band]} label={`Fit for ${m.title}`} valueText={`${ranked.fit} out of 100`} />
             <SubScoreBars sub={ranked.sub} variant="compact" dimmed={lowConfidence} className="mt-1" />
           </div>
         );

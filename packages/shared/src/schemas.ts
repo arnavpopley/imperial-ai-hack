@@ -408,6 +408,11 @@ export const TimetableView = z.object({
   coreModuleIds: z.array(z.string()),
   clashes: z.array(Clash),
   swaps: z.array(SwapSuggestion),
+  /**
+   * Issue 103: for a clash with no swap within the fit window, the best alternatives beyond it, each with its fit
+   * drop. They pass every other swap check; the recommended swaps above are unchanged.
+   */
+  widerSwaps: z.array(SwapSuggestion),
   /** Backups for picks near or over capacity in the synthetic cohort (issue #68); never a change to fit. */
   backups: z.array(CapacityBackup),
   keepFree: z.array(KeepFreeWindow),
@@ -939,13 +944,39 @@ export const ExamFormSaveBody = ExamFeedbackForm.omit({ id: true, moduleId: true
 export const ExamFormDraftBody = z.object({ examLabel: z.string().min(1), notes: z.string().min(1).max(20000) });
 
 /** Feedback for one student on one exam, from the examiner's form and the student's own question marks. */
+/**
+ * A published exam whose feedback the student cannot get yet: they shared a mark for the module, but no question
+ * marks that match the examiner's questions (issue #108). Says nothing about anyone else's marks.
+ */
+export const ExamAwaitingMarks = z.object({
+  moduleId: z.string(),
+  examLabel: z.string(),
+  /** The question ids the examiner's form uses, so the student knows what their mark sheet needs to show. */
+  questionIds: z.array(z.string()),
+});
+
 export const TailoredFeedback = z.object({
   moduleId: z.string(),
   examLabel: z.string(),
+  /** The student's overall mark on this exam, for the at-a-glance strip. */
+  mark: z.number().min(0).max(100).optional(),
+  /** Every question the student has a mark for, in paper order, for the per-question chart. */
+  questions: z
+    .array(z.object({ questionId: z.string(), label: z.string(), mark: z.number().min(0), maxMarks: z.number().positive() }))
+    .optional(),
+  /** One sentence naming where most marks went; the numbers live in the chart, so it does not repeat them. */
   overall: z.string(),
   strengths: z.array(z.string()),
   weakPoints: z.array(
-    z.object({ questionId: z.string(), topics: z.array(TopicId), lostMarks: z.number().min(0), advice: z.string() }),
+    z.object({
+      questionId: z.string(),
+      /** The question's subject without its "Q3:" prefix, such as "Boundary layers and the Blasius solution". */
+      label: z.string().optional(),
+      topics: z.array(TopicId),
+      lostMarks: z.number().min(0),
+      /** The examiner's common mistakes and what good answers did; the marks lost are shown in the chart instead. */
+      advice: z.string(),
+    }),
   ),
   revisionPlan: z.array(z.string()),
   /** Future modules that build on the weak topics, with a short note each. */
