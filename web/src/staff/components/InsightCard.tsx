@@ -10,6 +10,7 @@ import { Provenance } from '../../components/Provenance.tsx';
 import type { StaffDecision } from '../hooks/useInsights.ts';
 import { focusRing, plural } from '../lib/format.ts';
 import { isSummaryCard, outcomeOf, tagEditorLink } from '../lib/insights.ts';
+import { buttonClass, type ButtonVariant } from '../../components/Button.tsx';
 import { CheckIcon, ChevronDownIcon, ClockAlertIcon, EyeIcon, NoteIcon, TrendUpIcon, UsersIcon, XIcon } from './icons.tsx';
 
 type IconComponent = ComponentType<Omit<SVGProps<SVGSVGElement>, 'children'>>;
@@ -29,10 +30,11 @@ const DECISION_STATE: Record<InsightDecision, { label: string; className: string
   dismissed: { label: 'Dismissed', className: 'bg-line text-muted' },
 };
 
-const ACTIONS: { decision: StaffDecision; label: string; Icon: IconComponent; active: string }[] = [
-  { decision: 'accepted', label: 'Accept', Icon: CheckIcon, active: 'border-fit-high bg-fit-high text-surface' },
-  { decision: 'noted', label: 'Note', Icon: NoteIcon, active: 'border-brand bg-brand text-surface' },
-  { decision: 'dismissed', label: 'Dismiss', Icon: XIcon, active: 'border-muted bg-muted text-surface' },
+/** Accept is the one primary action on a card; Note and Dismiss are quieter (issue #142). */
+const ACTIONS: { decision: StaffDecision; label: string; Icon: IconComponent; variant: ButtonVariant; active: string }[] = [
+  { decision: 'accepted', label: 'Accept', Icon: CheckIcon, variant: 'primary', active: 'border-fit-high bg-fit-high text-on-brand' },
+  { decision: 'noted', label: 'Note', Icon: NoteIcon, variant: 'ghost', active: 'border-brand bg-brand text-on-brand' },
+  { decision: 'dismissed', label: 'Dismiss', Icon: XIcon, variant: 'ghost', active: 'border-muted bg-muted text-on-brand' },
 ];
 
 export function InsightCard({
@@ -160,7 +162,7 @@ export function InsightCard({
           </button>
         ) : (
           <div ref={actionsRef} role="group" aria-label={`Decision on: ${insight.headline}`} className="flex flex-wrap gap-2">
-            {ACTIONS.map(({ decision, label, Icon, active }) => {
+            {ACTIONS.map(({ decision, label, Icon, variant, active }) => {
               const pressed = insight.decision === decision;
               return (
                 <button
@@ -169,9 +171,11 @@ export function InsightCard({
                   aria-pressed={pressed}
                   disabled={saving}
                   onClick={() => decide(decision)}
-                  className={`inline-flex min-h-10 items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm font-medium transition-colors disabled:cursor-wait ${
-                    pressed ? active : 'border-line text-ink hover:bg-canvas'
-                  } ${focusRing}`}
+                  className={`${
+                    pressed
+                      ? `inline-flex h-10 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-medium ${active}`
+                      : buttonClass(variant)
+                  } disabled:cursor-wait ${focusRing}`}
                 >
                   <Icon className="size-4" />
                   {label}

@@ -392,7 +392,7 @@ describe("planTimetable on Rosa's plan (seed data)", () => {
     expect(view.coreModuleIds).toEqual(['MECH60003', 'MECH60015']);
     const onGrid = new Set(view.grids.flatMap((grid) => grid.slots.map((slot) => slot.moduleId)));
     expect(onGrid).toEqual(new Set(['MECH60003', 'MECH60015', 'MECH60009', 'MECH60018', 'IEX-ML']));
-    expect(view.ects).toEqual({ core: 30, elective: 10, iExplore: 5, max: 60 });
+    expect(view.ects).toEqual({ core: 30, elective: 10, iExplore: 5, max: 60, electiveRequired: 25, iExploreRequired: true });
   });
 
   it('keeps a completed core module off the grid but in the ECTS total, as the rules check counts it', () => {

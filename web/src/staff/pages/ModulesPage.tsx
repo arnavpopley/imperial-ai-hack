@@ -4,8 +4,7 @@ import { useEffect } from 'react';
 import { NavLink, Outlet, useNavigate, useOutletContext, useParams } from 'react-router';
 import { api } from '../../api.ts';
 import { ModulePicker, firstModule } from '../components/ModulePicker.tsx';
-import { EmptyState, ErrorState, LoadingState } from '../components/ui.tsx';
-import { InboxIcon } from '../components/icons.tsx';
+import { EmptyState, ErrorState, LoadingState } from '../../components/StateViews.tsx';
 import { useResource } from '../hooks/useResource.ts';
 import { focusRing, plural } from '../lib/format.ts';
 import { isCohortVisible } from '../lib/privacy.ts';
@@ -25,12 +24,12 @@ export const useModuleOutlet = () => useOutletContext<ModuleOutlet>();
 export function ModulesPage() {
   const { state, reload } = useResource('staff-modules', api.staff.modules);
 
-  if (state.status === 'loading') return <LoadingState label="Loading modules" rows={4} />;
+  if (state.status === 'loading') return <LoadingState label="Loading modules" />;
   if (state.status === 'error')
-    return <ErrorState title="Could not load modules" error={state.error} onRetry={reload} />;
+    return <ErrorState title="Could not load modules" message={state.error.message} onRetry={reload} />;
   if (state.data.length === 0)
     return (
-      <EmptyState icon={<InboxIcon className="size-6" />} title="No modules yet">
+      <EmptyState icon="inbox" title="No modules yet">
         Seed the database to see demand and fit for each module.
       </EmptyState>
     );
@@ -87,7 +86,7 @@ export function ModuleLayout() {
 
   if (!summary)
     return (
-      <EmptyState icon={<InboxIcon className="size-6" />} title="Module not found">
+      <EmptyState icon="inbox" title="Module not found">
         There is no module with the id “{moduleId}”. Pick one from the list.
       </EmptyState>
     );

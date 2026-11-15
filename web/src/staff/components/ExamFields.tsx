@@ -4,7 +4,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import type { InputHTMLAttributes, KeyboardEvent, ReactNode, TextareaHTMLAttributes } from 'react';
 import { focusRing, topicLabel } from '../lib/format.ts';
 import { AlertIcon, ChevronDownIcon, PlusIcon, SearchIcon, XIcon } from './icons.tsx';
-import { Button } from './ui.tsx';
+import { Button } from '../../components/Button.tsx';
 
 export const inputClass = `w-full rounded-xl border border-line-strong bg-surface px-3.5 py-2.5 text-sm placeholder:text-muted/80 aria-invalid:border-fit-low ${focusRing}`;
 
