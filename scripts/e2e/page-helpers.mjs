@@ -234,8 +234,9 @@ export function installHelpers() {
     const vw = document.documentElement.clientWidth;
     for (let y = 0; ; y = Math.min(y + step, max)) {
       window.scrollTo({ top: y, behavior: 'instant' });
-      // The launcher re-measures on the next animation frame after a scroll.
-      for (let i = 0; i < 3; i += 1) await frame();
+      // The launcher re-measures on the animation frame after a scroll, then React re-renders; allow a few frames
+      // (about 100 ms, quicker than a person can aim at a button that has just scrolled into place).
+      for (let i = 0; i < 6; i += 1) await frame();
       for (const el of document.querySelectorAll(CLICKABLE)) {
         if (launcher.contains(el) || el.disabled || !visible(el)) continue;
         const r = el.getBoundingClientRect();

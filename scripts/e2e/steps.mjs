@@ -428,10 +428,11 @@ export const STEPS = [
         desc: 'the clash to clear after the swap',
         timeout: ctx.timeout,
       });
+      // The panel also lists the year's core modules (#87); only the student's own picks have a remove button.
       const listed = await page.eval(() =>
-        [...document.querySelectorAll('section[aria-labelledby="shortlist-heading"] li a')].map((a) =>
-          decodeURIComponent(a.getAttribute('href').slice('/modules/'.length)),
-        ),
+        [...document.querySelectorAll('section[aria-labelledby="shortlist-heading"] li')]
+          .filter((li) => li.querySelector('button') && li.querySelector('a[href^="/modules/"]'))
+          .map((li) => decodeURIComponent(li.querySelector('a[href^="/modules/"]').getAttribute('href').slice('/modules/'.length))),
       );
       if (listed.length !== 3) fail(`After the swap the shortlist has ${listed.length} modules`);
       ctx.state.shortlist = listed;
