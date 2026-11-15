@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'motion/react';
 import type { ReactNode, Ref } from 'react';
 import { Link } from 'react-router';
-import { ConfidenceBadge } from '../../components/ConfidenceBadge.tsx';
+import { Badge } from '../../components/Badge.tsx';
 import { cx } from '../../components/cx.ts';
 import { Icon } from '../../components/Icon.tsx';
 import { ModuleTypeChip } from '../../components/ModuleTypeChip.tsx';
@@ -78,14 +78,12 @@ export function ModuleCard({ item, lowConfidence, scored, shortlisted, pending, 
           <div className="min-w-0 flex-1">
             <div className="flex items-start gap-3">
               <div className="min-w-0 flex-1">
+                {/* At most three badges, one style (issue #141). Confidence is the profile's, the same on every card, so
+                    it lives in the list's notice and on the module page rather than here. */}
                 <div className="flex flex-wrap items-center gap-1.5">
                   {module && <ModuleTypeChip variant={module.type} />}
-                  <ConfidenceBadge variant={item.confidence} />
                   {!eligible && (
-                    <span className="inline-flex items-center gap-1 rounded-md bg-ink/6 px-1.5 py-0.5 text-2xs font-semibold text-muted">
-                      <Icon name={item.unconfirmed ? 'info' : 'lock'} size={11} />
-                      {item.unconfirmed ? "Can't confirm yet" : 'Not eligible yet'}
-                    </span>
+                    <Badge icon={item.unconfirmed ? 'info' : 'lock'}>{item.unconfirmed ? "Can't confirm yet" : 'Not eligible yet'}</Badge>
                   )}
                   {item.exception && <ExceptionChip decision={item.exception} />}
                   {/* Above the stretched card link, so hovering shows where the count comes from. */}

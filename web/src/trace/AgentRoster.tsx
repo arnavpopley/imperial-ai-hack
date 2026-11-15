@@ -2,6 +2,8 @@
 // full flowchart. Each card shows the model tier, the tools it calls and what it is never allowed to do, and lights
 // up once the current session has used it. A legend maps every agent to its model tier.
 import { motion } from 'motion/react';
+// The roster has its own Badge (the agent's avatar), so the shared one is a Chip here.
+import { Badge as Chip } from '../components/Badge.tsx';
 import { cx } from '../components/cx.ts';
 import { Icon } from '../components/Icon.tsx';
 import { AGENTS, AUDIENCES, JUDGE, TIERS, type Agent, type Tier } from './agents.ts';
@@ -40,7 +42,7 @@ function Group({ label, agents, seen, live }: { label: string; agents: readonly 
     <section aria-label={`${label} agents`} className="grid content-start gap-3">
       <h3 className="flex items-center gap-2 text-xs font-semibold tracking-[0.1em] text-muted uppercase">
         {label}
-        <span className="rounded-full bg-surface-2 px-2 py-0.5 text-2xs tracking-normal text-ink ring-1 ring-line">{agents.length}</span>
+        <Chip className="tracking-normal">{agents.length}</Chip>
       </h3>
       <ul className={cx('grid gap-4', agents.length > 2 ? 'sm:grid-cols-2 lg:grid-cols-3' : agents.length === 2 && 'sm:grid-cols-2')}>
         {agents.map((agent, i) => (
@@ -75,39 +77,34 @@ function AgentCard({ agent, index, used, live }: { agent: Agent; index: number; 
           <div className="min-w-0 flex-1">
             <h4 className="truncate font-semibold tracking-tight">{agent.name}</h4>
             {template ? (
-              <span
-                title={`Runs on ${tier.model} when the models are switched on`}
-                className="mt-0.5 inline-block rounded-full bg-surface-2 px-2 py-0.5 text-2xs font-semibold text-muted ring-1 ring-line"
-              >
+              <Chip title={`Runs on ${tier.model} when the models are switched on`} className="mt-0.5">
                 {agent.offlineLabel ?? 'Template (offline)'}
                 <span className="sr-only">; runs on {tier.model} when the models are switched on</span>
-              </span>
+              </Chip>
             ) : (
-              <span className={cx('mt-0.5 inline-block rounded-full px-2 py-0.5 text-2xs font-semibold', tier.chip)}>{tier.model}</span>
+              <Chip tone={tier.tone} className="mt-0.5">
+                {tier.model}
+              </Chip>
             )}
           </div>
           {used && (
-            <span className="flex shrink-0 items-center gap-1 self-start rounded-full bg-fit-high/12 px-2 py-0.5 text-2xs font-semibold text-fit-high">
-              <span className="size-1.5 rounded-full bg-fit-high" />
+            <Chip tone="success" dot className="self-start">
               {template ? 'Used (template)' : 'Used'}
-            </span>
+            </Chip>
           )}
         </div>
         <p className="text-sm text-muted">{agent.does}</p>
         <ul aria-label="Tools" className="flex flex-wrap gap-1.5">
           {agent.tools.length === 0 ? (
-            <li className="rounded-md bg-surface-2 px-1.5 py-0.5 text-2xs text-muted">No tools, data only</li>
+            <li>
+              <Chip>No tools, data only</Chip>
+            </li>
           ) : (
             agent.tools.map((tool) => (
-              <li
-                key={tool}
-                className={cx(
-                  'flex items-center gap-1 rounded-md bg-surface-2 px-1.5 py-0.5 text-2xs ring-1 ring-line',
-                  tool.includes('_') && 'font-mono',
-                )}
-              >
-                <Icon name="wrench" size={10} className="text-muted" />
-                {tool}
+              <li key={tool}>
+                <Chip icon="wrench" className={cx(tool.includes('_') && 'font-mono font-medium')}>
+                  {tool}
+                </Chip>
               </li>
             ))
           )}
@@ -154,7 +151,9 @@ function TierLegend({ live }: { live?: boolean }) {
           const agents = AGENTS.filter((a) => a.tier === id);
           return (
             <li key={id} className="flex flex-wrap items-center gap-3">
-              <span className={cx('w-24 rounded-full px-2 py-0.5 text-center text-2xs font-semibold', tier.chip)}>{tier.model}</span>
+              <Chip tone={tier.tone} className="w-24 justify-center">
+                {tier.model}
+              </Chip>
               <span className="w-36 text-xs text-muted">{tier.use}</span>
               <span className="flex flex-wrap gap-1.5">
                 {agents.map((a) => (
@@ -168,7 +167,7 @@ function TierLegend({ live }: { live?: boolean }) {
           );
         })}
         <li className="flex flex-wrap items-center gap-3 border-t border-line pt-3">
-          <span className="w-24 rounded-full bg-surface-2 px-2 py-0.5 text-center text-2xs font-semibold ring-1 ring-line">{JUDGE.model}</span>
+          <Chip className="w-24 justify-center">{JUDGE.model}</Chip>
           <span className="text-xs text-muted">{JUDGE.use}, never talks to a student</span>
         </li>
       </ul>

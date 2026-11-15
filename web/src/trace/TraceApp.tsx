@@ -4,6 +4,7 @@ import type { EvalRun, TraceEvent, TraceKind, Verdict } from '@modulematch/share
 import { motion } from 'motion/react';
 import { useCallback, useEffect, useId, useMemo, useState, type ReactNode } from 'react';
 import { api } from '../api.ts';
+import { Badge } from '../components/Badge.tsx';
 import { CountUp } from '../components/CountUp.tsx';
 import { cx } from '../components/cx.ts';
 import { Icon, type IconName } from '../components/Icon.tsx';
@@ -267,9 +268,9 @@ function EvalCard({ result: r, index }: { result: EvalRun['results'][number]; in
           <span className={cx('text-4xl font-semibold tracking-tight', ok ? 'text-fit-high' : 'text-fit-low')}>
             <CountUp value={pct} suffix="%" />
           </span>
-          <span className={cx('rounded-full px-2.5 py-1 text-xs font-semibold', ok ? 'bg-fit-high/15 text-fit-high' : 'bg-fit-low/15 text-fit-low')}>
+          <Badge tone={ok ? 'success' : 'danger'} size="md">
             {ok ? 'Meets target' : 'Below target'}
-          </span>
+          </Badge>
         </p>
         <div
           className="relative h-2.5 rounded-full bg-surface-2"

@@ -10,6 +10,7 @@ import type { StaffDecision } from '../hooks/useInsights.ts';
 import { focusRing, plural } from '../lib/format.ts';
 import { isSummaryCard, outcomeOf, tagEditorLink } from '../lib/insights.ts';
 import { buttonClass, type ButtonVariant } from '../../components/Button.tsx';
+import { Badge, type BadgeTone } from '../../components/Badge.tsx';
 import { CheckIcon, ChevronDownIcon, ClockAlertIcon, EyeIcon, NoteIcon, TrendUpIcon, UsersIcon, XIcon } from './icons.tsx';
 
 type IconComponent = ComponentType<Omit<SVGProps<SVGSVGElement>, 'children'>>;
@@ -21,11 +22,11 @@ const INSIGHT_KINDS: Record<InsightKind, { label: string; Icon: IconComponent; t
   CLASH: { label: 'Timetable clash', Icon: ClockAlertIcon, tint: 'bg-clash-likely/10', ink: 'text-clash-likely' },
 };
 
-const DECISION_STATE: Record<InsightDecision, { label: string; className: string }> = {
-  pending: { label: 'Awaiting your decision', className: 'bg-fit-mid/15 text-ink' },
-  accepted: { label: 'Accepted', className: 'bg-fit-high/10 text-fit-high' },
-  noted: { label: 'Noted', className: 'bg-brand-soft text-brand' },
-  dismissed: { label: 'Dismissed', className: 'bg-line text-muted' },
+const DECISION_STATE: Record<InsightDecision, { label: string; tone: BadgeTone }> = {
+  pending: { label: 'Awaiting your decision', tone: 'warning' },
+  accepted: { label: 'Accepted', tone: 'success' },
+  noted: { label: 'Noted', tone: 'brand' },
+  dismissed: { label: 'Dismissed', tone: 'neutral' },
 };
 
 /** Accept is the one primary action on a card; Note and Dismiss are quieter (issue #142). */
@@ -141,8 +142,8 @@ export function InsightCard({
             <UsersIcon className="size-3.5" />
             {plural(insight.cohortSize, 'student')} behind this card
           </span>
-          <span className={`rounded-full px-2 py-0.5 font-medium ${state.className}`} aria-live="polite">
-            {saving ? 'Saving…' : state.label}
+          <span aria-live="polite" className="inline-flex">
+            <Badge tone={saving ? 'neutral' : state.tone}>{saving ? 'Saving…' : state.label}</Badge>
           </span>
         </div>
         {collapsed ? (

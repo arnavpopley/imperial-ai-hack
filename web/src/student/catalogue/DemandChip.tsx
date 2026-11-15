@@ -2,16 +2,12 @@
 // the fit score and never changes it or the ranking. The server sends nothing for counts under five students.
 // The words are the staff console's (issue #111), and over capacity reads stronger than near capacity.
 import { CAPACITY_LABELS, type ModuleDemandSignal } from '@modulematch/shared';
-import { cx } from '../../components/cx.ts';
-import { Icon } from '../../components/Icon.tsx';
+import { Badge, type BadgeTone } from '../../components/Badge.tsx';
 
 const SOURCE = 'From the synthetic cohort’s shortlists';
 
-/** Over capacity carries the stronger colour; the text stays ink on both, for contrast. */
-const TONE: Record<ModuleDemandSignal['status'], { chip: string; icon: string }> = {
-  over: { chip: 'bg-fit-low/12 ring-1 ring-inset ring-fit-low/40', icon: 'text-fit-low' },
-  near: { chip: 'bg-fit-mid/12', icon: 'text-fit-mid' },
-};
+/** Over capacity is the stronger tone: danger against near capacity's warning, as on the staff console. */
+const TONE: Record<ModuleDemandSignal['status'], BadgeTone> = { over: 'danger', near: 'warning' };
 
 /** "Over capacity: 63 shortlists for 48 places" or "Near capacity: 56 shortlists for 60 places". */
 export function demandText(signal: ModuleDemandSignal): string {
@@ -19,20 +15,11 @@ export function demandText(signal: ModuleDemandSignal): string {
 }
 
 export function DemandChip({ signal, className }: { signal: ModuleDemandSignal; className?: string }) {
-  const tone = TONE[signal.status];
   return (
-    <span
-      title={SOURCE}
-      className={cx(
-        'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-2xs font-semibold text-ink tabular-nums',
-        tone.chip,
-        className,
-      )}
-    >
-      <Icon name="user" size={11} className={tone.icon} />
-      {demandText(signal)}
+    <Badge tone={TONE[signal.status]} icon="user" title={SOURCE} className={className}>
+      <span className="tabular-nums">{demandText(signal)}</span>
       <span className="sr-only"> ({SOURCE.toLowerCase()})</span>
-    </span>
+    </Badge>
   );
 }
 

@@ -138,10 +138,12 @@ export function ModuleDetailScreen() {
             <h1 className="mt-2 text-title text-balance">
               {module.title}
             </h1>
-            <ul className="mt-3 flex flex-wrap gap-1.5 text-2xs font-medium" aria-label="Module facts">
+            {/* Plain facts, not pills (issue #141): code · department · level · credits · terms. */}
+            <ul className="mt-3 flex flex-wrap gap-x-2 gap-y-1 text-xs text-muted" aria-label="Module facts">
               {facts.map((fact, i) => (
-                <li key={`${i}-${fact}`} className={cx('rounded-full bg-surface-2 px-2.5 py-1 text-muted', i === 0 && 'font-mono')}>
-                  {fact}
+                <li key={`${i}-${fact}`} className="flex items-center gap-2">
+                  {i > 0 && <span aria-hidden="true">·</span>}
+                  <span className={cx(i === 0 && 'font-mono')}>{fact}</span>
                 </li>
               ))}
             </ul>
