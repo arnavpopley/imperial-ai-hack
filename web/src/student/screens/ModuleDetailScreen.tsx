@@ -4,10 +4,11 @@ import type { Evidence } from '@modulematch/shared';
 import { motion, useReducedMotion } from 'motion/react';
 import { Link, useParams } from 'react-router';
 import { api } from '../../api.ts';
+import { Badge } from '../../components/Badge.tsx';
 import { buttonClass } from '../../components/Button.tsx';
 import { ConfidenceBadge } from '../../components/ConfidenceBadge.tsx';
 import { decisionsKey } from '../../components/exceptions.ts';
-import { FIT_BAND_LABELS, fitBand } from '../../components/FitScore.tsx';
+import { FIT_BAND_LABELS, FIT_BAND_TONE, fitBand } from '../../components/FitScore.tsx';
 import { Icon } from '../../components/Icon.tsx';
 import { ModuleTypeChip } from '../../components/ModuleTypeChip.tsx';
 import { PageHeader } from '../../components/PageHeader.tsx';
@@ -116,7 +117,6 @@ export function ModuleDetailScreen() {
                 <ModuleTypeChip variant={module.type} />
                 {rec && <ConfidenceBadge variant={rec.confidence} />}
                 {rec?.exception && <ExceptionChip decision={rec.exception} />}
-                {rec && scored && <Provenance kind="code" />}
               </span>
             </>
           }
@@ -135,9 +135,12 @@ export function ModuleDetailScreen() {
               <span className="flex items-center gap-3">
                 {scored ? <ScoreRing value={rec.fit} dimmed={dimmed} delay={0.15} /> : <NoScoreRing />}
                 {scored && (
-                  <span className="grid text-2xs leading-tight text-muted">
-                    <span className="font-semibold text-ink">{FIT_BAND_LABELS[fitBand(rec.fit)]}</span>
-                    {rec.rank === 1 ? 'your best match' : `ranked #${rec.rank}`}
+                  <span className="grid justify-items-start gap-1">
+                    <Badge tone={dimmed ? 'neutral' : FIT_BAND_TONE[fitBand(rec.fit)]}>
+                      {FIT_BAND_LABELS[fitBand(rec.fit)]} · {rec.rank === 1 ? 'your best match' : `ranked #${rec.rank}`}
+                    </Badge>
+                    {/* After the fit band, so it labels the score claim it describes. */}
+                    <Provenance kind="code" />
                   </span>
                 )}
               </span>

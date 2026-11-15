@@ -1,5 +1,6 @@
 // Links a "because" reason to its source: the student's own quote, or the module record field.
 import { useEffect, useId, useRef, useState } from 'react';
+import { badgeClass } from './Badge.tsx';
 import { cx } from './cx.ts';
 import { Icon } from './Icon.tsx';
 import { PROVENANCE, provenanceClass } from './Provenance.tsx';
@@ -67,8 +68,8 @@ export function EvidencePopover(props: EvidencePopoverProps) {
         aria-controls={panelId}
         onClick={() => setOpen((v) => !v)}
         className={cx(
-          // The same chip as everywhere else (Provenance): Your words or Module record.
-          kind ? provenanceClass(kind) : 'inline-flex items-center gap-1 rounded-full bg-surface-2 px-2 text-2xs font-semibold text-muted',
+          // The same Badge as everywhere else (Provenance): Your words or Module record.
+          kind ? provenanceClass(kind) : badgeClass(),
           'h-6 align-middle transition hover:brightness-95',
           open && 'ring-2 ring-brand/40',
         )}

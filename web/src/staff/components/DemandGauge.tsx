@@ -2,23 +2,20 @@
 import { MIN_COHORT } from '@modulematch/shared';
 import { CAPACITY_LABEL, NEAR_CAPACITY, capacityStatus, percent } from '../lib/format.ts';
 import type { CapacityStatus } from '../lib/format.ts';
-import { AlertIcon, CheckIcon } from './icons.tsx';
+import { Badge, type BadgeTone } from '../../components/Badge.tsx';
 
-const tone: Record<CapacityStatus, { bar: string; chip: string; icon: string }> = {
-  uncapped: { bar: 'bg-brand', chip: 'bg-brand-soft', icon: 'text-brand' },
-  within: { bar: 'bg-fit-high', chip: 'bg-fit-high/10', icon: 'text-fit-high' },
-  near: { bar: 'bg-fit-mid', chip: 'bg-fit-mid/15', icon: 'text-fit-mid' },
-  over: { bar: 'bg-fit-low', chip: 'bg-fit-low/10', icon: 'text-fit-low' },
+const tone: Record<CapacityStatus, { bar: string; badge: BadgeTone }> = {
+  uncapped: { bar: 'bg-brand', badge: 'brand' },
+  within: { bar: 'bg-fit-high', badge: 'success' },
+  near: { bar: 'bg-fit-mid', badge: 'warning' },
+  over: { bar: 'bg-fit-low', badge: 'danger' },
 };
 
 function CapacityChip({ status }: { status: CapacityStatus }) {
-  const t = tone[status];
-  const Icon = status === 'near' || status === 'over' ? AlertIcon : CheckIcon;
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${t.chip}`}>
-      <Icon className={`size-3.5 ${t.icon}`} />
+    <Badge tone={tone[status].badge} size="md" icon={status === 'near' || status === 'over' ? 'alert' : 'check'}>
       {CAPACITY_LABEL[status]}
-    </span>
+    </Badge>
   );
 }
 

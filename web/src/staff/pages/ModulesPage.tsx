@@ -5,6 +5,7 @@ import { NavLink, Outlet, useNavigate, useOutletContext, useParams } from 'react
 import { api } from '../../api.ts';
 import { ModulePicker, firstModule } from '../components/ModulePicker.tsx';
 import { EmptyState, ErrorState, LoadingState } from '../../components/StateViews.tsx';
+import { Badge, type BadgeTone } from '../../components/Badge.tsx';
 import { useResource } from '../hooks/useResource.ts';
 import { focusRing, plural } from '../lib/format.ts';
 import { isCohortVisible } from '../lib/privacy.ts';
@@ -67,11 +68,11 @@ const typeLabel: Record<StaffModuleSummary['type'], string> = {
   'i-explore': 'I-Explore',
 };
 
-const OFFER_CHIP: Record<CohortOffer, { label: string; className: string }> = {
-  elective: { label: 'Option for this cohort', className: 'bg-fit-high/10 text-fit-high ring-fit-high/30' },
-  'i-explore': { label: 'Option for this cohort', className: 'bg-fit-high/10 text-fit-high ring-fit-high/30' },
-  core: { label: 'Compulsory for this cohort', className: 'bg-brand-soft text-brand ring-brand/30' },
-  'not-offered': { label: 'Not offered to this cohort', className: 'bg-surface-2 text-muted ring-line-strong' },
+const OFFER_CHIP: Record<CohortOffer, { label: string; tone: BadgeTone }> = {
+  elective: { label: 'Option for this cohort', tone: 'success' },
+  'i-explore': { label: 'Option for this cohort', tone: 'success' },
+  core: { label: 'Compulsory for this cohort', tone: 'brand' },
+  'not-offered': { label: 'Not offered to this cohort', tone: 'neutral' },
 };
 
 const tab = ({ isActive }: { isActive: boolean }) =>
@@ -102,9 +103,9 @@ export function ModuleLayout() {
           <span aria-hidden="true">·</span>
           <span>Synthetic cohort of {plural(summary.cohortSize, 'student')}</span>
           {summary.offer && (
-            <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ${OFFER_CHIP[summary.offer].className}`}>
+            <Badge tone={OFFER_CHIP[summary.offer].tone} variant="outline" size="md">
               {OFFER_CHIP[summary.offer].label}
-            </span>
+            </Badge>
           )}
         </div>
         <h2 className="text-heading text-balance">{summary.title}</h2>

@@ -1,6 +1,8 @@
 // Who made a piece of content, at a glance (issue #138): words from the AI, numbers computed by code, the student's
-// own words, or a field of the module record. One shape everywhere; violet means AI and nothing else.
+// own words, or a field of the module record. One shape everywhere; violet means AI and nothing else. Each kind is a
+// Badge tone (issue #141), so it shares the badge's shape, size and colour tokens.
 import { useEffect, useId, useRef, useState } from 'react';
+import { BADGE_TONES, Badge, badgeClass, type BadgeTone } from './Badge.tsx';
 import { cx } from './cx.ts';
 import { Icon, type IconName } from './Icon.tsx';
 
@@ -9,7 +11,9 @@ export type ProvenanceKind = 'ai' | 'code' | 'quote' | 'record';
 interface ProvenanceMeta {
   label: string;
   icon: IconName;
-  /** Tint and text colour classes. */
+  /** The Badge tone this kind is drawn in. */
+  badge: BadgeTone;
+  /** Tint and text colour classes, from the Badge tone. */
   tone: string;
   /** The colour tokens behind `tone`, so a test can check 4.5:1 or better in light and dark. */
   colours: { text: string; tint: string; alpha: number };
@@ -17,42 +21,32 @@ interface ProvenanceMeta {
   meaning: string;
 }
 
+const define = (label: string, icon: IconName, badge: BadgeTone, meaning: string): ProvenanceMeta => ({
+  label,
+  icon,
+  badge,
+  tone: BADGE_TONES[badge].soft,
+  colours: BADGE_TONES[badge].colours,
+  meaning,
+});
+
+// Computed and Module record are both plain facts, so they share the neutral tone and differ by icon and label.
 export const PROVENANCE: Record<ProvenanceKind, ProvenanceMeta> = {
-  ai: {
-    label: 'AI-written',
-    icon: 'sparkle',
-    tone: 'bg-mode-explain/6 text-mode-explain ring-1 ring-mode-explain/30 ring-inset',
-    colours: { text: 'mode-explain', tint: 'mode-explain', alpha: 0.06 },
-    meaning: 'Words from an AI agent, always built on facts the code worked out. It cannot change a number. Offline, its template stands in.',
-  },
-  code: {
-    label: 'Computed',
-    icon: 'code',
-    tone: 'bg-surface-2 text-ink ring-1 ring-line ring-inset',
-    colours: { text: 'ink', tint: 'surface-2', alpha: 1 },
-    meaning: 'Worked out by code from your profile and the module records: the same answer every time.',
-  },
-  quote: {
-    label: 'Your words',
-    icon: 'chat',
-    tone: 'bg-brand-soft text-brand',
-    colours: { text: 'brand', tint: 'brand-soft', alpha: 1 },
-    meaning: 'Your own words from the interview, quoted as evidence.',
-  },
-  record: {
-    label: 'Module record',
-    icon: 'grid',
-    tone: 'bg-surface-2 text-muted ring-1 ring-line ring-inset',
-    colours: { text: 'muted', tint: 'surface-2', alpha: 1 },
-    meaning: 'A field from the module’s published record.',
-  },
+  ai: define(
+    'AI-written',
+    'sparkle',
+    'ai',
+    'Words from an AI agent, always built on facts the code worked out. It cannot change a number. Offline, its template stands in.',
+  ),
+  code: define('Computed', 'code', 'neutral', 'Worked out by code from your profile and the module records: the same answer every time.'),
+  quote: define('Your words', 'chat', 'brand', 'Your own words from the interview, quoted as evidence.'),
+  record: define('Module record', 'grid', 'neutral', 'A field from the module’s published record.'),
 };
 
 const ORDER: readonly ProvenanceKind[] = ['ai', 'code', 'quote', 'record'];
 
 /** The chip's classes, for controls that must look like a Provenance chip (for example a popover trigger). */
-export const provenanceClass = (kind: ProvenanceKind) =>
-  cx('inline-flex h-5 shrink-0 items-center gap-1 rounded-full px-2 text-2xs font-semibold whitespace-nowrap', PROVENANCE[kind].tone);
+export const provenanceClass = (kind: ProvenanceKind) => badgeClass({ tone: PROVENANCE[kind].badge });
 
 interface ProvenanceProps {
   kind: ProvenanceKind;
@@ -64,10 +58,9 @@ interface ProvenanceProps {
 export function Provenance({ kind, label, className }: ProvenanceProps) {
   const meta = PROVENANCE[kind];
   return (
-    <span title={meta.meaning} className={cx(provenanceClass(kind), className)}>
-      <Icon name={meta.icon} size={11} />
+    <Badge tone={meta.badge} icon={meta.icon} title={meta.meaning} className={className}>
       {label ?? meta.label}
-    </span>
+    </Badge>
   );
 }
 

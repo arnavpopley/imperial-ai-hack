@@ -1,12 +1,13 @@
 import type { Module } from '@modulematch/shared';
-import { cx } from './cx.ts';
+import { Badge, type BadgeTone } from './Badge.tsx';
 
 export type ModuleType = Module['type'];
 
-const styles: Record<ModuleType, { label: string; className: string }> = {
-  core: { label: 'Core', className: 'bg-ink/6 text-ink' },
-  elective: { label: 'Elective', className: 'bg-brand-soft text-brand' },
-  'i-explore': { label: 'I-Explore', className: 'bg-mode-explain/12 text-mode-explain' },
+/** I-Explore is teal (info): violet is kept for AI-written content (issue #138). */
+const styles: Record<ModuleType, { label: string; tone: BadgeTone }> = {
+  core: { label: 'Core', tone: 'neutral' },
+  elective: { label: 'Elective', tone: 'brand' },
+  'i-explore': { label: 'I-Explore', tone: 'info' },
 };
 
 export const MODULE_TYPE_LABELS: Record<ModuleType, string> = {
@@ -18,14 +19,8 @@ export const MODULE_TYPE_LABELS: Record<ModuleType, string> = {
 /** Module type chip: core, elective or I-Explore. */
 export function ModuleTypeChip({ variant, className }: { variant: ModuleType; className?: string }) {
   return (
-    <span
-      className={cx(
-        'inline-flex items-center rounded-md px-1.5 py-0.5 text-2xs font-semibold tracking-wide uppercase',
-        styles[variant].className,
-        className,
-      )}
-    >
+    <Badge tone={styles[variant].tone} className={className}>
       {styles[variant].label}
-    </span>
+    </Badge>
   );
 }
