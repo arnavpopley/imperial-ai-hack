@@ -3,7 +3,7 @@
 // by running the real engines on a synthetic student from data/cohort.json.
 import type { ClashLabel, Weekday } from '@modulematch/shared';
 import { AnimatePresence, motion } from 'motion/react';
-import { useState, type ReactNode } from 'react';
+import { useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import { buttonClass } from '../../components/Button.tsx';
 import { ClashMarker } from '../../components/ClashMarker.tsx';
@@ -31,6 +31,23 @@ const NAME = EXAMPLE_STUDENT.name;
 
 export function DemoScreen() {
   const [tab, setTab] = useState<TabId>('profile');
+  const tabRefs = useRef(new Map<TabId, HTMLButtonElement>());
+
+  // Tabs pattern: arrow keys and Home/End move between tabs and select them; only the selected tab is in the Tab order.
+  const onTabKey = (event: KeyboardEvent<HTMLButtonElement>) => {
+    const i = TABS.findIndex((t) => t.id === tab);
+    const next =
+      event.key === 'ArrowRight' ? (i + 1) % TABS.length
+      : event.key === 'ArrowLeft' ? (i - 1 + TABS.length) % TABS.length
+      : event.key === 'Home' ? 0
+      : event.key === 'End' ? TABS.length - 1
+      : -1;
+    if (next < 0) return;
+    event.preventDefault();
+    const id = TABS[next]!.id;
+    setTab(id);
+    tabRefs.current.get(id)?.focus();
+  };
 
   return (
     <div className="mx-auto grid max-w-6xl gap-10 py-6 sm:py-10">
@@ -62,6 +79,12 @@ export function DemoScreen() {
               id={`demo-tab-${t.id}`}
               aria-selected={active}
               aria-controls="demo-panel"
+              tabIndex={active ? 0 : -1}
+              ref={(el) => {
+                if (el) tabRefs.current.set(t.id, el);
+                else tabRefs.current.delete(t.id);
+              }}
+              onKeyDown={onTabKey}
               onClick={() => setTab(t.id)}
               className={cx(
                 'relative flex h-12 shrink-0 items-center gap-2 rounded-full px-5 text-sm font-semibold transition-colors',
@@ -83,7 +106,7 @@ export function DemoScreen() {
         })}
       </div>
 
-      <div id="demo-panel" role="tabpanel" aria-labelledby={`demo-tab-${tab}`}>
+      <div id="demo-panel" role="tabpanel" tabIndex={0} aria-labelledby={`demo-tab-${tab}`}>
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={tab}
