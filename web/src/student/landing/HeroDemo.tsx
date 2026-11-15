@@ -129,7 +129,7 @@ export function HeroDemo({ className }: { className?: string }) {
               </ul>
               {/* ReasonRow shows its "Your words" chip from sm up (phones open the row instead, which this picture
                   cannot do), so phones get the link to the student's words on its own line. */}
-              <span className="inline-flex max-w-full min-w-0 items-center gap-1 justify-self-start rounded-full bg-surface-2 px-2 py-0.5 text-[11px] font-medium text-muted sm:hidden">
+              <span className="inline-flex max-w-full min-w-0 items-center gap-1 justify-self-start rounded-full bg-surface-2 px-2 py-0.5 text-2xs font-medium text-muted sm:hidden">
                 <Icon name="chat" size={11} className="shrink-0" />
                 <span className="truncate">Your words: “{QUOTE}”</span>
               </span>
@@ -178,7 +178,7 @@ function MiniWeek({ swapped, reduce }: { swapped: boolean; reduce: boolean }) {
     <div className="relative grid h-20 grid-cols-5 gap-1 text-center">
       {DAYS.map((day) => (
         <div key={day} className="rounded-lg bg-surface-2/60">
-          <span className="block pt-1 text-[10px] font-medium text-muted">{day}</span>
+          <span className="block pt-1 text-2xs font-medium text-muted">{day}</span>
         </div>
       ))}
       {/* Embedded C stays on Tuesday 14:00. */}
@@ -220,7 +220,7 @@ function Block({ row, className, style, children }: { row: 'top' | 'low'; classN
   return (
     <span
       className={cx(
-        'absolute h-6 truncate rounded-md border-l-[3px] px-1 text-left text-[10px] leading-6 font-semibold',
+        'absolute h-6 truncate rounded-md border-l-[3px] px-1 text-left text-2xs leading-6 font-semibold',
         row === 'top' ? 'top-6' : 'top-[2.25rem]',
         className,
       )}
