@@ -64,7 +64,7 @@ export function DemoScreen() {
               aria-controls="demo-panel"
               onClick={() => setTab(t.id)}
               className={cx(
-                'relative flex h-12 shrink-0 items-center gap-2 rounded-full px-5 text-[15px] font-semibold transition-colors',
+                'relative flex h-12 shrink-0 items-center gap-2 rounded-full px-5 text-sm font-semibold transition-colors',
                 active ? 'text-on-brand' : 'bg-surface text-muted ring-1 ring-line hover:text-ink',
               )}
             >
@@ -113,7 +113,7 @@ function Explained({ children, note }: { children: ReactNode; note: { title: str
           <Icon name="info" size={16} />
           {note.title}
         </p>
-        <ul className="mt-3 grid gap-3 text-[15px]">
+        <ul className="mt-3 grid gap-3 text-sm">
           {note.points.map((point) => (
             <li key={point} className="flex gap-2.5">
               <span aria-hidden="true" className="mt-2.5 size-1.5 shrink-0 rounded-full bg-brand" />
@@ -160,7 +160,7 @@ function ProfileTab() {
           <ul className="mt-4 grid gap-4">
             {interests.map(([topic, value]) => (
               <li key={topic}>
-                <div className="mb-1.5 flex justify-between text-[15px] font-medium">
+                <div className="mb-1.5 flex justify-between text-sm font-medium">
                   {topicLabel(topic)}
                   <span className="text-muted">{Math.round(value * 100)}%</span>
                 </div>
@@ -174,7 +174,7 @@ function ProfileTab() {
           <ul className="mt-4 grid gap-4">
             {style.map((s) => (
               <li key={s.label}>
-                <div className="mb-1.5 flex justify-between text-[15px] font-medium">
+                <div className="mb-1.5 flex justify-between text-sm font-medium">
                   {s.label}
                   <span className="text-muted">{Math.round(s.value * 100)}%</span>
                 </div>
@@ -183,7 +183,7 @@ function ProfileTab() {
             ))}
           </ul>
           {snapshot.student.pathway && (
-            <p className="mt-6 inline-flex items-center gap-2 rounded-full bg-surface-2 px-4 py-2 text-[15px] font-medium">
+            <p className="mt-6 inline-flex items-center gap-2 rounded-full bg-surface-2 px-4 py-2 text-sm font-medium">
               <Icon name="compass" size={16} className="text-brand" />
               Heading towards: {snapshot.student.pathway.title}
             </p>
@@ -222,7 +222,7 @@ function ModulesTab() {
                 <span className="w-6 text-center text-sm font-bold text-muted">{i + 1}</span>
                 <FitScore value={m.fit} variant="compact" className="text-base" />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[16px] font-semibold">{m.title}</span>
+                  <span className="block truncate text-base font-semibold">{m.title}</span>
                   <span className="text-sm text-muted">
                     {m.code} · {m.ects} ECTS
                   </span>
@@ -311,7 +311,7 @@ function WeekTab() {
         ))}
         <div className="relative" style={{ height: (DAY_END - DAY_START) * HOUR_PX }}>
           {Array.from({ length: DAY_END - DAY_START }, (_, i) => (
-            <span key={i} className="absolute right-1 text-[11px] text-muted" style={{ top: i * HOUR_PX - 6 }}>
+            <span key={i} className="absolute right-1 text-xs text-muted" style={{ top: i * HOUR_PX - 6 }}>
               {DAY_START + i}:00
             </span>
           ))}
@@ -325,7 +325,7 @@ function WeekTab() {
                   <div
                     key={`${s.moduleId}-${s.start}`}
                     className={cx(
-                      'absolute overflow-hidden rounded-lg p-1.5 text-[11px] leading-tight font-semibold text-white',
+                      'absolute overflow-hidden rounded-lg p-1.5 text-xs leading-tight font-semibold text-white',
                       colour.get(s.moduleId),
                       columns > 1 && 'ring-2 ring-clash-certain ring-offset-1 ring-offset-surface-2',
                     )}
@@ -365,7 +365,7 @@ function SocietiesTab() {
         {snapshot.societies.map((s) => (
           <li key={s.id} className="flex flex-col gap-3 rounded-2xl bg-surface-2 p-5">
             <div className="flex items-start justify-between gap-3">
-              <p className="text-[16px] font-semibold">{s.name}</p>
+              <p className="text-base font-semibold">{s.name}</p>
               <FitScore value={s.fit} variant="compact" />
             </div>
             <p className="text-sm text-muted">{s.reason}</p>
