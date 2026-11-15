@@ -89,10 +89,13 @@ function ExamIntro({ status, children }: { status?: ExamStatus; children: ReactN
  */
 const unsavedDrafts = new Map<string, ExamDraft>();
 
-// A reload or closed tab would lose those drafts too, so the browser asks first while any remain, including
-// drafts for modules whose editor is not on screen.
+/** What the examiner typed on the start screen before drafting, by module, kept the same way. */
+const startInputs = new Map<string, { examLabel: string; notes: string }>();
+
+// A reload or closed tab would lose these too, so the browser asks first while any remain, including those for
+// modules whose editor is not on screen.
 window.addEventListener('beforeunload', (e) => {
-  if (unsavedDrafts.size > 0) e.preventDefault();
+  if (unsavedDrafts.size > 0 || startInputs.size > 0) e.preventDefault();
 });
 
 type Busy = 'idle' | 'saving' | 'publishing';
@@ -152,8 +155,11 @@ function ExamFormWorkspace({ moduleId, initial }: { moduleId: string; initial: E
     return (
       <ExamIntro status={status}>
         <StartPanel
+          key={moduleId}
+          moduleId={moduleId}
           module={module}
           onManual={(examLabel) => {
+            startInputs.delete(moduleId);
             const next = blankDraft(examLabel);
             setDraft(next);
             setPendingFocus({ field: fieldId(next.questions[0]!.key, 'label') });
@@ -161,6 +167,7 @@ function ExamFormWorkspace({ moduleId, initial }: { moduleId: string; initial: E
           onDraft={async (body) => {
             try {
               const form = await api.staff.draftExamForm(moduleId, body);
+              startInputs.delete(moduleId);
               setSaved(form);
               setDraft(draftFromForm(form));
               setFocusBanner(true);
@@ -168,6 +175,7 @@ function ExamFormWorkspace({ moduleId, initial }: { moduleId: string; initial: E
               // The examiner's own save wins over a late AI draft: load what they saved instead.
               const current = isConflict(e) ? await api.staff.examForm(moduleId) : null;
               if (!current) throw e;
+              startInputs.delete(moduleId);
               setSaved(current);
               setDraft(draftFromForm(current));
               setNotice({
@@ -540,17 +548,25 @@ function StatusLine({
 
 /** Shown before a form exists: name the exam, then draft it from marking notes or fill it in by hand. */
 function StartPanel({
+  moduleId,
   module,
   onManual,
   onDraft,
 }: {
+  moduleId: string;
   module: Module | undefined;
   onManual: (examLabel: string) => void;
   onDraft: (body: { examLabel: string; notes: string }) => Promise<void>;
 }) {
   const notesId = useId();
-  const [examLabel, setExamLabel] = useState('');
-  const [notes, setNotes] = useState('');
+  const [examLabel, setExamLabel] = useState(() => startInputs.get(moduleId)?.examLabel ?? '');
+  const [notes, setNotes] = useState(() => startInputs.get(moduleId)?.notes ?? '');
+
+  // Kept by module, so pasted notes survive switching tab or module before drafting.
+  useEffect(() => {
+    if (examLabel.trim() || notes.trim()) startInputs.set(moduleId, { examLabel, notes });
+    else startInputs.delete(moduleId);
+  }, [moduleId, examLabel, notes]);
   const [labelMissing, setLabelMissing] = useState(false);
   const [drafting, setDrafting] = useState(false);
   const [error, setError] = useState<string | null>(null);
