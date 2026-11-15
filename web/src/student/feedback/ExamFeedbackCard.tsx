@@ -14,6 +14,9 @@ import { formatMarks, lostMarksRows, questionLabel, readChecked, revisionKey, to
 
 const EASE = [0.2, 0.8, 0.2, 1] as const;
 
+/** "This affects" shows this many modules at first, so a long list does not crowd the card. */
+const AFFECTS_SHOWN = 3;
+
 interface ExamFeedbackCardProps {
   feedback: TailoredFeedback;
   /** The student's own result for this module, for question maximums on the bars. */
@@ -232,13 +235,17 @@ function RevisionPlan({ feedback, sessionId }: { feedback: TailoredFeedback; ses
 
 function AffectsModules({ feedback }: { feedback: TailoredFeedback }) {
   const id = useId();
+  const listId = useId();
   const { moduleById } = useReferenceData();
-  if (feedback.affectsModules.length === 0) return null;
+  const [all, setAll] = useState(false);
+  const list = feedback.affectsModules;
+  if (list.length === 0) return null;
+  const hidden = list.length - AFFECTS_SHOWN;
   return (
     <section aria-labelledby={id} className="grid gap-3">
       <SectionTitle id={id}>This affects</SectionTitle>
-      <ul className="grid gap-2">
-        {feedback.affectsModules.map((m) => {
+      <ul id={listId} className="grid gap-2">
+        {(all ? list : list.slice(0, AFFECTS_SHOWN)).map((m) => {
           const module = moduleById.get(m.moduleId);
           return (
             <li key={m.moduleId}>
@@ -258,6 +265,17 @@ function AffectsModules({ feedback }: { feedback: TailoredFeedback }) {
           );
         })}
       </ul>
+      {hidden > 0 && (
+        <button
+          type="button"
+          aria-expanded={all}
+          aria-controls={listId}
+          onClick={() => setAll((v) => !v)}
+          className="justify-self-start rounded-lg text-[13px] font-medium text-brand hover:underline"
+        >
+          {all ? 'Show fewer' : `Show ${hidden} more`}
+        </button>
+      )}
     </section>
   );
 }

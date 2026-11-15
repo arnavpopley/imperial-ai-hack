@@ -75,20 +75,43 @@ export interface UploadProblem {
   pasteInstead: boolean;
 }
 
+/**
+ * The server's own words from an error body such as `{"error": "..."}`. The results routes write these for students
+ * (paste instead, an impossible mark, nothing found), so they are shown as they are.
+ */
+export function serverMessage(message: string): string | null {
+  const body = message.replace(/^\d{3}\s*/, '');
+  try {
+    const parsed: unknown = JSON.parse(body);
+    if (typeof parsed === 'object' && parsed !== null && 'error' in parsed && typeof parsed.error === 'string') {
+      const text = parsed.error.trim();
+      if (text) return text.charAt(0).toUpperCase() + text.slice(1);
+    }
+  } catch {
+    // Not JSON: fall back to our own wording.
+  }
+  return null;
+}
+
 /** The API client throws `Error("<status> <body>")`; map it to something kind and actionable. */
 export function uploadProblem(error: unknown, sentFile: boolean): UploadProblem {
   const message = error instanceof Error ? error.message : '';
   const status = Number.parseInt(message, 10);
+  const fromServer = serverMessage(message);
+  // 422: offline file reading, an unreadable file, an impossible mark or no marks found. 410: withdrawn mid-upload.
   if (status === 422 && sentFile)
     return {
-      message: "We couldn't read that file just now. Copy the text from your transcript and paste it here instead.",
+      message: fromServer ?? "We couldn't read that file just now. Copy the text from your transcript and paste it here instead.",
       pasteInstead: true,
     };
   if (status === 422)
     return {
-      message: 'We could not find any module marks in that text. Each line needs a module code and a mark, like "MECH50010 Fluid Mechanics 2 62".',
+      message:
+        fromServer ??
+        'We could not find any module marks in that text. Each line needs a module code and a mark, like "MECH50010 Fluid Mechanics 2 62".',
       pasteInstead: false,
     };
+  if (status === 410) return { message: fromServer ?? 'Your results were deleted while this upload was read, so it was not kept.', pasteInstead: false };
   if (status === 413) return { message: 'That file is too large to send. Try a smaller photo or paste the text.', pasteInstead: true };
   if (status === 400) return { message: 'That upload was not quite right. Tick the consent box and add a file or some text.', pasteInstead: false };
   if (status === 404) return { message: 'Results upload is not switched on yet. You can skip this step for now.', pasteInstead: false };

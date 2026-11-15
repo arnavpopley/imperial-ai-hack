@@ -32,6 +32,10 @@ describe('results upload files', () => {
     expect(uploadProblem(new Error('422 unreadable'), true).pasteInstead).toBe(true);
     expect(uploadProblem(new Error('422 no marks'), false).pasteInstead).toBe(false);
     expect(uploadProblem(new Error('500 boom'), true).message).not.toContain('500');
+    // The server's own message is shown when it sends one, for example an impossible question mark.
+    const impossible = uploadProblem(new Error('422 {"error":"MECH50010 Q3 is 26/20, above its maximum. Please check and upload again."}'), false);
+    expect(impossible).toEqual({ message: 'MECH50010 Q3 is 26/20, above its maximum. Please check and upload again.', pasteInstead: false });
+    expect(uploadProblem(new Error('422 {"error":"Please paste the text instead."}'), true)).toEqual({ message: 'Please paste the text instead.', pasteInstead: true });
     expect(errorStatus('404 not found')).toBe(404);
     expect(errorStatus('network down')).toBeNull();
   });
