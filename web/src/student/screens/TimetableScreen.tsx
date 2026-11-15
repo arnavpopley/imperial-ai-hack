@@ -15,7 +15,7 @@ import { SegmentedControl } from '../../components/SegmentedControl.tsx';
 import { EmptyState, ErrorState, Skeleton } from '../../components/StateViews.tsx';
 import { useAsync } from '../hooks/useAsync.ts';
 import { useShortlist } from '../hooks/useShortlist.ts';
-import { TERM_LABELS } from '../labels.ts';
+import { DAY_LABELS, keepFreeLabel, TERM_LABELS } from '../labels.ts';
 import { PhotoBanner } from '../catalogue/PhotoBanner.tsx';
 import { paths } from '../routes.ts';
 import { useAdvisor } from '../shell/StudentShell.tsx';
@@ -29,9 +29,12 @@ export function TimetableScreen() {
   const { session } = useReadySession();
   const sessionId = session.id;
   const shortlistKey = session.shortlist.join(',');
-  // A Senior Tutor decision can change which swaps and rule violations apply, so it refetches the view too.
+  // A Senior Tutor decision can change which swaps and rule violations apply, and kept-free time comes from the
+  // profile, so either one refetches the view too.
   const decisions = decisionsKey(session);
-  const timetable = useAsync(() => api.timetable(sessionId), [sessionId, shortlistKey, decisions]);
+  const timetable = useAsync(() => api.timetable(sessionId), [sessionId, shortlistKey, decisions, session.profile.updatedAt]);
+  // Core modules are in the plan from the start, so the week shows even before any elective is shortlisted.
+  const nothingToShow = session.shortlist.length === 0 && timetable.data?.coreModuleIds.length === 0;
 
   return (
     <div className="grid grid-cols-1 gap-6">
@@ -44,7 +47,7 @@ export function TimetableScreen() {
       />
       <ProvisionalNotice />
 
-      {session.shortlist.length === 0 ? (
+      {nothingToShow ? (
         <EmptyState
           icon="calendar"
           title="Shortlist a few modules to see your week"
@@ -85,11 +88,13 @@ function TimetableBody({ view, onChanged, refreshing }: { view: TimetableView; o
   const term = chosen && terms.includes(chosen) ? chosen : defaultTerm;
   const grid = view.grids.find((g) => g.term === term);
 
-  const allModuleIds = [...session.shortlist, ...view.grids.flatMap((g) => g.slots.map((s) => s.moduleId))];
+  const coreIds = new Set(view.coreModuleIds);
+  const picked = session.shortlist.filter((id) => !coreIds.has(id));
+  // Core modules are grey, so the module colours go to the student's own choices.
+  const allModuleIds = [...picked, ...view.grids.flatMap((g) => g.slots.map((s) => s.moduleId)).filter((id) => !coreIds.has(id))];
   const colourFor = moduleColours(allModuleIds);
   const titleFor = (id: string) => moduleById.get(id)?.title ?? id;
   const codeFor = (id: string) => moduleById.get(id)?.code ?? id;
-  const ects = session.shortlist.reduce((sum, id) => sum + (moduleById.get(id)?.ects ?? 0), 0);
 
   const swap = async (s: SwapSuggestion) => {
     await shortlist.swap(s.replaceModuleId, s.withModuleId);
@@ -131,6 +136,9 @@ function TimetableBody({ view, onChanged, refreshing }: { view: TimetableView; o
             colourFor={colourFor}
             codeFor={codeFor}
             titleFor={titleFor}
+            coreIds={coreIds}
+            keepFree={view.keepFree}
+            keepFreeConflicts={view.keepFreeConflicts}
           />
         ) : (
           <EmptyState icon="calendar" title={`Nothing scheduled${term ? ` in ${TERM_LABELS[term].toLowerCase()}` : ''}`}>
@@ -169,6 +177,7 @@ function TimetableBody({ view, onChanged, refreshing }: { view: TimetableView; o
                   clash={clash}
                   swaps={view.swaps.filter((s) => s.replaceModuleId === clash.moduleA || s.replaceModuleId === clash.moduleB)}
                   titleFor={titleFor}
+                  coreIds={coreIds}
                   onSwap={swap}
                   onAsk={openAdvisor}
                   onEscalate={escalate}
@@ -178,17 +187,28 @@ function TimetableBody({ view, onChanged, refreshing }: { view: TimetableView; o
           </ul>
         </section>
 
+        <KeepFreePanel view={view} titleFor={titleFor} />
+
         <RulesPanel view={view} />
 
         <section aria-labelledby="shortlist-heading" className="rounded-card border border-line bg-surface p-4 shadow-soft">
           <div className="mb-2 flex items-baseline justify-between">
             <h2 id="shortlist-heading" className="text-sm font-semibold">
-              Shortlist
+              Your plan
             </h2>
-            <span className="text-[12px] text-muted tabular-nums">{ects} ECTS</span>
           </div>
-          <ul className="grid grid-cols-[minmax(0,1fr)] gap-1">
-            {session.shortlist.map((id) => (
+          <EctsBar ects={view.ects} />
+          <ul className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-1">
+            {view.coreModuleIds.map((id) => (
+              <li key={id} className="flex items-center gap-2.5 rounded-lg py-1 text-[13px]">
+                <Icon name="lock" size={12} className="shrink-0 text-muted" />
+                <Link to={paths.module(id)} className="min-w-0 flex-1 truncate font-medium hover:text-brand">
+                  {titleFor(id)}
+                </Link>
+                <span className="rounded-md bg-ink/6 px-1.5 py-0.5 text-[11px] font-semibold text-muted">Core</span>
+              </li>
+            ))}
+            {picked.map((id) => (
               <li key={id} className="flex items-center gap-2.5 rounded-lg py-1 text-[13px]">
                 <span className={cx('size-2.5 shrink-0 rounded-full', colourFor(id).dot)} aria-hidden="true" />
                 <Link to={paths.module(id)} className="min-w-0 flex-1 truncate font-medium hover:text-brand">
@@ -205,6 +225,12 @@ function TimetableBody({ view, onChanged, refreshing }: { view: TimetableView; o
               </li>
             ))}
           </ul>
+          {picked.length === 0 && (
+            <Link to={paths.catalogue} className={cx(buttonClass('secondary', 'sm'), 'mt-3 w-full')}>
+              <Icon name="plus" size={14} />
+              Add electives
+            </Link>
+          )}
           {shortlist.error && (
             <p role="alert" className="mt-2 text-[13px] text-fit-low">
               {shortlist.error}
@@ -238,18 +264,97 @@ function ProvisionalNotice() {
   );
 }
 
+/** The plan's ECTS against the programme cap, as one stacked bar: core, electives, I-Explore. */
+function EctsBar({ ects }: { ects: TimetableView['ects'] }) {
+  const total = ects.core + ects.elective + ects.iExplore;
+  const scale = Math.max(ects.max, total) || 1;
+  const parts = [
+    { key: 'core', label: 'core', value: ects.core, className: 'bg-ink/45' },
+    { key: 'elective', label: 'electives', value: ects.elective, className: 'bg-brand' },
+    { key: 'iExplore', label: 'I-Explore', value: ects.iExplore, className: 'bg-mode-plan' },
+  ];
+  return (
+    <div>
+      <p className="flex items-baseline justify-between text-[12px]">
+        <span className="font-semibold tabular-nums">
+          {total} <span className="font-normal text-muted">of {ects.max} ECTS</span>
+        </span>
+        <span className={cx('tabular-nums', total > ects.max ? 'text-fit-low' : 'text-muted')}>
+          {total > ects.max ? `${total - ects.max} over` : total === ects.max ? 'Full' : `${ects.max - total} to go`}
+        </span>
+      </p>
+      <div
+        className="mt-1.5 flex h-2 overflow-hidden rounded-full bg-surface-2"
+        role="img"
+        aria-label={`${total} of ${ects.max} ECTS: ${parts.map((p) => `${p.value} ${p.label}`).join(', ')}`}
+      >
+        {parts.map((p) => (
+          <span key={p.key} className={p.className} style={{ width: `${(p.value / scale) * 100}%` }} />
+        ))}
+      </div>
+      <ul className="mt-1.5 flex flex-wrap gap-x-3 text-[11px] text-muted tabular-nums" aria-hidden="true">
+        {parts.map((p) => (
+          <li key={p.key} className="flex items-center gap-1">
+            <span className={cx('size-2 rounded-full', p.className)} />
+            {p.value} {p.label}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/** Interview question 8: shortlisted sessions in time the student asked to keep free. A soft conflict, never a block. */
+function KeepFreePanel({ view, titleFor }: { view: TimetableView; titleFor: (id: string) => string }) {
+  if (view.keepFree.length === 0) return null;
+  const conflicts = view.keepFreeConflicts;
+  const shown = conflicts.slice(0, 4);
+  return (
+    <section aria-labelledby="keep-free-heading" className="rounded-card border border-mode-explain/30 bg-mode-explain/[0.05] p-4">
+      <h2 id="keep-free-heading" className="flex items-center gap-2 text-sm font-semibold">
+        <Icon name="moon" size={15} className="text-mode-explain" />
+        {conflicts.length === 0
+          ? 'Your kept-free time stays free'
+          : `${conflicts.length} session${conflicts.length > 1 ? 's' : ''} in kept-free time`}
+      </h2>
+      {shown.length > 0 && (
+        <ul className="mt-2 grid gap-1.5">
+          {shown.map(({ slot, window }) => (
+            <li key={`${slot.moduleId}|${slot.sessionKey}|${slot.day}|${slot.start}`} className="text-[13px] leading-snug">
+              <span className="font-semibold tabular-nums">
+                {DAY_LABELS[slot.day]} {slot.start}
+              </span>{' '}
+              <span className="text-muted">· {TERM_LABELS[slot.term]}</span> {titleFor(slot.moduleId)}
+              <span className="block text-[12px] text-muted">{keepFreeLabel(window)}: you asked to keep this free</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {conflicts.length > shown.length && (
+        <p className="mt-1.5 text-[12px] text-muted">and {conflicts.length - shown.length} more</p>
+      )}
+    </section>
+  );
+}
+
 function Legend() {
   return (
     <ul className="flex flex-wrap items-center gap-x-3 gap-y-2 text-[11px] text-muted" aria-label="Legend">
       <li className="flex items-center gap-1.5">
         <span className="h-3.5 w-6 rounded border border-dashed border-ink/50 bg-surface-2" aria-hidden="true" />
-        Dashed: provisional slot
+        Provisional
       </li>
       <li className="flex items-center gap-1.5">
-        <span className="rounded-full border border-dashed border-ink/50 px-1.5 text-[10px] font-semibold text-ink" aria-hidden="true">
-          80%
+        <span className="grid h-3.5 w-6 place-items-center rounded border-l-[3px] border-ink/45 bg-ink/[0.07]" aria-hidden="true">
+          <Icon name="lock" size={9} />
         </span>
-        Chance it runs at that time, from past years
+        Core
+      </li>
+      <li className="flex items-center gap-1.5">
+        <span className="grid h-3.5 w-6 place-items-center rounded bg-mode-explain/15 text-mode-explain" aria-hidden="true">
+          <Icon name="moon" size={9} />
+        </span>
+        Kept free
       </li>
       <li>
         <ClashMarker variant="certain" />

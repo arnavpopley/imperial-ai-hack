@@ -1,11 +1,11 @@
 // Lets the student correct anything the interviewer heard (spec 20.3: see, edit and delete).
-import { TOPIC_IDS, type ProfileEditBody, type Style, type StudentProfile, type Weekday } from '@modulematch/shared';
+import { TOPIC_IDS, type HalfDay, type ProfileEditBody, type Style, type StudentProfile, type Weekday } from '@modulematch/shared';
 import { useId, useState, type FormEvent } from 'react';
 import { Button } from '../../components/Button.tsx';
 import { cx } from '../../components/cx.ts';
 import { Icon } from '../../components/Icon.tsx';
 import { RangeSlider } from '../../components/RangeSlider.tsx';
-import { DAY_NAMES, percent, STYLE_KEYS, STYLE_META, styleValueText, topicLabel, WEEKDAYS } from '../labels.ts';
+import { DAY_LABELS, DAY_NAMES, halfDayLabel, percent, STYLE_KEYS, STYLE_META, styleValueText, topicLabel, WEEKDAYS } from '../labels.ts';
 
 const START_TIMES = ['09:00', '10:00', '11:00', '12:00'] as const;
 
@@ -23,6 +23,7 @@ export function ProfileEditor({ profile, onSave, onCancel, saving, error }: Prof
   const [breadth, setBreadth] = useState<number | null>(profile.breadthAppetite);
   const [avoidDays, setAvoidDays] = useState<Weekday[]>(profile.timetablePrefs.avoidDays);
   const [earliestStart, setEarliestStart] = useState<string | null>(profile.timetablePrefs.earliestStart);
+  const [avoidHalfDays, setAvoidHalfDays] = useState<HalfDay[]>(profile.timetablePrefs.avoidHalfDays ?? []);
   const [newTopic, setNewTopic] = useState('');
   const addTopicId = useId();
   const startId = useId();
@@ -35,7 +36,12 @@ export function ProfileEditor({ profile, onSave, onCancel, saving, error }: Prof
       interests,
       style,
       breadthAppetite: breadth,
-      timetablePrefs: { avoidDays, earliestStart },
+      // A whole day kept free already covers its half days.
+      timetablePrefs: {
+        avoidDays,
+        earliestStart,
+        avoidHalfDays: avoidHalfDays.filter((h) => !avoidDays.some((d) => h.startsWith(d))),
+      },
     });
   };
 
@@ -157,6 +163,44 @@ export function ProfileEditor({ profile, onSave, onCancel, saving, error }: Prof
               </label>
             );
           })}
+        </div>
+        <p className="mt-4 mb-2 text-[13px] font-medium" id={`${startId}-halves`}>
+          Half days to keep free
+        </p>
+        <div className="grid grid-cols-5 gap-1.5" role="group" aria-labelledby={`${startId}-halves`}>
+          {WEEKDAYS.map((day) => (
+            <div key={day} className="grid gap-1">
+              {(['am', 'pm'] as const).map((part) => {
+                const half: HalfDay = `${day}-${part}`;
+                const whole = avoidDays.includes(day);
+                const on = whole || avoidHalfDays.includes(half);
+                return (
+                  <label
+                    key={half}
+                    className={cx(
+                      'rounded-lg py-1 text-center text-[12px] font-medium ring-1 transition ring-inset has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand',
+                      whole ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
+                      on ? 'bg-brand/15 text-brand ring-brand/40' : 'bg-surface text-muted ring-line-strong hover:bg-surface-2',
+                    )}
+                  >
+                    <input
+                      type="checkbox"
+                      className="sr-only"
+                      checked={on}
+                      disabled={whole}
+                      aria-label={halfDayLabel(half)}
+                      onChange={() =>
+                        setAvoidHalfDays((current) => (on ? current.filter((h) => h !== half) : [...current, half]))
+                      }
+                    />
+                    <span aria-hidden="true">
+                      {DAY_LABELS[day]} {part.toUpperCase()}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          ))}
         </div>
         <label htmlFor={startId} className="mt-4 block text-[13px] font-medium">
           Earliest start

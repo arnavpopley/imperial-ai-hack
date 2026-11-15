@@ -15,6 +15,10 @@ export const SkillId = z.string().refine((k) => Object.hasOwn(taxonomy.skills, k
 export const PathwayId = z.string().min(1);
 export const Term = z.enum(['autumn', 'spring', 'summer']);
 export const Weekday = z.enum(['mon', 'tue', 'wed', 'thu', 'fri']);
+/** Half a weekday to keep free: `wed-pm` is Wednesday afternoon (from 12:00), `mon-am` Monday morning (before 12:00). */
+export const HalfDay = z.enum([
+  'mon-am', 'mon-pm', 'tue-am', 'tue-pm', 'wed-am', 'wed-pm', 'thu-am', 'thu-pm', 'fri-am', 'fri-pm',
+]);
 export const Mode = z.enum(['ONBOARD', 'INTERVIEW', 'RECOMMEND', 'EXPLAIN', 'PLAN', 'ESCALATED']);
 export const YearOfStudy = z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]);
 
@@ -45,14 +49,20 @@ export const StudentProfile = z.object({
   pathwaysSkipped: z.boolean(),
   style: Style,
   breadthAppetite: Fraction.nullable(),
-  timetablePrefs: z.object({ avoidDays: z.array(Weekday), earliestStart: HHMM.nullable() }),
+  timetablePrefs: z.object({
+    avoidDays: z.array(Weekday),
+    earliestStart: HHMM.nullable(),
+    /** Part-day keep-free answers ("Wednesday afternoons"); absent on profiles saved before part days existed. */
+    avoidHalfDays: z.array(HalfDay).optional(),
+  }),
   completeness: Fraction,
   updatedAt: IsoDate,
 });
 
 /**
  * A profile slot name the Profile Extractor may write (spec 10.3): `interest:<topicId>`, `style.<dimension>`,
- * `breadthAppetite`, `pathways`, `pathwaysSkipped`, `timetablePrefs.avoidDays` or `timetablePrefs.earliestStart`.
+ * `breadthAppetite`, `pathways`, `pathwaysSkipped`, `timetablePrefs.avoidDays`, `timetablePrefs.avoidHalfDays` or
+ * `timetablePrefs.earliestStart`.
  */
 export const SlotName = z.string().refine((slot) => slotValueSchema(slot) !== null, 'slot is not whitelisted');
 
@@ -72,6 +82,8 @@ export function slotValueSchema(slot: string): z.ZodType | null {
       return z.boolean();
     case 'timetablePrefs.avoidDays':
       return z.array(Weekday);
+    case 'timetablePrefs.avoidHalfDays':
+      return z.array(HalfDay);
     case 'timetablePrefs.earliestStart':
       return HHMM;
     default:
@@ -328,14 +340,34 @@ export const SwapSuggestion = z.object({
   withModuleId: z.string(),
   fit: z.number().int().min(0).max(100),
   fitDelta: z.number().int(),
+  /** Sessions of the alternative that fall in time the student asked to keep free (a soft constraint). */
+  keepFreeConflicts: z.number().int().min(0),
 });
 
 export const TermGrid = z.object({ term: Term, slots: z.array(Slot) });
 
+/** A stretch of the week the student asked to keep free: a whole day, half a day, or before their earliest start. */
+export const KeepFreeWindow = z.object({
+  day: Weekday,
+  from: HHMM,
+  to: HHMM,
+  reason: z.enum(['day', 'half-day', 'early']),
+});
+
+/** A shortlisted session in kept-free time: a soft conflict, shown but never blocking. */
+export const KeepFreeConflict = z.object({ moduleId: z.string(), slot: Slot, window: KeepFreeWindow });
+
 export const TimetableView = z.object({
+  /** Shortlisted modules plus the compulsory core modules for the student's year, which are locked. */
   grids: z.array(TermGrid),
+  /** The core modules drawn on the grids and counted in clash detection. */
+  coreModuleIds: z.array(z.string()),
   clashes: z.array(Clash),
   swaps: z.array(SwapSuggestion),
+  keepFree: z.array(KeepFreeWindow),
+  keepFreeConflicts: z.array(KeepFreeConflict),
+  /** ECTS in the plan: core modules, chosen electives and I-Explore, against the programme cap. */
+  ects: z.object({ core: z.number().min(0), elective: z.number().min(0), iExplore: z.number().min(0), max: z.number().min(0) }),
   rules: RulesResult,
 });
 
@@ -359,7 +391,8 @@ export const PathwayProgress = z.object({
   pathwayId: PathwayId,
   progress: Fraction,
   perSkill: z.array(z.object({ skill: SkillId, importance: Fraction, covered: Fraction })),
-  nextBest: z.object({ moduleId: z.string(), gain: Fraction }).nullable(),
+  /** The most pathway-relevant eligible module still to choose, its progress gain and the skill it adds most to. */
+  nextBest: z.object({ moduleId: z.string(), gain: Fraction, skill: SkillId }).nullable(),
 });
 
 export const Society = z.object({
@@ -504,7 +537,7 @@ export const ProfileEditBody = z.object({
   style: Style.partial().optional(),
   breadthAppetite: Fraction.nullable().optional(),
   timetablePrefs: z
-    .object({ avoidDays: z.array(Weekday), earliestStart: HHMM.nullable() })
+    .object({ avoidDays: z.array(Weekday), earliestStart: HHMM.nullable(), avoidHalfDays: z.array(HalfDay) })
     .partial()
     .optional(),
   /** Confirms the "Here is what I heard" card and leaves the interview. */
@@ -556,6 +589,8 @@ export const RecommendationsResponse = z.object({
    */
   ranking: z.enum(['fit', 'starter']),
   recommendations: z.array(Recommendation),
+  /** This year's compulsory core modules, already in the student's plan (spec 9.2), so never offered as additions. */
+  coreModuleIds: z.array(z.string()),
 });
 
 export const ExplanationResponse = z.object({

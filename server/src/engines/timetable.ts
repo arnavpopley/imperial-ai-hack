@@ -1,9 +1,12 @@
-// Spec 9.2: timetable engine. Term grids, clash probabilities, swap suggestions and staff clash priorities.
+// Spec 9.2: timetable engine. Term grids, clash probabilities, swap suggestions, kept-free time and staff clash
+// priorities. The student's plan is the shortlist plus the compulsory core modules for their year.
 import { LIKELY_CLASH_THRESHOLD, schemas, SWAP_FIT_TOLERANCE } from '@modulematch/shared';
 import type {
   Clash,
   ClashLabel,
   ClashPriority,
+  KeepFreeConflict,
+  KeepFreeWindow,
   Module,
   ProgrammeRules,
   Recommendation,
@@ -13,6 +16,7 @@ import type {
   StudentProfile,
   SwapSuggestion,
   TermGrid,
+  TimetableView,
 } from '@modulematch/shared';
 import { clamp01, compareIds, groupBy, pairs, TERMS, unique } from './util.ts';
 
@@ -43,9 +47,18 @@ const bySlotTime = (a: Slot, b: Slot): number =>
 
 const slotsByModule = (slots: readonly Slot[]): Map<string, Slot[]> => groupBy(slots, (slot) => slot.moduleId);
 
-/** Spec 9.2: one grid per term that has shortlisted slots, in autumn, spring, summer order. */
-export function buildTimetable(shortlist: readonly string[], slots: readonly Slot[]): TermGrid[] {
-  const chosen = new Set(shortlist);
+/**
+ * The core modules in this year's plan: the programme's compulsory modules the student has not completed.
+ * They are on every timetable and count in clash detection, but are never swapped (spec 9.2).
+ */
+export function coreInPlan(rules: ProgrammeRules, profile: StudentProfile): string[] {
+  const completed = new Set(profile.completedModuleIds);
+  return unique(rules.coreModuleIds.filter((id) => !completed.has(id)));
+}
+
+/** Spec 9.2: one grid per term that has slots for the given modules (shortlist plus core), in autumn, spring, summer order. */
+export function buildTimetable(moduleIds: readonly string[], slots: readonly Slot[]): TermGrid[] {
+  const chosen = new Set(moduleIds);
   const shortlisted = slots.filter((slot) => chosen.has(slot.moduleId)).sort(bySlotTime);
   return TERMS.flatMap((term) => {
     const termSlots = shortlisted.filter((slot) => slot.term === term);
@@ -97,10 +110,16 @@ function clashesBetween(moduleA: string, moduleB: string, byModule: Map<string, 
   });
 }
 
-/** Spec 9.2: every clashing pair in the shortlist, most probable first. moduleA sorts before moduleB. */
-export function findClashes(shortlist: readonly string[], slots: readonly Slot[]): Clash[] {
+/**
+ * Spec 9.2: every clashing pair in the shortlist and against the core modules, most probable first. moduleA
+ * sorts before moduleB. Two core modules are never paired: the department timetables them together, and the
+ * student can change neither.
+ */
+export function findClashes(shortlist: readonly string[], slots: readonly Slot[], core: readonly string[] = []): Clash[] {
   const byModule = slotsByModule(slots);
-  return pairs(unique(shortlist).sort(compareIds))
+  const fixed = new Set(core);
+  return pairs(unique([...shortlist, ...core]).sort(compareIds))
+    .filter(([a, b]) => !(fixed.has(a) && fixed.has(b)))
     .flatMap(([a, b]) => clashesBetween(a, b, byModule))
     .sort(
       (x, y) =>
@@ -111,12 +130,71 @@ export function findClashes(shortlist: readonly string[], slots: readonly Slot[]
     );
 }
 
+// ---------- kept-free time (interview question 8): a soft constraint that never changes fit or ranking ----------
+
+/** Half days split at noon. A whole day or an afternoon runs to the end of the day, so late sessions count too. */
+const NOON = '12:00';
+const DAY_OPEN = '00:00';
+const DAY_CLOSE = '23:59';
+
+/**
+ * The student's keep-free answers as windows on the week: whole days, half days ("Wednesday afternoons") and
+ * the time before their earliest start on every weekday. A whole day covers that day's half days and early
+ * start, and a kept-free morning covers the early start, so one window at most covers any moment. Week order.
+ */
+export function keepFreeWindows(prefs: StudentProfile['timetablePrefs']): KeepFreeWindow[] {
+  const days = new Set(prefs.avoidDays);
+  const halves = new Set(prefs.avoidHalfDays ?? []);
+  return WEEKDAYS.flatMap((day): KeepFreeWindow[] => {
+    if (days.has(day)) return [{ day, from: DAY_OPEN, to: DAY_CLOSE, reason: 'day' }];
+    const windows: KeepFreeWindow[] = [];
+    const morning = halves.has(`${day}-am`);
+    const afternoon = halves.has(`${day}-pm`);
+    const early = prefs.earliestStart && toMinutes(prefs.earliestStart) > 0 ? prefs.earliestStart : null;
+    if (morning) windows.push({ day, from: DAY_OPEN, to: NOON, reason: 'half-day' });
+    if (early) {
+      // The early-start window only covers what the half days leave uncovered, so windows never overlap.
+      const from = morning ? NOON : DAY_OPEN;
+      const to = afternoon && toMinutes(early) > toMinutes(NOON) ? NOON : early;
+      if (toMinutes(to) > toMinutes(from)) windows.push({ day, from, to, reason: 'early' });
+    }
+    if (afternoon) windows.push({ day, from: NOON, to: DAY_CLOSE, reason: 'half-day' });
+    return windows;
+  });
+}
+
+const inWindow = (slot: Slot, window: KeepFreeWindow): boolean =>
+  slot.day === window.day &&
+  Math.max(toMinutes(slot.start), toMinutes(window.from)) < Math.min(toMinutes(slot.end), toMinutes(window.to));
+
+/**
+ * Soft conflicts: each session of the given modules that falls in kept-free time, in weekly order. A provisional
+ * candidate time counts too, since the student would want to know a session might land there.
+ */
+export function keepFreeConflicts(
+  moduleIds: readonly string[],
+  slots: readonly Slot[],
+  windows: readonly KeepFreeWindow[],
+): KeepFreeConflict[] {
+  if (windows.length === 0) return [];
+  const chosen = new Set(moduleIds);
+  return slots
+    .filter((slot) => chosen.has(slot.moduleId))
+    .sort(bySlotTime)
+    .flatMap((slot): KeepFreeConflict[] => {
+      const window = windows.find((candidate) => inWindow(slot, candidate));
+      return window ? [{ moduleId: slot.moduleId, slot, window }] : [];
+    });
+}
+
 /** What a swap is checked against: the catalogue, the programme rules and the rules check for a shortlist. */
 export interface SwapPlan {
   modules: readonly Module[];
   rules: ProgrammeRules;
   /** The programme rules check (spec 9.1) for a shortlist, with whatever session details it needs. */
   check: (shortlist: readonly string[]) => RulesResult;
+  /** The student's kept-free time. Swaps that keep it free come first; it never rules a swap out. */
+  keepFree?: readonly KeepFreeWindow[];
 }
 
 type ModuleKind = Module['type'];
@@ -129,7 +207,8 @@ const violationKey = (violation: RuleViolation): string => JSON.stringify([viola
  * the module it replaces (elective for elective, I-Explore for I-Explore), not already shortlisted or
  * completed, free of clashes with the rest of the shortlist and the core modules, and within
  * SWAP_FIT_TOLERANCE of the module it replaces. It must not add a rules violation that was not there before
- * the swap, or deepen a credit shortfall or overrun that was. Best fit first, top MAX_SWAPS.
+ * the swap, or deepen a credit shortfall or overrun that was. Swaps that keep the student's kept-free time
+ * free come first, then best fit, top MAX_SWAPS.
  */
 export function suggestSwaps(
   profile: StudentProfile,
@@ -156,6 +235,8 @@ export function suggestSwaps(
   const completed = new Set(profile.completedModuleIds);
   const unavailable = new Set([...shortlist, ...completed]);
   const byModule = slotsByModule(slots);
+  const coreIds = coreInPlan(plan.rules, profile);
+  const keepFree = plan.keepFree ?? [];
   const before = new Set(plan.check(shortlist).violations.map(violationKey));
 
   return targets
@@ -164,7 +245,7 @@ export function suggestSwaps(
       const targetKind = kindOf(target);
       const targetEcts = byId.get(target)?.ects ?? 0;
       const rest = shortlist.filter((id) => id !== target);
-      const fixed = unique([...rest, ...plan.rules.coreModuleIds.filter((id) => !completed.has(id))]);
+      const fixed = unique([...rest, ...coreIds]);
       const keepsRules = (candidateId: string): boolean => {
         const ectsChange = (byId.get(candidateId)?.ects ?? 0) - targetEcts;
         return plan.check([...rest, candidateId]).violations.every(
@@ -189,15 +270,72 @@ export function suggestSwaps(
           withModuleId: candidate.moduleId,
           fit: candidate.fit,
           fitDelta: candidate.fit - targetFit,
+          keepFreeConflicts: keepFreeConflicts([candidate.moduleId], byModule.get(candidate.moduleId) ?? [], keepFree).length,
         }));
     })
     .sort(
       (x, y) =>
+        Number(x.keepFreeConflicts > 0) - Number(y.keepFreeConflicts > 0) ||
         y.fit - x.fit ||
         compareIds(x.replaceModuleId, y.replaceModuleId) ||
         compareIds(x.withModuleId, y.withModuleId),
     )
     .slice(0, MAX_SWAPS);
+}
+
+/**
+ * ECTS in the plan by kind (core, chosen electives, I-Explore) against the programme cap. It counts every core
+ * module, as the spec 9.1 rules check does, so the bar and the rules always agree on how much room is left.
+ */
+export function planEcts(shortlist: readonly string[], modules: readonly Module[], rules: ProgrammeRules): TimetableView['ects'] {
+  const byId = new Map(modules.map((module) => [module.id, module]));
+  const coreIds = new Set(rules.coreModuleIds);
+  const ects = { core: 0, elective: 0, iExplore: 0, max: rules.maxEcts };
+  for (const module of unique([...rules.coreModuleIds, ...shortlist]).flatMap((id) => byId.get(id) ?? [])) {
+    if (coreIds.has(module.id) || module.type === 'core') ects.core += module.ects;
+    else if (module.type === 'i-explore') ects.iExplore += module.ects;
+    else ects.elective += module.ects;
+  }
+  return ects;
+}
+
+/**
+ * Spec 9.2: the student's week. The shortlist and this year's core modules on term grids, the clashes among
+ * them (core included), de-duplicated swaps for each clash, and the kept-free windows with the shortlisted
+ * sessions that fall in them. Core sessions are never flagged as kept-free conflicts: the student cannot move
+ * them. The rules check is left to the caller, which knows the session's details.
+ */
+export function planTimetable(
+  profile: StudentProfile,
+  shortlist: readonly string[],
+  ranked: readonly Recommendation[],
+  slots: readonly Slot[],
+  plan: SwapPlan,
+): Omit<TimetableView, 'rules'> {
+  const core = coreInPlan(plan.rules, profile);
+  const keepFree = [...(plan.keepFree ?? keepFreeWindows(profile.timetablePrefs))];
+  const clashes = findClashes(shortlist, slots, core);
+  const swaps = new Map<string, SwapSuggestion>();
+  for (const clash of clashes) {
+    for (const swap of suggestSwaps(profile, shortlist, clash, ranked, slots, { ...plan, keepFree })) {
+      const key = JSON.stringify([swap.replaceModuleId, swap.withModuleId]);
+      if (!swaps.has(key)) swaps.set(key, swap);
+    }
+  }
+  const coreSet = new Set(core);
+  return {
+    grids: buildTimetable([...shortlist, ...core], slots),
+    coreModuleIds: core,
+    clashes,
+    swaps: [...swaps.values()],
+    keepFree,
+    keepFreeConflicts: keepFreeConflicts(
+      shortlist.filter((id) => !coreSet.has(id)),
+      slots,
+      keepFree,
+    ),
+    ects: planEcts(shortlist, plan.modules, plan.rules),
+  };
 }
 
 /**
