@@ -143,7 +143,13 @@ export function PathwayProgressCard({ pathwayId, pathway, index, wide = false }:
             What makes up {data ? percent(data.progress) : 'your progress'}
             {data && <span className="text-[12px] font-normal text-muted">{data.perSkill.length} skills</span>}
           </h4>
-          {data ? <SkillBars perSkill={data.perSkill} /> : <Skeleton className="h-40 w-full" />}
+          {data ? (
+            <SkillBars perSkill={data.perSkill} />
+          ) : progress.error ? (
+            <p className="text-[13px] text-muted">The skill breakdown appears once progress loads.</p>
+          ) : (
+            <Skeleton className="h-40 w-full" />
+          )}
         </section>
       )}
     </motion.article>

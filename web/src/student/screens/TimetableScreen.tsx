@@ -123,16 +123,22 @@ function TimetableBody({ view, onChanged, refreshing, stale }: TimetableBodyProp
   // Issue 103: a clash with no swap in the fit window can still be resolved in one click by removing the module a
   // swap would replace: the one the alternatives replace, else the lower-fit module that is not core.
   const { byId } = useCatalogue();
+  // While the view reloads after a change it may still show a clash the student has just resolved, so no target is
+  // offered until it catches up, and a target must still be on the shortlist.
   const removeTargetFor = (clash: Clash): string | null => {
-    const wider = view.widerSwaps.find((s) => s.replaceModuleId === clash.moduleA || s.replaceModuleId === clash.moduleB);
+    if (refreshing) return null;
+    const onShortlist = (id: string) => !coreIds.has(id) && session.shortlist.includes(id);
+    const wider = view.widerSwaps.find(
+      (s) => (s.replaceModuleId === clash.moduleA || s.replaceModuleId === clash.moduleB) && onShortlist(s.replaceModuleId),
+    );
     if (wider) return wider.replaceModuleId;
     const [lower] = [clash.moduleA, clash.moduleB]
-      .filter((id) => !coreIds.has(id) && session.shortlist.includes(id))
+      .filter(onShortlist)
       .sort((x, y) => (byId.get(x)?.fit ?? 0) - (byId.get(y)?.fit ?? 0));
     return lower ?? null;
   };
   const remove = async (moduleId: string) => {
-    await shortlist.toggle(moduleId);
+    await shortlist.remove(moduleId);
     onChanged();
   };
 
