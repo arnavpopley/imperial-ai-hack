@@ -525,6 +525,8 @@ export const RecommendationsResponse = z.object({
   confidence: Confidence,
   completeness: Fraction,
   recommendations: z.array(Recommendation),
+  /** This year's compulsory core modules, already in the student's plan (spec 9.2), so never offered as additions. */
+  coreModuleIds: z.array(z.string()),
 });
 
 export const ExplanationResponse = z.object({

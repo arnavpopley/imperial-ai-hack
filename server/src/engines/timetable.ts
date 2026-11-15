@@ -148,11 +148,17 @@ export function keepFreeWindows(prefs: StudentProfile['timetablePrefs']): KeepFr
   return WEEKDAYS.flatMap((day): KeepFreeWindow[] => {
     if (days.has(day)) return [{ day, from: DAY_OPEN, to: DAY_CLOSE, reason: 'day' }];
     const windows: KeepFreeWindow[] = [];
-    if (halves.has(`${day}-am`)) windows.push({ day, from: DAY_OPEN, to: NOON, reason: 'half-day' });
-    else if (prefs.earliestStart && toMinutes(prefs.earliestStart) > 0) {
-      windows.push({ day, from: DAY_OPEN, to: prefs.earliestStart, reason: 'early' });
+    const morning = halves.has(`${day}-am`);
+    const afternoon = halves.has(`${day}-pm`);
+    const early = prefs.earliestStart && toMinutes(prefs.earliestStart) > 0 ? prefs.earliestStart : null;
+    if (morning) windows.push({ day, from: DAY_OPEN, to: NOON, reason: 'half-day' });
+    if (early) {
+      // The early-start window only covers what the half days leave uncovered, so windows never overlap.
+      const from = morning ? NOON : DAY_OPEN;
+      const to = afternoon && toMinutes(early) > toMinutes(NOON) ? NOON : early;
+      if (toMinutes(to) > toMinutes(from)) windows.push({ day, from, to, reason: 'early' });
     }
-    if (halves.has(`${day}-pm`)) windows.push({ day, from: NOON, to: DAY_CLOSE, reason: 'half-day' });
+    if (afternoon) windows.push({ day, from: NOON, to: DAY_CLOSE, reason: 'half-day' });
     return windows;
   });
 }

@@ -158,6 +158,15 @@ describe('extractor', () => {
       avoidDays: ['fri'],
       avoidHalfDays: ['mon-am'],
     });
+    // A later half-day answer narrows an earlier whole day, and a whole day absorbs its half days.
+    const narrowed = mergeUpdates(
+      emptyProfile,
+      extractByCues('Keep Wednesdays free. Actually, only Wednesday afternoons.', slots, PATHWAYS),
+      { sessionId: 's', turnId: 't' },
+    );
+    expect(narrowed.profile.timetablePrefs).toMatchObject({ avoidDays: [], avoidHalfDays: ['wed-pm'] });
+    const widened = mergeUpdates(narrowed.profile, extractByCues('All of Wednesday, please.', slots, PATHWAYS), { sessionId: 's', turnId: 't' });
+    expect(widened.profile.timetablePrefs).toMatchObject({ avoidDays: ['wed'], avoidHalfDays: [] });
     // "No preference" clears both.
     const cleared = mergeUpdates(profile, extractByCues('No, anytime is fine.', slots, PATHWAYS), { sessionId: 's', turnId: 't' });
     expect(cleared.profile.timetablePrefs).toMatchObject({ avoidDays: [], avoidHalfDays: [] });
@@ -254,6 +263,10 @@ describe('timetabler wording', () => {
     expect(describeTimetable(fixtureTimetable.clashes, [{ ...swap, keepFreeConflicts: 2 }], title)).toContain(
       'No swap keeps all your kept-free time free; this one has 2 sessions in it.',
     );
+    // A later clash's swap that keeps the time free is offered instead of an earlier one that does not.
+    const mixed = describeTimetable(fixtureTimetable.clashes, [{ ...swap, keepFreeConflicts: 1 }, { ...swap, withModuleId: 'FREE' }], title);
+    expect(mixed).toContain('for FREE');
+    expect(mixed).not.toContain('No swap keeps');
   });
 });
 

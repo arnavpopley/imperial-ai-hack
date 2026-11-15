@@ -26,6 +26,8 @@ export interface RankedModule extends Recommendation {
   rank: number;
   /** Positions gained (positive) or lost against the default weights. */
   rankShift: number;
+  /** A compulsory core module for this year: already in the student's plan, so not offered as an addition. */
+  compulsory: boolean;
 }
 
 interface CatalogueValue {
@@ -113,6 +115,7 @@ export function CatalogueProvider({ children }: { children: ReactNode }) {
 
   const ranked = useMemo(() => {
     const list = recs.data?.recommendations ?? [];
+    const core = new Set(recs.data?.coreModuleIds ?? []);
     const baseline = list
       .map((r) => ({ ...r, fit: combineFit(r.sub, DEFAULT_WEIGHTS) }))
       .sort(order)
@@ -126,6 +129,7 @@ export function CatalogueProvider({ children }: { children: ReactNode }) {
           module: moduleById.get(r.moduleId),
           rank: index + 1,
           rankShift: baseline.indexOf(r.moduleId) - index,
+          compulsory: core.has(r.moduleId),
         }),
       );
   }, [recs.data, weights, moduleById]);

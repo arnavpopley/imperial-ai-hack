@@ -16,8 +16,8 @@ export function describeTimetable(
     const odds = c.label === 'certain' ? '' : ` (${pct}% chance, the slots are still provisional)`;
     return `${title(c.moduleA)} and ${title(c.moduleB)} have ${LABEL[c.label]} in ${c.term}${odds}.`;
   });
-  const swap = swaps[0];
-  // Swaps that keep the student's kept-free time free come first, so a first swap with conflicts means none could.
+  // Offer a swap that keeps the student's kept-free time free when any does, across every clash.
+  const swap = swaps.find((s) => s.keepFreeConflicts === 0) ?? swaps[0];
   const keepFree = swap && swap.keepFreeConflicts > 0
     ? ` No swap keeps all your kept-free time free; this one has ${swap.keepFreeConflicts} session${swap.keepFreeConflicts > 1 ? 's' : ''} in it.`
     : '';

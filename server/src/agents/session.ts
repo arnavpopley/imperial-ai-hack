@@ -18,7 +18,7 @@ import {
 import { randomUUID } from 'node:crypto';
 import { loadModuleResources, loadPathways, loadSocieties, rulesFor } from '../db/catalogue.ts';
 import * as repo from '../db/repo.ts';
-import { checkShortlist, completeness, performanceView, planTimetable, profileHash, rankModules } from '../engines/index.ts';
+import { checkShortlist, completeness, coreInPlan, performanceView, planTimetable, profileHash, rankModules } from '../engines/index.ts';
 import type { Tracer } from '../trace/tracer.ts';
 import { explain } from './matcher.ts';
 import { canTransition, restingModeFor } from './modes.ts';
@@ -135,6 +135,7 @@ export function recommendationsResponse(session: SessionState): RecommendationsR
     confidence: confidenceLabel(session.profile.completeness),
     completeness: session.profile.completeness,
     recommendations: ranked(session),
+    coreModuleIds: coreInPlan(rulesForProfile(session.profile), session.profile),
   };
 }
 

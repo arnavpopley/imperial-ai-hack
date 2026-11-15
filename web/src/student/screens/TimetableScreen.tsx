@@ -28,7 +28,10 @@ export function TimetableScreen() {
   const { session } = useReadySession();
   const sessionId = session.id;
   const shortlistKey = session.shortlist.join(',');
-  const timetable = useAsync(() => api.timetable(sessionId), [sessionId, shortlistKey]);
+  // Kept-free time comes from the profile, so a profile edit (in the advisor or Your data) rebuilds the week too.
+  const timetable = useAsync(() => api.timetable(sessionId), [sessionId, shortlistKey, session.profile.updatedAt]);
+  // Core modules are in the plan from the start, so the week shows even before any elective is shortlisted.
+  const nothingToShow = session.shortlist.length === 0 && timetable.data?.coreModuleIds.length === 0;
 
   return (
     <div className="grid grid-cols-1 gap-6">
@@ -41,7 +44,7 @@ export function TimetableScreen() {
       />
       <ProvisionalNotice />
 
-      {session.shortlist.length === 0 ? (
+      {nothingToShow ? (
         <EmptyState
           icon="calendar"
           title="Shortlist a few modules to see your week"
@@ -219,6 +222,12 @@ function TimetableBody({ view, onChanged, refreshing }: { view: TimetableView; o
               </li>
             ))}
           </ul>
+          {picked.length === 0 && (
+            <Link to={paths.catalogue} className={cx(buttonClass('secondary', 'sm'), 'mt-3 w-full')}>
+              <Icon name="plus" size={14} />
+              Add electives
+            </Link>
+          )}
           {shortlist.error && (
             <p role="alert" className="mt-2 text-[13px] text-fit-low">
               {shortlist.error}

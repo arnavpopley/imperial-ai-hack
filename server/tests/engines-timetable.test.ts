@@ -325,6 +325,13 @@ describe('keepFreeWindows and keepFreeConflicts', () => {
       { day: 'fri', from: '00:00', to: '23:59', reason: 'day' },
     ]);
     expect(keepFreeWindows({ avoidDays: [], earliestStart: null })).toEqual([]);
+    // A start after noon with a kept-free morning still keeps 12:00 to the start free, without overlapping.
+    const late = keepFreeWindows({ avoidDays: ['tue', 'wed', 'thu', 'fri'], earliestStart: '13:00', avoidHalfDays: ['mon-am'] });
+    expect(late).toEqual([
+      { day: 'mon', from: '00:00', to: '12:00', reason: 'half-day' },
+      { day: 'mon', from: '12:00', to: '13:00', reason: 'early' },
+      ...(['tue', 'wed', 'thu', 'fri'] as const).map((day) => ({ day, from: '00:00', to: '23:59', reason: 'day' })),
+    ]);
   });
 
   it('flags sessions in a kept-free afternoon or before the earliest start, and nothing else', () => {

@@ -447,9 +447,16 @@ export function mergeUpdates(
     } else if (u.slot === 'pathwaysSkipped' && typeof u.value === 'boolean') {
       next.pathwaysSkipped = u.value;
     } else if (u.slot === 'timetablePrefs.avoidDays' && Array.isArray(u.value)) {
-      next.timetablePrefs.avoidDays = schemas.Weekday.array().parse(u.value);
+      const days = schemas.Weekday.array().parse(u.value);
+      next.timetablePrefs.avoidDays = days;
+      // A whole day subsumes its half days.
+      const halves = next.timetablePrefs.avoidHalfDays;
+      if (halves) next.timetablePrefs.avoidHalfDays = halves.filter((h) => !days.some((d) => h.startsWith(d)));
     } else if (u.slot === 'timetablePrefs.avoidHalfDays' && Array.isArray(u.value)) {
-      next.timetablePrefs.avoidHalfDays = schemas.HalfDay.array().parse(u.value);
+      const halves = schemas.HalfDay.array().parse(u.value);
+      next.timetablePrefs.avoidHalfDays = halves;
+      // "Actually, only Wednesday afternoons" narrows an earlier whole Wednesday to the half day.
+      next.timetablePrefs.avoidDays = next.timetablePrefs.avoidDays.filter((d) => !halves.some((h) => h.startsWith(d)));
     } else if (u.slot === 'timetablePrefs.earliestStart' && typeof u.value === 'string') {
       next.timetablePrefs.earliestStart = u.value;
     } else {
