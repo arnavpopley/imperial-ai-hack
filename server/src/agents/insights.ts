@@ -34,7 +34,10 @@ export function plainWording(card: z.infer<typeof Card>): boolean {
  * reads the same on every load, so a reload after a staff decision never shows different words for the same
  * numbers. New engine content (for example after a tag edit) is a new key, so it is worded afresh.
  */
-const wording = new Map<string, z.infer<typeof Card>>();
+/**
+ * Held as the pending or finished request, so two loads that overlap share one model call and one set of words.
+ */
+const wording = new Map<string, Promise<z.infer<typeof Card> | null>>();
 /** Enough for every card in the catalogue several times over; the oldest entry goes first. */
 const MAX_WORDINGS = 1000;
 
@@ -45,23 +48,34 @@ export function clearInsightWording(): void {
   wording.clear();
 }
 
-export async function wordInsight(insight: Insight): Promise<Insight> {
-  if (!isLive()) return insight;
-  const key = wordingKey(insight);
-  const known = wording.get(key);
-  if (known) return { ...insight, ...known };
+/** The words for one engine card, or null when the model call failed. */
+async function reword(insight: Insight): Promise<z.infer<typeof Card> | null> {
   const rewrite = await structured(Card, {
     tier: 'smart',
     system: SYSTEM,
     messages: [{ role: 'user', content: asData('insight', JSON.stringify({ kind: insight.kind, headline: insight.headline, detail: insight.detail })) }],
   }).catch(() => null);
-  // A failed call is not remembered, so the next load tries again; the engine's own words stand meanwhile.
-  if (!rewrite) return insight;
+  if (!rewrite) return null;
   // A rewrite may not bring in internal units the engine's card did not have (a clash priority can be a decimal).
   const plain = (card: z.infer<typeof Card>) => plainWording(card) || !plainWording(insight);
   // A rejected rewrite is remembered as the engine's words, so the card does not change on the next load either.
-  const words = sameNumbers(insight, rewrite) && plain(rewrite) ? rewrite : { headline: insight.headline, detail: insight.detail };
-  if (wording.size >= MAX_WORDINGS) wording.delete(wording.keys().next().value!);
-  wording.set(key, words);
-  return { ...insight, ...words };
+  return sameNumbers(insight, rewrite) && plain(rewrite) ? rewrite : { headline: insight.headline, detail: insight.detail };
+}
+
+export async function wordInsight(insight: Insight): Promise<Insight> {
+  if (!isLive()) return insight;
+  const key = wordingKey(insight);
+  let words = wording.get(key);
+  if (!words) {
+    const pending = reword(insight);
+    if (wording.size >= MAX_WORDINGS) wording.delete(wording.keys().next().value!);
+    wording.set(key, pending);
+    // A failed call is not remembered, so the next load tries again; the engine's own words stand meanwhile.
+    void pending.then((result) => {
+      if (!result && wording.get(key) === pending) wording.delete(key);
+    });
+    words = pending;
+  }
+  const result = await words;
+  return result ? { ...insight, ...result } : insight;
 }

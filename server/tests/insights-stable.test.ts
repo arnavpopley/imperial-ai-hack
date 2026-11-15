@@ -85,22 +85,43 @@ describe('live wording is reused for the same engine card', () => {
     decision: 'pending',
   };
 
-  it('asks the model once, then gives the same words on every load until the engine card changes', async () => {
-    vi.mocked(llm.isLive).mockReturnValue(true);
+  // A model that words the card differently every time it is asked, keeping the card's numbers (24 and 75), so
+  // every rewrite passes the number and plain-wording checks and is the one that is shown.
+  const rewrites = [
+    { headline: 'No one change helps much; assessment is the main gap', detail: '24 interested students rate it below fit 75.' },
+    { headline: 'Small changes will not move it; look at the exams', detail: 'Fit stays under 75 for 24 interested students.' },
+    { headline: 'Nothing tested lifts it far; exams weigh most', detail: '24 keen students sit below fit 75.' },
+  ];
+  const varyingModel = () => {
     let call = 0;
-    // A model that words the card differently every time it is asked.
-    vi.mocked(llm.structured).mockImplementation(async () => {
-      call += 1;
-      return { headline: `Wording ${call}: no single change helps`, detail: '24 students are interested in M; fit is below 75.' } as never;
-    });
+    vi.mocked(llm.structured).mockReset();
+    vi.mocked(llm.structured).mockImplementation(async () => rewrites[call++ % rewrites.length] as never);
+  };
+
+  it('asks the model once, then gives the same accepted words on every load until the engine card changes', async () => {
+    vi.mocked(llm.isLive).mockReturnValue(true);
+    varyingModel();
     clearInsightWording();
     const first = await wordInsight(card);
+    expect({ headline: first.headline, detail: first.detail }).toEqual(rewrites[0]);
     const again = await wordInsight({ ...card, decision: 'accepted' });
-    expect(again.headline).toBe(first.headline);
+    expect({ headline: again.headline, detail: again.detail }).toEqual(rewrites[0]);
+    expect(again.decision).toBe('accepted');
     expect(vi.mocked(llm.structured)).toHaveBeenCalledTimes(1);
     // New engine content (for example after a tag edit) is worded afresh.
     await wordInsight({ ...card, detail: '30 students are interested in the topics of M, but its fit for them is below 75.' });
     expect(vi.mocked(llm.structured)).toHaveBeenCalledTimes(2);
+    vi.mocked(llm.isLive).mockReturnValue(false);
+  });
+
+  it('gives overlapping loads of the same card one model call and the same words', async () => {
+    vi.mocked(llm.isLive).mockReturnValue(true);
+    varyingModel();
+    clearInsightWording();
+    const [a, b] = await Promise.all([wordInsight(card), wordInsight(card)]);
+    expect(vi.mocked(llm.structured)).toHaveBeenCalledTimes(1);
+    expect(b.headline).toBe(a.headline);
+    expect(b.detail).toBe(a.detail);
     vi.mocked(llm.isLive).mockReturnValue(false);
   });
 
