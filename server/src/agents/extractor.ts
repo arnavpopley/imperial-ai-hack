@@ -102,7 +102,8 @@ function groupPreference(s: string): number | null {
     const dislike = DISLIKE.exec(part);
     if (!dislike) return false;
     const between = part.slice(dislike.index + dislike[0].length, part.search(re));
-    return !/\b(prefer\w*|like|love|enjoy\w*|best|happier|keen|rather)\b/.test(between);
+    // "Like" only counts with a subject ("I like"), so "things like group projects" stays a dislike.
+    return !/\b(i|i'd|i would|we)\s+(?:really\s+|much\s+|would\s+)?(prefer\w*|like|love|enjoy\w*)\b|\b(prefer\w*|happier|keen on|rather)\b/.test(between);
   };
   if (solo && team) {
     const teamDisliked = disliked(TEAM);
