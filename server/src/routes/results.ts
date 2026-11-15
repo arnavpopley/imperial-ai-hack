@@ -3,6 +3,7 @@
 // tailored-feedback agent. Withdrawing consent, or deleting the profile, deletes every stored mark.
 import { schemas, type SessionState, type TailoredFeedback } from '@modulematch/shared';
 import { Hono, type Context } from 'hono';
+import { createHash } from 'node:crypto';
 import { tailoredFeedback } from '../agents/exam-feedback.ts';
 import { isLive } from '../agents/llm.ts';
 import { readResultsFile } from '../agents/results-reader.ts';
@@ -29,7 +30,10 @@ const NOTHING_FOUND =
  */
 const deletions = new Map<string, number>();
 
-/** Tailored feedback, cached by session, form version and results version (spec 5 cost control). */
+/**
+ * Tailored feedback per session (spec 5 cost control), keyed by form version, results version and a hash of the facts,
+ * so a change to the student's completed modules or to the catalogue (which changes the affected modules) misses.
+ */
 const feedbackCache = new Map<string, Map<string, TailoredFeedback>>();
 
 /** Forgets everything derived from a session's marks. Called when results are deleted or replaced, or the profile is deleted. */
@@ -137,7 +141,8 @@ export const resultsRoutes = new Hono()
         const result = results.results.find((r) => r.matched && r.moduleId === form.moduleId && r.questionMarks.length > 0);
         const facts = result ? examFacts(form, result, modules, exclude) : null;
         if (!facts) return null;
-        const key = `${form.moduleId}:${form.updatedAt}:${results.updatedAt}`;
+        const factsHash = createHash('sha256').update(JSON.stringify(facts)).digest('hex').slice(0, 16);
+        const key = `${form.moduleId}:${form.updatedAt}:${results.updatedAt}:${factsHash}`;
         const cached = cache.get(key);
         if (cached) return cached;
         const feedback = await tracer.timed(

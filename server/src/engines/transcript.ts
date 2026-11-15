@@ -82,8 +82,10 @@ function readRows(text: string, catalogue: CatalogueEntry[]): TranscriptRow[] {
     const cells = DELIMITER.test(line) ? line.split(DELIMITER).map((c) => c.trim()) : null;
     const { marks, rest } = questionMarksIn(line);
     const code = CODE.exec(rest)?.[1]?.toUpperCase() ?? null;
+    // A row is matched by its code when it has one. Only a row without a code is matched by title, so an unknown
+    // code is never stored against a catalogue module that happens to share its title.
     const known = code ? catalogue.find((m) => m.code.toUpperCase() === code || m.id.toUpperCase() === code) : undefined;
-    const titled = known ?? titleMatch(code ? rest.replace(CODE, ' ') : rest, catalogue);
+    const titled = code ? known : titleMatch(rest, catalogue);
 
     if (!code && !titled) {
       // A header row of a table says which column holds the mark.
@@ -114,9 +116,11 @@ export function toResults(rows: TranscriptRow[], catalogue: CatalogueEntry[], so
   const problems: string[] = [];
   for (const row of rows) {
     const code = row.code?.trim().toUpperCase() || null;
-    const known =
-      (code ? catalogue.find((m) => m.code.toUpperCase() === code || m.id.toUpperCase() === code) : undefined) ??
-      (row.title ? titleMatch(row.title, catalogue) ?? undefined : undefined);
+    const known = code
+      ? catalogue.find((m) => m.code.toUpperCase() === code || m.id.toUpperCase() === code)
+      : row.title
+        ? (titleMatch(row.title, catalogue) ?? undefined)
+        : undefined;
     if (!known && !code) continue;
     const name = known ? `${known.code} ${known.title}` : code!;
     const questionMarks = row.questionMarks.filter((q) => Number.isFinite(q.mark) && Number.isFinite(q.maxMarks) && q.maxMarks > 0);

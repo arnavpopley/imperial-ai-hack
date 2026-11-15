@@ -86,11 +86,16 @@ export const staffRoutes = new Hono()
     if (!module) return c.json({ error: 'module not found' }, 404);
     const { examLabel, notes } = c.req.valid('json');
     const tracer = staffTracer();
+    const versionBefore = repo.getExamForm(module.id)?.updatedAt ?? null;
     const { draft } = await tracer.timed(
       { actor: 'exam form drafter', kind: 'agent', input: `draft ${module.id} from notes (${notes.length} chars)` },
       () => draftExamForm(notes, module, tracer),
       (d) => ({ output: `${d.draft.questions.length} question(s), ${d.source}`, verdict: null }),
     );
+    // The draft takes a few seconds live; an examiner save or publish made meanwhile is never overwritten.
+    if ((repo.getExamForm(module.id)?.updatedAt ?? null) !== versionBefore) {
+      return c.json({ error: 'the form was changed while the draft was being written, so the draft was not saved' }, 409);
+    }
     const form: ExamFeedbackForm = { ...draft, examLabel, id: examFormId(module.id), moduleId: module.id, status: 'draft', authoredBy: 'ai-draft', updatedAt: new Date().toISOString() };
     const saved = repo.saveExamForm(form);
     return c.json(saved);

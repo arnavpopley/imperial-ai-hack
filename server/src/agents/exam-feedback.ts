@@ -199,8 +199,22 @@ function factsBrief(f: ExamFacts) {
   };
 }
 
-/** G8 on every sentence the student sees; an emptied string falls back to the template's wording. */
-const claimsFree = (text: string, fallback: string) => filterClaims(text).text || fallback;
+/** Every number in the facts the model was given: marks, maxima, lost marks, question numbers and examiner text. */
+export function factNumbers(brief: unknown): Set<string> {
+  return new Set((JSON.stringify(brief).match(/\d+(?:\.\d+)?/g) ?? []).map((n) => String(Number(n))));
+}
+
+/** True when every number in the text appears in the facts, so the wording cannot change a mark or a count. */
+export const numbersFromFacts = (text: string, allowed: Set<string>) => (text.match(/\d+(?:\.\d+)?/g) ?? []).every((n) => allowed.has(String(Number(n))));
+
+/**
+ * The model's wording for one field, kept only when it passes G8 (claims) and states no number the facts do not
+ * contain; otherwise the template's wording is used.
+ */
+const checked = (text: string, fallback: string, allowed: Set<string>) => {
+  const clean = filterClaims(text).text;
+  return clean && numbersFromFacts(clean, allowed) ? clean : fallback;
+};
 
 /**
  * Feedback for one exam. Numbers, question ids, topics and modules always come from the facts; the model only
@@ -209,6 +223,8 @@ const claimsFree = (text: string, fallback: string) => filterClaims(text).text |
 export async function tailoredFeedback(f: ExamFacts, tracer: Tracer): Promise<TailoredFeedback> {
   const template = templateFeedback(f);
   if (!isLive()) return template;
+  const brief = factsBrief(f);
+  const allowed = factNumbers(brief);
   return validated(
     schemas.TailoredFeedback,
     async () => {
@@ -216,20 +232,21 @@ export async function tailoredFeedback(f: ExamFacts, tracer: Tracer): Promise<Ta
         tier: 'smart',
         effort: 'low',
         system: FEEDBACK_SYSTEM,
-        messages: [{ role: 'user', content: asData('exam-facts', JSON.stringify(factsBrief(f))) }],
+        messages: [{ role: 'user', content: asData('exam-facts', JSON.stringify(brief)) }],
       });
       if (!live) return null;
       const advice = new Map(live.weakPoints.map((w) => [w.questionId.trim().toLowerCase(), w.advice]));
       const notes = new Map(live.affectsModules.map((a) => [a.moduleId.trim(), a.note]));
-      const plan = live.revisionPlan.map((s) => filterClaims(s).text).filter(Boolean);
-      const strengths = live.strengths.map((s) => filterClaims(s).text).filter(Boolean).slice(0, f.strong.length);
+      const keep = (s: string) => checked(s, '', allowed);
+      const plan = live.revisionPlan.map(keep).filter(Boolean);
+      const strengths = live.strengths.map(keep).filter(Boolean).slice(0, f.strong.length);
       return {
         ...template,
-        overall: claimsFree(live.overall, template.overall),
+        overall: checked(live.overall, template.overall, allowed),
         strengths: strengths.length ? strengths : template.strengths,
-        weakPoints: f.weak.map((q) => ({ questionId: q.questionId, topics: q.topics, lostMarks: q.lostMarks, advice: claimsFree(advice.get(q.questionId.toLowerCase()) ?? '', weakAdvice(q)) })),
+        weakPoints: f.weak.map((q) => ({ questionId: q.questionId, topics: q.topics, lostMarks: q.lostMarks, advice: checked(advice.get(q.questionId.toLowerCase()) ?? '', weakAdvice(q), allowed) })),
         revisionPlan: plan.length ? plan.slice(0, 6) : template.revisionPlan,
-        affectsModules: f.affects.map((a) => ({ moduleId: a.moduleId, note: claimsFree(notes.get(a.moduleId) ?? '', affectedNote(a, f.moduleTitle)) })),
+        affectsModules: f.affects.map((a) => ({ moduleId: a.moduleId, note: checked(notes.get(a.moduleId) ?? '', affectedNote(a, f.moduleTitle), allowed) })),
         source: 'model' as const,
       };
     },

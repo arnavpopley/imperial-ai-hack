@@ -193,15 +193,27 @@ export function clearExplanationCache(): void {
   explanationCache.clear();
 }
 
-export async function explanationFor(session: SessionState, moduleId: string, tracer: Tracer, recs = ranked(session)): Promise<Explanation | null> {
+/**
+ * The explanation for one module. `withNudge` adds the student's performance nudge (spec 23) as a watch-out; only
+ * the explanation panel asks for it, because chat replies are stored as messages and a nudge, which is derived
+ * from marks, must not outlive the student withdrawing consent.
+ */
+export async function explanationFor(
+  session: SessionState,
+  moduleId: string,
+  tracer: Tracer,
+  recs = ranked(session),
+  opts: { withNudge?: boolean } = {},
+): Promise<Explanation | null> {
   const module = catalogue.modules().find((m) => m.id === moduleId);
   const rec = recs.find((r) => r.moduleId === moduleId);
   if (!module || !rec) return null;
-  const results = repo.getResults(session.id);
-  const key = `${profileHash(session.profile, session.weights)}:${results.updatedAt ?? 'no-results'}:${moduleId}`;
+  const results = opts.withNudge ? repo.getResults(session.id) : null;
+  const nudge = results?.consent.granted ? nudgeFor(performanceFor(session), moduleId) : undefined;
+  // Explanations without a nudge share one cache entry; a nudged one is keyed by the results version too.
+  const key = `${profileHash(session.profile, session.weights)}:${moduleId}${nudge ? `:nudge:${results?.updatedAt}` : ''}`;
   const cached = explanationCache.get(key);
   if (cached) return cached;
-  const nudge = results.consent.granted ? nudgeFor(performanceFor(session), moduleId) : undefined;
   const explanation = await tracer.timed(
     { actor: 'matcher', kind: 'agent', input: `explain ${module.code} (fit ${rec.fit})${nudge ? ', with a performance nudge' : ''}` },
     () => explain(session.profile, module, rec, session.evidence, tracer, nudge),

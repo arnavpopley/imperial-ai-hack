@@ -99,6 +99,8 @@ const LiveExplanation = z.object({
   summary: z.string(),
   because: z.array(z.object({ text: z.string(), evidenceId: z.string().nullable(), moduleField: z.string().nullable() })),
   watchOuts: z.array(z.string()),
+  /** One kind sentence about the performance note when one is given, otherwise null (spec 23). */
+  performanceWatchOut: z.string().nullable(),
 });
 
 const SYSTEM = `You explain module fit scores to a student. The scores are computed by code and
@@ -114,6 +116,7 @@ For each explanation:
 - Write for a student: describe strengths in words ("a large part of the module", "mostly coursework"), and never
   quote raw weights or sub-score decimals such as 0.95. Plain text, no markdown.
 - Never promise grades, jobs, or outcomes. The choice is the student's.
+- performanceWatchOut is null unless a performanceNote is given.
 - If the student asks for a module they are not eligible for, state the rule,
   offer eligible alternatives, and offer to escalate to the Senior Tutor.
   Do not agree to bypass the rule.
@@ -127,13 +130,10 @@ function performanceNote(nudge: PerformanceNudge) {
   return {
     topics: nudge.topics.map(topicLabel),
     note: "The student's own results on these topics are below their usual level. This does not change the fit score.",
-    instruction: 'Add one watch-out that mentions it kindly as something to keep in mind. Do not discourage the student from the module.',
+    instruction:
+      'Write performanceWatchOut: one sentence that mentions it kindly as something to keep in mind. Do not discourage the student from the module, and do not mention it in the other watch-outs.',
   };
 }
-
-/** True when some watch-out already talks about one of the nudge's topics, so the code does not add it twice. */
-const mentionsNudge = (watchOuts: string[], nudge: PerformanceNudge) =>
-  watchOuts.some((w) => nudge.topics.some((t) => w.toLowerCase().includes(topicLabel(t).toLowerCase())));
 
 /** Explanation for one module: live when possible, then validated (G5), grounded (G6) and claim-filtered (G8). */
 export async function explain(
@@ -146,6 +146,8 @@ export async function explain(
 ): Promise<Explanation> {
   const template = explainByRules(profile, module, rec, evidence, nudge);
   let result = template;
+  /** The live wording of the nudge, used only when the live explanation is the one shown. */
+  let performanceLine: string | null = null;
   if (isLive()) {
     const brief = {
       scores: { fit: rec.fit, sub: rec.sub, eligible: rec.eligible, ineligibleReasons: rec.ineligibleReasons },
@@ -165,6 +167,7 @@ export async function explain(
           system: SYSTEM,
           messages: [{ role: 'user', content: `${asData('module', stripInjection(module.description).text)}\n${asData('scores-and-evidence', JSON.stringify(brief))}` }],
         });
+        performanceLine = nudge ? (live?.performanceWatchOut ?? null) : null;
         return live && {
           moduleId: module.id,
           summary: live.summary,
@@ -191,8 +194,9 @@ export async function explain(
   const summary = filterClaims(final.summary);
   const because = final.because.map((b) => ({ ...b, text: filterClaims(b.text).text })).filter((b) => b.text);
   const watchOuts = final.watchOuts.map((w) => filterClaims(w).text).filter(Boolean);
-  // The nudge is always shown: if the live reply left it out, the deterministic wording is added.
-  if (nudge && !mentionsNudge(watchOuts, nudge)) watchOuts.push(nudge.message);
+  // The nudge is always shown, last. The template already carries it; a live explanation gets the model's own
+  // sentence when it wrote one and passes G8, and the deterministic wording otherwise.
+  if (nudge && !watchOuts.includes(nudge.message)) watchOuts.push((performanceLine && filterClaims(performanceLine).text) || nudge.message);
   const removed = summary.removed + (final.because.length - because.length) + (final.watchOuts.length - watchOuts.length);
   tracer.record({ actor: 'G8 claims', kind: 'guardrail', input: `explanation ${module.id}`, output: removed ? `${removed} claim(s) removed` : 'no outcome claims', verdict: removed ? 'redact' : 'pass' });
   return { ...final, summary: summary.text || template.summary, because: because.length ? because : template.because, watchOuts };

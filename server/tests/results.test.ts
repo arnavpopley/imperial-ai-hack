@@ -72,6 +72,13 @@ describe('transcript parser', () => {
     expect(parsed.results.find((r) => r.code === 'XYZ12345')).toMatchObject({ moduleId: 'XYZ12345', matched: false, mark: 55, title: 'Underwater Basket Weaving' });
   });
 
+  it('never matches an unknown code by its title, so it cannot replace a real result', () => {
+    const parsed = parseTranscript('MECH50010 Fluid Mechanics 2 62\nXYZ12345 Fluid Mechanics 2 55', catalogue());
+    expect(parsed.unmatched).toEqual(['XYZ12345']);
+    expect(parsed.results.find((r) => r.moduleId === 'MECH50010')?.mark).toBe(62);
+    expect(parsed.results.find((r) => r.moduleId === 'XYZ12345')).toMatchObject({ matched: false, mark: 55 });
+  });
+
   it('reports a question mark above its maximum, or a mark above 100, instead of storing it', () => {
     const parsed = parseTranscript('MECH50010 Fluid Mechanics 2 62\nQ1 25/20\nMECH50006 Thermodynamics 2 120', catalogue());
     expect(parsed.results).toEqual([]);
