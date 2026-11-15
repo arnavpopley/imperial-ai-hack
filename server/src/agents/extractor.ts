@@ -98,12 +98,13 @@ function groupPreference(s: string): number | null {
   // A dislike counts against an option when it is in the same phrase, however far apart the words are ("I hate having
   // to do projects in a group"), and no liking word sits between them ("I hate exams so I much prefer a group").
   const disliked = (re: RegExp) => {
-    const part = main.split(/[,;]|\b(?:and|so|because|since|while|whereas|which is why)\b/).find((p) => re.test(p)) ?? '';
+    const part = main.split(/[,;]|\b(?:and|so|yet|because|since|while|whereas|which is why)\b/).find((p) => re.test(p)) ?? '';
     const dislike = DISLIKE.exec(part);
     if (!dislike) return false;
     const between = part.slice(dislike.index + dislike[0].length, part.search(re));
-    // "Like" only counts with a subject ("I like"), so "things like group projects" stays a dislike.
-    return !/\b(i|i'd|i would|we)\s+(?:really\s+|much\s+|would\s+)?(prefer\w*|like|love|enjoy\w*)\b|\b(prefer\w*|happier|keen on|rather)\b/.test(between);
+    // Any liking verb ends the dislike's reach ("hate exams yet love a group"). "Like" alone can mean "such as", so it
+    // only counts after a subject or an adverb ("I like", "really like"): "things like group projects" stays a dislike.
+    return !/\b(prefer\w*|love|loved|enjoy\w*|happier|keen on|rather)\b|\b(i|i'd|we|really|would|do|also)\s+like\b/.test(between);
   };
   if (solo && team) {
     const teamDisliked = disliked(TEAM);

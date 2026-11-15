@@ -87,6 +87,9 @@ describe('extractor', () => {
     expect(group('I hate exams, I prefer working in a group.')).toBe(0.8);
     expect(group('Group work is boring for me.')).toBe(0.2);
     expect(group('I hate things like group projects.')).toBe(0.2);
+    expect(group('I hate exams yet love working in a group.')).toBe(0.8);
+    expect(group('I hate exams but enjoy working in a group.')).toBe(0.8);
+    expect(group('I really dislike all the group projects we get.')).toBe(0.2);
     expect(group('I hate deadlines but I really like working with a team.')).toBe(0.8);
     expect(group('I prefer working in a team, and a heavy workload is fine.')).toBe(0.8);
   });
