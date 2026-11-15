@@ -95,9 +95,15 @@ function groupPreference(s: string): number | null {
   if (!SOLO.test(main) && !TEAM.test(main)) [main, other] = [s, ''];
   const solo = SOLO.test(main);
   const team = TEAM.test(main);
-  // A dislike counts against an option when it is in the same phrase (split at commas, semicolons and "and"), however
-  // far apart the words are: "I hate having to do projects in a group".
-  const disliked = (re: RegExp) => DISLIKE.test(main.split(/[,;]|\band\b/).find((part) => re.test(part)) ?? '');
+  // A dislike counts against an option when it is in the same phrase, however far apart the words are ("I hate having
+  // to do projects in a group"), and no liking word sits between them ("I hate exams so I much prefer a group").
+  const disliked = (re: RegExp) => {
+    const part = main.split(/[,;]|\b(?:and|so|because|since|while|whereas|which is why)\b/).find((p) => re.test(p)) ?? '';
+    const dislike = DISLIKE.exec(part);
+    if (!dislike) return false;
+    const between = part.slice(dislike.index + dislike[0].length, part.search(re));
+    return !/\b(prefer\w*|like|love|enjoy\w*|best|happier|keen|rather)\b/.test(between);
+  };
   if (solo && team) {
     const teamDisliked = disliked(TEAM);
     const soloDisliked = disliked(SOLO);
