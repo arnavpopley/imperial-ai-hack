@@ -5,7 +5,7 @@ import { useReadySession } from '../state/SessionProvider.tsx';
 
 /** Shortlist membership and mutations. The server's session response is the source of truth. */
 export function useShortlist() {
-  const { session, replace, refresh } = useReadySession();
+  const { session, replace } = useReadySession();
   const [pending, setPending] = useState<ReadonlySet<string>>(() => new Set());
   const [error, setError] = useState<string | null>(null);
   const sessionId = session.id;
@@ -37,27 +37,37 @@ export function useShortlist() {
     [sessionId, shortlist, replace],
   );
 
-  /** Spec 10.6: a swap is applied only after the student confirms it. Throws so the caller can show the error. */
+  /**
+   * Spec 10.6: a swap is applied only after the student confirms it. Throws so the caller can show the error.
+   * The alternative is added before the old module is removed, so the shortlist never dips below two and the
+   * session stays in PLAN (spec 12) instead of flapping to RECOMMEND and back.
+   */
   const swap = useCallback(
     async (removeId: string, addId: string) => {
       mark([removeId, addId], true);
       try {
-        replace(await api.shortlist(sessionId, { moduleId: removeId, action: 'remove' }));
+        replace(await api.shortlist(sessionId, { moduleId: addId, action: 'add' }));
         try {
-          replace(await api.shortlist(sessionId, { moduleId: addId, action: 'add' }));
+          replace(await api.shortlist(sessionId, { moduleId: removeId, action: 'remove' }));
         } catch (err) {
-          // The removal was saved but the addition was not: put the original back so the student is not
-          // left a module short, or at least resync with the server, then report the failure.
-          await api
-            .shortlist(sessionId, { moduleId: removeId, action: 'add' })
-            .then(replace, () => refresh().catch(() => undefined));
+          // The removal may have been saved even though its response was lost, so read the shortlist back
+          // before undoing anything. Old module gone: the swap went through. Still there: take the
+          // alternative off again. Unknown: leave both, which loses nothing, and report the failure.
+          const saved = await api.getSession(sessionId).catch(() => null);
+          if (saved && !saved.shortlist.includes(removeId)) {
+            replace(saved);
+            return;
+          }
+          if (saved?.shortlist.includes(addId)) {
+            await api.shortlist(sessionId, { moduleId: addId, action: 'remove' }).then(replace, () => replace(saved));
+          } else if (saved) replace(saved);
           throw err;
         }
       } finally {
         mark([removeId, addId], false);
       }
     },
-    [sessionId, replace, refresh],
+    [sessionId, replace],
   );
 
   return {
