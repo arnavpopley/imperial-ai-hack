@@ -1,7 +1,8 @@
 // A Monday to Friday, 09:00 to 18:00 grid for one term. Provisional slots are dashed with their
 // probability; overlaps between clashing slots are hatched and pinned with a clash marker. Core modules are
 // grey and locked, kept-free time is shaded violet, and a shortlisted session inside it gets a dashed outline.
-import type { Clash, ClashLabel, KeepFreeConflict, KeepFreeWindow, Slot, Term } from '@modulematch/shared';
+import type { Clash, ClashLabel, KeepFreeConflict, KeepFreeWindow, Slot, Term, Weekday } from '@modulematch/shared';
+import { useState } from 'react';
 import { ClashMarker, CLASH_LABELS, CLASH_TEXT_CLASS } from '../../components/ClashMarker.tsx';
 import { cx } from '../../components/cx.ts';
 import { Icon } from '../../components/Icon.tsx';
@@ -17,6 +18,7 @@ import {
   slotKey,
   toMinutes,
 } from './layout.ts';
+import { useMediaQuery } from '../hooks/useMediaQuery.ts';
 import type { ModuleColour } from './moduleColours.ts';
 
 const RING_CLASS: Record<ClashLabel, string> = {
@@ -68,25 +70,74 @@ export function WeekGrid({
     }
   }
   const hourCount = (DAY_END - DAY_START) / 60;
+  // Issue 64: a phone shows one day at a time with a day switcher, instead of a five-column grid clipped at Wednesday.
+  const narrow = useMediaQuery('(max-width: 639px)');
+  // Open on the first day with a clash, else the first day with teaching.
+  const firstDay =
+    WEEKDAYS.find((d) => slots.some((s) => s.day === d && clashOf.has(slotKey(s)))) ??
+    WEEKDAYS.find((d) => slots.some((s) => s.day === d)) ??
+    'mon';
+  const [picked, setPicked] = useState<Weekday | null>(null);
+  const shownDay = picked ?? firstDay;
+  const days = narrow ? [shownDay] : WEEKDAYS;
+  const columns = narrow ? 'grid-cols-[3rem_minmax(0,1fr)]' : 'grid-cols-[3rem_repeat(5,minmax(0,1fr))]';
 
   return (
-    // On a phone the week scrolls sideways; the scroller takes focus so arrow keys can scroll it too.
+    // A phone shows one day, so nothing scrolls. Wider screens keep the whole week; if it is wider than the screen
+    // it scrolls sideways, and the scroller takes focus so arrow keys can scroll it too.
     <div
-      tabIndex={0}
-      role="region"
-      aria-label={`${TERM_LABELS[term]} term week, scrolls sideways`}
-      className="-mx-4 overflow-x-auto px-4 outline-none focus-visible:ring-2 focus-visible:ring-brand sm:mx-0 sm:px-0"
+      {...(narrow
+        ? {}
+        : {
+            tabIndex: 0,
+            role: 'region',
+            'aria-label': `${TERM_LABELS[term]} term week, scrolls sideways`,
+            className: '-mx-4 overflow-x-auto px-4 outline-none focus-visible:ring-2 focus-visible:ring-brand sm:mx-0 sm:px-0',
+          })}
     >
-      <div role="group" aria-label={`${TERM_LABELS[term]} term week`} className="min-w-[36rem]">
-        <div className="grid grid-cols-[3rem_repeat(5,minmax(0,1fr))] pb-2 text-[12px] font-semibold text-muted">
+      {narrow && (
+        <div role="group" aria-label="Day" className="mb-3 grid grid-cols-5 gap-1 rounded-xl bg-surface-2 p-1">
+          {WEEKDAYS.map((d) => {
+            const count = slots.filter((s) => s.day === d).length;
+            const clashing = slots.some((s) => s.day === d && clashOf.has(slotKey(s)));
+            return (
+              <button
+                key={d}
+                type="button"
+                aria-pressed={d === shownDay}
+                onClick={() => setPicked(d)}
+                className={cx(
+                  'relative grid h-11 place-items-center rounded-lg text-[13px] font-semibold transition-colors',
+                  d === shownDay ? 'bg-surface text-ink shadow-soft ring-1 ring-line' : 'text-muted',
+                )}
+              >
+                <span>
+                  {DAY_LABELS[d]}
+                  <span className="block text-[10px] font-medium text-muted tabular-nums">
+                    {count > 0 ? count : '·'}
+                    <span className="sr-only"> sessions</span>
+                  </span>
+                </span>
+                {clashing && (
+                  <span className="absolute top-1 right-1 size-2 rounded-full bg-clash-certain">
+                    <span className="sr-only">, has a clash</span>
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+      <div role="group" aria-label={`${TERM_LABELS[term]} term week`} className={cx(!narrow && 'min-w-[36rem]')}>
+        <div className={cx('grid pb-2 text-[12px] font-semibold text-muted', columns, narrow && 'sr-only')}>
           <span />
-          {WEEKDAYS.map((d) => (
+          {days.map((d) => (
             <span key={d} className="px-1.5">
               {DAY_LABELS[d]}
             </span>
           ))}
         </div>
-        <div className="relative grid h-[34rem] grid-cols-[3rem_repeat(5,minmax(0,1fr))] rounded-xl border border-line bg-canvas">
+        <div className={cx('relative grid h-[34rem] rounded-xl border border-line bg-canvas', columns)}>
           {/* Hour lines and labels */}
           <div aria-hidden="true" className="pointer-events-none absolute inset-0">
             {HOURS.map((h, i) => (
@@ -98,7 +149,7 @@ export function WeekGrid({
             ))}
           </div>
           <span aria-hidden="true" />
-          {WEEKDAYS.map((day) => (
+          {days.map((day) => (
             <div key={day} className="relative border-l border-line/70" aria-label={DAY_NAMES[day]} role="group">
               {keepFree
                 .filter((w) => w.day === day && dayOffset(toMinutes(w.to)) > dayOffset(toMinutes(w.from)))
@@ -112,7 +163,7 @@ export function WeekGrid({
                     }}
                   >
                     {/* The early-start band repeats every day, so only the first is labelled; the legend covers the rest. */}
-                    {(w.reason !== 'early' || day === firstEarlyDay) && (
+                    {(w.reason !== 'early' || day === firstEarlyDay || narrow) && (
                       <span className="absolute top-0.5 right-1 inline-flex items-center gap-0.5 text-[10px] font-semibold" aria-hidden="true">
                         <Icon name="moon" size={10} />
                         {w.reason === 'early' ? `Before ${w.to}` : 'Kept free'}
