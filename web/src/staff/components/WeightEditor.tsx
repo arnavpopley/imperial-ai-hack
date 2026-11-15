@@ -1,5 +1,6 @@
 // Weight sliders for the tag editor: one row per key, with add and remove for taxonomy-backed maps.
 import { useId, useState } from 'react';
+import { RangeSlider } from '../../components/RangeSlider.tsx';
 import { focusRing, weight } from '../lib/format.ts';
 import { PlusIcon, XIcon } from './icons.tsx';
 import { Button } from './ui.tsx';
@@ -28,38 +29,30 @@ export function WeightSlider({
   onChange: (value: number) => void;
   onRemove?: () => void;
 }) {
-  const id = useId();
   const changed = original === null || Math.abs(original - value) > 1e-6;
+  const delta = original === null ? null : value - original;
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 sm:grid-cols-[minmax(0,13rem)_minmax(0,1fr)_7.5rem]">
-      <label htmlFor={id} className="min-w-0 text-sm">
-        <span className="block truncate font-medium">{label}</span>
-        {hint && <span className="block text-xs text-muted">{hint}</span>}
-      </label>
-      <div className="col-span-2 flex items-center gap-3 sm:col-span-1">
-        <input
-          id={id}
-          type="range"
-          min={0}
-          max={1}
-          step={0.05}
-          value={value}
-          onChange={(e) => onChange(Number(e.target.value))}
-          aria-valuetext={weight(value)}
-          className={`h-2 min-w-0 flex-1 cursor-pointer accent-brand ${focusRing} rounded-full`}
-        />
-        <output htmlFor={id} className="w-10 text-right text-sm tabular-nums">
-          {weight(value)}
-        </output>
-      </div>
-      <div className="row-start-1 col-start-2 flex items-center justify-end gap-1 sm:row-auto sm:col-auto">
+    // The shared slider stacks its label above a full-width track, so the track keeps its width in a narrow card
+    // (issue #140). The change chip and remove button sit beside the track.
+    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3">
+      <RangeSlider
+        label={label}
+        hint={hint}
+        value={value}
+        onChange={onChange}
+        valueText={weight(value)}
+        ariaValueText={changed ? `${weight(value)}, ${original === null ? 'new' : `was ${weight(original)}`}` : weight(value)}
+        marker={changed && original !== null ? original : undefined}
+      />
+      {/* A fixed width, so the track never shifts under the pointer when the change chip appears mid-drag. */}
+      <div className="flex min-h-11 w-20 items-center justify-end gap-1 pt-4">
         {changed && (
-          <span className="rounded-full bg-brand-soft px-1.5 py-0.5 text-2xs font-medium text-brand">
-            {original === null ? 'new' : `was ${weight(original)}`}
+          <span className="rounded-full bg-brand-soft px-1.5 py-0.5 text-2xs font-medium text-brand tabular-nums" aria-hidden="true">
+            {delta === null ? 'new' : `${delta > 0 ? '+' : delta < 0 ? '\u2212' : ''}${weight(Math.abs(delta))}`}
           </span>
         )}
         {onRemove && (
-          <Button variant="ghost" onClick={onRemove} aria-label={`Remove ${label}`} className="px-1.5">
+          <Button variant="ghost" onClick={onRemove} aria-label={`Remove ${label}`} className="min-h-8 px-1.5">
             <XIcon />
           </Button>
         )}

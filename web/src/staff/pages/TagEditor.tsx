@@ -150,6 +150,7 @@ function TagEditorForm({
       setDraft(draftFrom(updated));
       replaceModule(updated);
       setSave({ status: 'saved' });
+      focusStatus();
       if (inThisSave) onSuggestionSettled(inThisSave);
     } catch (e) {
       setSave({ status: 'error', message: errorMessage(e) });
@@ -157,6 +158,11 @@ function TagEditorForm({
   };
 
   const reviewFlags = countReviewFlags(saved.derivedRationale);
+  // The save bar appears only with something to act on, so it never sits over a clean form (issue #140).
+  const showBar = changes > 0 || saving || save.status === 'error';
+  // Discarding or saving hides the bar and the button that was pressed, so focus moves to the status line.
+  const statusRef = useRef<HTMLParagraphElement>(null);
+  const focusStatus = () => window.requestAnimationFrame(() => statusRef.current?.focus());
 
   return (
     <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_22rem]">
@@ -167,6 +173,15 @@ function TagEditorForm({
           void submit();
         }}
       >
+        <p ref={statusRef} tabIndex={-1} className="-mb-2 text-right text-sm outline-none" aria-live="polite">
+          {save.status === 'saved' && changes === 0 ? (
+            <span className="inline-flex items-center gap-1.5 text-fit-high">
+              <CheckIcon /> Saved. Tags are now derived by staff-edit.
+            </span>
+          ) : changes === 0 && !saving ? (
+            <span className="text-muted">All changes saved</span>
+          ) : null}
+        </p>
         {suggested && save.status !== 'saved' && (
           <p role="status" className="flex items-start gap-2 rounded-2xl bg-brand-soft px-4 py-3 text-sm">
             <CheckIcon className="mt-0.5 size-4 shrink-0 text-brand" />
@@ -233,13 +248,10 @@ function TagEditorForm({
           <DiffSummary diff={diff} labelFor={labelFor} />
         </Panel>
 
-        <div className="sticky bottom-3 z-(--z-sticky) flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-surface/95 px-5 py-4 shadow-lift backdrop-blur">
+        {showBar && (
+        <div className="sticky bottom-3 z-(--z-sticky) flex animate-rise flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-surface/95 px-5 py-4 shadow-lift backdrop-blur">
           <p className="text-sm" aria-live="polite">
-            {save.status === 'saved' ? (
-              <span className="inline-flex items-center gap-1.5 text-fit-high">
-                <CheckIcon /> Saved. Tags are now derived by staff-edit.
-              </span>
-            ) : save.status === 'error' ? (
+            {save.status === 'error' ? (
               <span role="alert" className="inline-flex items-center gap-1.5 text-fit-low">
                 <AlertIcon /> Could not save: {save.message}
               </span>
@@ -257,6 +269,7 @@ function TagEditorForm({
                 setDraft(baseline);
                 if (suggestionKey) onSuggestionSettled(suggestionKey);
                 setSave({ status: 'idle' });
+                focusStatus();
               }}
             >
               Discard
@@ -266,6 +279,7 @@ function TagEditorForm({
             </Button>
           </div>
         </div>
+        )}
       </form>
 
       <aside className="grid gap-5 xl:sticky xl:top-24 xl:max-h-[calc(100dvh-7rem)] xl:overflow-y-auto" aria-label="Analyst rationale and source">
