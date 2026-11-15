@@ -72,7 +72,7 @@ export function CvPanel({ onImported, onClose }: CvPanelProps) {
           <Icon name="bookmark" size={22} />
         </span>
         <div className="min-w-0 flex-1">
-          <h2 id={`${inputId}-heading`} className="text-xl font-semibold tracking-tight">
+          <h2 id={`${inputId}-heading`} className="text-heading">
             Add your CV
           </h2>
           <p id={hintId} className="mt-1 flex items-center gap-1.5 text-sm text-muted">

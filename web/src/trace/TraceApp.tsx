@@ -188,7 +188,7 @@ function Explainer({ icon, title, children }: { icon: IconName; title: string; c
         <Icon name={icon} size={20} />
       </span>
       <div>
-        <h2 className="font-semibold">{title}</h2>
+        <h2 className="text-subheading">{title}</h2>
         <p className="mt-1 text-sm text-muted">{children}</p>
       </div>
     </li>
@@ -199,7 +199,7 @@ function SectionHeading({ id, eyebrow, title, children }: { id: string; eyebrow:
   return (
     <div className="grid gap-1.5">
       <p className="text-xs font-semibold tracking-[0.12em] text-brand uppercase">{eyebrow}</p>
-      <h2 id={id} className="text-2xl font-semibold tracking-tight sm:text-3xl">
+      <h2 id={id} className="text-heading">
         {title}
       </h2>
       <p className="max-w-2xl text-sm text-muted">{children}</p>

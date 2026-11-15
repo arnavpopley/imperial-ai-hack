@@ -57,7 +57,7 @@ export function WeightPanel({ goalUsed }: { goalUsed: boolean }) {
   return (
     <section aria-labelledby="weights-heading" className="rounded-card border border-line bg-surface p-4 shadow-soft sm:p-5">
       <div className="flex items-center justify-between gap-2">
-        <h2 id="weights-heading" className="flex items-center gap-2 text-sm font-semibold">
+        <h2 id="weights-heading" className="flex items-center gap-2 text-subheading">
           <Icon name="sliders" size={15} className="text-brand" />
           What matters most?
         </h2>

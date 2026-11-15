@@ -26,7 +26,7 @@ export function Panel({
         <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             {title && (
-              <h2 id={headingId} className="text-lg font-semibold tracking-tight">
+              <h2 id={headingId} className="text-heading">
                 {title}
               </h2>
             )}

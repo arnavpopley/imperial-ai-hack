@@ -259,7 +259,7 @@ export function AdvisorLauncher({ state, onOpen, onClose, showBubble }: AdvisorL
                   <Icon name="sparkle" size={22} />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <h2 id={titleId} className="text-base font-semibold tracking-tight">
+                  <h2 id={titleId} className="text-subheading">
                     Ask the advisor
                   </h2>
                   <p id={subtitleId} className="text-xs text-on-brand/85">
