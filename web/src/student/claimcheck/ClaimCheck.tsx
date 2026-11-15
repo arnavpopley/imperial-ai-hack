@@ -56,40 +56,35 @@ export function ClaimCheck({ label = 'Check this answer', storageKey, compact = 
     writeNote(storageKey, value);
   };
 
-  if (compact && !open) {
-    return (
-      <button
-        id={buttonId}
-        type="button"
-        aria-expanded={false}
-        aria-label={label}
-        title={label}
-        onClick={() => setOpen(true)}
-        className={cx('grid size-7 place-items-center rounded-full border border-dashed border-line-strong text-brand transition-colors hover:bg-surface-2/60', className)}
-      >
-        <Icon name="search" size={13} />
-      </button>
-    );
-  }
-
+  // Compact and closed, the same wrapper and button shrink to an icon, so opening or closing never moves focus.
+  const small = compact && !open;
   return (
-    <div className={cx('rounded-xl border border-dashed border-line-strong', className)}>
+    <div className={cx(small ? 'inline-block' : 'rounded-xl border border-dashed border-line-strong', className)}>
       <button
         id={buttonId}
         type="button"
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
+        title={small ? label : undefined}
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[13px] font-medium text-muted transition-colors hover:bg-surface-2/60 hover:text-ink"
+        className={cx(
+          small
+            ? 'grid size-7 place-items-center rounded-full border border-dashed border-line-strong text-brand transition-colors hover:bg-surface-2/60'
+            : 'flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[13px] font-medium text-muted transition-colors hover:bg-surface-2/60 hover:text-ink',
+        )}
       >
-        <Icon name="search" size={14} className="shrink-0 text-brand" />
-        <span className="min-w-0 flex-1">{label}</span>
-        <span className="hidden shrink-0 text-[11px] font-normal sm:inline">Optional</span>
-        <Icon
-          name="chevron-down"
-          size={14}
-          className={cx('shrink-0 transition-transform duration-200', open && 'rotate-180')}
-        />
+        <Icon name="search" size={small ? 13 : 14} className="shrink-0 text-brand" />
+        <span className={small ? 'sr-only' : 'min-w-0 flex-1'}>{label}</span>
+        {!small && (
+          <>
+            <span className="hidden shrink-0 text-[11px] font-normal sm:inline">Optional</span>
+            <Icon
+              name="chevron-down"
+              size={14}
+              className={cx('shrink-0 transition-transform duration-200', open && 'rotate-180')}
+            />
+          </>
+        )}
       </button>
       <AnimatePresence initial={false}>
         {open && (

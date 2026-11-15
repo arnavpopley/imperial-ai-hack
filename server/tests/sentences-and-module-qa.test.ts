@@ -3,7 +3,7 @@
 // exam question directly, and gives guarantee questions the same no-promise reply as the advisor chat.
 import { schemas as S } from '@modulematch/shared';
 import { beforeAll, describe, expect, it } from 'vitest';
-import { answerByRules, moduleFacts, SUMMARY_CAP, summaryByTemplate, withoutUrls } from '../src/agents/knowledge.ts';
+import { answerByRules, leadSentences, moduleFacts, SUMMARY_CAP, summaryByTemplate, withoutUrls } from '../src/agents/knowledge.ts';
 import { NO_GUARANTEE } from '../src/agents/outcomes.ts';
 import { createApp } from '../src/app.ts';
 import { seedIfEmpty } from '../src/bootstrap.ts';
@@ -52,12 +52,37 @@ describe('offline module summaries', () => {
     }
   });
 
+  it('never leaves a bracket open or stray when a long sentence is cut', () => {
+    const filler = 'word '.repeat(30);
+    const cases = [
+      `Intro text (with an outer note (and a nested one) that runs ${filler}long) and more ${filler}.`,
+      `A long opening ${filler}(short aside), then a long closing clause that keeps going ${filler}.`,
+      `${filler}ends here) with a stray bracket and more ${filler}.`,
+    ];
+    for (const text of cases) {
+      const lead = leadSentences(text);
+      expect(lead.length, text).toBeLessThanOrEqual(SUMMARY_CAP + 1);
+      expect(lead, text).toMatch(/…$/);
+      let depth = 0;
+      for (const ch of lead) {
+        if (ch === '(') depth += 1;
+        if (ch === ')') depth -= 1;
+        expect(depth, lead).toBeGreaterThanOrEqual(0);
+      }
+      expect(depth, lead).toBe(0);
+    }
+  });
+
   it('no longer cuts the demo modules at "e.g."', () => {
     for (const id of ['MECH60009', 'MECH40004']) expect(summaryByTemplate(modules.find((m) => m.id === id)!).summary).not.toMatch(/e\.g\.$/);
   });
 });
 
 describe('module Q&A answers', () => {
+  it('still answers assessment when the question mentions "example"', () => {
+    expect(answerByRules('How is it assessed, and are there any example questions?', facts('MECH60009'))).toContain('It is assessed by Project (80%, coursework)');
+  });
+
   it('answers "is there an exam" with a direct first word', () => {
     expect(answerByRules('Is there an exam, and who teaches it?', facts('MECH60009'))).toMatch(/^No written exam: it is assessed by Project \(80%, coursework\), Labs \(20%, practical\)\./);
   });

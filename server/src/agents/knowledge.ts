@@ -84,11 +84,32 @@ export function clearSummaryCache(): void {
 /** The offline summary's length limit; longer text is cut at a word with an ellipsis (issue #106). */
 export const SUMMARY_CAP = 220;
 
-const balanced = (text: string) => (text.match(/[([]/g) ?? []).length === (text.match(/[)\]]/g) ?? []).length;
+/** Where brackets go wrong: the first opening bracket left unclosed, and closing brackets with no opening one. */
+function bracketFaults(text: string): { open: number; strayCloses: number[] } {
+  const stack: number[] = [];
+  const strayCloses: number[] = [];
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === '(' || ch === '[') stack.push(i);
+    else if (ch === ')' || ch === ']') {
+      if (stack.length) stack.pop();
+      else strayCloses.push(i);
+    }
+  }
+  return { open: stack[0] ?? -1, strayCloses };
+}
+
+const balanced = (text: string) => {
+  const { open, strayCloses } = bracketFaults(text);
+  return open === -1 && strayCloses.length === 0;
+};
+
+const trimEnd = (text: string) => text.replace(/[\s,;:–-]+$/, '');
 
 /**
- * At most two sentences and SUMMARY_CAP characters. Over the cap, the first sentence alone if it fits, else a cut
- * at a word boundary before any bracket the cut would leave open, with an ellipsis. Always ends cleanly.
+ * At most two sentences and SUMMARY_CAP characters. Over the cap, the first sentence alone if it fits, else a cut at
+ * a clause or word boundary with an ellipsis. The final cut is checked last: it ends before the first bracket it
+ * would leave open, and drops any stray closing bracket, so the summary always ends cleanly (issue #106).
  */
 export function leadSentences(text: string): string {
   const parts = sentences(text).map((p) => p.trim()).filter(Boolean);
@@ -96,12 +117,13 @@ export function leadSentences(text: string): string {
   if (two.length <= SUMMARY_CAP && balanced(two)) return two;
   if (parts[0] && parts[0].length <= SUMMARY_CAP && balanced(parts[0])) return parts[0];
   let cut = (parts[0] ?? text).slice(0, SUMMARY_CAP);
-  const open = Math.max(cut.lastIndexOf('('), cut.lastIndexOf('['));
-  if (!balanced(cut) && open > 0) cut = cut.slice(0, open);
   // Prefer ending at a clause (a colon, semicolon, dash or comma) in the second half to ending mid-phrase.
   const clause = Math.max(...[':', ';', ' – ', ' - ', ','].map((mark) => cut.lastIndexOf(mark)));
-  cut = clause >= SUMMARY_CAP / 2 ? cut.slice(0, clause) : cut.replace(/\s+\S*$/, '');
-  cut = cut.replace(/[\s,;:–-]+$/, '');
+  cut = trimEnd(clause >= SUMMARY_CAP / 2 ? cut.slice(0, clause) : cut.replace(/\s+\S*$/, ''));
+  const { open, strayCloses } = bracketFaults(cut);
+  if (open >= 0) cut = trimEnd(cut.slice(0, open));
+  for (const at of [...strayCloses].reverse()) if (at < cut.length) cut = cut.slice(0, at) + cut.slice(at + 1);
+  cut = trimEnd(cut);
   return cut ? `${cut}…` : '';
 }
 
@@ -220,7 +242,7 @@ const QUESTION_RULES: [RegExp, (f: Facts) => RuleAnswer][] = [
   ],
   [
     // A yes/no exam question is already answered in full by the rule above.
-    /^(?!.*\b(is there|are there|does it have|do (?:we|i|you|students) (?:have|sit)|any)\b.{0,25}\bexam).*\b(assess\w*|exam\w*|coursework|graded|marked|weighting)\b/is,
+    /^(?!.*\b(is there|are there|does it have|do (?:we|i|you|students) (?:have|sit)|any)\b.{0,25}\b(exams?|examinations?)\b).*\b(assess\w*|exam\w*|coursework|graded|marked|weighting)\b/is,
     (f) =>
       f.publishedAssessment.length
         ? `It is assessed by ${assessmentList(f)}.${f.assessmentDetails?.passMark ? ` The published pass mark is ${f.assessmentDetails.passMark}.` : ''}`
