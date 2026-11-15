@@ -222,7 +222,8 @@ export interface Alternatives {
 /**
  * Relevant alternatives to a module the student cannot take (spec 10.5, issue 112). A missing prerequisite that is
  * open to them comes first whatever its fit, since taking it is the way in. Others need topic similarity of at
- * least MIN_ALTERNATIVE_SIMILARITY and, when the profile gives fit a meaning, a fit of at least MIN_ALTERNATIVE_FIT.
+ * least MIN_ALTERNATIVE_SIMILARITY and, to be suggested (rather than named as already shortlisted), a fit of at least
+ * MIN_ALTERNATIVE_FIT when the profile gives fit a meaning.
  * Nothing is padded in: when none qualifies the lists are empty.
  */
 export function alternativesTo(
@@ -243,18 +244,12 @@ export function alternativesTo(
     .filter((id) => recOf.get(id)?.eligible && !shortlist.includes(id))
     .map((id) => ({ moduleId: id, fit: recOf.get(id)!.fit, prerequisite: true }));
   const similar = ranked
-    .filter(
-      (r) =>
-        r.eligible &&
-        r.moduleId !== target.id &&
-        !prerequisiteIds.includes(r.moduleId) &&
-        close(r.moduleId) >= MIN_ALTERNATIVE_SIMILARITY &&
-        (!fitSignal || r.fit >= MIN_ALTERNATIVE_FIT),
-    )
+    .filter((r) => r.eligible && r.moduleId !== target.id && !prerequisiteIds.includes(r.moduleId) && close(r.moduleId) >= MIN_ALTERNATIVE_SIMILARITY)
     .map((r) => ({ r, score: close(r.moduleId) * 0.7 + (r.fit / 100) * 0.3 }))
     .sort((a, b) => b.score - a.score || a.r.moduleId.localeCompare(b.r.moduleId));
+  // The fit floor applies to new suggestions only: a close module the student already chose is named whatever its fit.
   const open = similar
-    .filter(({ r }) => !shortlist.includes(r.moduleId))
+    .filter(({ r }) => !shortlist.includes(r.moduleId) && (!fitSignal || r.fit >= MIN_ALTERNATIVE_FIT))
     .map(({ r }) => ({ moduleId: r.moduleId, fit: r.fit, prerequisite: false }));
   return {
     open: [...prerequisites, ...open].slice(0, n),
