@@ -1,6 +1,5 @@
 // Spec 23 live paths with a mocked model: tailored feedback keeps only numbers that are in the facts, a slow AI draft
-// never overwrites an examiner's newer save, and a live explanation always ends with the performance nudge.
-import { schemas as S, type StudentProfile } from '@modulematch/shared';
+// never overwrites an examiner's newer save.
 import { readFileSync } from 'node:fs';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
@@ -12,7 +11,6 @@ vi.mock('../src/agents/llm.ts', async (importOriginal) => ({
 
 const { structured } = await import('../src/agents/llm.ts');
 const { tailoredFeedback } = await import('../src/agents/exam-feedback.ts');
-const { explain } = await import('../src/agents/matcher.ts');
 const { createApp } = await import('../src/app.ts');
 const { seedIfEmpty } = await import('../src/bootstrap.ts');
 const { dataPath } = await import('../src/db/datasets.ts');
@@ -89,43 +87,5 @@ describe('live exam form drafts', () => {
     finish({ questions: [{ ...question, label: 'AI version' }], generalComments: '' });
     expect((await pending).status).toBe(409);
     expect(repo.getExamForm('MECH50001')).toMatchObject({ examLabel: 'Examiner version', authoredBy: 'examiner' });
-  });
-});
-
-describe('live explanation with a performance nudge', () => {
-  const profile = (): StudentProfile =>
-    S.StudentProfile.parse({
-      studentId: 's',
-      programme: 'MEng Mechanical Engineering',
-      yearOfStudy: 3,
-      completedModuleIds: [],
-      interests: {},
-      pathways: [],
-      pathwaysSkipped: false,
-      style: { examPreference: null, groupPreference: null, appliedPreference: null, mathsComfort: null, codingComfort: null, workloadTolerance: null },
-      breadthAppetite: null,
-      timetablePrefs: { avoidDays: [], earliestStart: null },
-      completeness: 0,
-      updatedAt: '2026-11-14T00:00:00.000Z',
-    });
-  const rec = () => S.Recommendation.parse({ moduleId: 'MECH60006', fit: 55, sub: { interest: 0.5, goal: null, style: 0.7, breadth: 0.5 }, eligible: true, ineligibleReasons: [], confidence: 'medium' });
-  const nudge = { moduleId: 'MECH60006', topics: ['fluid-mechanics'], delta: -8.7, message: 'Fluid Mechanics 3A leans on fluid mechanics. Worth keeping in mind.' };
-  const live = (performanceWatchOut: string | null) => ({
-    summary: 'A good fit.',
-    because: [{ text: 'It is mainly about fluid mechanics.', evidenceId: null, moduleField: 'topics.fluid-mechanics' }],
-    watchOuts: ['It needs a strong grounding in fluid mechanics.'],
-    performanceWatchOut,
-  });
-
-  it("ends with the model's own nudge sentence, even when another watch-out mentions the topic", async () => {
-    mocked.mockResolvedValueOnce(live('Your fluid mechanics results suggest some early revision would help.'));
-    const out = await explain(profile(), repo.getModule('MECH60006')!, rec(), [], tracer, nudge);
-    expect(out.watchOuts.at(-1)).toBe('Your fluid mechanics results suggest some early revision would help.');
-  });
-
-  it('falls back to the deterministic nudge when the model leaves it out', async () => {
-    mocked.mockResolvedValueOnce(live(null));
-    const out = await explain(profile(), repo.getModule('MECH60006')!, rec(), [], tracer, nudge);
-    expect(out.watchOuts).toEqual(['It needs a strong grounding in fluid mechanics.', nudge.message]);
   });
 });

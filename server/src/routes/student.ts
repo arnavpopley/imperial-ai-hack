@@ -8,7 +8,7 @@ import { extract, mergeUpdates } from '../agents/extractor.ts';
 import { QUICK_PLAN } from '../agents/interviewer.ts';
 import { answerModuleQuestion, moduleFacts } from '../agents/knowledge.ts';
 import { emitWords } from '../agents/llm.ts';
-import { catalogue, clearExplanationCache, explanationFor, moduleTitle, newSessionState, ranked, recommendationsResponse, saveProfile, setMode, syncPlanMode, timetableView, tracerSink } from '../agents/session.ts';
+import { applyShortlistEdit, catalogue, clearExplanationCache, explanationFor, moduleTitle, newSessionState, ranked, recommendationsResponse, saveProfile, setMode, timetableView, tracerSink } from '../agents/session.ts';
 import { confirmProfile, handleTurn, resumeInterview } from '../agents/supervisor.ts';
 import { rawModule } from '../db/catalogue.ts';
 import * as repo from '../db/repo.ts';
@@ -150,8 +150,7 @@ export const studentRoutes = new Hono()
   .get('/:id/modules/:moduleId/explanation', async (c) => {
     const session = load(c);
     if (session instanceof Response) return session;
-    // The panel shows the performance nudge, if any (spec 23); this response is never stored.
-    const explanation = await explanationFor(session, c.req.param('moduleId'), createTracer(session.id, tracerSink), undefined, { withNudge: true });
+    const explanation = await explanationFor(session, c.req.param('moduleId'), createTracer(session.id, tracerSink));
     if (!explanation) return c.json({ error: 'module not found' }, 404);
     const cited = new Set(explanation.because.flatMap((b) => (b.evidenceId ? [b.evidenceId] : [])));
     return c.json({ explanation, evidence: session.evidence.filter((e) => cited.has(e.id)) });
@@ -171,12 +170,8 @@ export const studentRoutes = new Hono()
         return c.json({ error: 'not eligible', reasons }, 422);
       }
     }
-    if (action === 'add') repo.addToShortlist(session.id, moduleId);
-    else repo.removeFromShortlist(session.id, moduleId);
-    session.shortlist = repo.listShortlist(session.id);
-    tracer.record({ actor: 'supervisor', kind: 'tool', input: `shortlist ${action} ${moduleId}`, output: `${session.shortlist.length} on shortlist`, verdict: null });
     // The returned session carries the new mode, so the mode chip follows the shortlist without a reload.
-    syncPlanMode(session, tracer);
+    applyShortlistEdit(session, moduleId, action, tracer);
     return c.json(fresh(session.id));
   })
   .get('/:id/timetable', (c) => {
