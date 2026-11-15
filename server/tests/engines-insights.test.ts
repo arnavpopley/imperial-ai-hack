@@ -327,26 +327,35 @@ describe('storedDecisions', () => {
   const [maths, thermo] = cards;
 
   it('keeps decisions by id', () => {
-    const { decisions, legacyIds } = storedDecisions(cards, [{ ...maths!, decision: 'noted' }]);
+    const { decisions, consumedIds } = storedDecisions(cards, [{ ...maths!, decision: 'noted' }]);
     expect(decisions.get(maths!.id)).toBe('noted');
-    expect(legacyIds).toEqual([]);
+    expect(consumedIds).toEqual([]);
   });
 
   it('carries a decision from an older rank-based id that names the same change, and hands the old row back', () => {
     // Rank 1 under the old ids, but the change is the thermodynamics one: matched by change, not by rank.
     const legacy = { ...thermo!, id: 'target:COUNTERFACTUAL:1', decision: 'accepted' as const };
-    const { decisions, legacyIds } = storedDecisions(cards, [legacy]);
+    const { decisions, consumedIds } = storedDecisions(cards, [legacy]);
     expect(decisions.get(thermo!.id)).toBe('accepted');
     expect(decisions.has(maths!.id)).toBe(false);
-    expect(legacyIds).toEqual(['target:COUNTERFACTUAL:1']);
+    expect(consumedIds).toEqual(['target:COUNTERFACTUAL:1']);
   });
 
-  it('carries nothing to a different change, even with the same rank and uplift', () => {
-    const legacy = { ...maths!, id: 'target:COUNTERFACTUAL:1', headline: 'Move 20% of the marks from the exam to coursework: +5.0 fit points', decision: 'accepted' as const };
-    const { decisions, legacyIds } = storedDecisions(cards, [legacy]);
+  it('matches a reworded old card by rank and uplift, since its wording names no current change', () => {
+    const reworded = { ...maths!, id: 'target:COUNTERFACTUAL:1', headline: 'Lighter maths would lift fit for six students', decision: 'noted' as const };
+    const { decisions, consumedIds } = storedDecisions(cards, [reworded]);
+    expect(decisions.get(maths!.id)).toBe('noted');
+    expect(consumedIds).toEqual(['target:COUNTERFACTUAL:1']);
+  });
+
+  it('carries nothing to a different change, and keeps the unmatched row for later', () => {
+    // Engine wording for the thermodynamics change, under rank 1 with the maths card's uplift: it names a
+    // current change, so the rank fallback never applies, and the uplift differs from thermodynamics.
+    const legacy = { ...thermo!, id: 'target:COUNTERFACTUAL:1', upliftPoints: maths!.upliftPoints, decision: 'accepted' as const };
+    const { decisions, consumedIds } = storedDecisions(cards, [legacy]);
     expect(decisions.has(maths!.id)).toBe(false);
-    // Still handed back, so it is deleted and never matches a later card.
-    expect(legacyIds).toEqual(['target:COUNTERFACTUAL:1']);
+    expect(decisions.has(thermo!.id)).toBe(false);
+    expect(consumedIds).toEqual([]);
   });
 
   it('uses each old row once, and lets a decision under the new id win', () => {

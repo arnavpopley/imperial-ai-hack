@@ -666,28 +666,50 @@ const changeWording = (card: Insight): string => card.headline.slice(0, card.hea
 export interface StoredDecisions {
   /** The staff decision for each current card id. */
   decisions: Map<string, InsightDecision>;
-  /** Rows under the old rank-based ids. They can never be shown again, so the caller deletes them once read. */
-  legacyIds: string[];
+  /** Old rank-based rows whose decision has now moved to a change-based id: the caller deletes them. */
+  consumedIds: string[];
 }
 
 /**
- * The staff decision for each card, by id. Counterfactual cards used to be numbered by rank. A decision
- * recorded under such an id carries over to the change-based id only when the stored card names the same
- * change in the engine's wording, with the same uplift; each old row is used at most once, and every old row
- * is then handed back for deletion, so the conversion happens once. A decision under the new id always wins.
- * `cards` must be the engine's own output, before the Insights agent rewords it.
+ * The staff decision for each card, by id. Counterfactual cards used to be numbered by rank (`…:1`), so a
+ * decision recorded under such an id is converted once, to the change-based id of the same change:
+ * - first by the change itself: the old headline starts with the card's engine wording, with the same uplift;
+ * - otherwise, for an old headline the Insights agent reworded (it matches no current card's wording), by
+ *   the same rank among the change cards and the same uplift.
+ * Each old row moves at most once and is then handed back for deletion, so it can never mark a later card.
+ * Rows that match nothing are kept, still hidden, until they can be matched. A decision already stored under
+ * the new id always wins. `cards` must be the engine's own output, before the Insights agent rewords it.
  */
 export function storedDecisions(cards: readonly Insight[], stored: readonly Insight[]): StoredDecisions {
   const decisions = new Map(stored.map((insight) => [insight.id, insight.decision]));
-  const legacy = stored.filter((insight) => RANKED_COUNTERFACTUAL_ID.test(insight.id));
-  const unused = legacy.filter((insight) => insight.decision !== 'pending');
-  for (const card of cards) {
-    if (card.kind !== 'COUNTERFACTUAL' || isCounterfactualSummary(card) || decisions.has(card.id)) continue;
+  const changeCards = cards.filter((card) => card.kind === 'COUNTERFACTUAL' && !isCounterfactualSummary(card));
+  const wordings = changeCards.map(changeWording).filter((wording) => wording !== '');
+  const unused = stored.filter((insight) => RANKED_COUNTERFACTUAL_ID.test(insight.id) && insight.decision !== 'pending');
+  const consumedIds: string[] = [];
+  const take = (cardId: string, index: number) => {
+    const [old] = unused.splice(index, 1);
+    if (!old) return;
+    decisions.set(cardId, old.decision);
+    consumedIds.push(old.id);
+  };
+  const open = changeCards.filter((card) => !decisions.has(card.id));
+  // By the change itself.
+  for (const card of open) {
     const wording = changeWording(card);
     const match = unused.findIndex((old) => wording !== '' && old.headline.startsWith(wording) && old.upliftPoints === card.upliftPoints);
-    if (match < 0) continue;
-    const [old] = unused.splice(match, 1);
-    if (old) decisions.set(card.id, old.decision);
+    if (match >= 0) take(card.id, match);
   }
-  return { decisions, legacyIds: legacy.map((insight) => insight.id) };
+  // Reworded rows only: same rank and same uplift.
+  for (const card of open) {
+    if (decisions.has(card.id)) continue;
+    const rank = String(changeCards.indexOf(card) + 1);
+    const match = unused.findIndex(
+      (old) =>
+        RANKED_COUNTERFACTUAL_ID.exec(old.id)?.[1] === rank &&
+        old.upliftPoints === card.upliftPoints &&
+        !wordings.some((wording) => old.headline.startsWith(wording)),
+    );
+    if (match >= 0) take(card.id, match);
+  }
+  return { decisions, consumedIds };
 }

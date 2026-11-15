@@ -99,16 +99,18 @@ function TagEditorForm({
 
   // A suggestion that arrives after the form mounted (for example when browser history restores the link) is
   // applied on top of the current draft. One that leaves the URL after a save or discard changes nothing.
+  // While a save is in flight the form stays locked, and the suggestion waits until the response has landed.
   const suggestionKey = suggested ? formatSuggestedEdit(suggested) : '';
   const appliedKey = useRef(suggestionKey);
+  const inFlight = save.status === 'saving';
   useEffect(() => {
-    if (suggestionKey === appliedKey.current) return;
+    if (inFlight || suggestionKey === appliedKey.current) return;
     appliedKey.current = suggestionKey;
     if (!suggested) return;
     setDraft((d) => applySuggestedEdit(d, suggested));
     setSave({ status: 'idle' });
     // `suggested` is the parsed form of `suggestionKey`, so the key alone says when it changed.
-  }, [suggestionKey]);
+  }, [suggestionKey, inFlight]);
 
   const baseline = useMemo(() => draftFrom(saved), [saved]);
   const diff = useMemo(() => diffDraft(baseline, draft), [baseline, draft]);
