@@ -131,7 +131,7 @@ export const AGENTS: readonly Agent[] = [
     tier: 'smart',
     tools: [],
     does: 'Turns your marks into tailored revision advice.',
-    never: 'states a number your marks do not contain.',
+    never: 'states a number the exam facts do not contain.',
     gradient: 'from-module-4 to-module-6',
     tone: 'text-module-4',
   },
