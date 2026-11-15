@@ -5,8 +5,8 @@ const TRANSITIONS: Record<Mode, Mode[]> = {
   ONBOARD: ['INTERVIEW'],
   INTERVIEW: ['RECOMMEND', 'ESCALATED'],
   RECOMMEND: ['EXPLAIN', 'INTERVIEW', 'PLAN', 'ESCALATED'],
-  EXPLAIN: ['RECOMMEND'],
-  PLAN: ['RECOMMEND', 'ESCALATED'],
+  EXPLAIN: ['RECOMMEND', 'PLAN'],
+  PLAN: ['EXPLAIN', 'RECOMMEND', 'ESCALATED'],
   ESCALATED: ['RECOMMEND'],
 };
 
@@ -15,8 +15,9 @@ export function canTransition(from: Mode, to: Mode): boolean {
 }
 
 /**
- * The mode a session should leave ESCALATED or EXPLAIN for, and the route from any mode back to
- * RECOMMEND. EXPLAIN is transient and returns here once its turn is done. PLAN is not: it lasts while the
- * shortlist has two or more modules (syncPlanMode in session.ts).
+ * Spec 12: the mode a shortlist of this size implies, PLAN at two or more modules and RECOMMEND below.
+ * The one rule behind shortlist edits (syncPlanMode) and the end of an explanation or what-if (leaveExplain).
  */
-export const RESTING_MODE: Mode = 'RECOMMEND';
+export function restingModeFor(shortlist: readonly string[]): 'PLAN' | 'RECOMMEND' {
+  return shortlist.length >= 2 ? 'PLAN' : 'RECOMMEND';
+}

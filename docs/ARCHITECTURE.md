@@ -54,10 +54,12 @@ stateDiagram-v2
   ONBOARD --> INTERVIEW: programme and year entered
   INTERVIEW --> RECOMMEND: profile confirmed or interview skipped
   RECOMMEND --> EXPLAIN: asks why or what-if
-  EXPLAIN --> RECOMMEND: done
+  EXPLAIN --> RECOMMEND: done, shortlist has fewer than two modules
+  EXPLAIN --> PLAN: done, shortlist has two or more modules
   RECOMMEND --> INTERVIEW: low confidence and student agrees
   RECOMMEND --> PLAN: shortlist has two or more modules
-  PLAN --> RECOMMEND: shortlist drops below two, or an explanation or what-if ends
+  PLAN --> EXPLAIN: asks why or what-if
+  PLAN --> RECOMMEND: shortlist drops below two modules
   INTERVIEW --> ESCALATED: guardrail trigger
   RECOMMEND --> ESCALATED: rule exception or low confidence
   PLAN --> ESCALATED: clash with no valid swap

@@ -146,7 +146,9 @@ describe('mode machine', () => {
     expect(canTransition('RECOMMEND', 'PLAN')).toBe(true);
     expect(canTransition('ESCALATED', 'RECOMMEND')).toBe(true);
     expect(canTransition('ONBOARD', 'PLAN')).toBe(false);
-    expect(canTransition('EXPLAIN', 'PLAN')).toBe(false);
+    expect(canTransition('PLAN', 'EXPLAIN')).toBe(true);
+    expect(canTransition('EXPLAIN', 'PLAN')).toBe(true);
+    expect(canTransition('ESCALATED', 'PLAN')).toBe(false);
   });
 });
 
