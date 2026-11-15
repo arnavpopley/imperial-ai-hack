@@ -41,11 +41,14 @@ export function TagEditor() {
   // "Make this change in the tag editor" on an accepted insight card passes its change here.
   const [params, setParams] = useSearchParams();
   const editParam = params.get(EDIT_PARAM) ?? '';
-  // Once the suggestion is saved or discarded it leaves the URL, so a refresh does not bring it back.
+  // Once a suggestion is saved or discarded it leaves the URL, so a refresh does not bring it back. Only that
+  // suggestion: if history has since brought a newer one into the URL, the newer one stays.
   const settleSuggestion = useCallback(
-    () =>
+    (settled: string) =>
       setParams(
         (current) => {
+          const now = parseSuggestedEdit(current.get(EDIT_PARAM) ?? '');
+          if (!now || formatSuggestedEdit(now) !== settled) return current;
           const next = new URLSearchParams(current);
           next.delete(EDIT_PARAM);
           return next;
@@ -88,7 +91,7 @@ function TagEditorForm({
 }: {
   module: Module;
   suggested: SuggestedEdit | null;
-  onSuggestionSettled: () => void;
+  onSuggestionSettled: (settled: string) => void;
 }) {
   const { replaceModule } = useStaffData();
   const pathways = useResource('pathways', api.pathways);
@@ -137,6 +140,8 @@ function TagEditorForm({
   const editWeights = (field: WeightField) => (value: Record<string, number>) => edit({ [field]: value });
 
   const submit = async () => {
+    // The suggestion already in the draft is the one this save settles, whatever the URL holds by the end.
+    const inThisSave = appliedKey.current;
     setSave({ status: 'saving' });
     try {
       const updated = await api.staff.editDerived(module.id, editBody(draft, diff));
@@ -145,7 +150,7 @@ function TagEditorForm({
       setDraft(draftFrom(updated));
       replaceModule(updated);
       setSave({ status: 'saved' });
-      if (suggested) onSuggestionSettled();
+      if (inThisSave) onSuggestionSettled(inThisSave);
     } catch (e) {
       setSave({ status: 'error', message: errorMessage(e) });
     }
@@ -250,7 +255,7 @@ function TagEditorForm({
               disabled={changes === 0 || saving}
               onClick={() => {
                 setDraft(baseline);
-                if (suggested) onSuggestionSettled();
+                if (suggestionKey) onSuggestionSettled(suggestionKey);
                 setSave({ status: 'idle' });
               }}
             >
