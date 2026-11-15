@@ -344,9 +344,21 @@ export const fixtureStaffModules: StaffModuleSummary[] = fixtureModules.map((m, 
   title: m.title,
   type: m.type,
   capacity: m.capacity,
-  shortlisted: [64, 12, 9, 31][i] ?? 0,
+  shortlisted: [64, 12, null, 31][i] ?? 0,
   averageFit: [71, 58, 44, 49][i] ?? 0,
-  fitHistogram: [0, 1, 4, 9, 18, 30, 42, 50, 32, 14],
+  // Bands of one to four students are merged with their neighbours (spec 20.4): 10–29 holds 5.
+  fitBands: [
+    { from: 0, to: 9, students: 0 },
+    { from: 10, to: 29, students: 5 },
+    { from: 30, to: 39, students: 9 },
+    { from: 40, to: 49, students: 18 },
+    { from: 50, to: 59, students: 30 },
+    { from: 60, to: 69, students: 42 },
+    { from: 70, to: 79, students: 50 },
+    { from: 80, to: 89, students: 32 },
+    { from: 90, to: 100, students: 14 },
+  ],
+  strongFitShare: 0.69,
   cohortSize: 200,
 }));
 

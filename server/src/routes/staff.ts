@@ -3,6 +3,7 @@ import {
   DEFAULT_WEIGHTS,
   MIN_COHORT,
   schemas,
+  STRONG_FIT_FLOOR,
   type CohortOffer,
   type Escalation,
   type ExamFeedbackForm,
@@ -20,7 +21,18 @@ import { wordInsight } from '../agents/insights.ts';
 import { clearSummaryCache } from '../agents/knowledge.ts';
 import { catalogue, clearExplanationCache, rulesForProfile, setMode, tracerSink } from '../agents/session.ts';
 import * as repo from '../db/repo.ts';
-import { buildInsights, checkProgrammeRules, clashPriorities, cohortStats, feedbackJsonl, storedDecisions, summariseFeedback, type InsightContext } from '../engines/index.ts';
+import {
+  buildInsights,
+  checkProgrammeRules,
+  clashPriorities,
+  cohortStats,
+  feedbackJsonl,
+  staffFitBands,
+  storedDecisions,
+  summariseFeedback,
+  withheld,
+  type InsightContext,
+} from '../engines/index.ts';
 import { createTracer, type Tracer } from '../trace/tracer.ts';
 import { body } from './validate.ts';
 
@@ -71,7 +83,24 @@ export const staffRoutes = new Hono()
       // Below the minimum cohort nothing is shown for the module (spec 20.4).
       if (!stats) return [];
       const offer = rules ? offerFor(m, rules) : undefined;
-      return [{ moduleId: m.id, code: m.code, title: m.title, type: m.type, capacity: m.capacity, ...stats, ...(offer && { offer }) }];
+      // Every count of one to four students is withheld here, before it leaves the API (spec 20.4): small fit
+      // bands are merged, a small shortlist count is null, and so is any share that would give such a count away.
+      const { bands, strong } = staffFitBands(stats.fitHistogram, STRONG_FIT_FLOOR);
+      return [
+        {
+          moduleId: m.id,
+          code: m.code,
+          title: m.title,
+          type: m.type,
+          capacity: m.capacity,
+          cohortSize: stats.cohortSize,
+          averageFit: stats.averageFit,
+          shortlisted: withheld(stats.shortlisted),
+          fitBands: bands,
+          strongFitShare: strong === null ? null : strong / stats.cohortSize,
+          ...(offer && { offer }),
+        },
+      ];
     });
     return c.json(rows);
   })

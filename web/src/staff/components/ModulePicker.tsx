@@ -12,6 +12,7 @@ import {
   hasOffers,
   inView,
   isOption,
+  knownShortlisted,
   shortlistFigure,
   shortlistLabel,
   strongFitShare,
@@ -162,16 +163,21 @@ export function ModulePicker({ modules }: { modules: StaffModuleSummary[] }) {
   );
 }
 
-/** The cohort's fit spread in ten buckets; strong-fit buckets are tinted. Decorative beside the figures. */
-function FitSpark({ histogram }: { histogram: readonly number[] }) {
-  const max = Math.max(1, ...histogram);
+/**
+ * The cohort's fit spread; strong-fit bands are tinted. Decorative beside the figures. Bands the server merged (one
+ * to four students, spec 20.4) are drawn as wide as they are, at their students per 10 points.
+ */
+function FitSpark({ bands }: { bands: StaffModuleSummary['fitBands'] }) {
+  const span = (b: (typeof bands)[number]) => Math.max(10, b.to - b.from + (b.to === 100 ? 0 : 1));
+  const perTen = (b: (typeof bands)[number]) => (b.students * 10) / span(b);
+  const max = Math.max(1, ...bands.map(perTen));
   return (
     <span aria-hidden="true" className="flex h-5 w-20 shrink-0 items-end gap-px" title="Fit spread, 0 to 100">
-      {histogram.map((n, i) => (
+      {bands.map((b) => (
         <span
-          key={i}
-          className={`flex-1 rounded-t-[2px] ${i * 10 >= STRONG_FIT ? 'bg-fit-high' : 'bg-line-strong'}`}
-          style={{ height: `${Math.max(n > 0 ? 12 : 4, (n / max) * 100)}%` }}
+          key={b.from}
+          className={`rounded-t-[2px] ${b.from >= STRONG_FIT ? 'bg-fit-high' : 'bg-line-strong'}`}
+          style={{ flexGrow: span(b), flexBasis: 0, height: `${Math.max(b.students > 0 ? 12 : 4, (perTen(b) / max) * 100)}%` }}
         />
       ))}
     </span>
@@ -179,9 +185,11 @@ function FitSpark({ histogram }: { histogram: readonly number[] }) {
 }
 
 function ModuleFigures({ module: m }: { module: StaffModuleSummary }) {
-  const status = capacityStatus(m.shortlisted, m.capacity);
+  const status = capacityStatus(knownShortlisted(m), m.capacity);
   const share = strongFitShare(m);
-  const counted = isOption(m) && m.shortlisted >= MIN_COHORT;
+  // A share made of one to four students is withheld by the server: shown as a band, never a percentage.
+  const shareText = m.strongFitShare === null ? `<${MIN_COHORT}` : percent(share);
+  const counted = isOption(m) && (m.shortlisted ?? 0) >= MIN_COHORT;
   return (
     <>
       <span className="flex items-start justify-between gap-3">
@@ -191,15 +199,19 @@ function ModuleFigures({ module: m }: { module: StaffModuleSummary }) {
           className={`grid h-7 min-w-11 shrink-0 place-items-center rounded-full px-2 text-xs font-semibold tabular-nums ring-1 ${
             share > 0 ? 'bg-fit-high/10 text-fit-high ring-fit-high/30' : 'bg-surface text-muted ring-line'
           }`}
-          title={`Share of the cohort with a fit of ${STRONG_FIT} or more`}
+          title={
+            m.strongFitShare === null
+              ? `Fewer than ${MIN_COHORT} students with a fit of ${STRONG_FIT} or more`
+              : `Share of the cohort with a fit of ${STRONG_FIT} or more`
+          }
         >
-          {percent(share)}
+          {shareText}
         </span>
       </span>
       <span className="flex flex-wrap items-end justify-between gap-x-3 gap-y-1 text-xs text-muted">
         <span className="flex items-end gap-2.5">
           <span className="font-mono">{m.code}</span>
-          <FitSpark histogram={m.fitHistogram} />
+          <FitSpark bands={m.fitBands} />
         </span>
         <span className="tabular-nums">
           {shortlistLabel(m)}
@@ -207,9 +219,12 @@ function ModuleFigures({ module: m }: { module: StaffModuleSummary }) {
           {counted && status === 'near' && <span className="ml-1 font-medium text-fit-mid">near cap</span>}
         </span>
       </span>
-      {counted && <DemandMiniBar shortlisted={m.shortlisted} capacity={m.capacity} />}
+      {counted && <DemandMiniBar shortlisted={knownShortlisted(m)} capacity={m.capacity} />}
       <span className="sr-only">
-        {percent(share)} of the cohort with a fit of {STRONG_FIT} or more; average fit {Math.round(m.averageFit)}.
+        {m.strongFitShare === null
+          ? `Fewer than ${MIN_COHORT} students with a fit of ${STRONG_FIT} or more`
+          : `${percent(share)} of the cohort with a fit of ${STRONG_FIT} or more`}
+        ; average fit {Math.round(m.averageFit)}.
       </span>
     </>
   );

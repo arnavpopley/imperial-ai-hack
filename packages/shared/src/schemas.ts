@@ -689,9 +689,22 @@ export const StaffModuleSummary = z.object({
   title: z.string(),
   type: Module.shape.type,
   capacity: z.number().nullable(),
-  shortlisted: z.number().int().min(0),
+  /** Students who shortlisted it. Null when that is one to four students, which are never counted out (spec 20.4). */
+  shortlisted: z.number().int().min(0).nullable(),
   averageFit: z.number().min(0).max(100),
-  fitHistogram: z.array(z.number().int().min(0)).length(10),
+  /**
+   * Students per fit band, low to high, covering 0 to 100. Bands start 10 points wide; a band of one to four
+   * students is merged with its neighbours until it holds five or more (spec 20.4), so every band is 0 or at least
+   * five and they add up to the cohort.
+   */
+  fitBands: z
+    .array(z.object({ from: z.number().int().min(0).max(100), to: z.number().int().min(0).max(100), students: z.number().int().min(0) }))
+    .min(1),
+  /**
+   * Share of the cohort with a fit of STRONG_FIT_FLOOR or more, from the exact counts. Null when one to four
+   * students sit on either side of that line, since the share would give that count away.
+   */
+  strongFitShare: Fraction.nullable(),
   cohortSize: z.number().int().min(0),
   /**
    * From the same programme check the students' recommendations use (before prerequisites). Absent when the cohort's

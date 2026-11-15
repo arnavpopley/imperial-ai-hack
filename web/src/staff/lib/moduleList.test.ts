@@ -11,16 +11,22 @@ const row = (moduleId: string, patch: Partial<StaffModuleSummary> = {}): StaffMo
   capacity: 60,
   shortlisted: 20,
   averageFit: 40,
-  fitHistogram: [0, 0, 10, 10, 10, 10, 5, 3, 2, 0],
+  fitBands: [
+    { from: 0, to: 19, students: 0 },
+    { from: 20, to: 59, students: 40 },
+    { from: 60, to: 100, students: 10 },
+  ],
+  strongFitShare: 10 / 50,
   cohortSize: 50,
   offer: 'elective',
   ...patch,
 });
 
 describe('staff module list', () => {
-  it('measures the share of the cohort with a strong fit from the histogram', () => {
+  it('takes the strong-fit share from the server, since withheld bands cannot be summed', () => {
     expect(strongFitShare(row('A'))).toBeCloseTo(10 / 50);
-    expect(strongFitShare(row('B', { fitHistogram: Array(10).fill(0) }))).toBe(0);
+    // One to four strong fits: withheld, and sorted as none.
+    expect(strongFitShare(row('B', { strongFitShare: null }))).toBe(0);
   });
 
   it('labels demand honestly: compulsory, not offered, none yet, and counts under five as a band', () => {
@@ -31,6 +37,9 @@ describe('staff module list', () => {
     expect(shortlistLabel(row('A', { shortlisted: 12 }))).toBe('12 / 60 shortlisted');
     expect(shortlistLabel(row('A', { shortlisted: 12, capacity: null }))).toBe('12 shortlisted');
     expect(shortlistFigure(row('A', { shortlisted: 4 }))).toBe(0);
+    // The server sends null for one to four students (spec 20.4).
+    expect(shortlistLabel(row('A', { shortlisted: null }))).toBe('Under 5 shortlisted');
+    expect(shortlistFigure(row('A', { shortlisted: null }))).toBe(0);
   });
 
   it('shows options by default and groups every view by offer', () => {
@@ -59,9 +68,9 @@ describe('staff module list', () => {
 
   it('opens on the strongest-fit option, never a module the cohort cannot take', () => {
     const rows = [
-      row('N', { offer: 'not-offered', fitHistogram: [0, 0, 0, 0, 0, 0, 0, 0, 50, 0] }),
-      row('E1', { fitHistogram: [0, 0, 40, 0, 0, 0, 0, 10, 0, 0] }),
-      row('E2', { fitHistogram: [0, 0, 30, 0, 0, 0, 0, 20, 0, 0] }),
+      row('N', { offer: 'not-offered', strongFitShare: 1 }),
+      row('E1', { strongFitShare: 0.2 }),
+      row('E2', { strongFitShare: 0.4 }),
     ];
     expect(firstModule(rows)?.moduleId).toBe('E2');
   });

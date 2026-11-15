@@ -1,5 +1,5 @@
 // Grouping, filtering and honest labels for the staff module list (issue #69).
-import { MIN_COHORT } from '@modulematch/shared';
+import { MIN_COHORT, STRONG_FIT_FLOOR } from '@modulematch/shared';
 import type { CohortOffer, StaffModuleSummary } from '@modulematch/shared';
 
 export const OFFER_GROUPS: readonly { offer: CohortOffer; label: string }[] = [
@@ -27,31 +27,32 @@ export const inView = (row: StaffModuleSummary, view: ListView) =>
 export const isOption = (row: StaffModuleSummary) => row.offer === undefined || row.offer === 'elective' || row.offer === 'i-explore';
 
 /** A fit at or above this counts as strong: the 60 to 100 buckets of the fit histogram. */
-export const STRONG_FIT = 60;
-const BUCKET_WIDTH = 10;
-
-/** Share of the cohort whose fit is strong. It separates modules far better than the mean, which sits at 25 to 42. */
-export function strongFitShare(row: StaffModuleSummary): number {
-  const total = row.fitHistogram.reduce((sum, n) => sum + n, 0);
-  if (total === 0) return 0;
-  const strong = row.fitHistogram.slice(STRONG_FIT / BUCKET_WIDTH).reduce((sum, n) => sum + n, 0);
-  return strong / total;
-}
+export const STRONG_FIT = STRONG_FIT_FLOOR;
 
 /**
- * Shortlist counts under MIN_COHORT are reported as a band, the same five-student rule as every other staff
- * figure, so a count of one or two never points at individual students.
+ * Share of the cohort whose fit is strong, from the server's exact counts. It separates modules far better than
+ * the mean, which sits at 25 to 42. Null (one to four students) sorts as none.
+ */
+export const strongFitShare = (row: StaffModuleSummary): number => row.strongFitShare ?? 0;
+
+/**
+ * The server withholds counts of one to four students (spec 20.4, null), so they are shown as a band, the same
+ * five-student rule as every other staff figure, and a count of one or two never points at individual students.
  */
 export function shortlistLabel(row: StaffModuleSummary): string {
   if (row.offer === 'core') return 'Compulsory for this cohort';
   if (row.offer === 'not-offered') return 'Not offered to this cohort';
   if (row.shortlisted === 0) return 'No shortlists yet';
-  if (row.shortlisted < MIN_COHORT) return `Under ${MIN_COHORT} shortlisted`;
+  if (row.shortlisted === null || row.shortlisted < MIN_COHORT) return `Under ${MIN_COHORT} shortlisted`;
   return `${row.shortlisted}${row.capacity === null ? '' : ` / ${row.capacity}`} shortlisted`;
 }
 
 /** The shortlist count for sorting, with counts under MIN_COHORT banded together so their order reveals nothing. */
-export const shortlistFigure = (row: StaffModuleSummary) => (row.shortlisted < MIN_COHORT ? 0 : row.shortlisted);
+export const shortlistFigure = (row: StaffModuleSummary) =>
+  row.shortlisted === null || row.shortlisted < MIN_COHORT ? 0 : row.shortlisted;
+
+/** A shortlist count to compare against capacity: a withheld count (one to four) is too few to be near it. */
+export const knownShortlisted = (row: Pick<StaffModuleSummary, 'shortlisted'>) => row.shortlisted ?? 0;
 
 export interface ModuleGroup {
   offer: CohortOffer | null;

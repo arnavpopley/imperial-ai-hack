@@ -275,7 +275,13 @@ describe('insight cards', () => {
   it('flags an overlooked module: above-median fit, under 20% of capacity shortlisted', () => {
     const card = overlooked(target, context(6, [['target']]));
     expect(card).toMatchObject({ id: 'target:OVERLOOKED:1', kind: 'OVERLOOKED', cohortSize: 9 });
-    expect(card?.detail).toContain('1% of its 100 places');
+    // One shortlist is not counted out loud, nor given as a share of the places (spec 20.4).
+    expect(card?.headline).toContain('but fewer than 5 shortlists');
+    expect(card?.detail).toContain('Fewer than 5 students shortlisted it, out of its 100 places.');
+    expect(card?.detail).not.toMatch(/1%|\b1 student/);
+    // Five or more are counted, with their share of the places.
+    const five = Array.from({ length: 5 }, () => ['target']);
+    expect(overlooked(target, context(6, five))?.detail).toContain('Only 5 students shortlisted it, 5% of its 100 places.');
     const popular = Array.from({ length: 20 }, () => ['target']);
     expect(overlooked(target, context(6, popular))).toBeNull();
   });
