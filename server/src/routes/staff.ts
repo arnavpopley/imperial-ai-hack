@@ -6,6 +6,8 @@ import {
   type Escalation,
   type ExamFeedbackForm,
   type Insight,
+  type Module,
+  type ProgrammeRules,
   type SessionState,
   type StaffEscalation,
   type StaffModuleSummary,
@@ -39,6 +41,19 @@ function insightContext(): InsightContext {
   };
 }
 
+/**
+ * How the cohort's programme year offers a module: compulsory, one of its options, or not offered at all. The staff
+ * module list leads with the options, since a core or other-year module shows "0 shortlisted" whatever its fit.
+ * Sent beside StaffModuleSummary as an optional extra field; the shared schema does not list it yet.
+ */
+type CohortOffer = 'core' | 'elective' | 'i-explore' | 'not-offered';
+
+function offerFor(module: Module, rules: ProgrammeRules): CohortOffer {
+  if (rules.coreModuleIds.includes(module.id)) return 'core';
+  if (!rules.allowedElectiveIds.includes(module.id)) return 'not-offered';
+  return module.type === 'i-explore' ? 'i-explore' : 'elective';
+}
+
 /** The one exam feedback form a module holds (spec 23). Staff trace events use the 'staff' session id. */
 const examFormId = (moduleId: string) => `exam-${moduleId}`;
 const staffTracer = () => createTracer('staff', tracerSink);
@@ -46,11 +61,14 @@ const staffTracer = () => createTracer('staff', tracerSink);
 export const staffRoutes = new Hono()
   .get('/modules', (c) => {
     const ctx = insightContext();
-    const rows: StaffModuleSummary[] = ctx.modules.flatMap((m) => {
+    const first = ctx.cohort[0];
+    // The synthetic cohort shares one programme and year, so its first student's rules are everyone's.
+    const rules = first ? rulesFor(first.programme, first.yearOfStudy) : null;
+    const rows: (StaffModuleSummary & { offer?: CohortOffer })[] = ctx.modules.flatMap((m) => {
       const stats = cohortStats(m, ctx.cohort, ctx.shortlists, ctx.weights, ctx.homeTopics);
       // Below the minimum cohort nothing is shown for the module (spec 20.4).
       if (!stats) return [];
-      return [{ moduleId: m.id, code: m.code, title: m.title, type: m.type, capacity: m.capacity, ...stats }];
+      return [{ moduleId: m.id, code: m.code, title: m.title, type: m.type, capacity: m.capacity, ...stats, ...(rules && { offer: offerFor(m, rules) }) }];
     });
     return c.json(rows);
   })
