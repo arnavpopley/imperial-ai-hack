@@ -83,7 +83,7 @@ Open http://localhost:5173. The database seeds itself from `data/` on first star
 |---|---|
 | `npm run dev` | API and web together, with reload |
 | `npm run seed` | Rebuilds the SQLite database from `data/` |
-| `npm test` | Unit, contract and agent tests, run offline (599 server tests and 294 web tests at the time of writing) |
+| `npm test` | Unit, contract and agent tests, run offline (602 server tests and 294 web tests at the time of writing) |
 | `npm run eval` | Offline evaluation harness: prints pass rates and stores them for the evaluation page |
 | `npm run eval:live` | Live evaluation against the real models (needs `ANTHROPIC_API_KEY`, about $1–2 a run) |
 | `npm run typecheck` | Type-checks every workspace |

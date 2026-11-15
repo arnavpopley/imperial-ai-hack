@@ -74,7 +74,7 @@ Every Imperial student chooses modules from the same flat catalogue, where every
 - The full journey works end to end, live or offline: interview, ranked catalogue, explanations, what-ifs, timetable and swap, refusal, escalation, staff reply, module-lead insights and trace.
 - **Offline evaluation** (`data/eval-latest.json`): ranking quality 10 of 12 personas (target 80%); extraction 47 of 47; extraction hard cases 33 of 33; guardrails 23 of 23 adversarial inputs; determinism 2 of 2; insights for a cohort of four are blocked.
 - **Live evaluation** (`data/eval-live-latest.json`, run of 14 November; *update if the `eval-live-refresh` run merges*): module facts 11 of 12, with exact assessment weightings and prerequisite codes; questions the data cannot answer declined 4 of 4; live extraction 33 of 33 slots; subtle guardrail cases 7 of 7; grounded explanations 4 of 5, graded by a model judge.
-- 599 server tests and 294 web tests, run in CI on every pull request, including axe-core accessibility checks and a test that keeps every font size on the type scale and at 12px or more.
+- 602 server tests and 294 web tests, run in CI on every pull request, including axe-core accessibility checks and a test that keeps every font size on the type scale and at 12px or more.
 - Route-level code splitting cut the first-load JavaScript from 1,022 kB to 552 kB.
 - The staff side is not an afterthought. Every insight waits for a person, every rule exception gets a human decision, no count of one to four students ever leaves the API, and staff can correct the AI's tags.
 
