@@ -1,5 +1,5 @@
 // Human labels for taxonomy keys, profile slots, terms and days.
-import { taxonomy, type Evidence, type Style, type Term, type Weekday } from '@modulematch/shared';
+import { taxonomy, type Evidence, type HalfDay, type KeepFreeWindow, type Style, type Term, type Weekday } from '@modulematch/shared';
 
 const topics: Record<string, { label: string }> = taxonomy.topics;
 const skills: Record<string, { label: string }> = taxonomy.skills;
@@ -27,6 +27,22 @@ export const DAY_NAMES: Record<Weekday, string> = {
 };
 
 const isWeekday = (value: string): value is Weekday => value in DAY_NAMES;
+
+/** "wed-pm" to "Wednesday afternoon", "mon-am" to "Monday morning". */
+export function halfDayLabel(halfDay: HalfDay | string): string {
+  const day = halfDay.slice(0, 3);
+  const name = isWeekday(day) ? DAY_NAMES[day] : humanise(day);
+  return `${name} ${halfDay.endsWith('-am') ? 'morning' : 'afternoon'}`;
+}
+
+const isHalfDay = (value: string): boolean => /^(mon|tue|wed|thu|fri)-(am|pm)$/.test(value);
+
+/** Why a stretch of the week is kept free, in a few words: "Friday", "Wednesday afternoon", "Before 10:00". */
+export function keepFreeLabel(window: KeepFreeWindow): string {
+  if (window.reason === 'early') return `Before ${window.to}`;
+  if (window.reason === 'day') return DAY_NAMES[window.day];
+  return halfDayLabel(`${window.day}-${window.from < '12:00' ? 'am' : 'pm'}`);
+}
 
 export type StyleKey = keyof Style;
 
@@ -62,6 +78,8 @@ export function slotLabel(slot: string): string {
       return 'Pathways skipped';
     case 'timetablePrefs.avoidDays':
       return 'Days to keep free';
+    case 'timetablePrefs.avoidHalfDays':
+      return 'Half days to keep free';
     case 'timetablePrefs.earliestStart':
       return 'Earliest start';
     default:
@@ -75,7 +93,7 @@ export function formatEvidenceValue(value: Evidence['value']): string {
   if (typeof value === 'boolean') return value ? 'Yes' : 'No';
   if (Array.isArray(value)) {
     if (value.length === 0) return 'None';
-    return value.map((v) => (isWeekday(v) ? DAY_NAMES[v] : humanise(v))).join(', ');
+    return value.map((v) => (isWeekday(v) ? DAY_NAMES[v] : isHalfDay(v) ? halfDayLabel(v) : humanise(v))).join(', ');
   }
   return value;
 }

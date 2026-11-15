@@ -23,6 +23,20 @@ export const LIKELY_CLASH_THRESHOLD = 0.3;
 export const SWAP_FIT_TOLERANCE = 10;
 /** Spec 9.3 / 20.4 minimum cohort behind any staff insight. */
 export const MIN_COHORT = 5;
+
+/** Share of capacity at which demand counts as near capacity, for staff and students alike. */
+export const NEAR_CAPACITY = 0.85;
+
+export type CapacityStatus = 'uncapped' | 'within' | 'near' | 'over';
+
+/** Demand against capacity: over above 100%, near from NEAR_CAPACITY, otherwise within. */
+export function capacityStatus(shortlisted: number, capacity: number | null): CapacityStatus {
+  if (capacity === null) return 'uncapped';
+  const ratio = shortlisted / capacity;
+  if (ratio > 1) return 'over';
+  if (ratio >= NEAR_CAPACITY) return 'near';
+  return 'within';
+}
 /** Spec 10.1 intent confidence floor before the Supervisor asks a clarifying question. */
 export const INTENT_CONFIDENCE_FLOOR = 0.6;
 /** Spec 10.2 quick and deep interview question budgets. */
@@ -56,6 +70,7 @@ export const PROFILE_SLOTS = [
   'pathways',
   'pathwaysSkipped',
   'timetablePrefs.avoidDays',
+  'timetablePrefs.avoidHalfDays',
   'timetablePrefs.earliestStart',
 ] as const;
 

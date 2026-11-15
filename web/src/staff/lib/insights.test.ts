@@ -1,7 +1,8 @@
 // Guards what staff see after deciding on an insight card, and the empty-state reason.
-import { MIN_COHORT } from '@modulematch/shared';
+import { MIN_COHORT, parseSuggestedEdit } from '@modulematch/shared';
 import { describe, expect, it } from 'vitest';
-import { canEditTags, isSummaryCard, NO_INSIGHTS, outcomeOf } from './insights.ts';
+import { applySuggestedEdit, changeCount, diffDraft } from './derivedDraft.ts';
+import { isSummaryCard, NO_INSIGHTS, outcomeOf, tagEditorLink } from './insights.ts';
 
 describe('outcomeOf', () => {
   it('says nothing while a card is pending', () => {
@@ -26,13 +27,50 @@ describe('outcomeOf', () => {
 });
 
 describe('summary cards', () => {
-  it('are counterfactual cards with no uplift, and do not link to the tag editor', () => {
-    const summary = { kind: 'COUNTERFACTUAL', upliftPoints: null, decision: 'accepted' } as const;
-    expect(isSummaryCard(summary)).toBe(true);
-    expect(canEditTags(summary)).toBe(false);
-    expect(canEditTags({ ...summary, upliftPoints: 2.8 })).toBe(true);
-    expect(canEditTags({ ...summary, upliftPoints: 2.8, decision: 'pending' })).toBe(false);
+  it('are counterfactual cards with no uplift', () => {
+    expect(isSummaryCard({ kind: 'COUNTERFACTUAL', upliftPoints: null })).toBe(true);
+    expect(isSummaryCard({ kind: 'COUNTERFACTUAL', upliftPoints: 2.8 })).toBe(false);
     expect(isSummaryCard({ kind: 'DEMAND', upliftPoints: null })).toBe(false);
+  });
+});
+
+describe('tagEditorLink', () => {
+  const accepted = {
+    id: 'MECH70014:COUNTERFACTUAL:topics.entrepreneurship-innovation=0.3',
+    moduleId: 'MECH70014',
+    kind: 'COUNTERFACTUAL',
+    decision: 'accepted',
+  } as const;
+
+  it('opens the tag editor with an accepted change filled in', () => {
+    expect(tagEditorLink(accepted)).toBe('/staff/modules/MECH70014/tags?edit=topics.entrepreneurship-innovation%3D0.3');
+  });
+
+  it('offers no link before acceptance, for the summary card, or for other kinds', () => {
+    expect(tagEditorLink({ ...accepted, decision: 'pending' })).toBeNull();
+    expect(tagEditorLink({ ...accepted, id: 'MECH70014:COUNTERFACTUAL:summary' })).toBeNull();
+    expect(tagEditorLink({ ...accepted, id: 'MECH70014:CLASH:1', kind: 'CLASH' })).toBeNull();
+  });
+});
+
+describe('applySuggestedEdit', () => {
+  const draft = {
+    topics: { 'fluid-mechanics': 1 },
+    skills: {},
+    pathwayRelevance: {},
+    demand: { examShare: 0.6, groupShare: 0.5, applied: 0.5, mathsIntensity: 0.5, codingIntensity: 0.5, workload: 0.5 },
+  };
+
+  it('adds a topic or sets a demand field, leaving the rest of the draft alone', () => {
+    const withTopic = applySuggestedEdit(draft, parseSuggestedEdit('topics.languages=0.3'));
+    expect(withTopic.topics).toEqual({ 'fluid-mechanics': 1, languages: 0.3 });
+    const lessExam = applySuggestedEdit(draft, parseSuggestedEdit('demand.examShare=0.4'));
+    expect(lessExam.demand).toEqual({ ...draft.demand, examShare: 0.4 });
+    expect(changeCount(diffDraft(draft, lessExam))).toBe(1);
+  });
+
+  it('keeps the draft unchanged for a missing or malformed edit', () => {
+    expect(applySuggestedEdit(draft, parseSuggestedEdit('demand.examShare=2'))).toBe(draft);
   });
 });
 

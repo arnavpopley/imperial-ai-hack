@@ -34,6 +34,11 @@ export function PathwayProgressCard({ pathwayId, pathway, index }: PathwayProgre
   const title = pathway?.title ?? pathwayId;
   const linkedIn = linkedInSearch(pathwayId, title);
   const data = progress.data;
+  // The skill with the largest weighted gap (importance × what is not yet covered) is the one missing most.
+  const biggestGap = data?.perSkill.reduce<{ skill: string; gap: number } | null>((best, s) => {
+    const gap = s.importance * (1 - s.covered);
+    return !best || gap > best.gap ? { skill: s.skill, gap } : best;
+  }, null)?.skill;
 
   return (
     <motion.article
@@ -50,7 +55,7 @@ export function PathwayProgressCard({ pathwayId, pathway, index }: PathwayProgre
         </span>
         <div className="min-w-0 flex-1">
           <h3 className="font-semibold tracking-tight">{title}</h3>
-          <p className="text-[12px] text-muted">From completed and shortlisted modules</p>
+          <p className="text-[12px] text-muted">Completed, core and shortlisted modules</p>
         </div>
         {data && <span className="text-3xl font-semibold tracking-tight tabular-nums">{percent(data.progress)}</span>}
       </div>
@@ -68,12 +73,19 @@ export function PathwayProgressCard({ pathwayId, pathway, index }: PathwayProgre
               <span className="min-w-0 flex-1">
                 <span className="block text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">Next best module</span>
                 <span className="block truncate text-sm font-semibold">{moduleTitle(data.nextBest.moduleId)}</span>
+                <span className="block truncate text-[12px] text-muted">
+                  Adds {skillLabel(data.nextBest.skill).toLowerCase()}
+                  {data.nextBest.skill === biggestGap ? ', your biggest gap' : ''}
+                </span>
               </span>
               <span className="text-[13px] font-semibold text-brand tabular-nums">+{Math.round(data.nextBest.gain * 100)} pts</span>
               <Icon name="arrow-right" size={15} className="text-brand transition group-hover:translate-x-0.5" />
             </Link>
           ) : (
-            <p className="mt-5 text-[13px] text-muted">No eligible module would add to this pathway right now.</p>
+            <p className="mt-5 flex items-center gap-2 text-[13px] text-muted">
+              <Icon name="check" size={14} className="shrink-0 text-fit-high" />
+              Every eligible module that suits this pathway is already in your plan.
+            </p>
           )}
 
           <Accordion

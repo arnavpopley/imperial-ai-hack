@@ -13,6 +13,24 @@ interface ShortlistButtonProps {
   /** md on cards, lg on the module page. */
   size?: 'md' | 'lg';
   className?: string;
+  /** A core module for the student's year: already in the plan, so there is nothing to add or remove. */
+  compulsory?: boolean;
+}
+
+/** Stands in for the button on a core module, at the same size, so cards keep their layout. */
+function CompulsoryPill({ size, className }: { size: 'md' | 'lg'; className?: string }) {
+  return (
+    <span
+      className={cx(
+        'inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-ink/6 font-semibold text-muted',
+        size === 'md' ? 'h-10 min-w-[8.5rem] px-4 text-[13px]' : 'h-12 min-w-[10.5rem] px-5 text-sm',
+        className,
+      )}
+    >
+      <Icon name="lock" size={14} />
+      Compulsory, already in your plan
+    </span>
+  );
 }
 
 /**
@@ -23,7 +41,11 @@ interface ShortlistButtonProps {
  * burst follows through around it. Removing is a gentle 200ms swap with no burst. Reduced motion swaps the
  * icon at once and skips the burst.
  */
-export function ShortlistButton({ title, shortlisted, pending, onToggle, size = 'md', className }: ShortlistButtonProps) {
+export function ShortlistButton(props: ShortlistButtonProps) {
+  return props.compulsory ? <CompulsoryPill size={props.size ?? 'md'} className={props.className} /> : <ToggleButton {...props} />;
+}
+
+function ToggleButton({ title, shortlisted, pending, onToggle, size = 'md', className }: ShortlistButtonProps) {
   const { reduce, transition } = useMotionTokens();
   // Celebrate only a new addition made while this button is on screen: not a module that was already
   // shortlisted when the page loaded, and not the check coming back after a removal that failed.

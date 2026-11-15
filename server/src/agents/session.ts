@@ -15,13 +15,12 @@ import {
   type RulesStatus,
   type SessionState,
   type StudentProfile,
-  type SwapSuggestion,
   type TimetableView,
 } from '@modulematch/shared';
 import { randomUUID } from 'node:crypto';
 import { levelCapFor, loadModuleResources, loadPathways, loadSocieties, rulesFor } from '../db/catalogue.ts';
 import * as repo from '../db/repo.ts';
-import { buildTimetable, checkShortlist, completeness, findClashes, hasFitSignal, performanceView, profileHash, rankModules, starterOrder, suggestSwaps } from '../engines/index.ts';
+import { checkShortlist, completeness, coreInPlan, hasFitSignal, performanceView, planTimetable, profileHash, rankModules, starterOrder } from '../engines/index.ts';
 import type { Tracer } from '../trace/tracer.ts';
 import { explain } from './matcher.ts';
 import { canTransition, restingModeFor } from './modes.ts';
@@ -185,6 +184,7 @@ export function recommendationsResponse(session: SessionState): RecommendationsR
     ranking: hasFitSignal(session.profile) ? 'fit' : 'starter',
     recommendations: ranked(session),
     rules: rulesStatus(rulesForProfile(session.profile)),
+    coreModuleIds: coreInPlan(rulesForProfile(session.profile), session.profile),
   };
 }
 
@@ -194,22 +194,9 @@ export function timetableView(session: SessionState, recs = ranked(session)): Ti
   const rules = rulesForProfile(session.profile);
   // Approved rule exceptions apply to the plan and to every swap the engine checks (spec 11.1).
   const check = (shortlist: readonly string[]) => checkShortlist(shortlist, session.profile, modules, rules, session.exceptions);
-  const clashes = findClashes(session.shortlist, slots);
-  const seen = new Set<string>();
-  const swaps: SwapSuggestion[] = [];
-  for (const clash of clashes) {
-    for (const swap of suggestSwaps(session.profile, session.shortlist, clash, recs, slots, { modules, rules, check })) {
-      const key = `${swap.replaceModuleId}->${swap.withModuleId}`;
-      if (!seen.has(key)) {
-        seen.add(key);
-        swaps.push(swap);
-      }
-    }
-  }
   return {
-    grids: buildTimetable(session.shortlist, slots),
-    clashes,
-    swaps,
+    // Core modules, clashes against them, swaps and kept-free time all come from the timetable engine (spec 9.2).
+    ...planTimetable(session.profile, session.shortlist, recs, slots, { modules, rules, check }),
     rules: check(session.shortlist),
   };
 }

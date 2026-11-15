@@ -16,6 +16,8 @@ interface ClashCardProps {
   /** Swaps that replace either module in this clash. */
   swaps: readonly SwapSuggestion[];
   titleFor: (moduleId: string) => string;
+  /** Compulsory core modules, marked with a lock: they are never the one swapped out. */
+  coreIds?: ReadonlySet<string>;
   onSwap: (swap: SwapSuggestion) => Promise<void>;
   onAsk: (question: string) => void;
   /** Spec 12 (PLAN -> ESCALATED): offer a personal tutor note when the clash has no valid swap. */
@@ -31,7 +33,16 @@ function overlapText(clash: Clash): string {
   return `${DAY_NAMES[first.a.day]} ${formatRange(start, end)}${more}, ${TERM_LABELS[clash.term]}`;
 }
 
-export function ClashCard({ clash, swaps, titleFor, onSwap, onAsk, onEscalate }: ClashCardProps) {
+function ModuleName({ title, core }: { title: string; core: boolean }) {
+  return (
+    <span className="font-semibold">
+      {core && <Icon name="lock" size={11} className="mr-0.5 inline align-[-1px] text-muted" label="Core module" />}
+      {title}
+    </span>
+  );
+}
+
+export function ClashCard({ clash, swaps, titleFor, coreIds, onSwap, onAsk, onEscalate }: ClashCardProps) {
   const [confirming, setConfirming] = useState<SwapSuggestion | null>(null);
   const [busy, setBusy] = useState(false);
   const reduce = useReducedMotion();
@@ -67,7 +78,8 @@ export function ClashCard({ clash, swaps, titleFor, onSwap, onAsk, onEscalate }:
     >
       <ClashMarker variant={clash.label} probability={clash.probability} />
       <p className="mt-2 text-sm leading-snug">
-        <span className="font-semibold">{a}</span> and <span className="font-semibold">{b}</span>{' '}
+        <ModuleName title={a} core={coreIds?.has(clash.moduleA) ?? false} /> and{' '}
+        <ModuleName title={b} core={coreIds?.has(clash.moduleB) ?? false} />{' '}
         {clash.label === 'certain' ? 'overlap' : 'may overlap'}.
       </p>
       <p className="mt-0.5 text-[12px] text-muted">{overlapText(clash)}</p>
@@ -93,6 +105,12 @@ export function ClashCard({ clash, swaps, titleFor, onSwap, onAsk, onEscalate }:
                       ({swap.fitDelta > 0 ? '+' : ''}
                       {swap.fitDelta} fit)
                     </span>
+                    {swap.keepFreeConflicts > 0 && (
+                      <span className="mt-0.5 flex w-fit items-center gap-1 rounded-full bg-mode-explain/10 px-1.5 text-[11px] font-medium text-mode-explain">
+                        <Icon name="moon" size={10} />
+                        Uses kept-free time
+                      </span>
+                    )}
                   </p>
                   {!isConfirming && (
                     <Button size="sm" icon="swap" onClick={() => setConfirming(swap)} disabled={busy}>

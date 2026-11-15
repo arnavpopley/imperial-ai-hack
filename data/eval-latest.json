@@ -1,6 +1,6 @@
 {
-  "id": "e4a93685-afd4-4478-80eb-11fd6648a0af",
-  "at": "2026-11-15T00:52:56.049Z",
+  "id": "382068bd-8dca-4d2a-ace5-e785ede57ba1",
+  "at": "2026-11-15T01:25:48.974Z",
   "results": [
     {
       "name": "Ranking quality",
@@ -72,8 +72,8 @@
     },
     {
       "name": "Extraction",
-      "passed": 33,
-      "total": 33,
+      "passed": 47,
+      "total": 47,
       "target": 0.85,
       "details": [
         {
@@ -167,6 +167,21 @@
           "note": "expected \"10:00\", got \"10:00\""
         },
         {
+          "case": "robotics founder: timetablePrefs.avoidDays",
+          "pass": true,
+          "note": "expected [], got []"
+        },
+        {
+          "case": "robotics founder: timetablePrefs.avoidHalfDays",
+          "pass": true,
+          "note": "expected [\"wed-pm\"], got [\"wed-pm\"]"
+        },
+        {
+          "case": "robotics founder: timetablePrefs.earliestStart",
+          "pass": true,
+          "note": "expected \"10:00\", got \"10:00\""
+        },
+        {
           "case": "robotics founder: interest:control-robotics",
           "pass": true,
           "note": "expected 0.85, got 0.85"
@@ -204,7 +219,7 @@
         {
           "case": "robotics founder: style.workloadTolerance",
           "pass": true,
-          "note": "expected 0.3, got 0.3"
+          "note": "expected 0.3, got 0.25"
         },
         {
           "case": "robotics founder: breadthAppetite",
@@ -240,13 +255,68 @@
           "case": "sustainability engineer: style.examPreference",
           "pass": true,
           "note": "expected 0.5, got 0.5"
+        },
+        {
+          "case": "#55 no exams please: style.examPreference",
+          "pass": true,
+          "note": "expected 0.2, got 0.2"
+        },
+        {
+          "case": "#55 not big exams: style.examPreference",
+          "pass": true,
+          "note": "expected 0.2, got 0.2"
+        },
+        {
+          "case": "#55 exams, not coursework: style.examPreference",
+          "pass": true,
+          "note": "expected 0.8, got 0.8"
+        },
+        {
+          "case": "#55 moderate workload: style.workloadTolerance",
+          "pass": true,
+          "note": "expected 0.5, got 0.5"
+        },
+        {
+          "case": "#55 small team, moderate workload: style.groupPreference",
+          "pass": true,
+          "note": "expected 0.8, got 0.8"
+        },
+        {
+          "case": "#55 small team, moderate workload: style.workloadTolerance",
+          "pass": true,
+          "note": "expected 0.5, got 0.5"
+        },
+        {
+          "case": "#55 heavy is fine: style.workloadTolerance",
+          "pass": true,
+          "note": "expected 0.8, got 0.8"
+        },
+        {
+          "case": "#55 light workload: style.workloadTolerance",
+          "pass": true,
+          "note": "expected 0.25, got 0.25"
+        },
+        {
+          "case": "#55 explicit yes to breadth: breadthAppetite",
+          "pass": true,
+          "note": "expected 0.85, got 0.85"
+        },
+        {
+          "case": "#55 dislikes: interest:thermodynamics-energy",
+          "pass": true,
+          "note": "expected 0.1, got 0.1"
+        },
+        {
+          "case": "#55 dislikes: interest:finance-economics",
+          "pass": true,
+          "note": "expected 0.1, got 0.1"
         }
       ]
     },
     {
       "name": "Extraction (hard cases)",
-      "passed": 32,
-      "total": 32,
+      "passed": 33,
+      "total": 33,
       "target": 0.9,
       "details": [
         {
@@ -373,6 +443,11 @@
           "case": "rather a portfolio than tests: style.examPreference",
           "pass": true,
           "note": "expected 0.2, got 0.2"
+        },
+        {
+          "case": "unsure about workload: no style.workloadTolerance",
+          "pass": true,
+          "note": "expected nothing, got null"
         },
         {
           "case": "torn between two careers: pathways",

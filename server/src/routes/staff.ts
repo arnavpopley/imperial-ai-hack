@@ -3,6 +3,7 @@ import {
   DEFAULT_WEIGHTS,
   MIN_COHORT,
   schemas,
+  type CohortOffer,
   type Escalation,
   type ExamFeedbackForm,
   type Insight,
@@ -19,7 +20,7 @@ import { wordInsight } from '../agents/insights.ts';
 import { clearSummaryCache } from '../agents/knowledge.ts';
 import { catalogue, clearExplanationCache, rulesForProfile, setMode, tracerSink } from '../agents/session.ts';
 import * as repo from '../db/repo.ts';
-import { buildInsights, checkProgrammeRules, clashPriorities, cohortStats, feedbackJsonl, summariseFeedback, type InsightContext } from '../engines/index.ts';
+import { buildInsights, checkProgrammeRules, clashPriorities, cohortStats, feedbackJsonl, storedDecisions, summariseFeedback, type InsightContext } from '../engines/index.ts';
 import { createTracer, type Tracer } from '../trace/tracer.ts';
 import { body } from './validate.ts';
 
@@ -44,12 +45,9 @@ function insightContext(): InsightContext {
 }
 
 /**
- * How the cohort's programme year offers a module: compulsory, one of its options, or not offered at all. The staff
- * module list leads with the options, since a core or other-year module shows "0 shortlisted" whatever its fit.
- * Sent beside StaffModuleSummary as an optional extra field; the shared schema does not list it yet.
+ * How the cohort's programme year offers a module (StaffModuleSummary.offer). The staff module list leads with the
+ * options, since a core or other-year module shows "0 shortlisted" whatever its fit.
  */
-type CohortOffer = 'core' | 'elective' | 'i-explore' | 'not-offered';
-
 function offerFor(module: Module, rules: ProgrammeRules): CohortOffer | undefined {
   // Without rules for the cohort's year there is nothing to say (issue 51), so no offer is sent.
   if (!rules.loaded) return undefined;
@@ -68,7 +66,7 @@ export const staffRoutes = new Hono()
     const ctx = insightContext();
     // The synthetic cohort shares one programme and year, so its first student's rules are everyone's.
     const rules = ctx.rules ?? null;
-    const rows: (StaffModuleSummary & { offer?: CohortOffer })[] = ctx.modules.flatMap((m) => {
+    const rows: StaffModuleSummary[] = ctx.modules.flatMap((m) => {
       const stats = cohortStats(m, ctx.cohort, ctx.shortlists, ctx.weights, ctx.homeTopics);
       // Below the minimum cohort nothing is shown for the module (spec 20.4).
       if (!stats) return [];
@@ -81,15 +79,21 @@ export const staffRoutes = new Hono()
     const ctx = insightContext();
     const module = ctx.modules.find((m) => m.id === c.req.param('id'));
     if (!module) return c.json({ error: 'module not found' }, 404);
-    const decided = new Map(repo.listInsights(module.id).map((i) => [i.id, i.decision]));
+    const built = buildInsights(module, ctx);
+    // Stored decisions carry over by id, including those recorded under the older rank-based counterfactual ids.
+    const { decisions, consumedIds } = storedDecisions(built, repo.listInsights(module.id));
     const cards: Insight[] = await Promise.all(
-      buildInsights(module, ctx).map(async (i) => ({ ...(await wordInsight(i)), decision: decided.get(i.id) ?? 'pending' })),
+      built.map(async (i) => ({ ...(await wordInsight(i)), decision: decisions.get(i.id) ?? 'pending' })),
     );
     const current = cards.filter((i) => i.cohortSize >= MIN_COHORT);
     repo.upsertInsights(current);
-    // Only cards the current calculation still produces are shown; stored decisions carry over by id.
-    const ids = new Set(current.map((i) => i.id));
-    return c.json(repo.listInsights(module.id).filter((i) => ids.has(i.id)));
+    // An old row whose decision has moved to its new id is removed, so it can never mark a later card.
+    repo.deleteInsights(consumedIds);
+    // Only cards the current calculation still produces are shown, in the engine's order (most useful first);
+    // stored decisions carry over by id.
+    const order = new Map(current.map((i, n) => [i.id, n]));
+    const shown = repo.listInsights(module.id).filter((i) => order.has(i.id));
+    return c.json(shown.sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0)));
   })
   .post('/insights/:id/decision', body(schemas.InsightDecisionBody), (c) => {
     const insight = repo.setInsightDecision(c.req.param('id'), c.req.valid('json').decision);

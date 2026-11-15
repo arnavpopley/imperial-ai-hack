@@ -351,7 +351,8 @@ export const STEPS = [
         timeout: ctx.timeout,
       });
       const listed = await page.eval(() =>
-        [...document.querySelectorAll('section[aria-labelledby="shortlist-heading"] li a')].map((a) =>
+        // The panel also lists the year's compulsory core modules (#92); the student's own picks have a remove button.
+        [...document.querySelectorAll('section[aria-labelledby="shortlist-heading"] li:has(button) a')].map((a) =>
           decodeURIComponent(a.getAttribute('href').slice('/modules/'.length)),
         ),
       );
