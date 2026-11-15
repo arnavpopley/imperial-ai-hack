@@ -108,16 +108,20 @@ export function ProvenanceLegend({ className, tone = 'default' }: { className?: 
     const onPointer = (event: PointerEvent) => {
       if (event.target instanceof Node && !wrapperRef.current?.contains(event.target)) setOpen(false);
     };
+    // Escape closes the legend only: caught before anything else sees it, so the drawer or dialog around the legend
+    // (the advisor, the compare drawer) stays open.
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
+      event.preventDefault();
+      event.stopPropagation();
       setOpen(false);
       buttonRef.current?.focus();
     };
     document.addEventListener('pointerdown', onPointer);
-    document.addEventListener('keydown', onKey);
+    document.addEventListener('keydown', onKey, true);
     return () => {
       document.removeEventListener('pointerdown', onPointer);
-      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('keydown', onKey, true);
     };
   }, [open]);
 
