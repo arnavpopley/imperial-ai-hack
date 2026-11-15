@@ -410,6 +410,8 @@ Profile completeness $\kappa_s$ is the fraction of required slots that have at l
 | $0.5 \le \kappa_s < 0.8$ | medium | Show scores with a note offering two more questions. |
 | $\kappa_s < 0.5$ | low | Show scores greyed, and the Supervisor proposes returning to the interview. |
 
+Cold start: with no interests and no pathway (an interview skipped), every module gets the same fit, so there is nothing to rank by. The catalogue shows a starter order instead (modules at the student's year first, electives before I-Explore before core, then how many students in the same programme and year shortlisted it, then title) with no fit numbers or ranks, and the Supervisor offers three quick questions. The personal tutor escalation (11.1) is offered only when confidence is still low after a completed interview, never on a skip.
+
 ### 8.7 Eligibility is a gate, not a score
 
 Ineligible modules are still listed, greyed, with the reason. Compulsory modules are scored too, and where $L$ is low the Matcher gives a preparation hint.

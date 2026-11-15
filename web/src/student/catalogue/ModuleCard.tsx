@@ -13,13 +13,15 @@ import { useNudge } from '../results/ResultsProvider.tsx';
 import { paths } from '../routes.ts';
 import type { RankedModule } from '../state/CatalogueProvider.tsx';
 import { ExceptionChip } from './ExceptionChip.tsx';
-import { ScoreRing } from './ScoreRing.tsx';
+import { NoScoreRing, ScoreRing } from './ScoreRing.tsx';
 import { ShortlistButton } from './ShortlistButton.tsx';
 
 interface ModuleCardProps {
   item: RankedModule;
   /** Low profile confidence greys every score (spec 8.6). */
   lowConfidence: boolean;
+  /** False when there is nothing to score yet: no fit number, rank or sub-scores are shown. */
+  scored: boolean;
   shortlisted: boolean;
   pending: boolean;
   onToggleShortlist: () => void;
@@ -33,7 +35,7 @@ interface ModuleCardProps {
 /** Cards after this many enter together, so a long list does not trickle in. */
 const STAGGER_LIMIT = 8;
 
-export function ModuleCard({ item, lowConfidence, shortlisted, pending, onToggleShortlist, onAsk, listRef, index }: ModuleCardProps) {
+export function ModuleCard({ item, lowConfidence, scored, shortlisted, pending, onToggleShortlist, onAsk, listRef, index }: ModuleCardProps) {
   const { module, eligible } = item;
   const title = module?.title ?? item.moduleId;
   const dimmed = lowConfidence || !eligible;
@@ -57,8 +59,14 @@ export function ModuleCard({ item, lowConfidence, shortlisted, pending, onToggle
       >
         <div className="flex gap-4 sm:gap-6">
           <div className="flex flex-col items-center gap-1.5">
-            <ScoreRing value={item.fit} dimmed={dimmed} delay={delay + 0.1} />
-            <RankShift rank={item.rank} shift={item.rankShift} />
+            {scored ? (
+              <>
+                <ScoreRing value={item.fit} dimmed={dimmed} delay={delay + 0.1} />
+                <RankShift rank={item.rank} shift={item.rankShift} />
+              </>
+            ) : (
+              <NoScoreRing />
+            )}
           </div>
 
           <div className="min-w-0 flex-1">
@@ -100,7 +108,7 @@ export function ModuleCard({ item, lowConfidence, shortlisted, pending, onToggle
               />
             </div>
 
-            <SubScoreBars sub={item.sub} variant="compact" dimmed={dimmed} className="mt-4 max-w-lg" />
+            {scored && <SubScoreBars sub={item.sub} variant="compact" dimmed={dimmed} className="mt-4 max-w-lg" />}
 
             {nudge && <NudgeNote nudge={nudge} className="mt-3 max-w-lg" />}
 

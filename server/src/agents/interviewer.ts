@@ -77,6 +77,20 @@ export function unfilledSlots(profile: StudentProfile, evidence: Evidence[]): st
 const slotFilled = (slot: string, gaps: string[], evidence: Evidence[]) =>
   slot.startsWith('timetablePrefs') ? evidence.some((e) => e.slot.startsWith('timetablePrefs')) : !gaps.includes(slot);
 
+/**
+ * The asked steps that got an answer: at least one of their slots now has evidence. A step the student
+ * skipped or talked past is dropped, so it can be asked again rather than lost.
+ */
+export function answeredSteps(session: SessionState): string[] {
+  const { profile, evidence } = session;
+  const slotsOf = (id: string) => QUICK_PLAN.find((step) => step.id === id)?.slots ?? (id.startsWith('follow:') ? [id.slice('follow:'.length)] : []);
+  // "interest" covers interest:<topic>, and "timetablePrefs" its sub-fields; a pathway skip answers "pathways".
+  const answered = (slot: string) =>
+    (slot === 'pathways' && profile.pathwaysSkipped) ||
+    evidence.some((e) => e.slot === slot || e.slot.startsWith(`${slot}:`) || e.slot.startsWith(`${slot}.`) || (slot === 'pathways' && e.slot === 'pathwaysSkipped'));
+  return session.interview.askedSteps.filter((id) => slotsOf(id).some(answered));
+}
+
 export interface NextQuestion {
   step: PlanStep;
   /** Slots the question targets, passed to the extractor on the next turn. */

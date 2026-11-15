@@ -212,6 +212,7 @@ export const fixtureRecommendations: RecommendationsResponse = {
   weights: DEFAULT_WEIGHTS,
   confidence: 'high',
   completeness: 0.82,
+  ranking: 'fit',
   coreModuleIds: [],
   recommendations: [
     rec({ moduleId: 'ME3-CFD', sub: { interest: 0.82, goal: 0.9, style: 0.86, breadth: 0.05 }, ...eligible }),

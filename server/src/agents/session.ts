@@ -19,7 +19,7 @@ import {
 import { randomUUID } from 'node:crypto';
 import { loadModuleResources, loadPathways, loadSocieties, rulesFor } from '../db/catalogue.ts';
 import * as repo from '../db/repo.ts';
-import { checkShortlist, completeness, coreInPlan, performanceView, planTimetable, profileHash, rankModules } from '../engines/index.ts';
+import { checkShortlist, completeness, coreInPlan, hasFitSignal, performanceView, planTimetable, profileHash, rankModules, starterOrder } from '../engines/index.ts';
 import type { Tracer } from '../trace/tracer.ts';
 import { explain } from './matcher.ts';
 import { canTransition, restingModeFor } from './modes.ts';
@@ -138,8 +138,12 @@ export function exceptionDecisions(session: SessionState): Map<string, Exception
  */
 export function ranked(session: SessionState): Recommendation[] {
   const completed = new Set(session.profile.completedModuleIds);
+  const modules = catalogue.modules();
   const decisions = exceptionDecisions(session);
-  const all = rankModules(session.profile, catalogue.modules(), session.weights, rulesForProfile(session.profile), session.exceptions)
+  const scored = rankModules(session.profile, modules, session.weights, rulesForProfile(session.profile), session.exceptions);
+  // Spec 8.6 cold start: with nothing to score, a starter order instead of a list of identical fits.
+  const ordered = hasFitSignal(session.profile) ? scored : starterOrder(scored, modules, session.profile.yearOfStudy, cohortPopularity(session.profile));
+  const all = ordered
     .filter((r) => !completed.has(r.moduleId))
     .map((r) => {
       const exception = decisions.get(r.moduleId);
@@ -148,11 +152,22 @@ export function ranked(session: SessionState): Recommendation[] {
   return [...all.filter((r) => r.eligible), ...all.filter((r) => !r.eligible)];
 }
 
+/** How many synthetic cohort students in the student's programme and year shortlisted each module. */
+function cohortPopularity(profile: StudentProfile): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const student of repo.listCohort()) {
+    if (student.profile.programme !== profile.programme || student.profile.yearOfStudy !== profile.yearOfStudy) continue;
+    for (const id of new Set(student.shortlist)) counts.set(id, (counts.get(id) ?? 0) + 1);
+  }
+  return counts;
+}
+
 export function recommendationsResponse(session: SessionState): RecommendationsResponse {
   return {
     weights: session.weights,
     confidence: confidenceLabel(session.profile.completeness),
     completeness: session.profile.completeness,
+    ranking: hasFitSignal(session.profile) ? 'fit' : 'starter',
     recommendations: ranked(session),
     coreModuleIds: coreInPlan(rulesForProfile(session.profile), session.profile),
   };
