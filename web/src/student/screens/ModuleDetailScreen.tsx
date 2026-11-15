@@ -131,12 +131,13 @@ export function ModuleDetailScreen() {
               <ModuleTypeChip variant={module.type} />
               {rec && <ConfidenceBadge variant={rec.confidence} />}
               {rec?.exception && <ExceptionChip decision={rec.exception} />}
-              {rec && scored && <Provenance kind="code" />}
               {rec && scored && (
                 <Badge tone={FIT_BAND_TONE[fitBand(rec.fit)]}>
                   {FIT_BAND_LABELS[fitBand(rec.fit)]} · {rec.rank === 1 ? 'your best match' : `ranked #${rec.rank}`}
                 </Badge>
               )}
+              {/* After the fit band, so it labels the score claim it describes. */}
+              {rec && scored && <Provenance kind="code" />}
             </div>
             <h1 className="mt-2 text-title text-balance">
               {module.title}
