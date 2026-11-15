@@ -300,11 +300,23 @@ export function suggestSwaps(
 }
 
 /**
+ * A pick has a backup on the shortlist when the plan would still meet the programme rules without it: dropping it
+ * adds no rules violation, and leaves no elective credit shortfall, which dropping a module can only create or
+ * deepen. That is the case once the student has shortlisted more than the rules need, such as an extra elective.
+ */
+function hasBackupFor(target: string, shortlist: readonly string[], plan: SwapPlan, before: ReadonlySet<string>): boolean {
+  return plan
+    .check(shortlist.filter((id) => id !== target))
+    .violations.every((violation) => before.has(violationKey(violation)) && violation.code !== 'ELECTIVE_ECTS_SHORT');
+}
+
+/**
  * Issue #68: for each shortlisted option that the cohort's demand puts near or over capacity, the best backup.
  * It is the best-fitting swap candidate (the same checks as swapCandidates, with no fit tolerance) that is not
  * near capacity itself. `canAdd` says it can also sit beside the popular pick: no clash with it, no new rules
  * violation from keeping both, and no ECTS overrun, since adding a module only ever deepens one that is already
- * there. Informational: fit and rank are unchanged.
+ * there. A pick that already has a backup on the shortlist gets no suggestion (see hasBackupFor). Informational:
+ * fit and rank are unchanged.
  */
 export function capacityBackups(
   profile: StudentProfile,
@@ -318,7 +330,7 @@ export function capacityBackups(
   const before = new Set(plan.check(shortlist).violations.map(violationKey));
   return shortlist.flatMap((target) => {
     const signal = demand.get(target);
-    if (!signal) return [];
+    if (!signal || hasBackupFor(target, shortlist, plan, before)) return [];
     const best = swapCandidates(profile, shortlist, target, ranked, slots, plan, null).find((c) => !demand.has(c.withModuleId));
     if (!best) return [];
     const canAdd =
