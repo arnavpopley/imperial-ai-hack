@@ -2,8 +2,8 @@
 // the catalogue, the weights, a module's reasons, her timetable clash, the advisor and her data. startDemo restores
 // her session (demoSession.ts) under a new id, so every visitor gets their own copy.
 import { motion } from 'motion/react';
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router';
 import { buttonClass } from '../../components/Button.tsx';
 import { cx } from '../../components/cx.ts';
 import { Icon, type IconName } from '../../components/Icon.tsx';
@@ -24,22 +24,35 @@ const TRY: readonly { icon: IconName; title: string; text: string }[] = [
 const TAGS = ['Year 3 · MEng Mechanical', 'Robotics and control', 'Hands-on learner'];
 
 export function DemoScreen() {
-  const { startDemo, status, isDemo } = useSession();
+  const { startDemo, status, isDemo, forget } = useSession();
   const navigate = useNavigate();
   const [opening, setOpening] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const replacesOwnSession = status === 'ready' && !isDemo;
+  // Leaving the page cancels a pending open, so Rosa never takes over after the visitor has moved on.
+  const pending = useRef<AbortController | null>(null);
+  useEffect(() => () => pending.current?.abort(), []);
 
   const open = async () => {
+    const controller = new AbortController();
+    pending.current = controller;
     setOpening(true);
     setError(null);
     try {
-      await startDemo();
-      navigate(paths.catalogue);
+      const opened = await startDemo(controller.signal);
+      if (opened) navigate(paths.catalogue);
     } catch (err) {
+      if (controller.signal.aborted) return;
       setError(errorMessage(err));
       setOpening(false);
     }
+  };
+
+  // Starting your own leaves Rosa first; otherwise /start would send the open demo session straight back to her.
+  const startOwn = () => {
+    pending.current?.abort();
+    if (isDemo) forget();
+    navigate(paths.start);
   };
 
   return (
@@ -83,9 +96,13 @@ export function DemoScreen() {
             {opening ? 'Opening…' : 'Explore as Rosa'}
             <Icon name="arrow-right" size={18} />
           </button>
-          <Link to={paths.start} className={cx(buttonClass('secondary'), 'h-14 rounded-full px-7 text-base font-bold')}>
+          <button
+            type="button"
+            onClick={startOwn}
+            className={cx(buttonClass('secondary'), 'h-14 rounded-full px-7 text-base font-bold')}
+          >
             Start my own instead
-          </Link>
+          </button>
         </div>
         {replacesOwnSession && (
           <p className="mt-4 flex items-center gap-2 text-sm text-muted">
