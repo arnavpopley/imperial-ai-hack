@@ -212,6 +212,7 @@ export const fixtureRecommendations: RecommendationsResponse = {
   weights: DEFAULT_WEIGHTS,
   confidence: 'high',
   completeness: 0.82,
+  ranking: 'fit',
   recommendations: [
     rec({ moduleId: 'ME3-CFD', sub: { interest: 0.82, goal: 0.9, style: 0.86, breadth: 0.05 }, ...eligible }),
     rec({ moduleId: 'IEX-SUS', sub: { interest: 0.35, goal: 0.1, style: 0.75, breadth: 0.5 }, ...eligible }),
@@ -336,7 +337,6 @@ export const fixtureStaffModules: StaffModuleSummary[] = fixtureModules.map((m, 
   averageFit: [71, 58, 44, 49][i] ?? 0,
   fitHistogram: [0, 1, 4, 9, 18, 30, 42, 50, 32, 14],
   cohortSize: 200,
-  openToCohortYear: true,
 }));
 
 export const fixtureInsights: Insight[] = [

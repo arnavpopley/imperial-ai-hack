@@ -6,6 +6,8 @@ import {
   type Escalation,
   type ExamFeedbackForm,
   type Insight,
+  type Module,
+  type ProgrammeRules,
   type SessionState,
   type StaffEscalation,
   type StaffModuleSummary,
@@ -41,6 +43,22 @@ function insightContext(): InsightContext {
   };
 }
 
+/**
+ * How the cohort's programme year offers a module: compulsory, one of its options, or not offered at all. The staff
+ * module list leads with the options, since a core or other-year module shows "0 shortlisted" whatever its fit.
+ * Sent beside StaffModuleSummary as an optional extra field; the shared schema does not list it yet.
+ */
+type CohortOffer = 'core' | 'elective' | 'i-explore' | 'not-offered';
+
+function offerFor(module: Module, rules: ProgrammeRules): CohortOffer | undefined {
+  // Without rules for the cohort's year there is nothing to say (issue 51), so no offer is sent.
+  if (!rules.loaded) return undefined;
+  if (rules.coreModuleIds.includes(module.id)) return 'core';
+  // The same programme check as the students' recommendations, so the staff list and the students agree (issue 51).
+  if (checkProgrammeRules(module, rules).length > 0) return 'not-offered';
+  return module.type === 'i-explore' ? 'i-explore' : 'elective';
+}
+
 /** The one exam feedback form a module holds (spec 23). Staff trace events use the 'staff' session id. */
 const examFormId = (moduleId: string) => `exam-${moduleId}`;
 const staffTracer = () => createTracer('staff', tracerSink);
@@ -48,13 +66,14 @@ const staffTracer = () => createTracer('staff', tracerSink);
 export const staffRoutes = new Hono()
   .get('/modules', (c) => {
     const ctx = insightContext();
-    const rows: StaffModuleSummary[] = ctx.modules.flatMap((m) => {
+    // The synthetic cohort shares one programme and year, so its first student's rules are everyone's.
+    const rules = ctx.rules ?? null;
+    const rows: (StaffModuleSummary & { offer?: CohortOffer })[] = ctx.modules.flatMap((m) => {
       const stats = cohortStats(m, ctx.cohort, ctx.shortlists, ctx.weights, ctx.homeTopics);
       // Below the minimum cohort nothing is shown for the module (spec 20.4).
       if (!stats) return [];
-      // The same programme check as the students' recommendations (issue 51); prerequisites are personal, so not here.
-      const openToCohortYear = ctx.rules ? checkProgrammeRules(m, ctx.rules).length === 0 : false;
-      return [{ moduleId: m.id, code: m.code, title: m.title, type: m.type, capacity: m.capacity, ...stats, openToCohortYear }];
+      const offer = rules ? offerFor(m, rules) : undefined;
+      return [{ moduleId: m.id, code: m.code, title: m.title, type: m.type, capacity: m.capacity, ...stats, ...(offer && { offer }) }];
     });
     return c.json(rows);
   })

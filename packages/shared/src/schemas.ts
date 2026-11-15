@@ -585,6 +585,11 @@ export const RecommendationsResponse = z.object({
   weights: Weights,
   confidence: Confidence,
   completeness: Fraction,
+  /**
+   * fit: ranked by fit score (spec 8.5). starter: the profile has no interests or pathway yet, so there is
+   * nothing to score; the list is in a starter order and fit numbers are not shown (spec 8.6).
+   */
+  ranking: z.enum(['fit', 'starter']),
   recommendations: z.array(Recommendation),
   rules: RulesStatus,
 });
@@ -605,10 +610,10 @@ export const StaffModuleSummary = z.object({
   fitHistogram: z.array(z.number().int().min(0)).length(10),
   cohortSize: z.number().int().min(0),
   /**
-   * Whether the programme rules for the cohort's programme and year allow the module (the same check the
-   * students' recommendations use, before prerequisites). False when those rules are not loaded.
+   * How the cohort's programme year offers the module, from the same programme check the students' recommendations
+   * use (before prerequisites). Absent when the rules for the cohort's year are not loaded (issue 51).
    */
-  openToCohortYear: z.boolean(),
+  offer: z.enum(['core', 'elective', 'i-explore', 'not-offered']).optional(),
 });
 
 export const StaffEscalation = Escalation.extend({

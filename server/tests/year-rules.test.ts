@@ -78,7 +78,7 @@ describe('Year 3 is unchanged, and staff agree with students', () => {
     ]);
   });
 
-  it('the staff module list marks as not open exactly what the Year 3 rules refuse', async () => {
+  it('the staff module list marks as not offered exactly what the Year 3 rules refuse', async () => {
     const rows = S.StaffModuleSummary.array().parse(await (await app.request('/api/staff/modules')).json());
     expect(rows.length).toBeGreaterThan(0);
     // A Year 3 student who has completed every prerequisite: only the programme rules can refuse a module.
@@ -87,8 +87,8 @@ describe('Year 3 is unchanged, and staff agree with students', () => {
     for (const row of rows) {
       const rec = recs.find((r) => r.moduleId === row.moduleId);
       if (!rec) continue; // completed, so not in the student's catalogue
-      expect([row.moduleId, row.openToCohortYear]).toEqual([row.moduleId, rec.eligible]);
+      expect([row.moduleId, row.offer !== 'not-offered']).toEqual([row.moduleId, rec.eligible]);
     }
-    expect(rows.find((r) => r.moduleId === 'MECH70057')?.openToCohortYear).toBe(false);
+    expect(rows.find((r) => r.moduleId === 'MECH70057')?.offer).toBe('not-offered');
   });
 });
