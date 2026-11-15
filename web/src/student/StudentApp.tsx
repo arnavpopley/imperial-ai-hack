@@ -9,8 +9,8 @@
 //   /pathways            pathways, progress and societies
 //   /feedback            tailored exam feedback from the examiner's notes and the student's own marks (spec 23)
 //   /your-data           what we hold, the quotes behind it, edit and delete (spec 20.3)
-import { useEffect, type ReactNode } from 'react';
-import { Navigate, Route, Routes } from 'react-router';
+import { startTransition, useEffect, type ReactNode } from 'react';
+import { Navigate, Route, Routes, useNavigate } from 'react-router';
 import { Button } from '../components/Button.tsx';
 import { ErrorState, LoadingState } from '../components/StateViews.tsx';
 import { Lazy, lazyNamed, whenIdle } from '../components/LazyRoute.tsx';
@@ -102,6 +102,30 @@ function SessionGate() {
 
 function SessionStatusView() {
   const { status, error, retry, forget } = useSession();
+  const navigate = useNavigate();
+  if (status === 'lost') {
+    return (
+      <ErrorState
+        title="This demo server restarted"
+        message="Your session is not on this server any more, so nothing more can load for it. Start again; the interview takes about three minutes."
+      >
+        <Button
+          size="sm"
+          variant="primary"
+          onClick={() => {
+            // The router navigates inside a transition; clearing the session in the same transition lands on the start
+            // form in one step, rather than the session gate first redirecting to the landing page.
+            startTransition(() => {
+              navigate(paths.start, { replace: true });
+              forget();
+            });
+          }}
+        >
+          Start again
+        </Button>
+      </ErrorState>
+    );
+  }
   if (status === 'error') {
     return (
       <ErrorState title="Could not resume your session" message={error ?? 'The session could not be loaded.'} onRetry={retry}>
