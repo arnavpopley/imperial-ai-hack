@@ -20,7 +20,7 @@ import {
 import { randomUUID } from 'node:crypto';
 import { loadModuleResources, loadPathways, loadSocieties, rulesFor } from '../db/catalogue.ts';
 import * as repo from '../db/repo.ts';
-import { buildTimetable, checkShortlist, completeness, findClashes, nudgeFor, performanceView, profileHash, rankModules, suggestSwaps } from '../engines/index.ts';
+import { buildTimetable, checkShortlist, completeness, findClashes, performanceView, profileHash, rankModules, suggestSwaps } from '../engines/index.ts';
 import type { Tracer } from '../trace/tracer.ts';
 import { explain } from './matcher.ts';
 import { canTransition } from './modes.ts';
@@ -240,7 +240,7 @@ export function performanceFor(session: SessionState): PerformanceView {
   });
 }
 
-/** Explanations are cached by profile hash, results version and module ID (spec 5 cost control). */
+/** Explanations are cached by profile hash and module ID (spec 5 cost control). */
 const explanationCache = new Map<string, Explanation>();
 
 export function clearExplanationCache(): void {
@@ -248,31 +248,28 @@ export function clearExplanationCache(): void {
 }
 
 /**
- * The explanation for one module. `withNudge` adds the student's performance nudge (spec 23) as a watch-out; only
- * the explanation panel asks for it, because chat replies are stored as messages and a nudge, which is derived
- * from marks, must not outlive the student withdrawing consent.
+ * The explanation for one module. It never carries a performance nudge (spec 23): nudges come only from
+ * GET /performance and appear once, as the "Keep in mind" note on the module page and the catalogue cards, so
+ * nothing derived from marks is stored with chat replies or outlives a withdrawal of consent.
  */
 export async function explanationFor(
   session: SessionState,
   moduleId: string,
   tracer: Tracer,
   recs = ranked(session),
-  opts: { withNudge?: boolean } = {},
 ): Promise<Explanation | null> {
   const module = catalogue.modules().find((m) => m.id === moduleId);
   const rec = recs.find((r) => r.moduleId === moduleId);
   if (!module || !rec) return null;
-  const results = opts.withNudge ? repo.getResults(session.id) : null;
-  const nudge = results?.consent.granted ? nudgeFor(performanceFor(session), moduleId) : undefined;
-  // Explanations without a nudge share one cache entry; a nudged one is keyed by the results version too. The rules
-  // waived for this module are in the key, so an explanation written before an approval never fills the new entry.
+  // The rules waived for this module are in the key, so an explanation written before an approval never fills the
+  // entry used after it.
   const waived = session.exceptions.find((e) => e.moduleId === moduleId)?.waived;
-  const key = `${profileHash(session.profile, session.weights)}:${moduleId}${nudge ? `:nudge:${results?.updatedAt}` : ''}${waived ? `:waived:${JSON.stringify(waived)}` : ''}`;
+  const key = `${profileHash(session.profile, session.weights)}:${moduleId}${waived ? `:waived:${JSON.stringify(waived)}` : ''}`;
   const cached = explanationCache.get(key);
   if (cached) return cached;
   const explanation = await tracer.timed(
-    { actor: 'matcher', kind: 'agent', input: `explain ${module.code} (fit ${rec.fit})${nudge ? ', with a performance nudge' : ''}` },
-    () => explain(session.profile, module, rec, session.evidence, tracer, nudge),
+    { actor: 'matcher', kind: 'agent', input: `explain ${module.code} (fit ${rec.fit})` },
+    () => explain(session.profile, module, rec, session.evidence, tracer),
     (e) => ({ output: `${e.because.length} reasons, ${e.watchOuts.length} watch-outs`, verdict: null }),
   );
   explanationCache.set(key, explanation);

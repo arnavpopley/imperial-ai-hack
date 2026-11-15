@@ -697,6 +697,16 @@ export const StudentResults = z.object({
   updatedAt: IsoDate.nullable(),
 });
 
+/**
+ * Upload size limits. Production runs on a Vercel function, which rejects request bodies over 4.5 MB, so a file is
+ * capped at 3 MB: about 4 MB once base64 encoded, leaving room for the rest of the JSON body.
+ */
+export const RESULTS_FILE_MAX_BYTES = 3_000_000;
+/** Base64 length of the largest allowed file: every 3 bytes become 4 characters. */
+export const RESULTS_BASE64_MAX = Math.ceil(RESULTS_FILE_MAX_BYTES / 3) * 4;
+/** The whole JSON body: the largest file plus the text, the field names and some slack, still under 4.5 MB. */
+export const RESULTS_BODY_MAX_BYTES = RESULTS_BASE64_MAX + 200_000;
+
 /** Upload a transcript or mark sheet. Consent must be given explicitly with every upload. */
 export const ResultsUploadBody = z
   .object({
@@ -705,11 +715,11 @@ export const ResultsUploadBody = z
     file: z
       .object({
         mediaType: z.enum(['application/pdf', 'image/png', 'image/jpeg']),
-        /** Base64 file contents, at most about 6 MB once decoded. */
+        /** Base64 file contents, at most 3 MB once decoded (RESULTS_FILE_MAX_BYTES). */
         base64: z
           .string()
           .min(4)
-          .max(8_000_000)
+          .max(RESULTS_BASE64_MAX)
           .regex(/^[A-Za-z0-9+/]+={0,2}$/, 'file must be non-empty base64'),
       })
       .optional(),

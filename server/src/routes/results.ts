@@ -1,13 +1,14 @@
 // Consented results upload, performance nudges and tailored exam feedback (spec 23). Marks are visible to the student
 // only, are never written to the trace (summaries only), and reach no model except the transcript reader and the
 // tailored-feedback agent. Withdrawing consent, or deleting the profile, deletes every stored mark.
-import { schemas, type SessionState, type TailoredFeedback } from '@modulematch/shared';
+import { RESULTS_BODY_MAX_BYTES, schemas, type SessionState, type TailoredFeedback } from '@modulematch/shared';
 import { Hono, type Context } from 'hono';
+import { bodyLimit } from 'hono/body-limit';
 import { createHash } from 'node:crypto';
 import { tailoredFeedback } from '../agents/exam-feedback.ts';
 import { isLive } from '../agents/llm.ts';
 import { readResultsFile } from '../agents/results-reader.ts';
-import { catalogue, clearExplanationCache, performanceFor, tracerSink } from '../agents/session.ts';
+import { catalogue, performanceFor, tracerSink } from '../agents/session.ts';
 import * as repo from '../db/repo.ts';
 import { examFacts, parseTranscript, type ParsedTranscript } from '../engines/index.ts';
 import { stripInjection } from '../guardrails/g3-injection.ts';
@@ -21,6 +22,7 @@ function load(c: Context): SessionState | Response {
 
 export const PASTE_INSTEAD = 'Reading a PDF or photo needs the live AI mode, which is off here. Please paste the text of your transcript instead.';
 const UNREADABLE = 'Sorry, I could not read module marks from that file. Please paste the text of your transcript instead.';
+export const TOO_LARGE = 'That file is too large to upload. Please use a PDF or photo of up to 3 MB, or paste the text of your transcript instead.';
 const NOTHING_FOUND =
   'No module marks were found. Paste one module per line, for example "MECH50010 Fluid Mechanics 2 62", with question marks such as "Q1 14/20" if you have them.';
 
@@ -40,7 +42,6 @@ const feedbackCache = new Map<string, Map<string, TailoredFeedback>>();
 export function forgetResults(sessionId: string, deleted: boolean): void {
   if (deleted) deletions.set(sessionId, (deletions.get(sessionId) ?? 0) + 1);
   feedbackCache.delete(sessionId);
-  clearExplanationCache();
 }
 
 /** G3 pattern pass, line by line so the transcript's layout survives. No model sees the marks at this stage. */
@@ -62,7 +63,8 @@ const describe = (p: ParsedTranscript) => {
 };
 
 export const resultsRoutes = new Hono()
-  .post('/:id/results', body(schemas.ResultsUploadBody), async (c) => {
+  // A friendly 413 before the body is read; Vercel would otherwise reject anything over 4.5 MB with an opaque error.
+  .post('/:id/results', bodyLimit({ maxSize: RESULTS_BODY_MAX_BYTES, onError: (c) => c.json({ error: TOO_LARGE }, 413) }), body(schemas.ResultsUploadBody), async (c) => {
     const session = load(c);
     if (session instanceof Response) return session;
     const input = c.req.valid('json');

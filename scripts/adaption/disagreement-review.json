@@ -1,0 +1,350 @@
+{
+  "Anything with heavy derivations, proofs are a slog for me. | style.appliedPreference": {
+    "verdict": "ambiguous",
+    "reason": "Disliking proofs leans towards applied work, as the prompt says, but the student did not state a preference."
+  },
+  "As an international student I want to work in aerospace back home. | pathways": {
+    "verdict": "ours",
+    "reason": "G2 removes the whole sentence because \"As an international student\" cannot be cut cleanly; losing the pathway is the privacy-first choice."
+  },
+  "Combining digital sketching on tablets with physical collage materials encourages the most inclusive participation. | interest:creative-arts-design": {
+    "verdict": "ambiguous",
+    "reason": "A teaching statement about sketching and collage; an arts interest is plausible but not stated about themselves."
+  },
+  "Her work on interest rate sensitivity in emerging markets provides the best framework for my current data set. | interest:statistics-data": {
+    "verdict": "reference",
+    "reason": "Statistics was invented from \"my current data set\"."
+  },
+  "Honestly the maths modules and the statistics course were my favourite. | interest:mathematics-modelling": {
+    "verdict": "reference",
+    "reason": "Haiku paraphrased the quote, so grounding dropped a real interest. Fixed: grounding now maps a shortened quote to its verbatim span."
+  },
+  "I aim to blend neuroscience and formal modeling for decision-making systems. | interest:machine-learning-ai": {
+    "verdict": "reference",
+    "reason": "Machine learning was not named; \"formal modeling for decision-making\" is not ML."
+  },
+  "I aim to guide students through gender studies and personal empowerment discourse. | interest:policy-ethics": {
+    "verdict": "ambiguous",
+    "reason": "Gender studies has no taxonomy topic; policy-ethics is a stretch either way."
+  },
+  "I aim to integrate digital strategies with scholarly rigor for global firms. | interest:management-leadership": {
+    "verdict": "ambiguous",
+    "reason": "Digital strategy for firms could be management; the reference strength 0.5 reflects the doubt."
+  },
+  "I aim to research risk management applications in life insurance sectors. | pathways": {
+    "verdict": "ambiguous",
+    "reason": "Researching a topic is not necessarily a research career; the guard deliberately requires career words."
+  },
+  "I aim to synthesize complex logical systems and structural epistemology models. | interest:history-philosophy": {
+    "verdict": "reference",
+    "reason": "Epistemology is philosophy, so history-philosophy should be set."
+  },
+  "I aim to synthesize complex logical systems and structural epistemology models. | style.appliedPreference": {
+    "verdict": "ours",
+    "reason": "Nothing in the answer states a theory or applied preference."
+  },
+  "I am deeply interested in the intersection of behavioral economics and public policy. | interest:psychology-behaviour": {
+    "verdict": "ambiguous",
+    "reason": "Behavioural economics touches psychology, but the student named economics."
+  },
+  "I am experienced with R and Python for statistical analysis and data visualization. | interest:programming-software": {
+    "verdict": "ambiguous",
+    "reason": "R and Python named for analysis: programming interest is plausible; the reference used coding comfort instead."
+  },
+  "I am interested in refining rating systems and defining clear performance levels. | interest:management-leadership": {
+    "verdict": "reference",
+    "reason": "Management-leadership was invented from rating systems and performance levels."
+  },
+  "I am most alert in the afternoons, so I avoid 8 AM lectures. | timetablePrefs.earliestStart": {
+    "verdict": "reference",
+    "reason": "Avoiding 8am lectures means a 09:00 earliest start. Fixed with a prompt mapping (the live hard case now passes)."
+  },
+  "I choose labor hours and capital investment as inputs, with service output and customer satisfaction as outputs. | interest:finance-economics": {
+    "verdict": "ambiguous",
+    "reason": "Labour hours and capital investment as model inputs is operations research; finance is a loose fit."
+  },
+  "I create a strict hourly schedule and avoid all social commitments. | timetablePrefs.avoidDays": {
+    "verdict": "reference",
+    "reason": "\"Avoid all social commitments\" is not a day preference; the guard allows an empty list only because the question was mapped to the timetable step."
+  },
+  "I examine how class and religion overlap with gender to create unique barriers for female students in rural areas. | interest:policy-ethics": {
+    "verdict": "ambiguous",
+    "reason": "Barriers created by class and religion read as policy, but the student did not say they want to study policy."
+  },
+  "I focus on balancing linguistic diversity with literacy standards in multicultural settings. | breadthAppetite": {
+    "verdict": "reference",
+    "reason": "Nothing about modules outside their degree; the breadth value was invented."
+  },
+  "I focus on balancing linguistic diversity with literacy standards in multicultural settings. | interest:languages": {
+    "verdict": "reference",
+    "reason": "Linguistic diversity names languages."
+  },
+  "I focus on evidence-based analysis of mental health and dissertation standards. | interest:policy-ethics": {
+    "verdict": "reference",
+    "reason": "Policy-ethics was invented from mental health analysis."
+  },
+  "I focus on evidence-based analysis of mental health and dissertation standards. | interest:statistics-data": {
+    "verdict": "ambiguous",
+    "reason": "\"Evidence-based analysis\" weakly implies statistics."
+  },
+  "I focus on low-speed aerodynamics and renewable energy optimization projects. | interest:mathematics-modelling": {
+    "verdict": "ambiguous",
+    "reason": "Aerodynamic optimisation involves maths, but maths was not named."
+  },
+  "I focus on low-speed aerodynamics and renewable energy optimization projects. | interest:thermodynamics-energy": {
+    "verdict": "ambiguous",
+    "reason": "Renewable energy optimisation maps to sustainability (both set it); thermodynamics is the reference's extra reading."
+  },
+  "I focus on narratology and scholarly depth in Irish literary criticism. | interest:communication-writing": {
+    "verdict": "ambiguous",
+    "reason": "Literary criticism: communication-writing or history-philosophy are both loose fits."
+  },
+  "I focus on narratology and scholarly depth in Irish literary criticism. | interest:history-philosophy": {
+    "verdict": "ambiguous",
+    "reason": "Same answer as above; neither topic is clearly stated."
+  },
+  "I focus on real-world physics modeling and kinematics for STEM students. | interest:computational-simulation": {
+    "verdict": "ambiguous",
+    "reason": "Physics modelling could be computational simulation or mathematics; the student said neither."
+  },
+  "I focus on real-world physics modeling and kinematics for STEM students. | interest:mathematics-modelling": {
+    "verdict": "reference",
+    "reason": "Real-world physics modelling names mathematical modelling."
+  },
+  "I focus on real-world physics modeling and kinematics for STEM students. | style.appliedPreference": {
+    "verdict": "reference",
+    "reason": "\"Real-world\" modelling is a stated applied focus."
+  },
+  "I focus on regulatory compliance and technical precision in food safety. | interest:policy-ethics": {
+    "verdict": "ours",
+    "reason": "Regulatory compliance is one of policy-ethics' cue words (\"regulation\")."
+  },
+  "I focus on sunspot numbers and flare classifications to help students correlate solar cycles with space weather events. | interest:sustainability-climate": {
+    "verdict": "reference",
+    "reason": "Sunspots and space weather are not climate or sustainability."
+  },
+  "I focus on the use of visual framing and dialogue pacing to reveal underlying power dynamics in origin stories. | interest:creative-arts-design": {
+    "verdict": "ours",
+    "reason": "Visual framing and pacing in film is creative arts and design."
+  },
+  "I like exams and I prefer theory and derivations. | interest:mathematics-modelling": {
+    "verdict": "ours",
+    "reason": "The prompt maps \"derivations\" to mathematics-modelling; the seed label left it out."
+  },
+  "I model entropy generation rates to identify inefficiencies in heat exchangers operating under transient conditions. | interest:computational-simulation": {
+    "verdict": "ambiguous",
+    "reason": "Modelling entropy generation could be simulation; the student did not say they simulate."
+  },
+  "I model entropy generation rates to identify inefficiencies in heat exchangers operating under transient conditions. | interest:mathematics-modelling": {
+    "verdict": "ambiguous",
+    "reason": "Modelling implies maths but maths was not named."
+  },
+  "I prefer apps that allow real-time ecological momentary assessment over weekly retrospective surveys. | interest:psychology-behaviour": {
+    "verdict": "ambiguous",
+    "reason": "Ecological momentary assessment is a psychology method; the answer is about apps."
+  },
+  "I prefer the intensive format as it allows me to immerse myself fully. | style.workloadTolerance": {
+    "verdict": "ambiguous",
+    "reason": "An intensive format may mean a higher workload tolerance, but they spoke about immersion, not workload."
+  },
+  "I prioritize lift-to-drag ratios at low Reynolds numbers using QBlade simulations before finalizing the design. | interest:computational-simulation": {
+    "verdict": "ours",
+    "reason": "QBlade simulations are named: computational-simulation is right, and the reference label was empty."
+  },
+  "I prioritize lift-to-drag ratios at low Reynolds numbers using QBlade simulations before finalizing the design. | interest:design-manufacturing": {
+    "verdict": "ambiguous",
+    "reason": "\"Before finalising the design\" names design, weakly."
+  },
+  "I prioritize lift-to-drag ratios at low Reynolds numbers using QBlade simulations before finalizing the design. | interest:fluid-mechanics": {
+    "verdict": "ours",
+    "reason": "Lift-to-drag ratios at low Reynolds numbers are fluid mechanics; the reviewed label missed it."
+  },
+  "I prioritize precise terminology for equations but restructure sentences to improve readability for interdisciplinary audiences. | interest:communication-writing": {
+    "verdict": "ambiguous",
+    "reason": "Restructuring sentences for readability weakly implies an interest in writing."
+  },
+  "I really got into machine learning over the summer, mostly neural nets in Python. | interest:programming-software": {
+    "verdict": "ambiguous",
+    "reason": "Neural nets in Python implies programming; the seed label recorded coding comfort instead."
+  },
+  "I really got into machine learning over the summer, mostly neural nets in Python. | style.codingComfort": {
+    "verdict": "ambiguous",
+    "reason": "Coding comfort from enjoying ML in Python is an inference the seed made and Sonnet did not."
+  },
+  "I seek out supplementary video tutorials and form peer study groups for review. | style.groupPreference": {
+    "verdict": "reference",
+    "reason": "Forming peer study groups is a stated group preference."
+  },
+  "I still need to take Intermediate Calculus before I can enter the engineering core. | interest:mathematics-modelling": {
+    "verdict": "reference",
+    "reason": "A prerequisite they still need is not an interest in mathematics."
+  },
+  "I use visual block-coding tools to show how computers recognize patterns in images without writing complex code. | interest:machine-learning-ai": {
+    "verdict": "ambiguous",
+    "reason": "Teaching children how computers recognise images: ML is named in effect, but as a teacher, not a student."
+  },
+  "I use visual block-coding tools to show how computers recognize patterns in images without writing complex code. | style.codingComfort": {
+    "verdict": "reference",
+    "reason": "Block-coding tools used to teach say nothing about their own coding comfort."
+  },
+  "I want a curriculum that is 70% hands-on lab work and 30% theory. | interest:experimental-lab": {
+    "verdict": "ours",
+    "reason": "70% hands-on lab work names experimental lab work."
+  },
+  "I want to blend academic rigor with real-world data design applications. | interest:statistics-data": {
+    "verdict": "ambiguous",
+    "reason": "Data design applications weakly implies statistics and data."
+  },
+  "I want to design K-8 programs integrating vocabulary, verbs, and grammar. | interest:communication-writing": {
+    "verdict": "ambiguous",
+    "reason": "Vocabulary and grammar programmes: languages (reference) or writing (Haiku) are both loose."
+  },
+  "I want to design K-8 programs integrating vocabulary, verbs, and grammar. | interest:languages": {
+    "verdict": "reference",
+    "reason": "Vocabulary, verbs and grammar programmes name languages."
+  },
+  "I want to ensure scientific integrity and citation accuracy in climate texts. | interest:communication-writing": {
+    "verdict": "ambiguous",
+    "reason": "Citation accuracy weakly implies writing."
+  },
+  "I want to ensure scientific integrity and citation accuracy in climate texts. | interest:policy-ethics": {
+    "verdict": "reference",
+    "reason": "Policy-ethics was invented from scientific integrity."
+  },
+  "I want to explore enterprise storage trade-offs for high-performance computing. | interest:computational-simulation": {
+    "verdict": "ambiguous",
+    "reason": "High-performance computing can be computational simulation, not stated."
+  },
+  "I want to focus on bias mitigation in meta-analyses of rare adverse events. | interest:machine-learning-ai": {
+    "verdict": "reference",
+    "reason": "Meta-analysis is statistics, not machine learning."
+  },
+  "I want to gain the credentials necessary to work in international diplomatic relations. | interest:global-development": {
+    "verdict": "ambiguous",
+    "reason": "Diplomacy relates to global development, loosely."
+  },
+  "I want to gain the credentials necessary to work in international diplomatic relations. | interest:policy-ethics": {
+    "verdict": "reference",
+    "reason": "International diplomatic relations is policy."
+  },
+  "I want to gain the credentials necessary to work in international diplomatic relations. | pathways": {
+    "verdict": "ambiguous",
+    "reason": "An empty pathways list changes nothing; harmless."
+  },
+  "I want to integrate reflective practices with measurable outcomes in curricula. | breadthAppetite": {
+    "verdict": "reference",
+    "reason": "Nothing about modules outside their degree."
+  },
+  "I want to support hesitant learners through cultural sensitivity and emotional safety. | interest:policy-ethics": {
+    "verdict": "reference",
+    "reason": "Policy-ethics was invented from cultural sensitivity in teaching."
+  },
+  "I want to support hesitant learners through cultural sensitivity and emotional safety. | interest:psychology-behaviour": {
+    "verdict": "ambiguous",
+    "reason": "Emotional safety of learners touches psychology, loosely."
+  },
+  "I want to work in Formula 1 aerodynamics. | interest:fluid-mechanics": {
+    "verdict": "ours",
+    "reason": "Formula 1 aerodynamics names fluid mechanics, which the prompt allows from a career answer."
+  },
+  "I'm feeling overwhelmed by the overlapping deadlines in my three science labs. | style.workloadTolerance": {
+    "verdict": "reference",
+    "reason": "Feeling overwhelmed by deadlines is a low workload tolerance."
+  },
+  "I'm thinking about adding a minor in Philosophy to complement my Political Science degree. | breadthAppetite": {
+    "verdict": "reference",
+    "reason": "Adding a philosophy minor is an appetite for modules outside the degree."
+  },
+  "I'm torn between pursuing a PhD in Sociology or entering public policy. | interest:policy-ethics": {
+    "verdict": "reference",
+    "reason": "Public policy is named."
+  },
+  "I'm torn between pursuing a PhD in Sociology or entering public policy. | pathways": {
+    "verdict": "reference",
+    "reason": "A PhD is named, so research-academia; Haiku said pathwaysSkipped, which the guard now drops."
+  },
+  "I'm very interested in blending computer science with digital humanities. | breadthAppetite": {
+    "verdict": "ambiguous",
+    "reason": "Blending computer science with humanities may be breadth appetite; the question was not about breadth."
+  },
+  "I'm very interested in blending computer science with digital humanities. | interest:creative-arts-design": {
+    "verdict": "reference",
+    "reason": "Digital humanities is not creative arts."
+  },
+  "I'm very interested in blending computer science with digital humanities. | interest:history-philosophy": {
+    "verdict": "ambiguous",
+    "reason": "Humanities maps loosely to history-philosophy."
+  },
+  "I've always been fascinated by behavioral economics and game theory. | interest:psychology-behaviour": {
+    "verdict": "ambiguous",
+    "reason": "Game theory and behavioural economics touch psychology; economics was set by both."
+  },
+  "I've always wanted to understand how urban planning affects social equity. | interest:global-development": {
+    "verdict": "ambiguous",
+    "reason": "Social equity in urban planning could be global development."
+  },
+  "I've used basic Excel, but I've never touched R or SPSS before. | style.codingComfort": {
+    "verdict": "ours",
+    "reason": "Never having touched R or SPSS is a stated low coding comfort."
+  },
+  "Local fisheries often resist no-take zones due to immediate economic losses despite long-term ecological benefits. | interest:policy-ethics": {
+    "verdict": "ambiguous",
+    "reason": "No-take zones and fisheries are environmental policy, loosely."
+  },
+  "Maybe consulting, or a quant role at a bank. | pathways": {
+    "verdict": "ambiguous",
+    "reason": "A quant role at a bank fits software-data as well as consulting fits consulting."
+  },
+  "My focus is on self-perception theory and its clinical applications. | interest:biomedical-engineering": {
+    "verdict": "reference",
+    "reason": "\"Clinical applications\" of psychology is not biomedical engineering."
+  },
+  "Practicing small-signal model derivations repeatedly builds the intuition needed to solve complex circuit problems quickly. | interest:electronics-embedded": {
+    "verdict": "ours",
+    "reason": "Small-signal models of circuits are electronics."
+  },
+  "Practicing small-signal model derivations repeatedly builds the intuition needed to solve complex circuit problems quickly. | interest:mathematics-modelling": {
+    "verdict": "ours",
+    "reason": "The prompt maps derivations to mathematics-modelling."
+  },
+  "Practicing small-signal model derivations repeatedly builds the intuition needed to solve complex circuit problems quickly. | style.appliedPreference": {
+    "verdict": "ambiguous",
+    "reason": "Practising derivations does not state a theory or applied preference."
+  },
+  "Renewables and climate work really interest me, and the materials labs were fun. | interest:solid-mechanics-materials": {
+    "verdict": "reference",
+    "reason": "\"The materials labs were fun\" names materials."
+  },
+  "Something in energy, maybe nuclear or renewables. | interest:nuclear-energy": {
+    "verdict": "ours",
+    "reason": "Nuclear is named; the prompt allows interests named in a career answer."
+  },
+  "Something in energy, maybe nuclear or renewables. | interest:sustainability-climate": {
+    "verdict": "ours",
+    "reason": "Renewables are named."
+  },
+  "The interplay between the endocrine and nervous systems during stress responses is hardest to map mentally. | interest:psychology-behaviour": {
+    "verdict": "reference",
+    "reason": "Endocrine and nervous systems are physiology, not psychology."
+  },
+  "Visualizing goroutine scheduling and channel communication helps students grasp concurrency without race conditions. | interest:programming-software": {
+    "verdict": "ours",
+    "reason": "Goroutine scheduling is programming; the reviewed label was empty."
+  },
+  "Yes, I am planning to take the CFA Level 1 exam during my final year. | interest:finance-economics": {
+    "verdict": "reference",
+    "reason": "Planning to sit the CFA names finance."
+  },
+  "Yes, specifically CNN and LSTM integration for automated prescription analysis. | interest:biomedical-engineering": {
+    "verdict": "ambiguous",
+    "reason": "Prescription analysis is healthcare, not clearly biomedical engineering."
+  },
+  "Yes, specifically urban music economies and festival data in Lagos. | interest:creative-arts-design": {
+    "verdict": "ambiguous",
+    "reason": "Urban music economies: arts and global development are both loose fits."
+  },
+  "Yes, specifically urban music economies and festival data in Lagos. | interest:global-development": {
+    "verdict": "ambiguous",
+    "reason": "As above."
+  }
+}

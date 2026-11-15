@@ -213,7 +213,7 @@ function UploadForm({ onUploaded, onSkip }: { onUploaded: () => void; onSkip: ()
                 <span className="text-brand underline underline-offset-2 sm:hidden">Choose a PDF or photo</span>
               </span>
               <span id={fileHintId} className="text-[12.5px] text-muted">
-                PDF, PNG or JPEG, up to {formatBytes(MAX_FILE_BYTES)}
+                PDF or photo (PNG or JPEG), up to {formatBytes(MAX_FILE_BYTES)}
               </span>
               <input
                 type="file"

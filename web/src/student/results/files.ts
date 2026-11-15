@@ -1,11 +1,12 @@
 // Pure helpers for the results upload (spec 23): which files we accept, the size limit, reading a file as
 // base64, and turning an API error into a friendly next step.
+import { RESULTS_FILE_MAX_BYTES } from '@modulematch/shared';
 
 /**
- * The contract caps the base64 string at 8,000,000 characters, which is 6,000,000 bytes once decoded.
- * Checked on the client so a student never waits for an upload the server would refuse.
+ * 3 MB, the contract's limit (about 4 MB of base64, under Vercel's 4.5 MB body cap). Checked on the client so a
+ * student never waits for an upload the server would refuse.
  */
-export const MAX_FILE_BYTES = 6_000_000;
+export const MAX_FILE_BYTES = RESULTS_FILE_MAX_BYTES;
 
 export type ResultsMediaType = 'application/pdf' | 'image/png' | 'image/jpeg';
 
@@ -112,7 +113,8 @@ export function uploadProblem(error: unknown, sentFile: boolean): UploadProblem 
       pasteInstead: false,
     };
   if (status === 410) return { message: fromServer ?? 'Your results were deleted while this upload was read, so it was not kept.', pasteInstead: false };
-  if (status === 413) return { message: 'That file is too large to send. Try a smaller photo or paste the text.', pasteInstead: true };
+  if (status === 413)
+    return { message: fromServer ?? `That file is too large to send. Use one of up to ${formatBytes(MAX_FILE_BYTES)}, or paste the text.`, pasteInstead: true };
   if (status === 400) return { message: 'That upload was not quite right. Tick the consent box and add a file or some text.', pasteInstead: false };
   if (status === 404) return { message: 'Results upload is not switched on yet. You can skip this step for now.', pasteInstead: false };
   return { message: 'Something went wrong reading your results. Please try again in a moment.', pasteInstead: false };

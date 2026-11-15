@@ -2,7 +2,7 @@
 import { DEFAULT_WEIGHTS, type Evidence, type SessionState } from '@modulematch/shared';
 import { fixtureModules, fixtureProfile, fixtureSession } from '@modulematch/shared/fixtures';
 import { describe, expect, it } from 'vitest';
-import { extract, extractByCues, mergeUpdates } from '../src/agents/extractor.ts';
+import { extract, extractByCues, grounded, mergeUpdates, plausible } from '../src/agents/extractor.ts';
 import { classifyByRules } from '../src/agents/intent.ts';
 import { nextQuestion, QUICK_PLAN, reflect, unfilledSlots, whatIHeard } from '../src/agents/interviewer.ts';
 import { explainByRules } from '../src/agents/matcher.ts';
@@ -45,6 +45,94 @@ describe('extractor', () => {
     expect(extractByCues('Not sure yet.', ['pathways'], PATHWAYS)).toEqual([expect.objectContaining({ slot: 'pathwaysSkipped', value: true })]);
     expect(extractByCues('Yes, definitely!', ['breadthAppetite'], PATHWAYS)).toEqual([expect.objectContaining({ slot: 'breadthAppetite', value: 0.85 })]);
     expect(extractByCues('I want to work in F1 aerodynamics.', ['pathways'], PATHWAYS)).toContainEqual(expect.objectContaining({ slot: 'pathways', value: ['aerospace-motorsport'] }));
+  });
+
+  it('does not read an assessment or hands-on preference off a topic name', () => {
+    const slots = (text: string) => extractByCues(text, ['interest'], PATHWAYS).map((u) => u.slot);
+    expect(slots('I lost track of time in the wind tunnel lab and the CFD coursework.')).not.toContain('style.examPreference');
+    expect(slots('Building robots and programming the electronics is what I love.')).not.toContain('style.appliedPreference');
+    // Asked directly, the same words do state a preference.
+    expect(extractByCues('Building things, definitely.', ['style.examPreference', 'style.appliedPreference'], PATHWAYS)).toContainEqual(
+      expect.objectContaining({ slot: 'style.appliedPreference', value: 0.85 }),
+    );
+  });
+
+  it('reads dreading proofs as low maths comfort and a lean towards applied work', () => {
+    const bySlot = Object.fromEntries(extractByCues('Anything with heavy derivations, proofs are a slog for me.', ['interest'], PATHWAYS).map((u) => [u.slot, u.value]));
+    expect(bySlot).toMatchObject({ 'style.mathsComfort': 0.3, 'style.appliedPreference': 0.8 });
+  });
+
+  it('grounds a shortened quote to the verbatim span and drops an invented one', () => {
+    const text = 'Honestly the maths modules and the statistics course were my favourite.';
+    const u = (quote: string) => ({ slot: 'interest:mathematics-modelling', value: 0.9, quote, confidence: 0.9 });
+    expect(grounded(text, [u('the maths modules were my favourite')])).toEqual([u('the maths modules and the statistics course were my favourite')]);
+    expect(grounded(text, [u('the maths modules')])).toEqual([u('the maths modules')]);
+    expect(grounded(text, [u('I adore algebra')])).toEqual([]);
+    // A repair that would skip a negation flips the meaning, so it is refused.
+    expect(grounded('The CFD modules were not my favourite.', [u('the CFD modules were my favourite')])).toEqual([]);
+  });
+
+  it('lets the main clause decide the team preference', () => {
+    const group = (text: string) => extractByCues(text, ['style.groupPreference'], PATHWAYS).find((x) => x.slot === 'style.groupPreference')?.value;
+    expect(group('I prefer group work though I can work alone.')).toBe(0.7);
+    expect(group("I'm more productive solo, though I can handle group work if necessary.")).toBe(0.3);
+    expect(group('I work best on my own.')).toBe(0.2);
+    expect(group('Team work please, but a lighter workload this year.')).toBe(0.8);
+    expect(group('I prefer group work over working alone.')).toBe(0.8);
+    expect(group('I hate group work, I prefer working alone.')).toBe(0.2);
+    expect(group("I don't mind group work but I prefer working alone.")).toBe(0.3);
+    expect(group("I'd rather not work alone.")).toBe(0.8);
+    expect(group('I hate having to do projects in a group.')).toBe(0.2);
+    expect(group('I hate working alone and prefer groups.')).toBe(0.8);
+    expect(group('I hate exams so I much prefer working in a group.')).toBe(0.8);
+    expect(group('I hate exams, I prefer working in a group.')).toBe(0.8);
+    expect(group('Group work is boring for me.')).toBe(0.2);
+    expect(group('I hate things like group projects.')).toBe(0.2);
+    expect(group('I hate exams yet love working in a group.')).toBe(0.8);
+    expect(group('I hate exams but enjoy working in a group.')).toBe(0.8);
+    expect(group('I really dislike all the group projects we get.')).toBe(0.2);
+    expect(group('I hate deadlines but I really like working with a team.')).toBe(0.8);
+    expect(group('I prefer working in a team, and a heavy workload is fine.')).toBe(0.8);
+  });
+
+  it('reads typed comfort phrases when no slider values were sent', async () => {
+    const updates = await extract('Maths comfort: 70%. Coding comfort: 40%', ['style.mathsComfort', 'style.codingComfort'], PATHWAYS);
+    expect(updates.map((x) => [x.slot, x.value])).toEqual([
+      ['style.mathsComfort', 0.7],
+      ['style.codingComfort', 0.4],
+    ]);
+    // Inside a longer message the percentage may be a correction, so it is not saved as an answer.
+    const corrected = await extract('Maths comfort: 70% is wrong; please leave it unset.', ['style.mathsComfort'], PATHWAYS);
+    expect(corrected.filter((x) => x.slot === 'style.mathsComfort' && x.value === 0.7)).toEqual([]);
+  });
+
+  it('drops slots the words do not state, whichever extractor produced them', () => {
+    const keep = (slot: string, value: unknown, text: string, target: string[] = ['interest']) =>
+      plausible({ slot, value: value as number, quote: text, confidence: 0.8 }, text, target);
+    expect(keep('timetablePrefs.earliestStart', '06:00', 'I dedicate two hours each morning to review.', ['timetablePrefs.earliestStart'])).toBe(false);
+    expect(keep('timetablePrefs.earliestStart', '17:00', 'I work on Tuesdays from noon until five.', ['timetablePrefs.earliestStart'])).toBe(false);
+    expect(keep('timetablePrefs.earliestStart', '10:00', 'Nothing before 10am please.', ['timetablePrefs.earliestStart'])).toBe(true);
+    expect(keep('pathways', ['energy-transition'], 'I am leaning towards a thesis on urban sustainability.')).toBe(false);
+    expect(keep('pathways', ['research-academia'], 'I want to do a PhD.')).toBe(true);
+    expect(keep('pathwaysSkipped', true, "I'm torn between a PhD and policy.", ['pathways'])).toBe(false);
+    expect(keep('style.codingComfort', 0.75, 'My syntax is usually correct.')).toBe(false);
+    expect(keep('timetablePrefs.avoidDays', [], 'I avoid all social commitments.')).toBe(false);
+    expect(keep('interest:fluid-mechanics', 0.9, 'Anything about wind.')).toBe(true);
+    // A short answer to the question that asked for the slot needs no keyword; a long one must name it.
+    expect(keep('style.groupPreference', 0.8, 'Yes, really enjoyed it.', ['style.groupPreference'])).toBe(true);
+    expect(keep('style.workloadTolerance', 0.7, "I'm more productive solo, though I can handle group work if necessary.", ['style.groupPreference', 'style.workloadTolerance'])).toBe(false);
+    for (const text of ['No lectures earlier than 10 please.', 'Nothing before ten.', "Not before nine o'clock."]) {
+      expect(keep('timetablePrefs.earliestStart', '10:00', text, ['timetablePrefs.earliestStart'])).toBe(true);
+    }
+  });
+
+  it('reads a slider answer as comfort only, never as an interest', async () => {
+    const updates = await extract('Maths comfort: 70%. Coding comfort: 40%', ['style.mathsComfort', 'style.codingComfort'], PATHWAYS, { mathsComfort: 0.7, codingComfort: 0.4 });
+    expect(updates.map((u) => [u.slot, u.value])).toEqual([
+      ['style.mathsComfort', 0.7],
+      ['style.codingComfort', 0.4],
+    ]);
+    expect(extractByCues('Maths comfort: 70%. Coding comfort: 40%', ['interest'], PATHWAYS)).toEqual([]);
   });
 
   it('reads style, timetable and slider answers', async () => {
