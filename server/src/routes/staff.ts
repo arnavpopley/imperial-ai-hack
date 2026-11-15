@@ -3,6 +3,7 @@ import {
   DEFAULT_WEIGHTS,
   MIN_COHORT,
   schemas,
+  type CohortOffer,
   type Escalation,
   type ExamFeedbackForm,
   type Insight,
@@ -42,12 +43,9 @@ function insightContext(): InsightContext {
 }
 
 /**
- * How the cohort's programme year offers a module: compulsory, one of its options, or not offered at all. The staff
- * module list leads with the options, since a core or other-year module shows "0 shortlisted" whatever its fit.
- * Sent beside StaffModuleSummary as an optional extra field; the shared schema does not list it yet.
+ * How the cohort's programme year offers a module (StaffModuleSummary.offer). The staff module list leads with the
+ * options, since a core or other-year module shows "0 shortlisted" whatever its fit.
  */
-type CohortOffer = 'core' | 'elective' | 'i-explore' | 'not-offered';
-
 function offerFor(module: Module, rules: ProgrammeRules): CohortOffer {
   if (rules.coreModuleIds.includes(module.id)) return 'core';
   if (!rules.allowedElectiveIds.includes(module.id)) return 'not-offered';
@@ -64,7 +62,7 @@ export const staffRoutes = new Hono()
     const first = ctx.cohort[0];
     // The synthetic cohort shares one programme and year, so its first student's rules are everyone's.
     const rules = first ? rulesFor(first.programme, first.yearOfStudy) : null;
-    const rows: (StaffModuleSummary & { offer?: CohortOffer })[] = ctx.modules.flatMap((m) => {
+    const rows: StaffModuleSummary[] = ctx.modules.flatMap((m) => {
       const stats = cohortStats(m, ctx.cohort, ctx.shortlists, ctx.weights, ctx.homeTopics);
       // Below the minimum cohort nothing is shown for the module (spec 20.4).
       if (!stats) return [];

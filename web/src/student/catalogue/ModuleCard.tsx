@@ -12,6 +12,8 @@ import { NudgeNote } from '../results/NudgeNote.tsx';
 import { useNudge } from '../results/ResultsProvider.tsx';
 import { paths } from '../routes.ts';
 import type { RankedModule } from '../state/CatalogueProvider.tsx';
+import { useReferenceData } from '../state/ReferenceDataProvider.tsx';
+import { DemandChip } from './DemandChip.tsx';
 import { ExceptionChip } from './ExceptionChip.tsx';
 import { NoScoreRing, ScoreRing } from './ScoreRing.tsx';
 import { ShortlistButton } from './ShortlistButton.tsx';
@@ -43,6 +45,8 @@ export function ModuleCard({ item, lowConfidence, scored, shortlisted, pending, 
   const { reduce, transition } = useMotionTokens();
   // From the student's own marks, when shared: a gentle note beside the score, never a change to it.
   const nudge = useNudge(item.moduleId);
+  // Cohort demand beside the score, never part of it.
+  const demand = useReferenceData().demandById.get(item.moduleId);
   const delay = Math.min(index, STAGGER_LIMIT) * 0.05;
 
   return (
@@ -82,6 +86,8 @@ export function ModuleCard({ item, lowConfidence, scored, shortlisted, pending, 
                     </span>
                   )}
                   {item.exception && <ExceptionChip decision={item.exception} />}
+                  {/* Above the stretched card link, so hovering shows where the count comes from. */}
+                  {demand && <DemandChip signal={demand} className="relative z-10" />}
                 </div>
                 <h3 className={cx('mt-1.5 text-[17px] leading-snug font-semibold tracking-tight', !eligible && 'text-muted')}>
                   <Link

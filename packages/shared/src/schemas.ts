@@ -598,6 +598,9 @@ export const ExplanationResponse = z.object({
   evidence: z.array(Evidence),
 });
 
+/** How the cohort's programme year offers a module: one of its options, compulsory, or not offered at all. */
+export const CohortOffer = z.enum(['elective', 'i-explore', 'core', 'not-offered']);
+
 export const StaffModuleSummary = z.object({
   moduleId: z.string(),
   code: z.string(),
@@ -608,6 +611,19 @@ export const StaffModuleSummary = z.object({
   averageFit: z.number().min(0).max(100),
   fitHistogram: z.array(z.number().int().min(0)).length(10),
   cohortSize: z.number().int().min(0),
+  /** Absent only when the cohort's programme and year have no programme rules to read the offer from. */
+  offer: CohortOffer.optional(),
+});
+
+/**
+ * Aggregate demand for a capped module that is near or over capacity, from the synthetic cohort's shortlists.
+ * Only sent when at least MIN_COHORT students are behind the count (spec 20.4); never changes fit or rank.
+ */
+export const ModuleDemandSignal = z.object({
+  moduleId: z.string(),
+  status: z.enum(['near', 'over']),
+  shortlisted: z.number().int().min(0),
+  capacity: z.number().int().positive(),
 });
 
 export const StaffEscalation = Escalation.extend({
