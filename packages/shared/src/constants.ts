@@ -44,6 +44,14 @@ export const NEAR_CAPACITY = 0.85;
 
 export type CapacityStatus = 'uncapped' | 'within' | 'near' | 'over';
 
+/** The words for each capacity state, the same on the student chip and the staff console (issue 111). */
+export const CAPACITY_LABELS: Record<CapacityStatus, string> = {
+  uncapped: 'No capacity limit',
+  within: 'Within capacity',
+  near: 'Near capacity',
+  over: 'Over capacity',
+};
+
 /** Demand against capacity: over above 100%, near from NEAR_CAPACITY, otherwise within. */
 export function capacityStatus(shortlisted: number, capacity: number | null): CapacityStatus {
   if (capacity === null) return 'uncapped';

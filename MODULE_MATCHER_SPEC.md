@@ -879,7 +879,7 @@ Success metrics to state in `LEVEL1.md`:
 1. The profile holds interests, goals, and learning preferences only.
 2. Health, ethnicity, religion, nationality, sexuality, disability, and finances are never requested, stored, or inferred. Grades and results are stored only through the consented results upload (section 23). Grades typed into the chat are still redacted, and marks are never inferred.
 3. The student can see, edit, and delete everything held about them.
-4. Staff views are aggregate only, with a minimum cohort of five.
+4. Staff views are aggregate only, with a minimum cohort of five. The rule covers counts of students; tallies of ratings on AI answers, which carry no student or session, are shown as they are.
 5. The advisor recommends and explains. The student decides.
 6. Wellbeing concerns are handed to people, with consent, and the advisor does not counsel.
 7. All sample and synthetic data is labelled.

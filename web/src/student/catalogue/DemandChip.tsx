@@ -1,27 +1,35 @@
 // A calm note that a capped module is near or over capacity in the synthetic cohort (issue #68). It sits beside
 // the fit score and never changes it or the ranking. The server sends nothing for counts under five students.
-import type { ModuleDemandSignal } from '@modulematch/shared';
+// The words are the staff console's (issue #111), and over capacity reads stronger than near capacity.
+import { CAPACITY_LABELS, type ModuleDemandSignal } from '@modulematch/shared';
 import { cx } from '../../components/cx.ts';
 import { Icon } from '../../components/Icon.tsx';
 
 const SOURCE = 'From the synthetic cohort’s shortlists';
 
-/** "Popular: 63 shortlists for 48 places" or "Nearly full: 56 shortlists for 60 places". */
+/** Over capacity carries the stronger colour; the text stays ink on both, for contrast. */
+const TONE: Record<ModuleDemandSignal['status'], { chip: string; icon: string }> = {
+  over: { chip: 'bg-fit-low/12 ring-1 ring-inset ring-fit-low/40', icon: 'text-fit-low' },
+  near: { chip: 'bg-fit-mid/12', icon: 'text-fit-mid' },
+};
+
+/** "Over capacity: 63 shortlists for 48 places" or "Near capacity: 56 shortlists for 60 places". */
 export function demandText(signal: ModuleDemandSignal): string {
-  const lead = signal.status === 'over' ? 'Popular' : 'Nearly full';
-  return `${lead}: ${signal.shortlisted} shortlists for ${signal.capacity} places`;
+  return `${CAPACITY_LABELS[signal.status]}: ${signal.shortlisted} shortlists for ${signal.capacity} places`;
 }
 
 export function DemandChip({ signal, className }: { signal: ModuleDemandSignal; className?: string }) {
+  const tone = TONE[signal.status];
   return (
     <span
       title={SOURCE}
       className={cx(
-        'inline-flex items-center gap-1 rounded-md bg-fit-mid/12 px-1.5 py-0.5 text-[11px] font-semibold text-ink tabular-nums',
+        'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-semibold text-ink tabular-nums',
+        tone.chip,
         className,
       )}
     >
-      <Icon name="user" size={11} />
+      <Icon name="user" size={11} className={tone.icon} />
       {demandText(signal)}
       <span className="sr-only"> ({SOURCE.toLowerCase()})</span>
     </span>
