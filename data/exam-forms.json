@@ -1,0 +1,321 @@
+{
+  "_note": "SYNTHETIC demo data (spec 23). These examiner feedback forms were written for the hackathon demo from each module's public description and learning outcomes in modules.raw.json. They are not real Imperial exam papers or examiner reports. Seeded into exam_forms by seedIfEmpty when no forms exist.",
+  "forms": [
+    {
+      "id": "exam-MECH50010",
+      "moduleId": "MECH50010",
+      "examLabel": "Summer 2026 exam (synthetic demo)",
+      "questions": [
+        {
+          "id": "Q1",
+          "label": "Q1: Dimensional analysis and similarity",
+          "maxMarks": 20,
+          "topics": ["fluid-mechanics", "mathematics-modelling"],
+          "whatGoodAnswersDid": "Good answers listed the variables first, chose repeating variables that span the dimensions, and checked each group was dimensionless before using it to scale the model test.",
+          "commonMistakes": [
+            "Choosing a repeating variable that is itself dimensionless, which leaves too few groups",
+            "Assuming complete similarity when the Reynolds and Froude numbers cannot both be matched"
+          ],
+          "revisionPointers": [
+            "Rework the Buckingham Pi examples from the lecture notes, writing the dimension matrix every time",
+            "Revise complete and incomplete similarity, and practise saying which group a wind-tunnel test can actually match"
+          ]
+        },
+        {
+          "id": "Q2",
+          "label": "Q2: Navier-Stokes and exact solutions (Couette-Poiseuille flow)",
+          "maxMarks": 20,
+          "topics": ["fluid-mechanics", "mathematics-modelling"],
+          "whatGoodAnswersDid": "Good answers stated each simplifying assumption (steady, fully developed, incompressible) before cancelling terms, and applied the no-slip condition on both walls.",
+          "commonMistakes": [
+            "Cancelling the pressure-gradient term in a pressure-driven flow",
+            "Applying only one boundary condition and leaving an integration constant undetermined"
+          ],
+          "revisionPointers": [
+            "Practise reducing the Navier-Stokes equations term by term for channel and pipe flows",
+            "Check every velocity profile against the boundary conditions before computing the shear stress"
+          ]
+        },
+        {
+          "id": "Q3",
+          "label": "Q3: Boundary layers and the Blasius solution",
+          "maxMarks": 20,
+          "topics": ["fluid-mechanics", "mathematics-modelling"],
+          "whatGoodAnswersDid": "Good answers used the order-of-magnitude argument to justify the boundary-layer equations, then used the Blasius result for the thickness and the skin-friction drag on the plate.",
+          "commonMistakes": [
+            "Confusing the boundary-layer thickness with the displacement thickness",
+            "Using the laminar Blasius result beyond the transition Reynolds number",
+            "Forgetting to integrate the wall shear stress over the plate length to get the drag force"
+          ],
+          "revisionPointers": [
+            "Revise the derivation of the boundary-layer equations from the scaling argument in the notes",
+            "Work through the flat-plate drag tutorial problems, laminar first and then turbulent",
+            "Make a one-page summary of the thickness definitions (99%, displacement, momentum) with when to use each"
+          ]
+        },
+        {
+          "id": "Q4",
+          "label": "Q4: Turbulent pipe flow and the time-averaged equations (RANS)",
+          "maxMarks": 20,
+          "topics": ["fluid-mechanics"],
+          "whatGoodAnswersDid": "Good answers explained where the Reynolds stresses come from in the averaging, and used the Moody chart with a correctly computed relative roughness.",
+          "commonMistakes": [
+            "Treating the Reynolds stress as a molecular viscous stress",
+            "Reading the Moody chart with the wrong Reynolds number or roughness ratio"
+          ],
+          "revisionPointers": [
+            "Rederive the Reynolds-averaged momentum equation once without notes",
+            "Practise head-loss problems with the Moody chart until the iteration feels routine"
+          ]
+        },
+        {
+          "id": "Q5",
+          "label": "Q5: Compressible flow in converging-diverging nozzles",
+          "maxMarks": 20,
+          "topics": ["fluid-mechanics", "thermodynamics-energy"],
+          "whatGoodAnswersDid": "Good answers identified whether the nozzle was choked, used the isentropic relations from the throat, and checked the exit Mach number against the back pressure.",
+          "commonMistakes": [
+            "Using the isentropic relations across a normal shock",
+            "Not checking whether the throat is choked before computing the mass flow"
+          ],
+          "revisionPointers": [
+            "Revise the area-Mach number relation and when the throat chokes",
+            "Sketch the pressure distribution along the nozzle for falling back pressures"
+          ]
+        }
+      ],
+      "generalComments": "Synthetic demo form. Most of the cohort did well on the integral and dimensional questions. Marks were mostly lost where approximations had to be justified rather than applied, especially in the boundary-layer question.",
+      "status": "published",
+      "authoredBy": "examiner",
+      "updatedAt": "2026-11-14T00:00:00.000Z"
+    },
+    {
+      "id": "exam-MECH50006",
+      "moduleId": "MECH50006",
+      "examLabel": "Summer 2026 exam (synthetic demo)",
+      "questions": [
+        {
+          "id": "Q1",
+          "label": "Q1: Gas turbine (Brayton) cycle analysis",
+          "maxMarks": 25,
+          "topics": ["thermodynamics-energy"],
+          "whatGoodAnswersDid": "Good answers drew the T-s diagram first, used isentropic efficiencies for the compressor and turbine, and found the work ratio and thermal efficiency.",
+          "commonMistakes": [
+            "Applying an isentropic efficiency the wrong way round for the compressor",
+            "Using the cold-air standard specific heats when the question gave temperature-dependent data"
+          ],
+          "revisionPointers": [
+            "Practise drawing the T-s diagram before writing any equations",
+            "Revise the definitions of compressor and turbine isentropic efficiency side by side"
+          ]
+        },
+        {
+          "id": "Q2",
+          "label": "Q2: Steam plant (Rankine cycle) with reheat",
+          "maxMarks": 25,
+          "topics": ["thermodynamics-energy"],
+          "whatGoodAnswersDid": "Good answers read the steam tables carefully, interpolated where needed, and checked the dryness fraction at the turbine exit.",
+          "commonMistakes": [
+            "Reading saturated-liquid values where superheated values were needed",
+            "Forgetting the feed-pump work when computing the net work"
+          ],
+          "revisionPointers": [
+            "Work through two reheat cycle problems end to end with the steam tables",
+            "Always state the state point table (p, T, h, s, x) before computing efficiencies"
+          ]
+        },
+        {
+          "id": "Q3",
+          "label": "Q3: Refrigeration and psychrometry",
+          "maxMarks": 25,
+          "topics": ["thermodynamics-energy"],
+          "whatGoodAnswersDid": "Good answers used the psychrometric chart to track each process and stated the coefficient of performance with the right definition.",
+          "commonMistakes": [
+            "Mixing up the heat pump and refrigerator definitions of the coefficient of performance",
+            "Ignoring the condensate leaving the cooling coil"
+          ],
+          "revisionPointers": [
+            "Revise the vapour-compression cycle on the p-h diagram",
+            "Practise air-conditioning processes on the psychrometric chart"
+          ]
+        },
+        {
+          "id": "Q4",
+          "label": "Q4: Heat exchanger selection and performance",
+          "maxMarks": 25,
+          "topics": ["thermodynamics-energy", "design-manufacturing"],
+          "whatGoodAnswersDid": "Good answers chose between the LMTD and effectiveness-NTU methods based on what was known, and commented on the economic and material constraints.",
+          "commonMistakes": [
+            "Using the LMTD method when the outlet temperatures were unknown",
+            "Not discussing practical constraints when asked to justify a design"
+          ],
+          "revisionPointers": [
+            "Revise when to use LMTD and when to use effectiveness-NTU",
+            "Practise short written justifications that mention materials, cost and the environment"
+          ]
+        }
+      ],
+      "generalComments": "Synthetic demo form. Cycle analysis was generally strong. Written justification of design choices was the weakest area across the cohort.",
+      "status": "published",
+      "authoredBy": "examiner",
+      "updatedAt": "2026-11-14T00:00:00.000Z"
+    },
+    {
+      "id": "exam-MECH50002",
+      "moduleId": "MECH50002",
+      "examLabel": "Summer 2026 exam (synthetic demo)",
+      "questions": [
+        {
+          "id": "Q1",
+          "label": "Q1: Stress transformation and Mohr's circle",
+          "maxMarks": 20,
+          "topics": ["solid-mechanics-materials", "mathematics-modelling"],
+          "whatGoodAnswersDid": "Good answers drew Mohr's circle to scale, labelled the plane angles, and found the principal stresses and maximum shear stress.",
+          "commonMistakes": [
+            "Using the physical angle rather than twice the angle on Mohr's circle",
+            "Sign errors in the shear stress convention"
+          ],
+          "revisionPointers": [
+            "Practise Mohr's circle questions with a fixed sign convention written at the top of the page",
+            "Check principal stresses with the transformation equations as well as the circle"
+          ]
+        },
+        {
+          "id": "Q2",
+          "label": "Q2: Failure criteria for ductile and brittle materials",
+          "maxMarks": 20,
+          "topics": ["solid-mechanics-materials", "design-manufacturing"],
+          "whatGoodAnswersDid": "Good answers chose Tresca or von Mises for the ductile case and maximum principal stress for the brittle case, and quoted a safety factor.",
+          "commonMistakes": [
+            "Applying a ductile criterion to a brittle material",
+            "Leaving out the safety factor when asked whether a design is safe"
+          ],
+          "revisionPointers": [
+            "Make a table of the failure criteria with when each applies",
+            "Revise safety factors with one worked design check per criterion"
+          ]
+        },
+        {
+          "id": "Q3",
+          "label": "Q3: Thick-walled cylinders (Lamé equations)",
+          "maxMarks": 20,
+          "topics": ["solid-mechanics-materials", "mathematics-modelling"],
+          "whatGoodAnswersDid": "Good answers applied the boundary conditions at both radii and identified the bore as the critical location.",
+          "commonMistakes": [
+            "Applying thin-walled formulae to a thick cylinder",
+            "Using the wrong boundary condition at the outer radius"
+          ],
+          "revisionPointers": [
+            "Rework the Lamé derivation and the compound cylinder example",
+            "Practise identifying where the maximum hoop stress occurs"
+          ]
+        },
+        {
+          "id": "Q4",
+          "label": "Q4: Plastic bending and residual stresses in beams",
+          "maxMarks": 20,
+          "topics": ["solid-mechanics-materials"],
+          "whatGoodAnswersDid": "Good answers sketched the stress distribution at each stage and found the residual stresses by superposing the elastic unloading.",
+          "commonMistakes": [
+            "Forgetting that unloading is elastic",
+            "Confusing the shape factor with the safety factor"
+          ],
+          "revisionPointers": [
+            "Practise the elastic-plastic bending examples, sketching the stress block every time",
+            "Revise residual stress by superposition with the tutorial sheet"
+          ]
+        },
+        {
+          "id": "Q5",
+          "label": "Q5: Euler buckling of struts",
+          "maxMarks": 20,
+          "topics": ["solid-mechanics-materials", "mathematics-modelling"],
+          "whatGoodAnswersDid": "Good answers used the right effective length for the end conditions and checked whether the strut yields before it buckles.",
+          "commonMistakes": [
+            "Using the pinned-pinned effective length for every end condition",
+            "Not checking yield against buckling for short struts"
+          ],
+          "revisionPointers": [
+            "Revise the effective length for each set of end conditions",
+            "Practise deciding between yield and buckling using the slenderness ratio"
+          ]
+        }
+      ],
+      "generalComments": "Synthetic demo form. Mohr's circle and buckling were well answered. Plastic bending and residual stress caused most difficulty.",
+      "status": "published",
+      "authoredBy": "examiner",
+      "updatedAt": "2026-11-14T00:00:00.000Z"
+    },
+    {
+      "id": "exam-MECH50003",
+      "moduleId": "MECH50003",
+      "examLabel": "Summer 2026 exam (synthetic demo)",
+      "questions": [
+        {
+          "id": "Q1",
+          "label": "Q1: Separation of variables for 2D PDEs",
+          "maxMarks": 25,
+          "topics": ["mathematics-modelling"],
+          "whatGoodAnswersDid": "Good answers set up the eigenvalue problem from the homogeneous boundary conditions first and used orthogonality to find the Fourier coefficients.",
+          "commonMistakes": [
+            "Choosing the wrong sign of the separation constant",
+            "Applying the non-homogeneous boundary condition before finding the eigenfunctions"
+          ],
+          "revisionPointers": [
+            "Rework the Laplace and heat equation examples from the notes",
+            "Revise Fourier series coefficients and orthogonality"
+          ]
+        },
+        {
+          "id": "Q2",
+          "label": "Q2: Finite difference and finite volume schemes",
+          "maxMarks": 25,
+          "topics": ["computational-simulation", "mathematics-modelling"],
+          "whatGoodAnswersDid": "Good answers derived the scheme from a Taylor expansion, stated its order of accuracy, and treated the boundary nodes explicitly.",
+          "commonMistakes": [
+            "Stating the order of accuracy without deriving it",
+            "Mixing up the differential and integral forms when building a finite volume scheme"
+          ],
+          "revisionPointers": [
+            "Derive the central difference stencil and its truncation error from scratch",
+            "Practise writing a finite volume balance for one cell"
+          ]
+        },
+        {
+          "id": "Q3",
+          "label": "Q3: Convergence, consistency and stability",
+          "maxMarks": 25,
+          "topics": ["computational-simulation", "mathematics-modelling"],
+          "whatGoodAnswersDid": "Good answers distinguished consistency from convergence clearly and used the stability condition to choose the time step.",
+          "commonMistakes": [
+            "Treating consistency and convergence as the same thing",
+            "Choosing a time step that breaks the stability limit"
+          ],
+          "revisionPointers": [
+            "Revise the definitions of consistency, stability and convergence with one example each",
+            "Practise finding the stability limit for the explicit heat equation scheme"
+          ]
+        },
+        {
+          "id": "Q4",
+          "label": "Q4: Iterative solution of linear systems in Python",
+          "maxMarks": 25,
+          "topics": ["programming-software", "computational-simulation"],
+          "whatGoodAnswersDid": "Good answers wrote a clear Jacobi or Gauss-Seidel loop with a residual-based stopping test and commented on convergence.",
+          "commonMistakes": [
+            "Stopping after a fixed number of iterations without checking the residual",
+            "Updating the solution in place in a Jacobi loop"
+          ],
+          "revisionPointers": [
+            "Rewrite the Jacobi and Gauss-Seidel solvers from the computing labs without notes",
+            "Practise residual-based stopping tests"
+          ]
+        }
+      ],
+      "generalComments": "Synthetic demo form. Analytical questions were strong. Many lost marks on the conceptual question on consistency and convergence.",
+      "status": "published",
+      "authoredBy": "examiner",
+      "updatedAt": "2026-11-14T00:00:00.000Z"
+    }
+  ]
+}

@@ -3,13 +3,21 @@
 import { schemas } from '@modulematch/shared';
 import { existsSync } from 'node:fs';
 import { getDb } from './db/client.ts';
-import { CohortFile, DATASET_FILES, dataPath, ModulesFile, readDataset, SlotsFile } from './db/datasets.ts';
-import { latestEvalRun, listModules, replaceCohort, replaceModules, replaceSlots, saveEvalRun } from './db/repo.ts';
+import { CohortFile, DATASET_FILES, dataPath, ExamFormsFile, ModulesFile, readDataset, SlotsFile } from './db/datasets.ts';
+import { latestEvalRun, listExamForms, listModules, replaceCohort, replaceExamForms, replaceModules, replaceSlots, saveEvalRun } from './db/repo.ts';
 
 /** The latest `npm run eval` result, committed so a fresh database can still show evaluation pass rates. */
 export const EVAL_SNAPSHOT_FILE = 'eval-latest.json';
 
+/** The synthetic exam forms are seeded whenever none exist, so databases created before spec 23 get them too. */
+function seedExamFormsIfEmpty(db = getDb()): void {
+  if (listExamForms(undefined, db).length === 0 && existsSync(dataPath(DATASET_FILES.examForms))) {
+    replaceExamForms(readDataset(DATASET_FILES.examForms, ExamFormsFile).forms, db);
+  }
+}
+
 export function seedIfEmpty(db = getDb()): boolean {
+  seedExamFormsIfEmpty(db);
   if (listModules(db).length > 0) return false;
   replaceModules(readDataset(DATASET_FILES.modules, ModulesFile).modules, db);
   replaceSlots(readDataset(DATASET_FILES.slots, SlotsFile).slots, db);

@@ -1,4 +1,4 @@
-// Drizzle schema for the twelve tables in spec section 7, plus answer feedback. JSON columns hold shared contract objects and are
+// Drizzle schema for the twelve tables in spec section 7, plus answer feedback, consented results and exam forms (spec 23). JSON columns hold shared contract objects and are
 // parsed with the zod schemas in repo.ts on every read. client.ts creates these tables; keep both in step.
 import { integer, real, sqliteTable, text, unique } from 'drizzle-orm/sqlite-core';
 
@@ -156,6 +156,43 @@ export const feedback = sqliteTable(
   (t) => [unique('feedback_session_target').on(t.sessionId, t.targetKind, t.targetId)],
 );
 
+/**
+ * Consent for a session's results upload (spec 23): one row per session while consent stands. Withdrawing consent
+ * or deleting the profile removes this row and every module result.
+ */
+export const resultsConsent = sqliteTable('results_consent', {
+  sessionId: text('session_id')
+    .primaryKey()
+    .references(() => sessions.id, { onDelete: 'cascade' }),
+  grantedAt: text('granted_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+});
+
+/** One module mark from the student's own transcript, with per-question marks as JSON. Visible to the student only. */
+export const moduleResults = sqliteTable(
+  'module_results',
+  {
+    seq: integer('seq').primaryKey({ autoIncrement: true }),
+    sessionId: sessionRef(),
+    moduleId: text('module_id').notNull(),
+    code: text('code').notNull(),
+    title: text('title'),
+    mark: real('mark').notNull(),
+    questionMarks: text('question_marks', { mode: 'json' }).notNull(),
+    matched: integer('matched', { mode: 'boolean' }).notNull(),
+    source: text('source').notNull(),
+  },
+  (t) => [unique('module_results_session_module').on(t.sessionId, t.moduleId)],
+);
+
+/** The examiner's feedback form for one module's exam (cohort-level, never about a student). Drafts stay hidden from students. */
+export const examForms = sqliteTable('exam_forms', {
+  moduleId: text('module_id').primaryKey(),
+  data: text('data', { mode: 'json' }).notNull(),
+  status: text('status').notNull(),
+  updatedAt: text('updated_at').notNull(),
+});
+
 export const tables = {
   sessions,
   messages,
@@ -170,4 +207,7 @@ export const tables = {
   cohortProfiles,
   evalRuns,
   feedback,
+  resultsConsent,
+  moduleResults,
+  examForms,
 };
