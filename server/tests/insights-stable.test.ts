@@ -44,7 +44,8 @@ describe('a staff decision leaves the cards alone', () => {
       expect(after.find((c) => c.id === first.id)?.decision).toBe('accepted');
     }
     expect(decided).toBeGreaterThan(10);
-  });
+    // Two full insight builds per module across the catalogue: slower than vitest's 5s default on a CI runner.
+  }, 60_000);
 });
 
 describe('the main gap does not depend on cohort order', () => {
