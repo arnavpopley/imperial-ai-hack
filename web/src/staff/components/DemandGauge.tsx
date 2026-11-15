@@ -3,6 +3,7 @@ import { MIN_COHORT } from '@modulematch/shared';
 import { CAPACITY_LABEL, NEAR_CAPACITY, capacityStatus, percent } from '../lib/format.ts';
 import type { CapacityStatus } from '../lib/format.ts';
 import { Badge, type BadgeTone } from '../../components/Badge.tsx';
+import { InfoTip } from '../../components/InfoTip.tsx';
 
 const tone: Record<CapacityStatus, { bar: string; badge: BadgeTone }> = {
   uncapped: { bar: 'bg-brand', badge: 'brand' },
@@ -83,10 +84,13 @@ export function DemandGauge({ shortlisted, capacity }: { shortlisted: number | n
           />
         )}
       </div>
-      <p className="mt-2 text-xs text-muted">
-        {capacity === null
-          ? 'This module has no capacity limit.'
-          : `${percent(shortlisted / capacity)} of capacity. Turns amber at ${percent(NEAR_CAPACITY)} and red above 100%.`}
+      <p className="mt-2 flex items-center gap-1 text-xs text-muted">
+        {capacity === null ? 'This module has no capacity limit.' : `${percent(shortlisted / capacity)} of capacity.`}
+        {capacity !== null && (
+          <InfoTip label="About the capacity colours">
+            The bar turns amber at {percent(NEAR_CAPACITY)} of capacity and red above 100%.
+          </InfoTip>
+        )}
       </p>
     </div>
   );

@@ -1,17 +1,22 @@
 // Layout blocks for the staff screens: panels, stat tiles and the segmented filter. Buttons, icons and the loading,
 // empty and error states come from the shared components in web/src/components (issue #142).
 import { useId } from 'react';
+import { InfoTip } from '../../components/InfoTip.tsx';
 import type { ReactNode } from 'react';
 
 export function Panel({
   title,
   description,
+  info,
   actions,
   children,
   className = '',
 }: {
   title?: string;
+  /** Always visible under the title: keep it for things a reader must not miss. */
   description?: ReactNode;
+  /** Background detail, tucked behind an "i" button beside the title. */
+  info?: ReactNode;
   actions?: ReactNode;
   children: ReactNode;
   className?: string;
@@ -26,8 +31,9 @@ export function Panel({
         <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             {title && (
-              <h2 id={headingId} className="text-heading">
+              <h2 id={headingId} className="flex items-center gap-1.5 text-heading">
                 {title}
+                {info && <InfoTip label={`About ${title.toLowerCase()}`}>{info}</InfoTip>}
               </h2>
             )}
             {description && <p className="mt-1 text-sm text-muted">{description}</p>}

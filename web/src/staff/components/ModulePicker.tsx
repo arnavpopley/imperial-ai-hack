@@ -113,9 +113,8 @@ export function ModulePicker({ modules }: { modules: StaffModuleSummary[] }) {
             ))}
           </Select>
         </div>
-        <p className="text-xs text-muted">
-          % = share of the cohort with a good fit or better ({GOOD_FIT}+)
-        </p>
+        {/* Inline, not an InfoTip: the narrow, clipped picker would cut a popover off. */}
+        <p className="text-xs text-muted">% = share of the cohort with a good fit ({GOOD_FIT}+).</p>
       </div>
       <p className="sr-only" aria-live="polite">
         {visible.length} of {modules.length} modules shown
