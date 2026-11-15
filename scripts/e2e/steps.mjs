@@ -1,10 +1,15 @@
 // The eight demo steps from spec 18.2. Each step drives the UI the way the presenter would and asserts what
 // the audience should see. Steps share `ctx.state` (the judge's answers, the shortlist, the reply sent).
+import { readFileSync } from 'node:fs';
 import { sleep } from './cdp.mjs';
+
+const TRANSCRIPT = new URL('../../data/demo/synthetic-transcript.txt', import.meta.url);
 
 /** The judge's answers, chosen by what the interviewer asks so the same script works with live wording. */
 const ANSWERS = {
-  love: 'I loved the robotics and control systems lectures, and anything with machine learning or programming robots.',
+  // States the maths interest outright: the sliders give comfort, not interest, and Mathematics A is the elective
+  // the demo swap brings in for Mechatronics 3A.
+  love: 'I loved the robotics and control systems lectures, especially the maths and modelling behind them, and anything with machine learning or programming robots.',
   avoid: 'I would avoid heavy thermodynamics and fluid mechanics if I could.',
   career: 'I want to work in robotics or autonomous vehicles after I graduate.',
   assessment: 'I prefer coursework and projects over exams, and I like hands-on applied work.',
@@ -37,6 +42,8 @@ const RULE_REASON = 'I covered reactor basics on my summer placement and want to
 const STAFF_REPLY = 'Please read the Introduction to Nuclear Energy A notes before week 3.';
 /** Two modules the timetable puts at the same time in spring, whatever the profile (data/slots.json). */
 const CLASHING = ['MECH60009', 'MECH60018'];
+/** Finance & Financial Management: one of the two modules with a counterfactual that clears the bar (+2.1 fit). */
+const COUNTERFACTUAL_MODULE = 'BUSI60043';
 
 const CONVERSATION = { css: 'ol[aria-label="Conversation"]' };
 const MAIN_NAV = (text) => ({ css: 'nav[aria-label="Role"] a', text });
@@ -189,6 +196,85 @@ export const STEPS = [
     },
   },
   {
+    id: 'results',
+    title: 'Optional: results upload, nudge, feedback, withdraw',
+    // Spec 23 is not in the three-minute script, so a failure here is reported but does not stop the demo steps.
+    optional: true,
+    async run(ctx) {
+      const page = ctx.student;
+      ctx.active = page;
+      const transcript = readFileSync(TRANSCRIPT, 'utf8');
+      await page.click(STUDENT_TAB('Your data'));
+      await pathIs(page, '/your-data');
+      await page.click({ css: 'button', text: 'Add your results' });
+      await pathIs(page, '/interview');
+      await page.waitForElement({ css: 'h2', text: { exact: 'Your results' } }, { desc: 'the results panel' });
+      await page.click({ css: 'label', text: { exact: 'Paste text' } });
+      // Pasting: the whole transcript arrives in one input event, as it does from the clipboard.
+      await page.type({ forLabel: 'Paste your marks' }, transcript, { desc: 'the marks box' });
+      await page.click({ forLabel: 'I agree to share these marks' }, { desc: 'the consent box' });
+      await page.click({ css: 'button[type="submit"]', text: 'Read my results' });
+      const read = await page.waitFor(
+        () => {
+          const status = [...document.querySelectorAll('[role="status"]')].map((s) => s.innerText).find((t) => /(Read|Shared) \d+ modules?/.test(t));
+          return status ?? false;
+        },
+        [],
+        { desc: 'the marks to be read', timeout: ctx.timeout },
+      );
+      ctx.note(`results: ${read}`);
+      await ctx.checkpoint(page, 'results-read');
+      await page.click({ css: 'button', text: 'Back to the conversation' });
+
+      await page.click(STUDENT_TAB('Catalogue'));
+      await pathIs(page, '/catalogue');
+      const nudge = { css: 'section[aria-labelledby="ranked-heading"] ol > li', text: 'Keep in mind' };
+      await page.waitForElement(nudge, { desc: 'a "Keep in mind" note on a catalogue card', timeout: ctx.timeout });
+      const nudged = await page.eval(
+        () => [...document.querySelectorAll('section[aria-labelledby="ranked-heading"] ol > li')].filter((li) => li.textContent.includes('Keep in mind')).length,
+      );
+      ctx.note(`${nudged} catalogue card(s) carry a "Keep in mind" note`);
+      await page.scrollIntoView(nudge);
+      await ctx.checkpoint(page, 'nudge');
+
+      // The transcript has per-question marks for Stress Analysis 2, so the Exam feedback tab must appear, and its
+      // page must show that module's revision plan (not just the heading, which also shows while loading or empty).
+      await page.click(STUDENT_TAB('Exam feedback'), { desc: 'the Exam feedback tab', timeout: ctx.timeout });
+      await pathIs(page, '/feedback');
+      await page.waitFor(
+        () => {
+          const text = document.querySelector('main')?.innerText ?? '';
+          return text.includes('Stress Analysis 2') && /your revision plan/i.test(text);
+        },
+        [],
+        { desc: 'the Stress Analysis 2 feedback with its revision plan', timeout: ctx.timeout },
+      );
+      const failed = await page.eval(() => document.body.textContent.includes('Your feedback did not load'));
+      if (failed) fail('The exam feedback page shows "Your feedback did not load"');
+      ctx.note('feedback page: Stress Analysis 2 revision plan shown');
+      await page.scrollIntoView({ css: 'h2, h3', text: 'Stress Analysis 2' });
+      await ctx.checkpoint(page, 'feedback');
+
+      await page.click(STUDENT_TAB('Your data'));
+      await pathIs(page, '/your-data');
+      await page.click({ css: 'button', text: 'Withdraw consent and delete my marks' });
+      await page.click({ css: 'button', text: 'Yes, delete my marks' });
+      await page.waitForElement({ css: '[role="status"]', text: 'Consent withdrawn' }, { desc: 'consent to be withdrawn' });
+      await ctx.checkpoint(page, 'withdrawn');
+      await page.click(STUDENT_TAB('Catalogue'));
+      await pathIs(page, '/catalogue');
+      await page.waitFor(() => /\d+ modules · \d+ open to you/.test(document.getElementById('ranked-heading')?.innerText ?? ''), [], {
+        desc: 'the ranked catalogue',
+      });
+      await page.waitFor(
+        () => ![...document.querySelectorAll('section[aria-labelledby="ranked-heading"] ol > li')].some((li) => li.textContent.includes('Keep in mind')),
+        [],
+        { desc: 'the "Keep in mind" notes to disappear after withdrawing consent' },
+      );
+      await page.scrollTo('top');
+    },
+  },
+  {
     id: 'catalogue',
     title: 'Ranked catalogue, reasons tied to quotes',
     async run(ctx) {
@@ -311,17 +397,16 @@ export const STEPS = [
     async run(ctx) {
       const page = ctx.student;
       ctx.active = page;
-      // A swap must come within 10 fit points of the lower-fit module in the clash, and the closest
-      // candidates are the modules ranked just below the pair. Taking the third pick from further down
-      // keeps those free to swap in (with live models the next one or two are often the only candidates).
+      // A swap must be an elective within 10 fit points of the lower-fit module in the clash (spec 9.2), and the
+      // closest candidates rank just below the pair, so the third pick comes from further down to keep them free.
       const eligible = await page.eval(() =>
         [...document.querySelectorAll('section[aria-labelledby="ranked-heading"] ol > li')]
           .filter((li) => li.querySelector('a[href^="/modules/"]') && !li.textContent.includes('Not eligible yet'))
           .map((li) => decodeURIComponent(li.querySelector('a[href^="/modules/"]').getAttribute('href').slice('/modules/'.length))),
       );
+      if (!CLASHING.every((id) => eligible.includes(id))) fail(`${CLASHING.join(' and ')} are not both open to this student`);
       const others = eligible.filter((id) => !CLASHING.includes(id));
       const third = others[3] ?? others.at(-1) ?? fail('Not enough eligible modules to shortlist three');
-      if (!CLASHING.every((id) => eligible.includes(id))) fail(`${CLASHING.join(' and ')} are not both open to this student`);
       const picks = [...CLASHING, third];
       for (const id of picks) {
         const button = { css: `section[aria-labelledby="ranked-heading"] ol > li:has(a[href="/modules/${id}"]) button[aria-pressed]` };
@@ -509,12 +594,17 @@ export const STEPS = [
       await staff.bringToFront();
       await staff.click(STAFF_TAB('Modules'));
       await pathIs(staff, { re: '^/staff/modules/[^/]+$' });
-      // The module from the demo script: Mechatronics 3A, one half of the student's clash.
-      await staff.click({ css: `a[href="/staff/modules/${CLASHING[1]}"]` }, { desc: `${CLASHING[1]} in the module picker` });
-      await pathIs(staff, `/staff/modules/${CLASHING[1]}`);
-      await staff.waitForElement({ css: 'article', text: 'Timetable clash' }, { desc: 'the timetable clash card', timeout: ctx.timeout });
-      const card = { css: 'article', text: 'Counterfactual' };
-      await staff.waitForElement({ css: 'article button', text: { exact: 'Accept' }, within: card }, { desc: 'a counterfactual card', timeout: ctx.timeout });
+      // Most modules now get one "no single change makes a big difference" summary; Finance & Financial
+      // Management keeps a real counterfactual (+2.1 fit), so the demo opens it.
+      await staff.click({ css: `a[href="/staff/modules/${COUNTERFACTUAL_MODULE}"]` }, { desc: `${COUNTERFACTUAL_MODULE} in the module picker` });
+      await pathIs(staff, `/staff/modules/${COUNTERFACTUAL_MODULE}`);
+      const index = await staff.waitFor(() => {
+        const i = [...document.querySelectorAll('article')]
+          .filter((a) => a.checkVisibility())
+          .findIndex((a) => /counterfactual/i.test(a.innerText) && !/counterfactual summary/i.test(a.innerText) && /\bAccept\b/.test(a.innerText));
+        return i >= 0 ? String(i) : false;
+      }, [], { desc: 'a counterfactual card (not the summary)', timeout: ctx.timeout });
+      const card = { css: 'article', index: Number(index) };
       const headline = await staff.text({ css: 'h3', within: card });
       await ctx.checkpoint(staff, 'dashboard');
       await staff.click({ css: 'button', text: { exact: 'Accept' }, within: card }, { desc: 'Accept on the counterfactual card' });
@@ -526,8 +616,9 @@ export const STEPS = [
           (a) =>
             /Counterfactual/i.test(a.innerText) &&
             /Accepted/.test(a.innerText) &&
-            ([...a.querySelectorAll('button')].some((b) => b.innerText.trim() === 'Change decision') ||
-              a.querySelector('button[aria-pressed="true"]')?.innerText.trim() === 'Accept'),
+            a.innerText.includes('Logged for the module review') &&
+            a.innerText.includes('Owner: module lead') &&
+            [...a.querySelectorAll('button')].some((b) => b.innerText.trim() === 'Change decision'),
         );
       await staff.waitFor(decided, [], { desc: 'the card to show Accepted' });
       ctx.note(`accepted "${headline}"`);

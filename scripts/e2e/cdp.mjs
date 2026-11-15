@@ -68,8 +68,11 @@ export class Cdp {
   }
 }
 
-/** Serialises an in-page call: `fn` runs in the page with JSON arguments. */
-const call = (fn, args) => `(${fn})(...${JSON.stringify(args)})`;
+/**
+ * Serialises an in-page call: `fn` runs in the page with JSON arguments. A DOM node cannot cross the protocol by
+ * value, so a returned node (for example from a waitFor on querySelector) comes back as true.
+ */
+const call = (fn, args) => `Promise.resolve((${fn})(...${JSON.stringify(args)})).then((v) => (v instanceof Node ? true : v))`;
 
 export class Page {
   /**

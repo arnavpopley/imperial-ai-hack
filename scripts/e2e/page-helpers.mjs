@@ -133,11 +133,33 @@ export function installHelpers() {
     return { scrollWidth: doc.scrollWidth, viewport: vw, offenders };
   }
 
-  /** The nearest fixed or sticky ancestor-or-self, if any. */
+  /**
+   * The nearest fixed ancestor-or-self, or sticky one that is currently stuck, if any. A sticky element that
+   * is taller than its room scrolls like normal content, so it does not count.
+   */
   function floating(el) {
     for (let p = el; p && p !== document.documentElement; p = p.parentElement) {
-      const pos = getComputedStyle(p).position;
-      if (pos === 'fixed' || pos === 'sticky') return p;
+      const cs = getComputedStyle(p);
+      if (cs.position === 'fixed') return p;
+      if (cs.position === 'sticky') {
+        // Stuck means sitting at its `top` offset within its scroll container (the viewport if there is none).
+        const top = parseFloat(cs.top);
+        const scroller = scrollParent(p);
+        const base = scroller ? scroller.getBoundingClientRect().top + scroller.clientTop : 0;
+        if (Number.isNaN(top) || Math.abs(p.getBoundingClientRect().top - base - top) < 1) return p;
+      }
+    }
+    return null;
+  }
+
+  function* ancestors(el) {
+    for (let p = el; p && p !== document.documentElement; p = p.parentElement) yield p;
+  }
+
+  /** The nearest ancestor that scrolls vertically, or null for the page itself. */
+  function scrollParent(el) {
+    for (let p = el.parentElement; p && p !== document.body && p !== document.documentElement; p = p.parentElement) {
+      if (/(auto|scroll)/.test(getComputedStyle(p).overflowY)) return p;
     }
     return null;
   }
@@ -169,6 +191,8 @@ export function installHelpers() {
     const modal = [...document.querySelectorAll('dialog')].find((d) => d.open && d.matches(':modal'));
     for (const el of document.querySelectorAll(CLICKABLE)) {
       if (!visible(el) || el.disabled || el.closest('[inert], [aria-hidden="true"]')) continue;
+      // Click-through on purpose, for example the advisor launcher while it is tucked away.
+      if (getComputedStyle(el).pointerEvents === 'none') continue;
       if (modal && !modal.contains(el)) continue;
       const r = el.getBoundingClientRect();
       if (r.width < 4 || r.height < 4) continue;
@@ -178,6 +202,10 @@ export function installHelpers() {
       if (!insideClips(el, x, y)) continue;
       const top = document.elementFromPoint(x, y);
       if (!top || hits(el, top) || top.contains(el)) continue;
+      // A sticky heading inside a scrolling list covers the rows that scroll under it; scrolling the list fixes it.
+      const sticky = [...ancestors(top)].find((p) => getComputedStyle(p).position === 'sticky');
+      const scroller = sticky ? scrollParent(sticky) : null;
+      if (scroller && scroller.contains(el)) continue;
       const cover = floating(top);
       if (cover && !floating(el)) {
         const box = cover.getBoundingClientRect();
@@ -206,8 +234,9 @@ export function installHelpers() {
     const vw = document.documentElement.clientWidth;
     for (let y = 0; ; y = Math.min(y + step, max)) {
       window.scrollTo({ top: y, behavior: 'instant' });
-      // The launcher re-measures on the next animation frame after a scroll.
-      for (let i = 0; i < 3; i += 1) await frame();
+      // The launcher re-measures on the animation frame after a scroll, then React re-renders; allow a few frames
+      // (about 100 ms, quicker than a person can aim at a button that has just scrolled into place).
+      for (let i = 0; i < 6; i += 1) await frame();
       for (const el of document.querySelectorAll(CLICKABLE)) {
         if (launcher.contains(el) || el.disabled || !visible(el)) continue;
         const r = el.getBoundingClientRect();
