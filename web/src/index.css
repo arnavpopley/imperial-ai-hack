@@ -251,3 +251,25 @@
     }
   }
 }
+
+/* "Download my plan" (issue 63): the printable plan is hidden on screen, and printing shows only it, black on white. */
+.print-plan {
+  display: none;
+}
+@media print {
+  @page {
+    margin: 12mm;
+  }
+  body > #root {
+    display: none !important;
+  }
+  body::before {
+    display: none;
+  }
+  body {
+    background: #fff;
+  }
+  .print-plan {
+    display: block;
+  }
+}
