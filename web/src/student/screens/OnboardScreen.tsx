@@ -125,7 +125,7 @@ export function OnboardScreen() {
         <div className="grid gap-6 lg:sticky lg:top-24">
           <motion.div variants={RISE}>
             <ModeChip variant="ONBOARD" />
-            <h1 className="mt-5 text-[2.25rem] leading-[1.08] font-semibold tracking-tight text-balance sm:text-[3.25rem]">
+            <h1 className="mt-5 text-display text-balance">
               Modules that fit <span className="text-brand">you</span>, not everyone.
             </h1>
             <p className="mt-4 max-w-md text-base leading-relaxed text-muted sm:text-lg">
@@ -150,7 +150,7 @@ export function OnboardScreen() {
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.45 + i * 0.12, duration: 0.45, ease: EASE }}
-                  className="flex items-center gap-2 rounded-full bg-surface/92 py-1.5 pr-3.5 pl-1.5 text-[13px] font-medium shadow-soft backdrop-blur"
+                  className="flex items-center gap-2 rounded-full bg-surface/92 py-1.5 pr-3.5 pl-1.5 text-xs font-medium shadow-soft backdrop-blur"
                 >
                   <span className="grid size-6 place-items-center rounded-full bg-brand-soft text-brand">
                     <Icon name={item.icon} size={12} />
@@ -174,7 +174,7 @@ export function OnboardScreen() {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 role="status"
-                className="flex items-center gap-2 rounded-xl bg-fit-high/10 px-3 py-2.5 text-[13px] font-medium"
+                className="flex items-center gap-2 rounded-xl bg-fit-high/10 px-3 py-2.5 text-xs font-medium"
               >
                 <Icon name="check" size={14} className="text-fit-high" />
                 Your profile and evidence have been deleted.
@@ -185,7 +185,7 @@ export function OnboardScreen() {
             <h2 id="onboard-heading" className="text-2xl font-semibold tracking-tight">
               Get started
             </h2>
-            <p className="mt-1 text-[14px] text-muted">Three details, then a short chat.</p>
+            <p className="mt-1 text-sm text-muted">Three details, then a short chat.</p>
           </div>
 
           <SegmentedControl
@@ -216,15 +216,15 @@ export function OnboardScreen() {
                     <p className="font-semibold">
                       Meet {EXAMPLE_STUDENT.name} <span className="font-normal text-muted">(an invented student)</span>
                     </p>
-                    <p className="mt-0.5 text-[13px] text-muted">{EXAMPLE_STUDENT.summary}</p>
+                    <p className="mt-0.5 text-xs text-muted">{EXAMPLE_STUDENT.summary}</p>
                     <ul className="mt-2.5 flex flex-wrap gap-1.5">
                       {EXAMPLE_STUDENT.tags.map((tag) => (
-                        <li key={tag} className="rounded-full bg-surface px-2.5 py-0.5 text-[12px] font-medium shadow-soft">
+                        <li key={tag} className="rounded-full bg-surface px-2.5 py-0.5 text-2xs font-medium shadow-soft">
                           {tag}
                         </li>
                       ))}
                     </ul>
-                    <p className="mt-2.5 text-[12px] text-muted">
+                    <p className="mt-2.5 text-2xs text-muted">
                       The form is filled in, and {EXAMPLE_STUDENT.name}&rsquo;s first answer will be waiting in the chat.
                     </p>
                   </div>
@@ -238,7 +238,7 @@ export function OnboardScreen() {
             <div className="grid gap-1.5">
               <Dropdown label="Year of study" options={yearOptions} value={year} onChange={setYear} />
               {noRules.has(YEAR_OF[year]) && (
-                <p role="status" className="flex items-start gap-1.5 text-[13px] text-muted">
+                <p role="status" className="flex items-start gap-1.5 text-xs text-muted">
                   <Icon name="info" size={14} className="mt-0.5 shrink-0" />
                   {noRulesHint(year)}
                 </p>
@@ -257,7 +257,7 @@ export function OnboardScreen() {
               disabled={!modules.data}
             />
             {modules.error && !modules.data && (
-              <p role="alert" className="mt-1.5 flex flex-wrap items-center gap-2 text-[12px] text-fit-low">
+              <p role="alert" className="mt-1.5 flex flex-wrap items-center gap-2 text-2xs text-fit-low">
                 The module list did not load. You can continue without it.
                 <button type="button" onClick={modules.reload} className="font-semibold underline underline-offset-2">
                   Retry
@@ -268,7 +268,7 @@ export function OnboardScreen() {
           </div>
 
           <fieldset>
-            <legend className="mb-1.5 text-[13px] font-medium">Interview</legend>
+            <legend className="mb-1.5 text-xs font-medium">Interview</legend>
             <div className="grid gap-2 sm:grid-cols-2">
               {DEPTHS.map((d) => (
                 <label
@@ -290,18 +290,18 @@ export function OnboardScreen() {
                     {d.title}
                     {depth === d.value && <Icon name="check" size={15} className="text-brand" />}
                   </span>
-                  <span className="mt-0.5 block text-[12px] text-muted">{d.detail}</span>
+                  <span className="mt-0.5 block text-2xs text-muted">{d.detail}</span>
                 </label>
               ))}
             </div>
           </fieldset>
 
           {error && (
-            <p role="alert" className="text-[13px] text-fit-low">
+            <p role="alert" className="text-xs text-fit-low">
               {error}
             </p>
           )}
-          <Button type="submit" variant="primary" busy={submitting} className="h-12 w-full rounded-2xl text-[15px]">
+          <Button type="submit" variant="primary" busy={submitting} className="h-12 w-full rounded-2xl text-sm">
             {startMode === 'example' ? `Start as ${EXAMPLE_STUDENT.name}` : 'Start the interview'}
             <Icon name="arrow-right" size={16} />
           </Button>

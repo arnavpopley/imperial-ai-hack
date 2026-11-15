@@ -55,22 +55,22 @@ export function SocietiesPanel({ onSeen, onClose }: SocietiesPanelProps) {
         <h2 id={headingId} className="text-xl font-semibold tracking-tight">
           Societies and clubs
         </h2>
-        <p className="mt-1 text-[14px] text-muted">Picked from the interests you have shared so far.</p>
+        <p className="mt-1 text-sm text-muted">Picked from the interests you have shared so far.</p>
       </div>
 
       {matches.loading && !loaded ? (
-        <p className="flex items-center gap-2 text-[14px] text-muted" role="status">
+        <p className="flex items-center gap-2 text-sm text-muted" role="status">
           <Spinner size={16} /> Finding your people…
         </p>
       ) : matches.error ? (
-        <motion.p role="alert" {...gentle} className="flex flex-wrap items-center gap-2 text-[13px] text-fit-low">
+        <motion.p role="alert" {...gentle} className="flex flex-wrap items-center gap-2 text-xs text-fit-low">
           Societies did not load.
           <button type="button" onClick={matches.reload} className="font-semibold underline underline-offset-2">
             Retry
           </button>
         </motion.p>
       ) : top.length === 0 ? (
-        <motion.p {...gentle} className="rounded-2xl border border-dashed border-line px-4 py-3 text-[14px] text-muted">
+        <motion.p {...gentle} className="rounded-2xl border border-dashed border-line px-4 py-3 text-sm text-muted">
           Tell me a few interests first and matching societies will appear here.
         </motion.p>
       ) : (
@@ -88,13 +88,13 @@ export function SocietiesPanel({ onSeen, onClose }: SocietiesPanelProps) {
                 <div className="flex items-start justify-between gap-3">
                   <span className="font-semibold leading-snug">{name}</span>
                   {match.wildcard && (
-                    <span className="shrink-0 rounded-full bg-mode-explain/12 px-2 py-0.5 text-[11px] font-semibold text-mode-explain">
+                    <span className="shrink-0 rounded-full bg-mode-explain/12 px-2 py-0.5 text-2xs font-semibold text-mode-explain">
                       Wildcard
                     </span>
                   )}
                 </div>
                 <Meter value={match.fit / 100} label={`Fit with ${name}`} valueText={`${match.fit}%`} />
-                <p className="text-[13px] leading-snug text-muted">{match.reason}</p>
+                <p className="text-xs leading-snug text-muted">{match.reason}</p>
               </motion.li>
             );
           })}

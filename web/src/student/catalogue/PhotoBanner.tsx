@@ -42,7 +42,7 @@ export function PhotoBanner({ image, alt, title, subtitle, aside, focus = 'cente
       />
       <div className="flex min-h-24 flex-wrap items-end justify-between gap-3 px-4 py-4 sm:min-h-40 sm:px-7 sm:py-6">
         <div className="max-w-xl min-w-0 text-white">
-          <h1 className="text-xl font-semibold tracking-tight text-balance sm:text-[1.75rem]">{title}</h1>
+          <h1 className="text-title text-balance">{title}</h1>
           {/* Phones keep the banner to a title strip (issue 64), so the content starts in the first screen. */}
           {subtitle && <p className="mt-1.5 text-sm leading-relaxed text-white/85 text-pretty max-sm:hidden">{subtitle}</p>}
         </div>

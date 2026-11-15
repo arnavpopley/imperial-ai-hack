@@ -97,7 +97,7 @@ function PanelBody(props: EvidencePopoverProps & { titleId: string }) {
         <span id={props.titleId} className="block text-2xs font-semibold tracking-wide text-muted uppercase">
           In your words
         </span>
-        <q className="mt-1.5 block text-[15px] leading-snug font-medium text-ink before:text-brand after:text-brand">
+        <q className="mt-1.5 block text-sm leading-snug font-medium text-ink before:text-brand after:text-brand">
           {props.quote}
         </q>
         <span className="mt-3 flex items-center justify-between gap-3 text-2xs text-muted">
@@ -114,12 +114,12 @@ function PanelBody(props: EvidencePopoverProps & { titleId: string }) {
           From the module record
         </span>
         <span className="mt-1.5 block text-sm font-medium">{props.fieldLabel}</span>
-        <span className="mt-1 block font-mono text-[13px] break-words text-muted">{props.value}</span>
+        <span className="mt-1 block font-mono text-xs break-words text-muted">{props.value}</span>
       </>
     );
   }
   return (
-    <span id={props.titleId} className="block text-[13px] text-muted">
+    <span id={props.titleId} className="block text-xs text-muted">
       The source for this reason is no longer available.
     </span>
   );

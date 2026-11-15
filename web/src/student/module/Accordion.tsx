@@ -42,7 +42,7 @@ export function Accordion({ title, meta, icon, defaultOpen = false, as: Heading 
             </span>
           )}
           <span className="min-w-0 flex-1">{title}</span>
-          {meta && <span className="shrink-0 text-[12px] font-medium text-muted">{meta}</span>}
+          {meta && <span className="shrink-0 text-2xs font-medium text-muted">{meta}</span>}
           <motion.span
             aria-hidden="true"
             animate={{ rotate: open ? 180 : 0 }}

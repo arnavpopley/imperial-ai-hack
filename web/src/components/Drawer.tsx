@@ -50,7 +50,7 @@ export function Drawer({ open, onClose, title, subtitle, headerExtra, size = 'md
               <h2 id={titleId} className="text-base font-semibold tracking-tight">
                 {title}
               </h2>
-              {subtitle && <div className="mt-0.5 text-[13px] text-muted">{subtitle}</div>}
+              {subtitle && <div className="mt-0.5 text-xs text-muted">{subtitle}</div>}
             </div>
             {headerExtra}
             <button

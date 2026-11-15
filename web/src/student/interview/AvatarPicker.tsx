@@ -45,7 +45,7 @@ export function AvatarPicker({ className }: { className?: string }) {
       >
         <InterviewerAvatar persona={persona} size={34} />
         <span className="grid leading-tight">
-          <span className="text-[11px] text-muted">Talking with</span>
+          <span className="text-2xs text-muted">Talking with</span>
           <span className="text-sm font-semibold">{persona.name}</span>
         </span>
         <Icon name="edit" size={13} className="ml-1 text-muted" label="Change interviewer" />
@@ -85,7 +85,7 @@ export function AvatarPicker({ className }: { className?: string }) {
                       <motion.span whileHover={{ y: -2 }} className="block">
                         <InterviewerAvatar persona={p} size={48} />
                       </motion.span>
-                      <span className={cx('text-[12px]', selected ? 'font-semibold text-brand' : 'text-muted')}>
+                      <span className={cx('text-2xs', selected ? 'font-semibold text-brand' : 'text-muted')}>
                         {p.name}
                       </span>
                     </label>

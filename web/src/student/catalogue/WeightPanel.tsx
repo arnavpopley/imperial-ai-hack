@@ -3,6 +3,7 @@
 import { motion } from 'motion/react';
 import { Link } from 'react-router';
 import { Button } from '../../components/Button.tsx';
+import { FACTOR_COLOURS } from '../../components/factorColours.ts';
 import { Icon } from '../../components/Icon.tsx';
 import { RangeSlider } from '../../components/RangeSlider.tsx';
 import { Spinner } from '../../components/Spinner.tsx';
@@ -11,12 +12,12 @@ import { paths } from '../routes.ts';
 import { useCatalogue, type SaveState, type WeightKey } from '../state/CatalogueProvider.tsx';
 import { levelWord, weightShares } from './weightShares.ts';
 
-/** Each weight's colour, shared by its slider and its segment of the mix bar. */
+/** Each weight's factor colour, shared by its slider, its segment of the mix bar and every sub-score bar. */
 const SLIDERS: readonly { key: WeightKey; label: string; short: string; fill: string; border: string }[] = [
-  { key: 'interest', label: 'Interest', short: 'Interest', fill: 'bg-module-1', border: 'border-module-1' },
-  { key: 'goal', label: 'Career', short: 'Career', fill: 'bg-module-2', border: 'border-module-2' },
-  { key: 'style', label: 'Learning style', short: 'Style', fill: 'bg-module-4', border: 'border-module-4' },
-  { key: 'breadth', label: 'Breadth', short: 'Breadth', fill: 'bg-module-3', border: 'border-module-3' },
+  { key: 'interest', label: 'Interest', short: 'Interest', ...FACTOR_COLOURS.interest },
+  { key: 'goal', label: 'Career', short: 'Career', ...FACTOR_COLOURS.goal },
+  { key: 'style', label: 'Learning style', short: 'Style', ...FACTOR_COLOURS.style },
+  { key: 'breadth', label: 'Breadth', short: 'Breadth', ...FACTOR_COLOURS.breadth },
 ];
 
 /** The fit score's mix as one stacked bar, with each weight's share beneath it. */
@@ -29,7 +30,7 @@ function MixBar({ shares }: { shares: Record<WeightKey, number> }) {
           <motion.span key={key} className={`h-full ${fill}`} initial={false} animate={{ width: `${shares[key]}%` }} transition={{ duration: 0.25 }} />
         ))}
       </div>
-      <ul aria-label="Share of your fit score" className="flex flex-wrap justify-between gap-x-2 gap-y-1 text-[11px] text-muted">
+      <ul aria-label="Share of your fit score" className="flex flex-wrap justify-between gap-x-2 gap-y-1 text-2xs text-muted">
         {SLIDERS.map(({ key, label, short, fill }) => (
           <li key={key} className="flex items-center gap-1">
             <span aria-hidden="true" className={`size-2 rounded-full ${fill}`} />
@@ -64,7 +65,7 @@ export function WeightPanel({ goalUsed }: { goalUsed: boolean }) {
           Reset
         </Button>
       </div>
-      <p className="text-[12px] text-muted">How much each matters, and its share of your fit:</p>
+      <p className="text-2xs text-muted">How much each matters, and its share of your fit:</p>
       <MixBar shares={shares} />
       <div className="mt-3 grid grid-cols-2 gap-x-5 gap-y-3 lg:grid-cols-1">
         {SLIDERS.map(({ key, label, fill, border }) => {
@@ -84,14 +85,14 @@ export function WeightPanel({ goalUsed }: { goalUsed: boolean }) {
         })}
       </div>
       {!goalUsed && (
-        <p className="mt-3 text-[12px] text-muted">
+        <p className="mt-3 text-2xs text-muted">
           Career needs a pathway.{' '}
           <Link to={paths.pathways} className="font-medium text-brand underline-offset-2 hover:underline">
             Choose one
           </Link>
         </p>
       )}
-      <p className="mt-3 flex h-4 items-center text-[11px] text-muted" aria-live="polite">
+      <p className="mt-3 flex h-4 items-center text-2xs text-muted" aria-live="polite">
         {saveState !== 'idle' && (
           // Each state fades in softly on the feedback clock; a failed save is calm, never a flash.
           <motion.span key={saveState} {...enter} className="flex items-center gap-1.5">

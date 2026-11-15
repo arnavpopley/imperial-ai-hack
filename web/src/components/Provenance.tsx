@@ -154,7 +154,7 @@ export function ProvenanceLegend({ className, tone = 'default' }: { className?: 
           {ORDER.map((kind) => (
             <span key={kind} className="grid gap-1">
               <Provenance kind={kind} className="justify-self-start" />
-              <span className="text-[12px] leading-snug text-muted">{PROVENANCE[kind].meaning}</span>
+              <span className="text-2xs leading-snug text-muted">{PROVENANCE[kind].meaning}</span>
             </span>
           ))}
         </span>
