@@ -123,7 +123,8 @@ function ResultsSection() {
   // when it fails, the card shows its skeleton or its error instead of a note that would hide the problem.
   const settledEmpty =
     !hasResults && !results.loading && (results.error === null ? results.data !== undefined : errorStatus(results.error) === 404);
-  const nothingToShare = !offersResultsStep(session.profile.yearOfStudy) && settledEmpty;
+  const canShare = offersResultsStep(session.profile.yearOfStudy);
+  const nothingToShare = !canShare && settledEmpty;
   return (
     <section aria-labelledby="results-heading" className="grid min-w-0 grid-cols-1 gap-6">
       {nothingToShare ? (
@@ -135,7 +136,7 @@ function ResultsSection() {
           <SectionHeading id="results-heading" eyebrow="Results" title="Marks you chose to share">
             Visible only to you. They never change your fit scores.
           </SectionHeading>
-          <ResultsDataSection />
+          <ResultsDataSection canAdd={canShare} />
         </>
       )}
     </section>
