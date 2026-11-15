@@ -102,7 +102,12 @@ export const RawModule = S.Module.omit({
 export const RawModulesFile = z.object({ _note: Note, _assumptions: z.array(z.string()), modules: z.array(RawModule) });
 export const ModulesFile = z.object({ _note: Note, modules: z.array(S.Module) });
 export const SlotsFile = z.object({ _note: Note, slots: z.array(S.Slot) });
-export const ProgrammeRulesFile = z.object({ _note: Note, rules: z.array(S.ProgrammeRules).min(1) });
+export const ProgrammeRulesFile = z.object({
+  _note: Note,
+  /** The highest module level open to each year of study (issue 51), keyed by year as a string. */
+  levelCaps: z.object({ _note: Note, byYear: z.record(z.string().regex(/^[1-4]$/), z.number().int().min(1).max(4)) }),
+  rules: z.array(S.ProgrammeRules).min(1),
+});
 export const PathwaysFile = z.object({ _note: Note, pathways: z.array(S.Pathway) });
 export const SocietiesFile = z.object({ _note: Note, societies: z.array(S.Society) });
 

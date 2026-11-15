@@ -120,7 +120,8 @@ export function exceptionFor(request: ExceptionRequest | null): ModuleException 
   if (!request || !moduleId) return null;
   const waived = request.violations.flatMap((v): RuleWaiver[] => {
     if (v.moduleId !== moduleId) return [];
-    if (v.code === 'NOT_ALLOWED') return [{ code: v.code }];
+    // The programme check, the year-level check and an unconfirmable module are waived as a whole; a prerequisite by name.
+    if (v.code === 'NOT_ALLOWED' || v.code === 'ABOVE_YEAR_LEVEL' || v.code === 'RULES_NOT_LOADED') return [{ code: v.code }];
     if (v.code === 'PREREQUISITE_MISSING' && v.prerequisiteId) return [{ code: v.code, prerequisiteId: v.prerequisiteId }];
     return [];
   });
