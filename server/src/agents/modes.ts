@@ -16,6 +16,7 @@ export function canTransition(from: Mode, to: Mode): boolean {
 
 /**
  * The mode a session should leave ESCALATED or EXPLAIN for, and the route from any mode back to
- * RECOMMEND. EXPLAIN and PLAN are transient: they return to RECOMMEND once their turn is done.
+ * RECOMMEND. EXPLAIN is transient and returns here once its turn is done. PLAN is not: it lasts while the
+ * shortlist has two or more modules (syncPlanMode in session.ts).
  */
 export const RESTING_MODE: Mode = 'RECOMMEND';
