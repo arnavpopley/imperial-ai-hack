@@ -621,7 +621,10 @@ export const STEPS = [
           const approve = [...document.querySelectorAll('form button')].find((b) => b.innerText.trim() === 'Approve exception');
           return { bottom: approve?.getBoundingClientRect().bottom ?? Infinity, height: window.innerHeight, scrolled: window.scrollY };
         });
-        if (fold.scrolled > 0 || fold.bottom > fold.height) fail(`Approve exception is below the fold (bottom ${Math.round(fold.bottom)} of ${fold.height})`);
+        const below = fold.scrolled > 0 || fold.bottom > fold.height;
+        // The first-screen requirement is for 1440x900 (76e6ba4); at 1280x720 the position is recorded, not failed.
+        if (below && ctx.viewport === 'desktop') fail(`Approve exception is below the fold (bottom ${Math.round(fold.bottom)} of ${fold.height})`);
+        if (below) ctx.note(`Approve exception sits below the fold at this size (bottom ${Math.round(fold.bottom)} of ${fold.height})`);
       }
       await ctx.checkpoint(staff, 'staff-queue');
       await staff.click(item);
