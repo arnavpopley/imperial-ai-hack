@@ -11,6 +11,7 @@ import { Icon } from '../../components/Icon.tsx';
 import { errorMessage } from '../../components/StateViews.tsx';
 import { DemandChip } from '../catalogue/DemandChip.tsx';
 import { useShortlist } from '../hooks/useShortlist.ts';
+import { useCatalogue } from '../state/CatalogueProvider.tsx';
 import { useReferenceData } from '../state/ReferenceDataProvider.tsx';
 
 interface CapacityBackupPanelProps {
@@ -19,7 +20,11 @@ interface CapacityBackupPanelProps {
 }
 
 export function CapacityBackupPanel({ backups, titleFor }: CapacityBackupPanelProps) {
-  if (backups.length === 0) return null;
+  const { shortlist } = useShortlist();
+  // The rows come from the last timetable response; until the next one lands, drop any that the shortlist has
+  // already settled (the backup added, or the pick removed), so no button acts on a stale suggestion.
+  const live = backups.filter((b) => shortlist.includes(b.replaceModuleId) && !shortlist.includes(b.withModuleId));
+  if (live.length === 0) return null;
   return (
     <section aria-labelledby="backup-heading" className="rounded-card border border-line bg-surface p-4 shadow-soft">
       <h2 id="backup-heading" className="flex items-center gap-1.5 text-sm font-semibold">
@@ -30,7 +35,7 @@ export function CapacityBackupPanel({ backups, titleFor }: CapacityBackupPanelPr
         From the synthetic cohort’s shortlists. Popular modules can run out of places; your fit scores are unchanged.
       </p>
       <ul className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-2">
-        {backups.map((backup) => (
+        {live.map((backup) => (
           <BackupItem key={`${backup.replaceModuleId}-${backup.withModuleId}`} backup={backup} titleFor={titleFor} />
         ))}
       </ul>
@@ -41,6 +46,8 @@ export function CapacityBackupPanel({ backups, titleFor }: CapacityBackupPanelPr
 function BackupItem({ backup, titleFor }: { backup: CapacityBackup; titleFor: (moduleId: string) => string }) {
   const shortlist = useShortlist();
   const signal = useReferenceData().demandById.get(backup.replaceModuleId);
+  // Starter profiles have no fit signal yet (spec 8.6), so their fit numbers are not shown, as in the catalogue.
+  const { scored } = useCatalogue();
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -60,8 +67,12 @@ function BackupItem({ backup, titleFor }: { backup: CapacityBackup; titleFor: (m
       setBusy(false);
     }
   };
-  // toggle reports its own failure through shortlist.error rather than throwing.
-  const add = () => run(() => shortlist.toggle(backup.withModuleId));
+  // toggle reports its own failure through shortlist.error rather than throwing. It only ever adds here: a backup
+  // that is already shortlisted is filtered out above, and checked again in case a click lands mid-update.
+  const add = () =>
+    run(async () => {
+      if (!shortlist.isShortlisted(backup.withModuleId)) await shortlist.toggle(backup.withModuleId);
+    });
   const swap = () => run(() => shortlist.swap(backup.replaceModuleId, backup.withModuleId));
 
   return (
@@ -75,12 +86,14 @@ function BackupItem({ backup, titleFor }: { backup: CapacityBackup; titleFor: (m
         )}
       </p>
       <div className="mt-2 flex items-center gap-3">
-        <FitScore value={backup.fit} variant="compact" className="text-sm" />
+        {scored && <FitScore value={backup.fit} variant="compact" className="text-sm" />}
         <p className="min-w-0 flex-1 text-[13px] leading-snug">
           Backup: <span className="font-medium">{alternative}</span>
-          <span className={cx('ml-1 tabular-nums', backup.fitDelta > 0 ? 'text-fit-high' : 'text-muted')}>
-            ({backup.fitDelta === 0 ? 'same fit' : `${backup.fitDelta > 0 ? '+' : ''}${backup.fitDelta} fit`})
-          </span>
+          {scored && (
+            <span className={cx('ml-1 tabular-nums', backup.fitDelta > 0 ? 'text-fit-high' : 'text-muted')}>
+              ({backup.fitDelta === 0 ? 'same fit' : `${backup.fitDelta > 0 ? '+' : ''}${backup.fitDelta} fit`})
+            </span>
+          )}
           {backup.keepFreeConflicts > 0 && (
             <span className="mt-0.5 flex w-fit items-center gap-1 rounded-full bg-mode-explain/10 px-1.5 text-[11px] font-medium text-mode-explain">
               <Icon name="moon" size={10} />

@@ -302,8 +302,9 @@ export function suggestSwaps(
 /**
  * Issue #68: for each shortlisted option that the cohort's demand puts near or over capacity, the best backup.
  * It is the best-fitting swap candidate (the same checks as swapCandidates, with no fit tolerance) that is not
- * near capacity itself. `canAdd` says it can also sit beside the popular pick: no clash with it, and no new
- * rules violation, such as going over the ECTS cap, from keeping both. Informational: fit and rank are unchanged.
+ * near capacity itself. `canAdd` says it can also sit beside the popular pick: no clash with it, no new rules
+ * violation from keeping both, and no ECTS overrun, since adding a module only ever deepens one that is already
+ * there. Informational: fit and rank are unchanged.
  */
 export function capacityBackups(
   profile: StudentProfile,
@@ -322,7 +323,9 @@ export function capacityBackups(
     if (!best) return [];
     const canAdd =
       clashesBetween(best.withModuleId, target, byModule).length === 0 &&
-      plan.check([...shortlist, best.withModuleId]).violations.every((violation) => before.has(violationKey(violation)));
+      plan
+        .check([...shortlist, best.withModuleId])
+        .violations.every((violation) => before.has(violationKey(violation)) && violation.code !== 'ECTS_CAP_EXCEEDED');
     return [{ ...best, status: signal.status, canAdd }];
   });
 }

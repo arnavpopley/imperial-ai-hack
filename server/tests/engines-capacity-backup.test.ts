@@ -81,6 +81,13 @@ describe('capacityBackups', () => {
     expect(backup).toMatchObject({ withModuleId: 'steady', canAdd: false });
   });
 
+  it('never offers to add when the plan is already over the ECTS cap', () => {
+    const demand = new Map([signal('popular'), signal('also-popular'), signal('clashes-with-popular')]);
+    const over = ['popular', 'other', 'iexplore'];
+    const [backup] = capacityBackups(profile, over, ranked, slots, planFor(profile, { maxEcts: 10 }), demand);
+    expect(backup?.canAdd).toBe(false);
+  });
+
   it('suggests nothing for picks with calm demand, for core modules, or when no candidate passes', () => {
     expect(capacityBackups(profile, shortlist, ranked, slots, planFor(profile), new Map())).toEqual([]);
     expect(capacityBackups(profile, ['core-module'], ranked, slots, planFor(profile), new Map([signal('core-module')]))).toEqual([]);
