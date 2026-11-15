@@ -46,11 +46,19 @@ describe('checkModuleEligibility', () => {
     expect(checkModuleEligibility('cfd', makeProfile(), modules, rules)[0]?.prerequisiteId).toBe('fluids');
   });
 
-  it('waives the programme and prerequisite checks for a Senior Tutor exception, and only for that module', () => {
-    expect(checkModuleEligibility('cfd', makeProfile(), modules, rules, ['cfd'])).toEqual([]);
-    expect(checkModuleEligibility('closed', profile, modules, rules, ['closed'])).toEqual([]);
-    expect(checkModuleEligibility('closed', profile, modules, rules, ['cfd']).map((v) => v.code)).toEqual(['NOT_ALLOWED']);
-    expect(checkModuleEligibility('nope', profile, modules, rules, ['nope']).map((v) => v.code)).toEqual(['UNKNOWN_MODULE']);
+  it('waives exactly the rules a Senior Tutor exception names, for that module only', () => {
+    const prereq = { moduleId: 'cfd', waived: [{ code: 'PREREQUISITE_MISSING' as const, prerequisiteId: 'fluids' }] };
+    const allowed = { moduleId: 'closed', waived: [{ code: 'NOT_ALLOWED' as const }] };
+    expect(checkModuleEligibility('cfd', makeProfile(), modules, rules, [prereq])).toEqual([]);
+    expect(checkModuleEligibility('closed', profile, modules, rules, [allowed])).toEqual([]);
+    expect(checkModuleEligibility('closed', profile, modules, rules, [prereq]).map((v) => v.code)).toEqual(['NOT_ALLOWED']);
+    // A waiver for one rule leaves the module's other rules in force.
+    const wrongRule = { moduleId: 'cfd', waived: [{ code: 'NOT_ALLOWED' as const }] };
+    expect(checkModuleEligibility('cfd', makeProfile(), modules, rules, [wrongRule]).map((v) => v.code)).toEqual(['PREREQUISITE_MISSING']);
+    const otherPrereq = { moduleId: 'cfd', waived: [{ code: 'PREREQUISITE_MISSING' as const, prerequisiteId: 'maths' }] };
+    expect(checkModuleEligibility('cfd', makeProfile(), modules, rules, [otherPrereq]).map((v) => v.code)).toEqual(['PREREQUISITE_MISSING']);
+    const unknown = { moduleId: 'nope', waived: [{ code: 'NOT_ALLOWED' as const }] };
+    expect(checkModuleEligibility('nope', profile, modules, rules, [unknown]).map((v) => v.code)).toEqual(['UNKNOWN_MODULE']);
   });
 });
 
@@ -70,11 +78,14 @@ describe('checkShortlist', () => {
     expect(result.violations.find((v) => v.code === 'ELECTIVE_ECTS_SHORT')?.message).toContain('Add at least 5 ECTS');
   });
 
-  it('honours exceptions: an approved module is allowed and left out of the ECTS cap', () => {
-    const result = checkShortlist(['closed', 'cfd', 'robots', 'iex'], profile, modules, { ...rules, maxEcts: 55 }, ['closed']);
-    expect(result).toMatchObject({ ok: true, violations: [] });
-    const over = checkShortlist(['closed', 'cfd', 'robots', 'iex'], profile, modules, { ...rules, maxEcts: 50 }, ['closed']);
-    expect(over.violations[0]?.message).toContain('55 ECTS including core modules, not counting modules with an approved exception,');
+  it('allows an approved module but still counts its ECTS towards the cap', () => {
+    const allowed = [{ moduleId: 'closed', waived: [{ code: 'NOT_ALLOWED' as const }] }];
+    const plan = ['closed', 'cfd', 'robots', 'iex'];
+    expect(checkShortlist(plan, profile, modules, { ...rules, maxEcts: 60 }, allowed)).toMatchObject({ ok: true, violations: [] });
+    // 40 core + 20 shortlisted = 60 ECTS, the approved module's 5 included: over a 55 ECTS cap.
+    const over = checkShortlist(plan, profile, modules, { ...rules, maxEcts: 55 }, allowed);
+    expect(codes(over)).toEqual(['ECTS_CAP_EXCEEDED']);
+    expect(over.violations[0]?.message).toContain('60 ECTS');
   });
 
   it('counts core modules towards the ECTS cap', () => {

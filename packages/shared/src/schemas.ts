@@ -208,6 +208,21 @@ export const RuleViolation = z.object({
   message: z.string(),
 });
 
+/**
+ * One broken rule a Senior Tutor waived for one module: the programme check (NOT_ALLOWED) or one missing
+ * prerequisite. Shortlist rules such as the credit cap are never waived; the module's ECTS always count.
+ */
+export const RuleWaiver = z.object({
+  code: RuleViolation.shape.code.extract(['PREREQUISITE_MISSING', 'NOT_ALLOWED']),
+  prerequisiteId: z.string().optional(),
+});
+
+/** An approved rule exception: the module, and exactly the rules that were broken when the student asked. */
+export const ModuleException = z.object({
+  moduleId: z.string(),
+  waived: z.array(RuleWaiver).min(1),
+});
+
 /** A one-line reason from the student, asked for in every rule-exception draft. */
 export const EXCEPTION_REASON_MAX = 200;
 
@@ -402,8 +417,8 @@ export const SessionState = z.object({
   escalations: z.array(Escalation),
   /** An escalation the agent drafted that the student has not yet approved. */
   escalationDraft: EscalationDraft.nullable(),
-  /** Modules the Senior Tutor approved a rule exception for; the rules engine treats them as eligible. */
-  exceptions: z.array(z.string()).default([]),
+  /** Rule exceptions the Senior Tutor approved; the rules engine waives exactly those rules for those modules. */
+  exceptions: z.array(ModuleException).default([]),
   createdAt: IsoDate,
   updatedAt: IsoDate,
 });

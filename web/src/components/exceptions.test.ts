@@ -1,7 +1,7 @@
 // Issue 49: a rule-exception draft needs a one-line reason, and a Senior Tutor decision refreshes the ranking.
 import type { Escalation } from '@modulematch/shared';
 import { describe, expect, it } from 'vitest';
-import { canSendDraft, decisionsKey, EXCEPTION_LABELS, oneLine } from './exceptions.ts';
+import { canSendDraft, decisionsKey, draftIdentity, EXCEPTION_LABELS, oneLine } from './exceptions.ts';
 
 const escalation = (id: string, decision: Escalation['decision']): Escalation => ({
   id,
@@ -34,10 +34,19 @@ describe('oneLine', () => {
 describe('decisionsKey', () => {
   it('changes when a decision lands, and not before', () => {
     const open = decisionsKey({ exceptions: [], escalations: [escalation('a', null)] });
-    const approved = decisionsKey({ exceptions: ['MECH70057'], escalations: [escalation('a', 'approved')] });
+    const approved = decisionsKey({ exceptions: [{ moduleId: 'MECH70057', waived: [{ code: 'NOT_ALLOWED' }] }], escalations: [escalation('a', 'approved')] });
     expect(open).toBe('');
     expect(approved).not.toBe(open);
     expect(decisionsKey({ exceptions: [], escalations: [escalation('a', 'declined')] })).not.toBe(open);
+  });
+});
+
+describe('draftIdentity', () => {
+  it('tells apart drafts with the same summary but a new reason or module', () => {
+    const draft = { type: 'RULE_EXCEPTION' as const, summary: 'Same summary.', moduleId: 'MECH70057', reason: 'First.' };
+    expect(draftIdentity(draft)).toBe(draftIdentity({ ...draft }));
+    expect(draftIdentity({ ...draft, reason: 'Second.' })).not.toBe(draftIdentity(draft));
+    expect(draftIdentity({ ...draft, moduleId: 'MECH70058' })).not.toBe(draftIdentity(draft));
   });
 });
 

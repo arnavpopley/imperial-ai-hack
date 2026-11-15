@@ -127,7 +127,7 @@ export function exceptionDecisions(session: SessionState): Map<string, Exception
   for (const e of session.escalations) {
     if (e.decision && e.request?.moduleId) decisions.set(e.request.moduleId, e.decision);
   }
-  for (const moduleId of session.exceptions) decisions.set(moduleId, 'approved');
+  for (const { moduleId } of session.exceptions) decisions.set(moduleId, 'approved');
   return decisions;
 }
 

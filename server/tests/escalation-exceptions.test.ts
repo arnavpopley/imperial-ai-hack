@@ -83,12 +83,31 @@ describe('Senior Tutor decisions', () => {
     expect(rec).toMatchObject({ eligible: true, ineligibleReasons: [], exception: 'approved' });
     expect((await shortlist(id)).status).toBe(200);
     const after = await session(id);
-    expect(after.exceptions).toEqual([ROBOT]);
+    expect(after.exceptions).toEqual([{ moduleId: ROBOT, waived: [{ code: 'NOT_ALLOWED' }] }]);
     expect(after.shortlist).toContain(ROBOT);
     expect(after.mode).not.toBe('ESCALATED');
 
     const trace = S.TraceEvent.array().parse(await (await app.request(`/api/trace/${id}`)).json());
-    expect(trace.some((t) => t.actor === 'Senior Tutor' && t.output.startsWith('approved') && t.input.includes(ROBOT))).toBe(true);
+    expect(trace.some((t) => t.actor === 'Senior Tutor' && t.output.startsWith('approved: waived NOT_ALLOWED') && t.input.includes(ROBOT))).toBe(true);
+  });
+
+  it('an approved module still counts towards the credit cap', async () => {
+    const id = await rosaInRecommend();
+    const { escalation } = await requestException(id, 'I built a robot arm controller on placement.');
+    await app.request(`/api/staff/escalations/${escalation.id}/respond`, json({ decision: 'approve' }));
+    const recs = S.RecommendationsResponse.parse(await (await app.request(`/api/sessions/${id}/recommendations`)).json()).recommendations;
+    // Fill the shortlist with eligible modules and the approved one until the plan is over the cap.
+    for (const r of [recs.find((x) => x.moduleId === ROBOT)!, ...recs.filter((x) => x.eligible && x.moduleId !== ROBOT)]) {
+      await app.request(`/api/sessions/${id}/shortlist`, json({ moduleId: r.moduleId, action: 'add' }));
+      const view = S.TimetableView.parse(await (await app.request(`/api/sessions/${id}/timetable`)).json());
+      if (view.rules.violations.some((v) => v.code === 'ECTS_CAP_EXCEEDED')) break;
+    }
+    const view = S.TimetableView.parse(await (await app.request(`/api/sessions/${id}/timetable`)).json());
+    const cap = view.rules.violations.find((v) => v.code === 'ECTS_CAP_EXCEEDED');
+    expect(cap).toBeDefined();
+    expect((await session(id)).shortlist).toContain(ROBOT);
+    // The approved module itself is not flagged, but its credits are in the total.
+    expect(view.rules.violations.some((v) => v.moduleId === ROBOT)).toBe(false);
   });
 
   it('a decline keeps the module ineligible and says so', async () => {

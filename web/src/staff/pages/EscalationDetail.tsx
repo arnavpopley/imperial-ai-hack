@@ -7,7 +7,15 @@ import { ESCALATION_TYPES, StatusBadge, TypeBadge } from '../components/Escalati
 import { Button, EmptyState } from '../components/ui.tsx';
 import { AlertIcon, ArrowLeftIcon, CheckIcon, HeartIcon, InboxIcon, XIcon } from '../components/icons.tsx';
 import { Avatar } from '../../components/Avatar.tsx';
-import { DECISION_LABELS, MAX_REPLY, respondBody, ruleRows, subScoreText, type StaffAction } from '../lib/exceptionCase.ts';
+import {
+  approvalOpensModule,
+  DECISION_LABELS,
+  MAX_REPLY,
+  respondBody,
+  ruleRows,
+  subScoreText,
+  type StaffAction,
+} from '../lib/exceptionCase.ts';
 import { focusRing, formatDateTime } from '../lib/format.ts';
 import { errorMessage } from '../lib/errors.ts';
 import { useStaffData } from '../StaffData.tsx';
@@ -305,7 +313,7 @@ function ReplyBox({ escalation }: { escalation: StaffEscalation }) {
 }
 
 function decisionHint(escalation: StaffEscalation): string {
-  return escalation.request?.moduleId
-    ? 'Approving opens the module to this student only, so they can shortlist it. Either decision resolves the case and appears in their session.'
-    : 'No single module is named, so the decision is recorded and shown to the student, but no module opens up.';
+  return approvalOpensModule(escalation.request)
+    ? "Approving waives the rule above for this student only, so they can shortlist the module; its credits still count towards the cap. Either decision resolves the case and appears in their session."
+    : 'No module rule can be waived here (the credit cap always applies), so the decision is recorded and shown to the student, but nothing opens up.';
 }

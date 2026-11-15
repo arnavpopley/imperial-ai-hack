@@ -98,8 +98,9 @@ describe('escalations', () => {
     expect(repo.getEscalation(e.id, db)?.request).toEqual(e.request);
     repo.updateEscalation(e.id, { decision: 'approved' }, db);
     expect(repo.updateEscalation(e.id, { status: 'resolved' }, db)?.decision).toBe('approved');
-    repo.updateSession(session.id, { exceptions: ['ME3-ROB'] }, db);
-    expect(repo.updateSession(session.id, { mode: 'RECOMMEND' }, db)?.exceptions).toEqual(['ME3-ROB']);
+    const exceptions = [{ moduleId: 'ME3-ROB', waived: [{ code: 'PREREQUISITE_MISSING' as const, prerequisiteId: 'ME2-CTRL' }] }];
+    repo.updateSession(session.id, { exceptions }, db);
+    expect(repo.updateSession(session.id, { mode: 'RECOMMEND' }, db)?.exceptions).toEqual(exceptions);
   });
 });
 

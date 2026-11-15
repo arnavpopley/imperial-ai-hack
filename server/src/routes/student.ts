@@ -193,7 +193,10 @@ export const studentRoutes = new Hono()
     // their fit for the module with the Senior Tutor (spec 11.1), as the draft card told the student.
     let request: ExceptionRequest | null = null;
     if (type === 'RULE_EXCEPTION') {
+      const deletionsBefore = deletions.get(session.id) ?? 0;
       const cleaned = reason === undefined ? undefined : (await cleanForStorage(reason, { mode: session.mode, tracer })).text;
+      // The live checks take a moment; a request sent while the student deleted their data is dropped with it.
+      if ((deletions.get(session.id) ?? 0) !== deletionsBefore) return c.json({ error: 'the profile was deleted' }, 410);
       const target = moduleId ?? (session.escalationDraft?.type === type ? session.escalationDraft.moduleId : null) ?? null;
       const rules = rulesForProfile(session.profile);
       request = exceptionRequest(

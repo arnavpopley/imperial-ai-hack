@@ -1,6 +1,7 @@
 // Spec 9.1: programme rules validator. A violation is a hard gate that no agent can override.
 import type {
   Module,
+  ModuleException,
   ProgrammeRules,
   RuleViolation,
   RuleWarning,
@@ -38,19 +39,22 @@ function unknownModule(moduleId: string): RuleViolation {
  * Spec 9.1 per-module checks used by rankModules and checkShortlist: the module exists, is allowed for
  * the programme, and every prerequisite is in the student's completed modules. Empty means eligible.
  *
- * `exceptions` are modules the Senior Tutor approved a rule exception for (spec 11.1). No agent can
- * override a violation, but a person can: an approved module skips the programme and prerequisite checks.
+ * `exceptions` are rule exceptions the Senior Tutor approved (spec 11.1). No agent can override a violation,
+ * but a person can: each exception waives exactly the rules it names for its module (the programme check or a
+ * given missing prerequisite), and any other violation still applies.
  */
 export function checkModuleEligibility(
   moduleId: string,
   profile: StudentProfile,
   modules: readonly Module[],
   rules: ProgrammeRules,
-  exceptions: readonly string[] = [],
+  exceptions: readonly ModuleException[] = [],
 ): RuleViolation[] {
   const module = modules.find((candidate) => candidate.id === moduleId);
   if (!module) return [unknownModule(moduleId)];
-  if (exceptions.includes(moduleId)) return [];
+  const waived = exceptions.find((exception) => exception.moduleId === moduleId)?.waived ?? [];
+  const isWaived = (violation: RuleViolation) =>
+    waived.some((w) => w.code === violation.code && (w.prerequisiteId ?? null) === (violation.prerequisiteId ?? null));
 
   const violations: RuleViolation[] = [];
   if (!isAllowed(module, rules)) {
@@ -72,7 +76,7 @@ export function checkModuleEligibility(
       message: `${moduleName(module)} requires ${named}, which is not among your completed modules.`,
     });
   }
-  return violations;
+  return violations.filter((violation) => !isWaived(violation));
 }
 
 /**
@@ -101,30 +105,27 @@ function termImbalance(plan: readonly Module[]): RuleWarning[] {
 /**
  * Spec 9.1: validate a shortlist. The plan is the shortlist plus the programme's core modules; ECTS cap
  * and term balance apply to the whole plan, and the elective requirement to shortlisted electives and
- * I-Explore modules. `exceptions` waive the per-module checks (see checkModuleEligibility) and are left out
- * of the ECTS cap.
+ * I-Explore modules. `exceptions` waive only the per-module rules they name (see checkModuleEligibility):
+ * an approved module's ECTS still count towards the cap and the totals.
  */
 export function checkShortlist(
   shortlist: readonly string[],
   profile: StudentProfile,
   modules: readonly Module[],
   rules: ProgrammeRules,
-  exceptions: readonly string[] = [],
+  exceptions: readonly ModuleException[] = [],
 ): RulesResult {
   const byId = new Map(modules.map((module) => [module.id, module]));
   const chosenIds = unique(shortlist);
   const violations = chosenIds.flatMap((id) => checkModuleEligibility(id, profile, modules, rules, exceptions));
 
   const plan = unique([...rules.coreModuleIds, ...chosenIds]).flatMap((id) => byId.get(id) ?? []);
-  // A module approved as an exception (for example, to go over the credit cap) does not count towards the cap.
-  const capped = plan.filter((module) => !exceptions.includes(module.id));
-  const totalEcts = sumEcts(capped);
+  const totalEcts = sumEcts(plan);
   if (totalEcts > rules.maxEcts) {
-    const waived = capped.length < plan.length ? ', not counting modules with an approved exception' : '';
     violations.push({
       code: 'ECTS_CAP_EXCEEDED',
       moduleId: null,
-      message: `Your plan totals ${formatEcts(totalEcts)} ECTS including core modules${waived}, which is over the ${formatEcts(rules.maxEcts)} ECTS limit. Remove at least ${formatEcts(totalEcts - rules.maxEcts)} ECTS.`,
+      message: `Your plan totals ${formatEcts(totalEcts)} ECTS including core modules, which is over the ${formatEcts(rules.maxEcts)} ECTS limit. Remove at least ${formatEcts(totalEcts - rules.maxEcts)} ECTS.`,
     });
   }
 

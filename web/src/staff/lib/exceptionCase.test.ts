@@ -1,7 +1,7 @@
 // Issue 49: the Senior Tutor's actions on a rule exception, and the broken rule shown as data.
-import { schemas } from '@modulematch/shared';
+import { schemas, type ExceptionRequest } from '@modulematch/shared';
 import { describe, expect, it } from 'vitest';
-import { respondBody, ruleRows, subScoreText } from './exceptionCase.ts';
+import { approvalOpensModule, respondBody, ruleRows, subScoreText } from './exceptionCase.ts';
 
 describe('respondBody', () => {
   it('sends a decision with an optional message, and every body passes the shared schema', () => {
@@ -31,6 +31,18 @@ describe('ruleRows', () => {
       detail: 'Needs ME2-CTRL.',
     });
     expect(ruleRows([{ code: 'NOT_ALLOWED', moduleId: 'X', message: 'm' }])[0]?.prerequisiteId).toBeNull();
+  });
+});
+
+describe('approvalOpensModule', () => {
+  const request = (violations: ExceptionRequest['violations']): ExceptionRequest => ({ moduleId: 'X', violations, reason: '', completedModuleIds: [], fit: null });
+
+  it('is true only when the module itself breaks a rule that can be waived', () => {
+    expect(approvalOpensModule(request([{ code: 'NOT_ALLOWED', moduleId: 'X', message: 'm' }]))).toBe(true);
+    expect(approvalOpensModule(request([{ code: 'PREREQUISITE_MISSING', moduleId: 'X', prerequisiteId: 'P', message: 'm' }]))).toBe(true);
+    expect(approvalOpensModule(request([{ code: 'ECTS_CAP_EXCEEDED', moduleId: null, message: 'm' }]))).toBe(false);
+    expect(approvalOpensModule({ ...request([{ code: 'NOT_ALLOWED', moduleId: 'X', message: 'm' }]), moduleId: null })).toBe(false);
+    expect(approvalOpensModule(null)).toBe(false);
   });
 });
 

@@ -1,6 +1,6 @@
 // Rule exceptions on the student side (spec 11.1): the reason a draft asks for, and the Senior Tutor's decision.
 import { schemas } from '@modulematch/shared';
-import type { EscalationType, ExceptionDecision, SessionState } from '@modulematch/shared';
+import type { EscalationDraft, EscalationType, ExceptionDecision, SessionState } from '@modulematch/shared';
 
 export const REASON_MAX = schemas.EXCEPTION_REASON_MAX;
 
@@ -20,10 +20,18 @@ export function canSendDraft(type: EscalationType, summary: string, reason: stri
 export const oneLine = (text: string): string => text.replace(/\s*\n+\s*/g, ' ');
 
 /**
+ * A draft's identity: a new draft (another module, or a new suggested reason) gets a fresh card, so a stale reason
+ * is never carried over, while polls that return the same draft keep what the student is typing.
+ */
+export function draftIdentity(draft: Pick<EscalationDraft, 'type' | 'summary' | 'moduleId' | 'reason'>): string {
+  return [draft.type, draft.moduleId ?? '', draft.summary, draft.reason ?? ''].join('|');
+}
+
+/**
  * Changes whenever a Senior Tutor decision lands in the session, so the ranked list is fetched again and an
  * approved module turns eligible without a reload.
  */
 export function decisionsKey(session: Pick<SessionState, 'exceptions' | 'escalations'>): string {
   const decided = session.escalations.flatMap((e) => (e.decision ? [`${e.id}:${e.decision}`] : []));
-  return [...session.exceptions, ...decided].join(',');
+  return [...session.exceptions.map((e) => e.moduleId), ...decided].join(',');
 }

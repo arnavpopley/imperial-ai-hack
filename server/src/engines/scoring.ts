@@ -1,6 +1,7 @@
 // Spec 8: the deterministic scoring engine. Pure functions with no model calls: same inputs, same outputs.
 import { combineFit, confidenceLabel, isAllowedSlot, MIN_INTEREST_TOPICS, schemas, STYLE_SLOTS } from '@modulematch/shared';
 import type {
+  ModuleException,
   Evidence,
   Module,
   ModuleDemand,
@@ -120,15 +121,15 @@ const byFitThenId = (a: Recommendation, b: Recommendation): number =>
 
 /**
  * Spec 8.7: score every module and gate it through the rules engine. Ineligible modules stay in the
- * list with their reasons, so the catalogue can grey them out. `exceptions` are modules the Senior Tutor
- * approved for this student (spec 11.1).
+ * list with their reasons, so the catalogue can grey them out. `exceptions` are the rule exceptions the
+ * Senior Tutor approved for this student (spec 11.1).
  */
 export function rankModules(
   profile: StudentProfile,
   modules: readonly Module[],
   weights: Weights,
   rules: ProgrammeRules,
-  exceptions: readonly string[] = [],
+  exceptions: readonly ModuleException[] = [],
 ): Recommendation[] {
   return modules
     .map((module) => {

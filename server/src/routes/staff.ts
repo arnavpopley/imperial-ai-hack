@@ -1,7 +1,7 @@
 // Staff routes (spec 13). Aggregate views only, with a minimum cohort of five (spec 20.4).
 import { DEFAULT_WEIGHTS, MIN_COHORT, schemas, type Escalation, type Insight, type SessionState, type StaffEscalation, type StaffModuleSummary } from '@modulematch/shared';
 import { Hono } from 'hono';
-import { decisionReply } from '../agents/escalation.ts';
+import { decisionReply, exceptionFor } from '../agents/escalation.ts';
 import { wordInsight } from '../agents/insights.ts';
 import { clearSummaryCache } from '../agents/knowledge.ts';
 import { catalogue, clearExplanationCache, rulesForProfile, setMode, tracerSink } from '../agents/session.ts';
@@ -113,24 +113,33 @@ export const staffRoutes = new Hono()
   });
 
 /**
- * Applies a Senior Tutor decision to the student's session and traces it (spec 11.1). An approval adds the module to
- * the session's exceptions, which the rules engine honours, so the module becomes eligible and shortlistable.
+ * Applies a Senior Tutor decision to the student's session and traces it (spec 11.1). An approval stores an exception
+ * that waives exactly the rules the request showed as broken for its module, so the module becomes eligible and
+ * shortlistable. Its ECTS still count towards the credit cap, which is never waived.
  */
 function recordDecision(session: SessionState, escalation: Escalation, tracer: Tracer): void {
   const moduleId = escalation.request?.moduleId ?? null;
   const approved = escalation.decision === 'approved';
-  if (approved && moduleId && !session.exceptions.includes(moduleId)) {
-    session.exceptions = [...session.exceptions, moduleId];
+  const exception = approved ? exceptionFor(escalation.request) : null;
+  if (exception) {
+    // A second approval for the same module adds the rules it names to the ones already waived.
+    const previous = session.exceptions.find((e) => e.moduleId === exception.moduleId)?.waived ?? [];
+    const fresh = exception.waived.filter((w) => !previous.some((p) => p.code === w.code && p.prerequisiteId === w.prerequisiteId));
+    session.exceptions = [...session.exceptions.filter((e) => e.moduleId !== exception.moduleId), { moduleId: exception.moduleId, waived: [...previous, ...fresh] }];
     repo.updateSession(session.id, { exceptions: session.exceptions });
     // Explanations mention eligibility, so cached ones are stale now.
     clearExplanationCache();
   }
-  const subject = moduleId ?? 'programme rule';
+  const waived = exception?.waived.map((w) => (w.prerequisiteId ? `${w.code} ${w.prerequisiteId}` : w.code)).join(', ');
   tracer.record({
     actor: 'Senior Tutor',
     kind: 'escalation',
-    input: `rule exception for ${subject}`,
-    output: approved ? `approved${moduleId ? `: ${moduleId} is now eligible for this student` : ''}` : `declined${moduleId ? `: ${moduleId} stays ineligible` : ''}`,
+    input: `rule exception for ${moduleId ?? 'programme rule'}`,
+    output: approved
+      ? exception
+        ? `approved: waived ${waived} for ${exception.moduleId}; the credit cap still applies`
+        : 'approved: no module rule to waive, decision recorded'
+      : `declined${moduleId ? `: ${moduleId} stays ineligible` : ''}`,
     verdict: null,
   });
 }

@@ -46,6 +46,20 @@ export function respondBody(action: StaffAction, message: string): RespondInput 
   return { decision: action, response: text, resolve: true };
 }
 
+/**
+ * Whether approving opens the module: only rules broken by the module itself (not open to the programme, or a
+ * missing prerequisite) can be waived. Shortlist rules such as the credit cap are never waived.
+ */
+export function approvalOpensModule(request: ExceptionRequest | null): boolean {
+  const moduleId = request?.moduleId;
+  return Boolean(
+    moduleId &&
+      request.violations.some(
+        (v) => v.moduleId === moduleId && (v.code === 'NOT_ALLOWED' || (v.code === 'PREREQUISITE_MISSING' && v.prerequisiteId)),
+      ),
+  );
+}
+
 export const DECISION_LABELS: Record<ExceptionDecision, string> = {
   approved: 'Exception approved',
   declined: 'Exception declined',

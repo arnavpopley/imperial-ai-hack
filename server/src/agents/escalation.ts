@@ -7,8 +7,10 @@ import {
   type EscalationType,
   type ExceptionRequest,
   type Module,
+  type ModuleException,
   type Recommendation,
   type RuleViolation,
+  type RuleWaiver,
   type SessionState,
   type StudentProfile,
 } from '@modulematch/shared';
@@ -106,6 +108,23 @@ export function exceptionRequest(
     completedModuleIds: [...session.profile.completedModuleIds],
     fit: rec ? { fit: rec.fit, sub: rec.sub } : null,
   };
+}
+
+/**
+ * The rule exception an approval grants: exactly the module-level rules the request showed as broken for its
+ * module (the programme check, or each missing prerequisite). Null when there is nothing to waive, for example a
+ * credit-cap request, because shortlist rules are never waived.
+ */
+export function exceptionFor(request: ExceptionRequest | null): ModuleException | null {
+  const moduleId = request?.moduleId;
+  if (!request || !moduleId) return null;
+  const waived = request.violations.flatMap((v): RuleWaiver[] => {
+    if (v.moduleId !== moduleId) return [];
+    if (v.code === 'NOT_ALLOWED') return [{ code: v.code }];
+    if (v.code === 'PREREQUISITE_MISSING' && v.prerequisiteId) return [{ code: v.code, prerequisiteId: v.prerequisiteId }];
+    return [];
+  });
+  return waived.length > 0 ? { moduleId, waived } : null;
 }
 
 /** The reply the student sees for a Senior Tutor decision, followed by the tutor's optional message. */
