@@ -2,6 +2,23 @@
 
 The spec section 18.2 flow, cut to two minutes for the Devpost video. Record at 1440×900 or larger, in light mode, with the browser zoomed to 110% so the text reads on a small player. Times are cumulative. Speed up the screen recording where the shot list says so (2× is enough); keep the voice-over at normal speed.
 
+## Automated recording (quickest)
+
+`npm run demo:video` drives the whole demo by itself in a visible Chrome window, offline, so it's the same every time. It runs:
+1. Landing (held 8 s for the problem statement).
+2. Interview.
+3. Catalogue.
+4. Weights.
+5. Shortlist and clash swap.
+6. Rule exception.
+7. Senior Tutor approval.
+8. Counterfactual card.
+9. How it works and evaluation.
+
+The whole run takes about 1:50. Screen-record the Chrome window (macOS: Cmd+Shift+5, then "Record Selected Portion") and narrate over it afterwards. The run prints a timeline of when each step starts and saves it to `scripts/e2e/output/<run>/desktop-light/video-timeline.txt`, so the voice-over can follow it.
+
+Tune it with `npm run demo:video -- --pace=350 --type-speed=10 --hold=1600 --landing-hold=8000` (milliseconds). Add `--live` to use the real models from `.env`, which is slower and costs about $0.50, or `--with-optional` to include the results upload and examiner round trip.
+
 ## Before recording
 
 1. Choose where to record:
