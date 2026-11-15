@@ -76,8 +76,10 @@ export function examFacts(form: ExamFeedbackForm, result: ModuleResult, modules:
   // A question's first topic is its main one; matching on it alone keeps broad topics (maths) from pulling in every module.
   const weakTopics = unique(weak.flatMap((q) => q.topics.slice(0, 1)));
   const skip = new Set([...exclude, form.moduleId]);
+  // Only modules taught later than the exam's own can build on it (issue #109); earlier years are behind the student.
+  const examLevel = modules.find((m) => m.id === form.moduleId)?.level;
   const affects = modules
-    .filter((m) => !skip.has(m.id))
+    .filter((m) => !skip.has(m.id) && (examLevel === undefined || m.level > examLevel))
     .flatMap((m) => {
       const overlap = weakTopics.filter((t) => (m.topics[t] ?? 0) >= MAIN_TOPIC_MIN);
       const prerequisite = m.prerequisites.includes(form.moduleId);
@@ -121,7 +123,8 @@ export function weakAdvice(q: WeakQuestionFact): string {
     parts.push(`Common mistakes the examiners saw: ${q.commonMistakes.slice(0, 2).map((m) => lowerFirst(m.trim().replace(/\.$/, ''))).join('; ')}.`);
   }
   const good = q.whatGoodAnswersDid.trim();
-  if (good) parts.push(/^(good|best|strong)/i.test(good) ? sentence(good) : `Good answers: ${sentence(good)}`);
+  // The field holds what good answers did ("Drew a diagram."), so it reads on from "Good answers".
+  if (good) parts.push(/^(good|best|strong)/i.test(good) ? sentence(good) : `Good answers ${lowerFirst(sentence(good))}`);
   return parts.join(' ');
 }
 

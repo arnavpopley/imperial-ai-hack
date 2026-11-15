@@ -2,6 +2,7 @@
 // shared by the interview step, the catalogue, the module page, the feedback page and "Your data".
 // Nudges are informational only: nothing here touches fit scores or rankings.
 import type {
+  ExamAwaitingMarks,
   PerformanceNudge,
   PerformanceView,
   ResultsUploadResponse,
@@ -20,6 +21,8 @@ interface ResultsValue {
   results: AsyncResult<StudentResults>;
   performance: AsyncResult<PerformanceView>;
   feedback: AsyncResult<TailoredFeedback[]>;
+  /** Published exams with a mark but no matching question marks: feedback the student could unlock. */
+  awaiting: AsyncResult<ExamAwaitingMarks[]>;
   /** True once the student has shared at least one mark. */
   hasResults: boolean;
   /** Codes that matched no catalogue module: kept, but not used for nudges. */
@@ -51,9 +54,11 @@ export function ResultsProvider({ children }: { children: ReactNode }) {
   // Nudges mention the student's interests, so they follow profile edits too.
   const performance = useAsync(() => api.performance(sessionId), [sessionId, version, session.profile.updatedAt]);
   const feedback = useAsync(() => api.examFeedback(sessionId), [sessionId, version]);
+  const awaiting = useAsync(() => api.examAwaitingMarks(sessionId), [sessionId, version]);
   const { setData: setResults } = results;
   const { setData: setPerformance } = performance;
   const { setData: setFeedback } = feedback;
+  const { setData: setAwaiting } = awaiting;
 
   const nudges = useMemo(() => {
     const view = performance.data;
@@ -80,17 +85,19 @@ export function ResultsProvider({ children }: { children: ReactNode }) {
     // Nothing made from the deleted marks may linger, even if the follow-up reads fail.
     setPerformance(NO_PERFORMANCE);
     setFeedback([]);
+    setAwaiting([]);
     clearRevisionChecklists(sessionId);
     setUnmatched([]);
     setLastSource(null);
     setVersion((v) => v + 1);
-  }, [sessionId, setResults, setPerformance, setFeedback]);
+  }, [sessionId, setResults, setPerformance, setFeedback, setAwaiting]);
 
   const value = useMemo<ResultsValue>(
     () => ({
       results,
       performance,
       feedback,
+      awaiting,
       hasResults: (results.data?.results.length ?? 0) > 0,
       unmatched: [...new Set([...unmatched, ...(results.data?.results ?? []).filter((r) => !r.matched).map((r) => r.code)])],
       lastSource,
@@ -98,7 +105,7 @@ export function ResultsProvider({ children }: { children: ReactNode }) {
       upload,
       withdraw,
     }),
-    [results, performance, feedback, unmatched, lastSource, nudgeFor, upload, withdraw],
+    [results, performance, feedback, awaiting, unmatched, lastSource, nudgeFor, upload, withdraw],
   );
   return <ResultsContext.Provider value={value}>{children}</ResultsContext.Provider>;
 }

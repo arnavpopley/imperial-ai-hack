@@ -11,13 +11,14 @@ import { MarkSheetIcon } from '../results/icons.tsx';
 import { useResults } from '../results/ResultsProvider.tsx';
 import { OPEN_RESULTS_STATE, paths } from '../routes.ts';
 import { useReadySession } from '../state/SessionProvider.tsx';
+import { AwaitingMarks } from './AwaitingMarks.tsx';
 import { ExamFeedbackCard } from './ExamFeedbackCard.tsx';
 
 const EASE = [0.2, 0.8, 0.2, 1] as const;
 
 export function FeedbackScreen() {
   const { session } = useReadySession();
-  const { feedback, results } = useResults();
+  const { feedback, results, awaiting } = useResults();
   const list = feedback.data ?? [];
   // A 404 means the route is not deployed yet: show the empty state rather than an error.
   const failed = feedback.error !== null && errorStatus(feedback.error) !== 404 && !feedback.data;
@@ -55,6 +56,7 @@ export function FeedbackScreen() {
           </div>
         )}
         {failed && <ErrorState title="Your feedback did not load" message={feedback.error ?? ''} onRetry={feedback.reload} />}
+        {!loading && <AwaitingMarks exams={awaiting.data ?? []} />}
         {!loading && !failed && list.length === 0 && <EmptyFeedback />}
         {list.map((item, index) => (
           <ExamFeedbackCard
