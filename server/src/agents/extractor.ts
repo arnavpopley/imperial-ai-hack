@@ -361,10 +361,21 @@ async function extractLive(text: string, targetSlots: string[], pathwayIds: stri
     messages: [{ role: 'user', content: extractorMessage(text, targetSlots, pathwayIds) }],
     maxTokens: 1500,
   });
-  return grounded(text, result?.updates ?? []);
+  return lowDislikes(grounded(text, result?.updates ?? []));
 }
 
 /** Runs the extractor and keeps only whitelisted updates whose value matches the slot (spec 10.3). */
+/**
+ * A dislike lowers an interest, so its value must be low. "Strength" in the prompt can be read as strength of feeling
+ * (a dislike given 0.9), which would store "I'd avoid thermodynamics" as a strong interest; such a value is mirrored
+ * (0.9 becomes 0.1). Found by the live eval (#55 dislikes).
+ */
+export function lowDislikes(updates: ExtractedUpdate[]): ExtractedUpdate[] {
+  return updates.map((u) =>
+    u.dislike && u.slot.startsWith('interest:') && typeof u.value === 'number' && u.value > 0.5 ? { ...u, value: Math.round((1 - u.value) * 100) / 100 } : u,
+  );
+}
+
 export async function extract(
   text: string,
   targetSlots: string[],

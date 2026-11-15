@@ -4,7 +4,7 @@ import { fixtureModules, fixtureProfile, fixtureSession, fixtureTimetable } from
 import { describe, expect, it } from 'vitest';
 import { extract, extractByCues, grounded, mergeUpdates, plausible } from '../src/agents/extractor.ts';
 import { classifyByRules } from '../src/agents/intent.ts';
-import { nextQuestion, QUICK_PLAN, reflect, unfilledSlots, whatIHeard } from '../src/agents/interviewer.ts';
+import { nextQuestion, QUICK_PLAN, reflect, unfilledSlots, WHAT_I_HEARD_LINE } from '../src/agents/interviewer.ts';
 import { explainByRules } from '../src/agents/matcher.ts';
 import { canTransition } from '../src/agents/modes.ts';
 import { decisionReply, draftRuleException, reasonFrom, thirdPerson } from '../src/agents/escalation.ts';
@@ -243,15 +243,9 @@ describe('interviewer', () => {
     expect(unfilledSlots(emptyProfile, [])).toHaveLength(9);
   });
 
-  it('summarises the profile without inventing anything', () => {
-    const card = whatIHeard(fixtureProfile, { 'aerospace-motorsport': 'Aerospace and motorsport' });
-    expect(card).toContain('Fluid mechanics');
-    expect(card).toContain('Aerospace and motorsport');
-  });
-
-  it('spells out the days to keep free', () => {
-    const card = whatIHeard({ ...fixtureProfile, timetablePrefs: { avoidDays: ['fri'], earliestStart: null } }, {});
-    expect(card).toContain('Keep free: Friday');
+  it('introduces the "Here is what I heard" card in one short line; the card itself shows the profile (issue 144)', () => {
+    expect(WHAT_I_HEARD_LINE.split(/\s+/).length).toBeLessThanOrEqual(20);
+    expect(WHAT_I_HEARD_LINE).not.toMatch(/•|\n/);
   });
 
   it('keeps acronyms in the reflection', () => {

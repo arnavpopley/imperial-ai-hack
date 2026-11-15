@@ -1,5 +1,5 @@
 // Live evaluation (spec 18): runs the real models against cases with known answers, to measure prompt and data
-// changes instead of guessing. Unlike `npm run eval` it calls the API, so it costs money: about $1-2 per run.
+// changes instead of guessing. Unlike `npm run eval` it calls the API, so it costs money: about $1 per run.
 // Usage: `npm run eval:live` (needs ANTHROPIC_API_KEY). Results go to data/eval-live-latest.json.
 // `npm run eval:live -- --hard-cases` runs only the extraction hard cases (about 20 Haiku calls, a few cents) and
 // prints them without overwriting the saved run. `npm run eval:live -- --interview` likewise runs only the
@@ -13,6 +13,7 @@ import { extract, mergeUpdates } from '../server/src/agents/extractor.ts';
 import { answerModuleQuestion, moduleFacts } from '../server/src/agents/knowledge.ts';
 import { isLive, modelId, structured } from '../server/src/agents/llm.ts';
 import { explain } from '../server/src/agents/matcher.ts';
+import { NO_GUARANTEE } from '../server/src/agents/outcomes.ts';
 import { emptyProfile } from '../server/src/agents/session.ts';
 import { loadPathways, rawModule, rulesFor } from '../server/src/db/catalogue.ts';
 import { DATASET_FILES, dataPath, ModulesFile, readDataset, REPO_ROOT } from '../server/src/db/datasets.ts';
@@ -401,14 +402,21 @@ async function interviewRouting(): Promise<EvalResult> {
   const skipped = repo.getSession(skip.id)!;
   details.push({ case: 'skip the rest, show me my modules', pass: skipped.mode === 'RECOMMEND' && skipped.interview.confirmed, note: `mode ${skipped.mode}` });
 
-  for (const question of ['Will taking Mechatronics 3A get me a job at Boston Dynamics?', 'Which modules use Python?']) {
+  // A guarantee question gets the deterministic no-promise reply (#93); a catalogue question needs the model's answer.
+  const QUESTIONS = [
+    { question: 'Will taking Mechatronics 3A get me a job at Boston Dynamics?', guarantee: true },
+    { question: 'Which modules use Python?', guarantee: false },
+  ] as const;
+  for (const { question, guarantee } of QUESTIONS) {
     const before = await fresh();
     const { text } = await chatTurn(app, before.id, question);
     const after = repo.getSession(before.id)!;
     // The catalogue agent falls back to the rules answer when the model fails; a live pass needs the model's.
     const byModel = repo.listTraceEvents(before.id).some((e) => e.actor === 'catalogue' && e.output.startsWith('model answer'));
     const problems = [
-      byModel ? '' : 'answered by the rules fallback, not the model',
+      guarantee
+        ? text.startsWith(NO_GUARANTEE) ? '' : 'did not open with the no-promise statement'
+        : byModel ? '' : 'answered by the rules fallback, not the model',
       after.evidence.length > 0 ? `stored ${after.evidence.map((e) => e.slot).join(', ')}` : '',
       after.interview.questionsAsked !== before.interview.questionsAsked ? 'used up a question' : '',
       after.mode !== 'INTERVIEW' ? `left the interview (${after.mode})` : '',
