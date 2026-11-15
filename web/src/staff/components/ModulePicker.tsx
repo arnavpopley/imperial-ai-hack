@@ -16,7 +16,7 @@ import {
   shortlistLabel,
   strongFitShare,
 } from '../lib/moduleList.ts';
-import type { ListView, StaffModuleRow } from '../lib/moduleList.ts';
+import type { ListView } from '../lib/moduleList.ts';
 import { byCohortFigure, isCohortVisible } from '../lib/privacy.ts';
 import { DemandMiniBar } from './DemandGauge.tsx';
 import { SearchIcon, ShieldIcon } from './icons.tsx';
@@ -40,12 +40,12 @@ function load(m: StaffModuleSummary): number {
 const isSortKey = (v: string): v is SortKey => Object.hasOwn(SORTS, v);
 
 /** The module the console opens on: the strongest fit among the options the cohort can choose. */
-export function firstModule(modules: readonly StaffModuleRow[]): StaffModuleRow | undefined {
+export function firstModule(modules: readonly StaffModuleSummary[]): StaffModuleSummary | undefined {
   const options = modules.filter(isOption);
   return [...(options.length > 0 ? options : modules)].sort(SORTS.strong.compare)[0];
 }
 
-export function ModulePicker({ modules }: { modules: StaffModuleRow[] }) {
+export function ModulePicker({ modules }: { modules: StaffModuleSummary[] }) {
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<SortKey>('strong');
   // Start on the options, unless the open module is not one: then show everything so it stays in the list.
@@ -178,7 +178,7 @@ function FitSpark({ histogram }: { histogram: readonly number[] }) {
   );
 }
 
-function ModuleFigures({ module: m }: { module: StaffModuleRow }) {
+function ModuleFigures({ module: m }: { module: StaffModuleSummary }) {
   const status = capacityStatus(m.shortlisted, m.capacity);
   const share = strongFitShare(m);
   const counted = isOption(m) && m.shortlisted >= MIN_COHORT;
@@ -216,7 +216,7 @@ function ModuleFigures({ module: m }: { module: StaffModuleRow }) {
 }
 
 /** Students in this cohort cannot take the module, so its fit and demand would only mislead. */
-function NotOffered({ module: m }: { module: StaffModuleRow }) {
+function NotOffered({ module: m }: { module: StaffModuleSummary }) {
   return (
     <>
       <span className="min-w-0 text-sm leading-snug font-medium break-words text-pretty text-muted">{m.title}</span>

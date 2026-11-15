@@ -1,5 +1,5 @@
-// Catalogue data that does not depend on the session: modules and pathways, loaded once.
-import type { Module, Pathway } from '@modulematch/shared';
+// Catalogue data that does not depend on the session: modules, pathways and cohort demand, loaded once.
+import type { Module, ModuleDemandSignal, Pathway } from '@modulematch/shared';
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import { api } from '../../api.ts';
 import { useAsync, type AsyncResult } from '../hooks/useAsync.ts';
@@ -9,6 +9,8 @@ interface ReferenceData {
   pathways: AsyncResult<Pathway[]>;
   moduleById: ReadonlyMap<string, Module>;
   pathwayById: ReadonlyMap<string, Pathway>;
+  /** Synthetic cohort demand for modules near or over capacity; a module with no entry shows nothing. */
+  demandById: ReadonlyMap<string, ModuleDemandSignal>;
 }
 
 const ReferenceDataContext = createContext<ReferenceData | null>(null);
@@ -16,11 +18,14 @@ const ReferenceDataContext = createContext<ReferenceData | null>(null);
 export function ReferenceDataProvider({ children }: { children: ReactNode }) {
   const modules = useAsync(api.modules, []);
   const pathways = useAsync(api.pathways, []);
+  // Demand is a nice-to-have: if it fails to load, the catalogue simply shows no demand chips.
+  const demand = useAsync(api.moduleDemand, []);
   const moduleById = useMemo(() => new Map((modules.data ?? []).map((m) => [m.id, m])), [modules.data]);
   const pathwayById = useMemo(() => new Map((pathways.data ?? []).map((p) => [p.id, p])), [pathways.data]);
+  const demandById = useMemo(() => new Map((demand.data ?? []).map((d) => [d.moduleId, d])), [demand.data]);
   const value = useMemo(
-    () => ({ modules, pathways, moduleById, pathwayById }),
-    [modules, pathways, moduleById, pathwayById],
+    () => ({ modules, pathways, moduleById, pathwayById, demandById }),
+    [modules, pathways, moduleById, pathwayById, demandById],
   );
   return <ReferenceDataContext.Provider value={value}>{children}</ReferenceDataContext.Provider>;
 }
