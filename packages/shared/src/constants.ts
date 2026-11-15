@@ -41,6 +41,8 @@ export function capacityStatus(shortlisted: number, capacity: number | null): Ca
 export const INTENT_CONFIDENCE_FLOOR = 0.6;
 /** Spec 10.2 quick and deep interview question budgets. */
 export const INTERVIEW_BUDGET = { quick: 8, deep: 30 } as const;
+/** Questions offered when a student who skipped the interview comes back to it (spec 8.6 low confidence). */
+export const STARTER_QUESTIONS = 3;
 
 export const taxonomy = taxonomyJson;
 export type TaxonomyTopicKey = keyof typeof taxonomyJson.topics;

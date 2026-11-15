@@ -5,7 +5,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { api } from '../../api.ts';
 import { draftIdentity } from '../../components/exceptions.ts';
 import { errorMessage } from '../../components/StateViews.tsx';
-import { readStoredSessionId, writeStoredSessionId } from './storage.ts';
+import { readDismissedDraft, readStoredSessionId, writeDismissedDraft, writeStoredSessionId } from './storage.ts';
 
 export type CreateSessionInput = Parameters<typeof api.createSession>[0];
 export type SessionStatus = 'loading' | 'none' | 'ready' | 'error';
@@ -112,6 +112,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const forget = useCallback(() => {
     writeStoredSessionId(null);
+    writeDismissedDraft('', null);
     setResumeId(null);
     setSession(null);
     setOfferedDraft(null);
@@ -121,12 +122,16 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const serverDraft = session?.escalationDraft ?? null;
-  const draft = offeredDraft ?? (serverDraft && draftIdentity(serverDraft) !== dismissedDraft ? serverDraft : null);
+  // A dismissal is remembered for the session, so the stored draft does not come back on every reload.
+  const dismissed = dismissedDraft ?? (sessionId ? readDismissedDraft(sessionId) : null);
+  const draft = offeredDraft ?? (serverDraft && draftIdentity(serverDraft) !== dismissed ? serverDraft : null);
 
   const dismissDraft = useCallback(() => {
     setOfferedDraft(null);
-    if (draft) setDismissedDraft(draftIdentity(draft));
-  }, [draft]);
+    if (!draft) return;
+    setDismissedDraft(draftIdentity(draft));
+    if (sessionId) writeDismissedDraft(sessionId, draftIdentity(draft));
+  }, [draft, sessionId]);
 
   const value = useMemo<SessionContextValue>(
     () => ({
