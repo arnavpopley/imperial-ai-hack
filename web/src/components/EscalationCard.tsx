@@ -1,5 +1,6 @@
-import type { EscalationStatus, EscalationType } from '@modulematch/shared';
+import type { EscalationStatus, EscalationType, ExceptionDecision } from '@modulematch/shared';
 import { useId, useState } from 'react';
+import { asksForReason, canSendDraft, EXCEPTION_LABELS, oneLine, REASON_MAX } from './exceptions.ts';
 import { Button } from './Button.tsx';
 import { cx } from './cx.ts';
 import { Icon } from './Icon.tsx';
@@ -23,7 +24,9 @@ interface CommonProps {
 interface DraftProps extends CommonProps {
   /** The agent's drafted summary, waiting for the student to approve or edit it. */
   variant: 'draft';
-  onSend: (summary: string) => void;
+  /** A suggested one-line reason for a rule exception, which the student edits or writes. */
+  reason?: string;
+  onSend: (summary: string, reason: string) => void;
   onDiscard: () => void;
   sending: boolean;
   error: string | null;
@@ -41,6 +44,8 @@ interface AnsweredProps extends CommonProps {
   variant: 'answered';
   staffResponse: string;
   createdAt: string;
+  /** The Senior Tutor's decision, for a rule exception. */
+  decision?: ExceptionDecision | null;
 }
 
 export type EscalationCardProps = DraftProps | SentProps | AnsweredProps;
@@ -61,7 +66,7 @@ export function EscalationCard(props: EscalationCardProps) {
         'animate-rise rounded-card border bg-surface shadow-soft',
         props.variant === 'draft' && 'border-mode-escalated/35',
         props.variant === 'sent' && 'border-line',
-        props.variant === 'answered' && 'border-fit-high/40',
+        props.variant === 'answered' && (props.decision === 'declined' ? 'border-line' : 'border-fit-high/40'),
         props.className,
       )}
     >
@@ -72,7 +77,7 @@ export function EscalationCard(props: EscalationCardProps) {
   );
 }
 
-function CardHeader({ icon, title, detail, tone }: { icon: 'tutor' | 'check' | 'clock'; title: string; detail: string; tone: string }) {
+function CardHeader({ icon, title, detail, tone }: { icon: 'tutor' | 'check' | 'clock' | 'x'; title: string; detail: string; tone: string }) {
   return (
     <div className="flex items-start gap-3">
       <span className={cx('grid size-8 shrink-0 place-items-center rounded-full', tone)}>
@@ -86,16 +91,21 @@ function CardHeader({ icon, title, detail, tone }: { icon: 'tutor' | 'check' | '
   );
 }
 
-function DraftBody({ summary, onSend, onDiscard, sending, error, queue }: DraftProps & { queue: string }) {
+function DraftBody({ escalationType, summary, reason: suggested = '', onSend, onDiscard, sending, error, queue }: DraftProps & { queue: string }) {
   const [text, setText] = useState(summary);
+  const [reason, setReason] = useState(suggested);
   const fieldId = useId();
+  const reasonId = useId();
+  const reasonHintId = useId();
   const trimmed = text.trim();
+  const withReason = asksForReason(escalationType);
+  const ready = canSendDraft(escalationType, text, reason);
   return (
     <form
       className="grid gap-3 p-4"
       onSubmit={(event) => {
         event.preventDefault();
-        if (trimmed) onSend(trimmed);
+        if (ready) onSend(trimmed, reason.trim());
       }}
     >
       <CardHeader
@@ -120,6 +130,28 @@ function DraftBody({ summary, onSend, onDiscard, sending, error, queue }: DraftP
           {text.length}/{SUMMARY_MAX}
         </p>
       </div>
+      {withReason && (
+        <div>
+          <label htmlFor={reasonId} className="text-[13px] font-medium">
+            Why do you want this exception? <span className="font-normal text-muted">One line</span>
+          </label>
+          <input
+            id={reasonId}
+            type="text"
+            value={reason}
+            maxLength={REASON_MAX}
+            required
+            aria-describedby={reasonHintId}
+            placeholder="For example: I covered this material on my summer placement."
+            onChange={(event) => setReason(oneLine(event.target.value))}
+            className="mt-1.5 w-full rounded-xl border border-line-strong bg-canvas px-3 py-2 text-sm focus:border-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
+          />
+          <p id={reasonHintId} className="mt-1 text-2xs text-muted">
+            Sent with the summary, the rule, your completed modules and your fit for the module. Nothing else from your
+            profile is shared.
+          </p>
+        </div>
+      )}
       {error && (
         <p role="alert" className="text-[13px] text-fit-low">
           {error}
@@ -129,7 +161,7 @@ function DraftBody({ summary, onSend, onDiscard, sending, error, queue }: DraftP
         <Button variant="ghost" size="sm" onClick={onDiscard} disabled={sending}>
           Not now
         </Button>
-        <Button type="submit" variant="primary" size="sm" icon="send" busy={sending} disabled={!trimmed}>
+        <Button type="submit" variant="primary" size="sm" icon="send" busy={sending} disabled={!ready}>
           Send to the {queue}
         </Button>
       </div>
@@ -152,16 +184,22 @@ function SentBody({ summary, status, createdAt, queue }: SentProps & { queue: st
   );
 }
 
-function AnsweredBody({ summary, staffResponse, createdAt, queue }: AnsweredProps & { queue: string }) {
+function AnsweredBody({ summary, staffResponse, createdAt, decision, queue }: AnsweredProps & { queue: string }) {
+  const declined = decision === 'declined';
   return (
     <div className="grid gap-3 p-4">
       <CardHeader
-        icon="check"
-        title={`Reply from the ${queue}`}
+        icon={declined ? 'x' : 'check'}
+        title={decision ? EXCEPTION_LABELS[decision] : `Reply from the ${queue}`}
         detail={`About your request from ${formatTime(createdAt)}`}
-        tone="bg-fit-high/12 text-fit-high"
+        tone={declined ? 'bg-ink/6 text-muted' : 'bg-fit-high/12 text-fit-high'}
       />
-      <blockquote className="rounded-xl border-l-4 border-fit-high bg-fit-high/6 px-4 py-3 text-sm leading-relaxed">
+      <blockquote
+        className={cx(
+          'rounded-xl border-l-4 px-4 py-3 text-sm leading-relaxed',
+          declined ? 'border-line-strong bg-surface-2' : 'border-fit-high bg-fit-high/6',
+        )}
+      >
         {staffResponse}
       </blockquote>
       <SummaryDetails summary={summary} />

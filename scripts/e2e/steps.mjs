@@ -30,8 +30,11 @@ const TOPICS = [
 ];
 
 export const RULE_BREAK = 'Can I take Nuclear Reactor Physics anyway, even without the prerequisite?';
-const STAFF_REPLY =
-  'Approved as an exception: you can take Nuclear Reactor Physics this year. Please read the Introduction to Nuclear Energy A notes before week 3.';
+/** The module the rule-break request names (data/modules.json), and the student's one-line reason for it. */
+const RULE_MODULE = 'MECH70002';
+const RULE_REASON = 'I covered reactor basics on my summer placement and want to work in nuclear energy.';
+/** The Senior Tutor's optional message, sent with Approve exception. */
+const STAFF_REPLY = 'Please read the Introduction to Nuclear Energy A notes before week 3.';
 /** Two modules the timetable puts at the same time in spring, whatever the profile (data/slots.json). */
 const CLASHING = ['MECH60009', 'MECH60018'];
 
@@ -122,6 +125,11 @@ export const STEPS = [
       await ctx.checkpoint(page, 'onboard');
       await page.click({ css: 'button[type="submit"]', text: 'Start the interview' });
       await pathIs(page, '/interview');
+      // The interview opens on the optional results upload (spec 23); the demo skips it.
+      const skipResults = { css: 'button', text: 'Skip for now' };
+      await page.waitForElement(skipResults, { desc: 'the optional results step' });
+      await ctx.checkpoint(page, 'results-step');
+      await page.click(skipResults, { desc: 'Skip for now on the results step' });
       const scope = 'section[aria-label="Interview conversation"]';
       await page.waitFor((s) => Boolean(document.querySelector(`${s} ol[aria-label="Conversation"] li[aria-busy="false"] p`)), [scope], {
         desc: 'the first interview question',
@@ -373,6 +381,14 @@ export const STEPS = [
       await page.waitForElement(send, { desc: 'the drafted escalation', timeout: ctx.timeout });
       const draft = await page.eval(() => document.querySelector('dialog[open] section[aria-label^="Escalation to the"] textarea')?.value ?? '');
       if (!/Nuclear Reactor Physics/.test(draft)) fail(`The drafted escalation does not name the module: "${draft.slice(0, 120)}"`);
+      // The draft is written for the tutor, about the student, and asks for a one-line reason before it can be sent.
+      if (/\b[Yy]ou(r)?\b/.test(draft)) fail(`The drafted escalation speaks to the student, not about them: "${draft.slice(0, 160)}"`);
+      const reason = { css: 'dialog[open] section[aria-label^="Escalation to the"] input[type="text"]' };
+      await page.waitForElement(reason, { desc: 'the one-line reason box' });
+      if (!(await page.eval(() => document.querySelector('dialog[open] section[aria-label^="Escalation to the"] button[type="submit"]')?.disabled))) {
+        fail('The escalation can be sent before the student gives a reason');
+      }
+      await page.type(reason, RULE_REASON, { desc: 'the one-line reason box' });
       await page.scrollIntoView(send);
       await ctx.checkpoint(page, 'held-position');
       await page.click(send, { desc: 'Send to the Senior Tutor' });
@@ -408,11 +424,16 @@ export const STEPS = [
       await ctx.checkpoint(staff, 'staff-queue');
       await staff.click(item);
       await pathIs(staff, { re: '^/staff/escalations/.+' });
+      // The request as data: the broken rule, the student's reason, their fit and completed modules.
+      for (const want of ['The request', 'Prerequisite not completed', RULE_REASON, 'Fit for the module', 'Completed modules']) {
+        await staff.waitForElement({ css: 'article', text: want }, { desc: `"${want}" in the request details` });
+      }
       await staff.type({ css: 'form textarea' }, STAFF_REPLY, {
-        desc: 'the staff reply box',
+        desc: 'the optional message to the student',
       });
-      await staff.click({ css: 'button[type="submit"]', text: 'Send reply and resolve' });
-      await staff.waitForElement({ css: 'h3', text: "Resolved. The reply is in the student's session" }, { desc: 'the resolved state' });
+      await ctx.checkpoint(staff, 'staff-decision');
+      await staff.click({ css: 'form button', text: 'Approve exception' });
+      await staff.waitForElement({ css: 'h3', text: "Exception approved. The decision is in the student's session" }, { desc: 'the approved state' });
       await ctx.checkpoint(staff, 'staff-resolved');
 
       // The student's tab has stayed open; the reply should arrive by itself, without a reload.
@@ -423,7 +444,7 @@ export const STEPS = [
       await student.waitFor(
         (reply) =>
           [...document.querySelectorAll('section[aria-label^="Escalation to the"]')].some(
-            (s) => /Reply from the/.test(s.textContent) && s.textContent.includes(reply),
+            (s) => /Exception approved by the Senior Tutor/.test(s.textContent) && s.textContent.includes(reply),
           ),
         [STAFF_REPLY],
         { desc: 'the staff reply in the student session', timeout: 20_000 },
@@ -446,6 +467,31 @@ export const STEPS = [
       await ctx.checkpoint(student, 'reply-in-chat');
       await student.click({ css: 'dialog[open] header button' }, { desc: 'Close the advisor' });
       await student.waitFor(() => !document.querySelector('dialog[open]'), [], { desc: 'the advisor to close' });
+
+      // The approval opens the module: its card says so, and it can now be shortlisted.
+      await student.click(STUDENT_TAB('Catalogue'));
+      await pathIs(student, '/catalogue');
+      const card = { css: `section[aria-labelledby="ranked-heading"] ol > li:has(a[href="/modules/${RULE_MODULE}"])` };
+      await student.waitFor(
+        (s) => {
+          const li = window.__e2e.one(s);
+          return Boolean(li && li.textContent.includes('Exception approved by the Senior Tutor') && !li.textContent.includes('Not eligible yet'));
+        },
+        [card],
+        { desc: `${RULE_MODULE} to show the approved exception and be eligible`, timeout: 20_000 },
+      );
+      const button = { css: `${card.css} button[aria-pressed]` };
+      await student.scrollIntoView(card);
+      await student.click(button, { desc: `Add to shortlist on ${RULE_MODULE}` });
+      await student.waitFor((s) => window.__e2e.one(s)?.getAttribute('aria-pressed') === 'true', [button], {
+        desc: `${RULE_MODULE} to be shortlisted`,
+      });
+      await student.waitFor(() => /4 shortlisted/.test(document.querySelector('nav[aria-label="Student sections"]')?.textContent ?? ''), [], {
+        desc: 'the Timetable tab to count 4 shortlisted',
+      });
+      ctx.state.shortlist = [...(ctx.state.shortlist ?? []), RULE_MODULE];
+      await ctx.checkpoint(student, 'exception-shortlisted');
+      await student.scrollTo('top');
     },
   },
   {
@@ -466,9 +512,14 @@ export const STEPS = [
       const headline = await staff.text({ css: 'h3', within: card });
       await ctx.checkpoint(staff, 'dashboard');
       await staff.click({ css: 'button', text: { exact: 'Accept' }, within: card }, { desc: 'Accept on the counterfactual card' });
+      // A decided card collapses its actions to "Change decision"; an open one shows Accept pressed.
       const decided = (h) =>
         [...document.querySelectorAll('article')].some(
-          (a) => a.querySelector('h3')?.innerText === h && /Accepted/.test(a.innerText) && a.querySelector('button[aria-pressed="true"]')?.innerText.trim() === 'Accept',
+          (a) =>
+            a.querySelector('h3')?.innerText === h &&
+            /Accepted/.test(a.innerText) &&
+            ([...a.querySelectorAll('button')].some((b) => b.innerText.trim() === 'Change decision') ||
+              a.querySelector('button[aria-pressed="true"]')?.innerText.trim() === 'Accept'),
         );
       await staff.waitFor(decided, [headline], { desc: 'the card to show Accepted' });
       ctx.note(`accepted "${headline}"`);

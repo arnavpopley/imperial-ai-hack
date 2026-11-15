@@ -90,6 +90,41 @@ describe('escalations', () => {
     expect(done).toEqual({ ...e, status: 'resolved', staffResponse: 'Approved.' });
     expect(repo.updateEscalation('missing', { status: 'claimed' }, db)).toBeNull();
   });
+
+  it('stores the exception request and a decision, and an update never resets fields it leaves out', () => {
+    repo.createSession({ ...session, escalations: [] }, db);
+    const e = { ...fx.fixtureEscalation, id: 'esc-decided' };
+    repo.createEscalation(e, db);
+    expect(repo.getEscalation(e.id, db)?.request).toEqual(e.request);
+    repo.updateEscalation(e.id, { decision: 'approved' }, db);
+    expect(repo.updateEscalation(e.id, { status: 'resolved' }, db)?.decision).toBe('approved');
+    const exceptions = [{ moduleId: 'ME3-ROB', waived: [{ code: 'PREREQUISITE_MISSING' as const, prerequisiteId: 'ME2-CTRL' }] }];
+    repo.updateSession(session.id, { exceptions }, db);
+    expect(repo.updateSession(session.id, { mode: 'RECOMMEND' }, db)?.exceptions).toEqual(exceptions);
+  });
+});
+
+describe('older database files', () => {
+  it('gain the exception columns when opened', async () => {
+    const { mkdtempSync } = await import('node:fs');
+    const { join } = await import('node:path');
+    const { tmpdir } = await import('node:os');
+    const Database = (await import('better-sqlite3')).default;
+    const path = join(mkdtempSync(join(tmpdir(), 'mm-old-')), 'old.db');
+    const old = new Database(path);
+    old.exec(`CREATE TABLE sessions (id TEXT PRIMARY KEY, mode TEXT NOT NULL, weights TEXT NOT NULL, interview TEXT NOT NULL,
+      escalation_draft TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
+      CREATE TABLE escalations (id TEXT PRIMARY KEY, session_id TEXT NOT NULL, type TEXT NOT NULL, summary TEXT NOT NULL,
+      status TEXT NOT NULL, staff_response TEXT, created_at TEXT NOT NULL);
+      INSERT INTO sessions VALUES ('s-old', 'RECOMMEND', '{}', '{}', NULL, 'then', 'then');`);
+    old.close();
+    const opened = openDb(path);
+    const columns = (table: string) => (opened.$client.pragma(`table_info(${table})`) as { name: string }[]).map((c) => c.name);
+    expect(columns('sessions')).toContain('exceptions');
+    expect(columns('escalations')).toEqual(expect.arrayContaining(['request', 'decision']));
+    expect(opened.$client.prepare(`SELECT exceptions FROM sessions WHERE id = 's-old'`).get()).toEqual({ exceptions: '[]' });
+    opened.$client.close();
+  });
 });
 
 describe('insights', () => {

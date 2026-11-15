@@ -40,6 +40,7 @@ const session = (mode: SessionState['mode'], shortlist: string[]): SessionState 
   interview: { depth: 'quick', questionsAsked: 0, budget: 6, finished: true, confirmed: true, askedSteps: [], targetSlots: [], disputes: 0 },
   escalations: [],
   escalationDraft: null,
+  exceptions: [],
   createdAt: at,
   updatedAt: at,
 });
