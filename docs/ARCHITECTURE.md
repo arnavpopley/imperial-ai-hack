@@ -57,7 +57,7 @@ stateDiagram-v2
   EXPLAIN --> RECOMMEND: done
   RECOMMEND --> INTERVIEW: low confidence and student agrees
   RECOMMEND --> PLAN: shortlist has two or more modules
-  PLAN --> RECOMMEND: swap accepted or shortlist edited
+  PLAN --> RECOMMEND: shortlist drops below two, or a chat turn ends
   INTERVIEW --> ESCALATED: guardrail trigger
   RECOMMEND --> ESCALATED: rule exception or low confidence
   PLAN --> ESCALATED: clash with no valid swap
@@ -72,15 +72,17 @@ Agents never compute numbers. For most agents the Supervisor calls the engine to
 
 | Agent | Inputs | Knowledge | Engine tools | Decisions | Outputs | Model |
 |---|---|---|---|---|---|---|
-| Supervisor (`agents/supervisor.ts`, `agents/intent.ts`) | Redacted student turn, session state | Mode machine, the 12 intents of spec 10.1 (including `catalogue_question`) | Intent classifier, every agent below | Which agent handles the turn; when to change mode; when to draft an escalation; asks a clarifying question when intent confidence is under 0.6 | SSE events, mode changes, escalation drafts | `MODEL_FAST` for intent, plus rules |
+| Supervisor (`agents/supervisor.ts`, `agents/intent.ts`) | Redacted student turn, session state | Mode machine, the 12 intents of spec 10.1 (including `catalogue_question`) | Intent classifier, every agent below | Which agent handles the turn; when to change mode; when to draft an escalation; asks a clarifying question when intent confidence is under 0.6 | SSE events, mode changes, escalation drafts | `MODEL_LIGHT` for intent, plus rules |
 | Interviewer (`agents/interviewer.ts`) | Conversation, profile, unfilled slots, question budget | Quick-mode question plan (8 questions) and follow-ups | None | Which slot to ask about next; when to finish | Streamed question, slider widget, the "Here is what I heard" card | `MODEL_SMART`, streamed |
 | Profile Extractor (`agents/extractor.ts`) | One redacted turn and the slots the last question targeted, or redacted CV text | Slot whitelist, taxonomy, pathway list | None | Which slots the turn fills and with what value; from a CV, interest and pathway slots only | `{ slot, value, quote, confidence }[]`, merged by deterministic rules | `MODEL_FAST`, structured output |
 | Module Analyst (`scripts/analyse-modules.ts`, offline) | Public module description | Taxonomy | None | Topic, skill, pathway and demand weights | Derived module fields with a quoted rationale; short descriptions flagged for review | `MODEL_SMART`, batch |
 | Matcher (`agents/matcher.ts`) | Recommendation, module record, evidence | Engine output only | `score_modules`, `get_module`, `get_evidence`, `check_rules` | How to explain a score; which eligible alternatives to offer | `Explanation` (every reason cites an evidence ID or module field); the refusal when a student asks to break a rule | `MODEL_SMART` |
-| Timetabler (`agents/timetabler.ts`) | Clashes and swaps from the engine | None | `build_timetable`, `find_clashes`, `suggest_swaps` | Wording only; a swap is applied only on confirmation | Clash summary | `MODEL_FAST` |
+| Timetabler (`agents/timetabler.ts`) | Clashes and swaps from the engine | None | `build_timetable`, `find_clashes`, `suggest_swaps` | Wording only; a swap is applied only on confirmation | Clash summary | `MODEL_LIGHT` |
 | Catalogue (`agents/catalogue.ts`) | Redacted question, modules it names, the student's ranking | Catalogue records, published assessment, taxonomy | `search_modules`, `get_module`, `compare_modules` (tool loop, at most four rounds) | Which searches to run; which modules answer the question | Plain-text answer under 120 words citing module codes, ineligible modules marked. A reply naming a module code that is not in the catalogue is blocked and replaced by the search results; G8 runs on the buffered reply. Offline, the search results as a list | `MODEL_SMART`, low effort |
 | Module knowledge (`agents/knowledge.ts`) | One module's record and public page (G3-scanned), the student's fit for it, a redacted question | Description, learning outcomes, published assessment, prerequisites, resources, source URL | None (the facts are passed in as data) | Whether the record answers the question; if not, say so and point to the module page | Two-sentence AI summary with highlight chips (cached per module), and answers under 90 words, buffered so G8 runs first. Offline, rule-based answers from the same facts | `MODEL_SMART`, low effort |
 | Insights (`agents/insights.ts`) | Insight cards from the engine | Cohort statistics | `cohort_stats`, `counterfactuals`, `clash_priorities` | Wording only; a rewrite that changes any number is rejected | Insight cards awaiting a staff decision | `MODEL_SMART` |
+
+The "How it works" page shows the same nine agents as cards, grouped as student-facing (Supervisor, Interviewer, Profile Extractor, Matcher, Timetabler, Catalogue, module knowledge), staff-facing (Insights) and offline (Module Analyst), each with its model tier, tools and the one thing it never does. The cards come from `web/src/trace/agents.ts`, and a web test checks each tier against the agent's source. A card lights up when the session's trace has an event from that agent (actors `catalogue` and `knowledge` included). The flowchart draws the Catalogue agent's tool loop and the staff path from the Insights engine through the Insights agent to the staff console.
 
 ## Engines
 

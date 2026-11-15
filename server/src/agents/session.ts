@@ -141,11 +141,14 @@ export function recommendationsResponse(session: SessionState): RecommendationsR
 
 export function timetableView(session: SessionState, recs = ranked(session)): TimetableView {
   const slots = catalogue.slots();
+  const modules = catalogue.modules();
+  const rules = rulesForProfile(session.profile);
+  const check = (shortlist: readonly string[]) => checkShortlist(shortlist, session.profile, modules, rules);
   const clashes = findClashes(session.shortlist, slots);
   const seen = new Set<string>();
   const swaps: SwapSuggestion[] = [];
   for (const clash of clashes) {
-    for (const swap of suggestSwaps(session.profile, session.shortlist, clash, recs, slots)) {
+    for (const swap of suggestSwaps(session.profile, session.shortlist, clash, recs, slots, { modules, rules, check })) {
       const key = `${swap.replaceModuleId}->${swap.withModuleId}`;
       if (!seen.has(key)) {
         seen.add(key);
@@ -157,7 +160,7 @@ export function timetableView(session: SessionState, recs = ranked(session)): Ti
     grids: buildTimetable(session.shortlist, slots),
     clashes,
     swaps,
-    rules: checkShortlist(session.shortlist, session.profile, catalogue.modules(), rulesForProfile(session.profile)),
+    rules: check(session.shortlist),
   };
 }
 
@@ -173,6 +176,18 @@ export function setMode(session: SessionState, to: Mode, tracer: Tracer, reason:
   repo.updateSession(session.id, { mode: to });
   tracer.record({ actor: 'supervisor', kind: 'mode', input: from, output: `${to}: ${reason}`, verdict: null });
   return from;
+}
+
+/**
+ * Spec 12: RECOMMEND moves to PLAN once the shortlist has two or more modules, and PLAN returns to
+ * RECOMMEND when it drops below two. Editing a shortlist that stays at two or more, as a swap does (the
+ * client adds the alternative before removing the module it replaces), keeps the session in PLAN, so the
+ * trace records each change of mode once instead of PLAN -> RECOMMEND -> PLAN on every edit.
+ */
+export function syncPlanMode(session: SessionState, tracer: Tracer): void {
+  const planning = session.shortlist.length >= 2;
+  if (session.mode === 'RECOMMEND' && planning) setMode(session, 'PLAN', tracer, 'shortlist has two or more modules');
+  else if (session.mode === 'PLAN' && !planning) setMode(session, 'RECOMMEND', tracer, 'shortlist edited');
 }
 
 /**

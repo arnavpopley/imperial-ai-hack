@@ -4,7 +4,11 @@ import type {
   Clash,
   ClashLabel,
   ClashPriority,
+  Module,
+  ProgrammeRules,
   Recommendation,
+  RuleViolation,
+  RulesResult,
   Slot,
   StudentProfile,
   SwapSuggestion,
@@ -107,10 +111,25 @@ export function findClashes(shortlist: readonly string[], slots: readonly Slot[]
     );
 }
 
+/** What a swap is checked against: the catalogue, the programme rules and the rules check for a shortlist. */
+export interface SwapPlan {
+  modules: readonly Module[];
+  rules: ProgrammeRules;
+  /** The programme rules check (spec 9.1) for a shortlist, with whatever session details it needs. */
+  check: (shortlist: readonly string[]) => RulesResult;
+}
+
+type ModuleKind = Module['type'];
+
+const violationKey = (violation: RuleViolation): string => JSON.stringify([violation.code, violation.moduleId]);
+
 /**
- * Spec 9.2: swaps for the lower-fit module in a clash (both when their fits are equal). An alternative
- * must be eligible, not already shortlisted or completed, free of clashes with the rest of the
- * shortlist, and within SWAP_FIT_TOLERANCE of the module it replaces. Best fit first, top MAX_SWAPS.
+ * Spec 9.2: swaps for the lower-fit module in a clash (both when their fits are equal). Core modules are
+ * compulsory, so they are never replaced or offered. An alternative must be eligible, of the same kind as
+ * the module it replaces (elective for elective, I-Explore for I-Explore), not already shortlisted or
+ * completed, free of clashes with the rest of the shortlist and the core modules, and within
+ * SWAP_FIT_TOLERANCE of the module it replaces. It must not add a rules violation that was not there before
+ * the swap, or deepen a credit shortfall or overrun that was. Best fit first, top MAX_SWAPS.
  */
 export function suggestSwaps(
   profile: StudentProfile,
@@ -118,25 +137,52 @@ export function suggestSwaps(
   clash: Clash,
   ranked: readonly Recommendation[],
   slots: readonly Slot[],
+  plan: SwapPlan,
 ): SwapSuggestion[] {
+  const byId = new Map(plan.modules.map((module) => [module.id, module]));
+  const core = new Set(plan.rules.coreModuleIds);
+  const kindOf = (id: string): ModuleKind | null => (core.has(id) ? 'core' : (byId.get(id)?.type ?? null));
+  const swappable = (id: string): boolean => {
+    const kind = kindOf(id);
+    return kind !== null && kind !== 'core';
+  };
+
   const fitOf = new Map(ranked.map((recommendation) => [recommendation.moduleId, recommendation.fit]));
-  const fitA = fitOf.get(clash.moduleA) ?? 0;
-  const fitB = fitOf.get(clash.moduleB) ?? 0;
-  const targets = fitA === fitB ? [clash.moduleA, clash.moduleB] : [fitA < fitB ? clash.moduleA : clash.moduleB];
-  const unavailable = new Set([...shortlist, ...profile.completedModuleIds]);
+  const [lowest] = [clash.moduleA, clash.moduleB]
+    .filter(swappable)
+    .map((id) => fitOf.get(id) ?? 0)
+    .sort((x, y) => x - y);
+  const targets = [clash.moduleA, clash.moduleB].filter((id) => swappable(id) && (fitOf.get(id) ?? 0) === lowest);
+  const completed = new Set(profile.completedModuleIds);
+  const unavailable = new Set([...shortlist, ...completed]);
   const byModule = slotsByModule(slots);
+  const before = new Set(plan.check(shortlist).violations.map(violationKey));
 
   return targets
     .flatMap((target) => {
       const targetFit = fitOf.get(target) ?? 0;
+      const targetKind = kindOf(target);
+      const targetEcts = byId.get(target)?.ects ?? 0;
       const rest = shortlist.filter((id) => id !== target);
+      const fixed = unique([...rest, ...plan.rules.coreModuleIds.filter((id) => !completed.has(id))]);
+      const keepsRules = (candidateId: string): boolean => {
+        const ectsChange = (byId.get(candidateId)?.ects ?? 0) - targetEcts;
+        return plan.check([...rest, candidateId]).violations.every(
+          (violation) =>
+            before.has(violationKey(violation)) &&
+            !(violation.code === 'ELECTIVE_ECTS_SHORT' && ectsChange < 0) &&
+            !(violation.code === 'ECTS_CAP_EXCEEDED' && ectsChange > 0),
+        );
+      };
       return ranked
         .filter(
           (candidate) =>
             candidate.eligible &&
             !unavailable.has(candidate.moduleId) &&
+            kindOf(candidate.moduleId) === targetKind &&
             candidate.fit >= targetFit - SWAP_FIT_TOLERANCE &&
-            rest.every((other) => clashesBetween(candidate.moduleId, other, byModule).length === 0),
+            fixed.every((other) => clashesBetween(candidate.moduleId, other, byModule).length === 0) &&
+            keepsRules(candidate.moduleId),
         )
         .map((candidate) => ({
           replaceModuleId: target,

@@ -23,7 +23,7 @@ Students choose modules from a flat catalogue where everyone sees the same descr
 - **Human in the loop.** Rule exceptions, low-confidence cases, wellbeing concerns and complaints go to staff queues, and staff replies return to the student's session.
 - **Staff console.** Module leads see demand against capacity, the fit distribution, and insight cards they can accept, note or dismiss. Counterfactual cards say what change would raise fit, and for how many interested students. Staff can also correct a module's derived tags, and timetabling staff see clash priorities.
 - **Answer feedback.** Students can rate any AI answer with a thumbs up or down. The text is redacted before storage. Staff see the totals and recent down-votes, and can export them as JSONL for evaluation.
-- **Trace and evaluation.** The "How it works" page shows the agents, an animated flowchart of one message, the evaluation pass rates and a live trace. Every mode change, agent call, tool call and guardrail verdict is traced. An offline harness and a live-model harness report pass rates.
+- **Trace and evaluation.** The "How it works" page shows all nine agents (student-facing, staff-facing and offline) with their model tier, tools and the one thing each never does, an animated flowchart of one message, the evaluation pass rates and a live trace. Every mode change, agent call, tool call and guardrail verdict is traced. An offline harness and a live-model harness report pass rates.
 
 ## How it works
 
@@ -59,7 +59,7 @@ Open http://localhost:5173. The database seeds itself from `data/` on first star
 |---|---|
 | `npm run dev` | API and web together, with reload |
 | `npm run seed` | Rebuilds the SQLite database from `data/` |
-| `npm test` | Unit, contract and agent tests, run offline (292 server tests and 90 web tests at the time of writing) |
+| `npm test` | Unit, contract and agent tests, run offline (321 server tests and 127 web tests at the time of writing) |
 | `npm run eval` | Offline evaluation harness: prints pass rates and stores them for the evaluation page |
 | `npm run eval:live` | Live evaluation against the real models (needs `ANTHROPIC_API_KEY`, about $1–2 a run) |
 | `npm run typecheck` | Type-checks every workspace |
@@ -150,7 +150,6 @@ Models: Opus 5.5 answers and explains, Sonnet 5.5 extracts, Haiku 4.5 runs the s
 - Offline-mode extraction is keyword-based. Live mode is more robust to phrasing.
 - The engines treat sessions as independent when combining clash probabilities.
 - On Vercel, sessions live in one function instance's `/tmp` and are lost when it goes cold.
-- The "How it works" agent cards cover the five chat agents; the Catalogue, module knowledge, Insights and Module Analyst agents are documented in `docs/ARCHITECTURE.md`.
 - There is no authentication, no real enrolment, and no connection to university systems.
 
 ## Documents
