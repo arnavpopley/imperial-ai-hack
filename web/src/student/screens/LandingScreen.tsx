@@ -7,6 +7,7 @@ import { Link } from 'react-router';
 import { buttonClass } from '../../components/Button.tsx';
 import { cx } from '../../components/cx.ts';
 import { Icon, type IconName } from '../../components/Icon.tsx';
+import { AGENTS, countWord } from '../../trace/agents.ts';
 import '../interview/interview.css';
 import { paths } from '../routes.ts';
 
@@ -43,14 +44,10 @@ const STEPS: readonly { icon: IconName; title: string; text: string; image: stri
   },
 ];
 
-/** Accent colour per agent, from the mode palette so it follows the theme. */
-const AGENTS: readonly { name: string; role: string; icon: IconName; tone: string }[] = [
-  { name: 'Supervisor', role: 'Reads what you want and picks who answers', icon: 'compass', tone: 'text-mode-onboard bg-mode-onboard/12' },
-  { name: 'Interviewer', role: 'Asks the next most useful question', icon: 'chat', tone: 'text-mode-interview bg-mode-interview/12' },
-  { name: 'Profile Extractor', role: 'Turns answers into a profile, quote by quote', icon: 'user', tone: 'text-mode-explain bg-mode-explain/12' },
-  { name: 'Matcher', role: 'Explains each ranking with evidence', icon: 'sparkle', tone: 'text-mode-recommend bg-mode-recommend/12' },
-  { name: 'Timetabler', role: 'Finds clashes and the cheapest swaps', icon: 'calendar', tone: 'text-mode-plan bg-mode-plan/12' },
-];
+/** The agents a student talks to, and the ones that work behind the scenes (the same list as "How it works"). */
+const FRONT = AGENTS.filter((a) => a.audience === 'student');
+const BEHIND = AGENTS.filter((a) => a.audience !== 'student');
+const BEHIND_LABEL = { staff: 'for staff', offline: 'offline', student: '' } as const;
 
 const PROMISES: readonly { icon: IconName; title: string; text: string }[] = [
   { icon: 'shield', title: '8 safety checks', text: 'On every message in and every reply out.' },
@@ -104,23 +101,33 @@ export function LandingScreen({ resumeTo }: LandingScreenProps) {
         </motion.ol>
       </Section>
 
-      <Section eyebrow="Under the hood" title="A team of AI agents, kept in check by plain code">
-        <motion.ul {...IN_VIEW} variants={STAGGER} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          {AGENTS.map((agent) => (
+      <Section eyebrow="Under the hood" title={`${countWord(AGENTS.length)} AI agents, kept in check by plain code`}>
+        <motion.ul {...IN_VIEW} variants={STAGGER} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {FRONT.map((agent) => (
             <motion.li
-              key={agent.name}
+              key={agent.id}
               variants={RISE}
               whileHover={{ y: -6 }}
               transition={{ type: 'spring', stiffness: 380, damping: 26 }}
-              className="rounded-panel bg-surface p-card shadow-soft ring-1 ring-line"
+              className="flex items-center gap-4 rounded-panel bg-surface p-card shadow-soft ring-1 ring-line"
             >
-              <span className={cx('grid size-12 place-items-center rounded-2xl', agent.tone)}>
-                <Icon name={agent.icon} size={22} />
-              </span>
-              <h3 className="mt-4 font-semibold tracking-tight">{agent.name}</h3>
-              <p className="mt-1 text-sm text-muted">{agent.role}</p>
+              <AgentBadge gradient={agent.gradient} icon={agent.icon} />
+              <div className="min-w-0">
+                <h3 className="font-semibold tracking-tight">{agent.name}</h3>
+                <p className="mt-0.5 text-sm text-muted">{agent.does}</p>
+              </div>
             </motion.li>
           ))}
+          <motion.li variants={RISE} className="grid content-center gap-2.5 rounded-panel bg-surface-2/70 p-card ring-1 ring-line">
+            <p className="text-xs font-semibold tracking-[0.1em] text-muted uppercase">Behind the scenes</p>
+            {BEHIND.map((agent) => (
+              <p key={agent.id} className="flex items-center gap-2.5 text-sm">
+                <AgentBadge gradient={agent.gradient} icon={agent.icon} small />
+                <span className="font-medium">{agent.name}</span>
+                <span className="text-muted">{BEHIND_LABEL[agent.audience]}</span>
+              </p>
+            ))}
+          </motion.li>
         </motion.ul>
         <motion.div {...IN_VIEW} variants={RISE} className="mt-6 flex flex-wrap items-center gap-3 text-sm text-muted">
           <span className="flex items-center gap-2 rounded-full bg-surface-2 px-4 py-2 ring-1 ring-line">
@@ -303,5 +310,21 @@ function Section({ eyebrow, title, children }: { eyebrow: string; title: string;
       </motion.header>
       {children}
     </section>
+  );
+}
+
+/** An agent's icon on its gradient, the same badge as on the "How it works" roster. */
+function AgentBadge({ gradient, icon, small }: { gradient: string; icon: IconName; small?: boolean }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cx(
+        'grid shrink-0 place-items-center bg-gradient-to-br text-on-brand shadow-soft',
+        small ? 'size-7 rounded-lg' : 'size-12 rounded-2xl',
+        gradient,
+      )}
+    >
+      <Icon name={icon} size={small ? 14 : 22} />
+    </span>
   );
 }

@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { benchmarkRoutes } from './routes/benchmark.ts';
+import { resultsRoutes } from './routes/results.ts';
 import { sharedRoutes } from './routes/shared.ts';
 import { staffRoutes } from './routes/staff.ts';
 import { studentRoutes } from './routes/student.ts';
@@ -10,6 +11,7 @@ export function createApp() {
   app.use('*', cors());
   app.get('/health', (c) => c.json({ ok: true }));
   app.route('/sessions', studentRoutes);
+  app.route('/sessions', resultsRoutes);
   app.route('/staff', staffRoutes);
   app.route('/eval', benchmarkRoutes);
   app.route('/', sharedRoutes);

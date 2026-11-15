@@ -1,7 +1,18 @@
 // Staff routes (spec 13). Aggregate views only, with a minimum cohort of five (spec 20.4).
-import { DEFAULT_WEIGHTS, MIN_COHORT, schemas, type Escalation, type Insight, type SessionState, type StaffEscalation, type StaffModuleSummary } from '@modulematch/shared';
+import {
+  DEFAULT_WEIGHTS,
+  MIN_COHORT,
+  schemas,
+  type Escalation,
+  type ExamFeedbackForm,
+  type Insight,
+  type SessionState,
+  type StaffEscalation,
+  type StaffModuleSummary,
+} from '@modulematch/shared';
 import { Hono } from 'hono';
 import { decisionReply, exceptionFor } from '../agents/escalation.ts';
+import { draftExamForm } from '../agents/exam-feedback.ts';
 import { wordInsight } from '../agents/insights.ts';
 import { clearSummaryCache } from '../agents/knowledge.ts';
 import { catalogue, clearExplanationCache, rulesForProfile, setMode, tracerSink } from '../agents/session.ts';
@@ -25,6 +36,10 @@ function insightContext(): InsightContext {
     slots: catalogue.slots(),
   };
 }
+
+/** The one exam feedback form a module holds (spec 23). Staff trace events use the 'staff' session id. */
+const examFormId = (moduleId: string) => `exam-${moduleId}`;
+const staffTracer = () => createTracer('staff', tracerSink);
 
 export const staffRoutes = new Hono()
   .get('/modules', (c) => {
@@ -61,6 +76,48 @@ export const staffRoutes = new Hono()
     clearExplanationCache();
     clearSummaryCache();
     return c.json(module);
+  })
+  // Exam feedback forms (spec 23). Cohort-level descriptions of each question, never about an individual student,
+  // and staff never see a student's marks. Saving or drafting leaves the form a draft; only published forms reach students.
+  .get('/modules/:id/exam-form', (c) => {
+    const module = catalogue.modules().find((m) => m.id === c.req.param('id'));
+    if (!module) return c.json({ error: 'module not found' }, 404);
+    return c.json(repo.getExamForm(module.id));
+  })
+  .put('/modules/:id/exam-form', body(schemas.ExamFormSaveBody), (c) => {
+    const module = catalogue.modules().find((m) => m.id === c.req.param('id'));
+    if (!module) return c.json({ error: 'module not found' }, 404);
+    const form: ExamFeedbackForm = { ...c.req.valid('json'), id: examFormId(module.id), moduleId: module.id, status: 'draft', authoredBy: 'examiner', updatedAt: new Date().toISOString() };
+    const saved = repo.saveExamForm(form);
+    staffTracer().record({ actor: 'staff', kind: 'tool', input: `exam form ${module.id}`, output: `saved by examiner as draft (${saved.questions.length} questions)`, verdict: null });
+    return c.json(saved);
+  })
+  .post('/modules/:id/exam-form/draft', body(schemas.ExamFormDraftBody), async (c) => {
+    const module = catalogue.modules().find((m) => m.id === c.req.param('id'));
+    if (!module) return c.json({ error: 'module not found' }, 404);
+    const { examLabel, notes } = c.req.valid('json');
+    const tracer = staffTracer();
+    const versionBefore = repo.getExamForm(module.id)?.updatedAt ?? null;
+    const { draft } = await tracer.timed(
+      { actor: 'exam form drafter', kind: 'agent', input: `draft ${module.id} from notes (${notes.length} chars)` },
+      () => draftExamForm(notes, module, tracer),
+      (d) => ({ output: `${d.draft.questions.length} question(s), ${d.source}`, verdict: null }),
+    );
+    // The draft takes a few seconds live; an examiner save or publish made meanwhile is never overwritten.
+    if ((repo.getExamForm(module.id)?.updatedAt ?? null) !== versionBefore) {
+      return c.json({ error: 'the form was changed while the draft was being written, so the draft was not saved' }, 409);
+    }
+    const form: ExamFeedbackForm = { ...draft, examLabel, id: examFormId(module.id), moduleId: module.id, status: 'draft', authoredBy: 'ai-draft', updatedAt: new Date().toISOString() };
+    const saved = repo.saveExamForm(form);
+    return c.json(saved);
+  })
+  .post('/modules/:id/exam-form/publish', (c) => {
+    const current = repo.getExamForm(c.req.param('id'));
+    if (!current) return c.json({ error: 'exam form not found' }, 404);
+    // Publishing is the examiner's review: from here the form counts as examiner-authored.
+    const saved = repo.saveExamForm({ ...current, status: 'published', authoredBy: 'examiner', updatedAt: new Date().toISOString() });
+    staffTracer().record({ actor: 'staff', kind: 'tool', input: `exam form ${saved.moduleId}`, output: 'published to students', verdict: null });
+    return c.json(saved);
   })
   .get('/timetable/clash-priorities', (c) => {
     const ctx = insightContext();

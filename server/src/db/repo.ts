@@ -5,15 +5,18 @@ import {
   type Escalation,
   type EvalRun,
   type Evidence,
+  type ExamFeedbackForm,
   type Feedback,
   type Insight,
   type InsightDecision,
   type Message,
   type Module,
   type ModuleDerived,
+  type ModuleResult,
   type SessionState,
   type Slot,
   type StudentProfile,
+  type StudentResults,
   type TraceEvent,
   schemas as S,
 } from '@modulematch/shared';
@@ -26,11 +29,14 @@ import {
   escalations,
   evalRuns,
   evidence,
+  examForms,
   feedback,
   insights,
   messages,
+  moduleResults,
   modules,
   profiles,
+  resultsConsent,
   sessions,
   shortlistItems,
   slots,
@@ -257,6 +263,9 @@ export function deleteProfileAndEvidence(sessionId: string, db: Db = getDb()): S
     tx.delete(shortlistItems).where(eq(shortlistItems.sessionId, sessionId)).run();
     tx.delete(feedback).where(eq(feedback.sessionId, sessionId)).run();
     tx.delete(traceEvents).where(eq(traceEvents.sessionId, sessionId)).run();
+    // Spec 23: deleting the profile deletes every stored mark and the consent with them.
+    tx.delete(moduleResults).where(eq(moduleResults.sessionId, sessionId)).run();
+    tx.delete(resultsConsent).where(eq(resultsConsent.sessionId, sessionId)).run();
     tx.update(profiles).set({ data: blank }).where(eq(profiles.sessionId, sessionId)).run();
     // Approved exceptions belonged to the deleted escalations, so they go too.
     tx.update(sessions).set({ updatedAt: blank.updatedAt, exceptions: [] }).where(eq(sessions.id, sessionId)).run();
@@ -449,6 +458,88 @@ export function listFeedback(sessionId?: string, db: Db = getDb()): Feedback[] {
     .orderBy(desc(feedback.createdAt), desc(feedback.seq))
     .all()
     .map(toFeedback);
+}
+
+// ---------- results (spec 23) ----------
+
+const QuestionMarks = S.ModuleResult.shape.questionMarks;
+
+/** Everything held about the student's marks; empty, with consent not granted, when nothing was uploaded. */
+export function getResults(sessionId: string, db: Db = getDb()): StudentResults {
+  const consent = db.select().from(resultsConsent).where(eq(resultsConsent.sessionId, sessionId)).get();
+  if (!consent) return { consent: { granted: false, at: null }, results: [], updatedAt: null };
+  const results = db
+    .select()
+    .from(moduleResults)
+    .where(eq(moduleResults.sessionId, sessionId))
+    .orderBy(asc(moduleResults.seq))
+    .all()
+    .map(({ seq: _seq, sessionId: _sid, ...r }) => S.ModuleResult.parse({ ...r, questionMarks: QuestionMarks.parse(r.questionMarks) }));
+  return S.StudentResults.parse({ consent: { granted: true, at: consent.grantedAt }, results, updatedAt: consent.updatedAt });
+}
+
+/**
+ * Stores an upload made with explicit consent. A result for a module already held replaces it, and other modules
+ * are kept, so a student can upload one year at a time. Consent is recorded afresh with every upload.
+ */
+export function saveResults(sessionId: string, results: ModuleResult[], db: Db = getDb()): StudentResults {
+  const rows = results.map((r) => S.ModuleResult.parse(r));
+  const at = now();
+  db.transaction((tx) => {
+    tx.insert(resultsConsent)
+      .values({ sessionId, grantedAt: at, updatedAt: at })
+      .onConflictDoUpdate({ target: resultsConsent.sessionId, set: { grantedAt: at, updatedAt: at } })
+      .run();
+    for (const r of rows) {
+      tx.delete(moduleResults).where(and(eq(moduleResults.sessionId, sessionId), eq(moduleResults.moduleId, r.moduleId))).run();
+      tx.insert(moduleResults).values({ ...r, sessionId }).run();
+    }
+  });
+  return getResults(sessionId, db);
+}
+
+/** Withdraws consent: every stored mark for the session is deleted. */
+export function deleteResults(sessionId: string, db: Db = getDb()): StudentResults {
+  db.transaction((tx) => {
+    tx.delete(moduleResults).where(eq(moduleResults.sessionId, sessionId)).run();
+    tx.delete(resultsConsent).where(eq(resultsConsent.sessionId, sessionId)).run();
+  });
+  return getResults(sessionId, db);
+}
+
+// ---------- exam feedback forms (spec 23) ----------
+
+export function getExamForm(moduleId: string, db: Db = getDb()): ExamFeedbackForm | null {
+  const row = db.select().from(examForms).where(eq(examForms.moduleId, moduleId)).get();
+  return row ? S.ExamFeedbackForm.parse(row.data) : null;
+}
+
+/** Inserts or replaces the one form held for a module. */
+export function saveExamForm(form: ExamFeedbackForm, db: Db = getDb()): ExamFeedbackForm {
+  const data = S.ExamFeedbackForm.parse(form);
+  const values = { data, status: data.status, updatedAt: data.updatedAt };
+  db.insert(examForms).values({ moduleId: data.moduleId, ...values }).onConflictDoUpdate({ target: examForms.moduleId, set: values }).run();
+  return data;
+}
+
+/** Every form, or only those with the given status (students only ever see 'published'). */
+export function listExamForms(status?: ExamFeedbackForm['status'], db: Db = getDb()): ExamFeedbackForm[] {
+  return db
+    .select()
+    .from(examForms)
+    .where(status === undefined ? undefined : eq(examForms.status, status))
+    .orderBy(asc(examForms.moduleId))
+    .all()
+    .map((r) => S.ExamFeedbackForm.parse(r.data));
+}
+
+/** Replace every exam form (used to seed the synthetic demo forms). */
+export function replaceExamForms(forms: ExamFeedbackForm[], db: Db = getDb()): void {
+  const rows = forms.map((f) => S.ExamFeedbackForm.parse(f));
+  db.transaction((tx) => {
+    tx.delete(examForms).run();
+    for (const data of rows) tx.insert(examForms).values({ moduleId: data.moduleId, data, status: data.status, updatedAt: data.updatedAt }).run();
+  });
 }
 
 // ---------- trace ----------

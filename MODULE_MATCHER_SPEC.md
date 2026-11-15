@@ -51,7 +51,7 @@ The Imperial track text asks for a working prototype with session state, guardra
 | Session state | Persisted session: profile, evidence, shortlist, timetable, mode, open escalations. A student can leave and resume (section 12). |
 | Guardrail pipeline | Eight named stages on input and output, every verdict logged (section 11). |
 | Real-time interaction | Streamed interview, profile panel that fills in live, instant re-ranking when weights change. |
-| Specialised agent roles | Supervisor, Interviewer, Profile Extractor, Module Analyst, Matcher, Timetabler, Insights (section 10). |
+| Specialised agent roles | Supervisor, Interviewer, Profile Extractor, Module Analyst, Matcher, Timetabler, Catalogue, module knowledge, Insights (section 10). |
 | Dynamic mode-switching | Mode machine: ONBOARD, INTERVIEW, RECOMMEND, EXPLAIN, PLAN, ESCALATED (section 12). |
 | Human-in-the-loop escalation | Rule exceptions and low-confidence cases go to a tutor queue. Module leads accept or dismiss every insight. Staff can correct module tags (sections 9 and 11). |
 
@@ -461,7 +461,7 @@ $$P(\mathrm{clash}_{ij}) = 1 - \prod_{(x,y)} \left( 1 - P_{ij}^{(x,y)} \right)$$
 
 Labels: certain clash when $P = 1$, likely clash when $0.3 \le P < 1$, possible clash when $0 < P < 0.3$.
 
-Swap suggestions for a clashing module $m$: alternatives $m'$ that are eligible, do not clash with the rest of the shortlist, and satisfy $\mathrm{Fit}(s,m') \ge \mathrm{Fit}(s,m) - 10$, ranked by fit.
+Swap suggestions for a clashing module $m$: alternatives $m'$ that are eligible, of the same kind as $m$ (elective for elective, I-Explore for I-Explore; core modules are never replaced or offered), do not clash with the rest of the shortlist or the core modules, add no programme rules violation that was not there before the swap, and satisfy $\mathrm{Fit}(s,m') \ge \mathrm{Fit}(s,m) - 10$, ranked by fit.
 
 Staff clash priority, where $n_{ij}$ is the number of students who shortlisted both modules:
 
@@ -657,7 +657,7 @@ stateDiagram-v2
   EXPLAIN --> RECOMMEND: done
   RECOMMEND --> INTERVIEW: low confidence and student agrees
   RECOMMEND --> PLAN: shortlist has two or more modules
-  PLAN --> RECOMMEND: swap accepted or shortlist edited
+  PLAN --> RECOMMEND: shortlist drops below two, or a chat turn ends
   INTERVIEW --> ESCALATED: guardrail trigger
   RECOMMEND --> ESCALATED: rule exception or low confidence
   PLAN --> ESCALATED: clash with no valid swap
@@ -883,6 +883,8 @@ Added on 14 November at the team's request. This reverses the earlier "no grades
 **Exam feedback.** For each module exam, an examiner fills in a form of questions, each with max marks, topics, what good answers did, common mistakes and revision pointers, plus general comments. Or they paste marking notes and the AI drafts the form (`MODEL_SMART`). Drafts are never shown to students until an examiner publishes them (human in the loop). A student who uploaded per-question marks for that exam gets tailored feedback, written by `MODEL_SMART` from facts computed by code: which questions lost the most marks and their topics, the examiner's mistakes and pointers for them, a short revision plan, and the future modules that build on those topics (prerequisite chains and topic overlap). Offline, a template builds it from the same facts.
 
 **Privacy.** Marks and tailored feedback are visible only to the student. Staff never see an individual's marks. Any staff view of exam performance is aggregate, with a minimum cohort of five. Demo marks and exam forms are synthetic and labelled.
+
+**Implementation details (backend).** An upload replaces the results for the modules it contains and keeps the others, so a student can upload one year at a time. Pasted transcripts pass G3's pattern rules only, not the G3 classifier, so marks reach no model except the transcript reader and the tailored-feedback agent; the live matcher is told which topics a nudge is about, never the marks. Nudges appear in the explanation panel, which is never stored; chat replies are stored as messages, so they do not carry nudges. A question mark above its maximum, or a mark above 100, is rejected with a message and nothing is stored. An examiner save or a new AI draft returns the form to draft, so students stop seeing it until it is published again. The trace records counts only, never marks.
 
 ## 21. Open items
 

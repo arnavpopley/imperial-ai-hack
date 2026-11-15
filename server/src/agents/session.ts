@@ -8,6 +8,7 @@ import {
   type ExceptionDecision,
   type Explanation,
   type Mode,
+  type PerformanceView,
   type ProgrammeRules,
   type Recommendation,
   type RecommendationsResponse,
@@ -19,7 +20,7 @@ import {
 import { randomUUID } from 'node:crypto';
 import { loadModuleResources, loadPathways, loadSocieties, rulesFor } from '../db/catalogue.ts';
 import * as repo from '../db/repo.ts';
-import { buildTimetable, checkShortlist, completeness, findClashes, profileHash, rankModules, suggestSwaps } from '../engines/index.ts';
+import { buildTimetable, checkShortlist, completeness, findClashes, nudgeFor, performanceView, profileHash, rankModules, suggestSwaps } from '../engines/index.ts';
 import type { Tracer } from '../trace/tracer.ts';
 import { explain } from './matcher.ts';
 import { canTransition } from './modes.ts';
@@ -159,11 +160,15 @@ export function recommendationsResponse(session: SessionState): RecommendationsR
 
 export function timetableView(session: SessionState, recs = ranked(session)): TimetableView {
   const slots = catalogue.slots();
+  const modules = catalogue.modules();
+  const rules = rulesForProfile(session.profile);
+  // Approved rule exceptions apply to the plan and to every swap the engine checks (spec 11.1).
+  const check = (shortlist: readonly string[]) => checkShortlist(shortlist, session.profile, modules, rules, session.exceptions);
   const clashes = findClashes(session.shortlist, slots);
   const seen = new Set<string>();
   const swaps: SwapSuggestion[] = [];
   for (const clash of clashes) {
-    for (const swap of suggestSwaps(session.profile, session.shortlist, clash, recs, slots)) {
+    for (const swap of suggestSwaps(session.profile, session.shortlist, clash, recs, slots, { modules, rules, check })) {
       const key = `${swap.replaceModuleId}->${swap.withModuleId}`;
       if (!seen.has(key)) {
         seen.add(key);
@@ -175,7 +180,7 @@ export function timetableView(session: SessionState, recs = ranked(session)): Ti
     grids: buildTimetable(session.shortlist, slots),
     clashes,
     swaps,
-    rules: checkShortlist(session.shortlist, session.profile, catalogue.modules(), rulesForProfile(session.profile), session.exceptions),
+    rules: check(session.shortlist),
   };
 }
 
@@ -193,23 +198,60 @@ export function setMode(session: SessionState, to: Mode, tracer: Tracer, reason:
   return from;
 }
 
-/** Explanations are cached by profile hash and module ID (spec 5 cost control). */
+/**
+ * Spec 12: RECOMMEND moves to PLAN once the shortlist has two or more modules, and PLAN returns to
+ * RECOMMEND when it drops below two. Editing a shortlist that stays at two or more, as a swap does (the
+ * client adds the alternative before removing the module it replaces), keeps the session in PLAN, so the
+ * trace records each change of mode once instead of PLAN -> RECOMMEND -> PLAN on every edit.
+ */
+export function syncPlanMode(session: SessionState, tracer: Tracer): void {
+  const planning = session.shortlist.length >= 2;
+  if (session.mode === 'RECOMMEND' && planning) setMode(session, 'PLAN', tracer, 'shortlist has two or more modules');
+  else if (session.mode === 'PLAN' && !planning) setMode(session, 'RECOMMEND', tracer, 'shortlist edited');
+}
+
+/**
+ * Topic strengths and nudges from the student's consented results (spec 23). Informational only: nothing here feeds
+ * the scoring engine, so fit scores and rankings are the same with or without results.
+ */
+export function performanceFor(session: SessionState): PerformanceView {
+  return performanceView(repo.getResults(session.id), catalogue.modules(), {
+    interests: session.profile.interests,
+    exclude: session.profile.completedModuleIds,
+  });
+}
+
+/** Explanations are cached by profile hash, results version and module ID (spec 5 cost control). */
 const explanationCache = new Map<string, Explanation>();
 
 export function clearExplanationCache(): void {
   explanationCache.clear();
 }
 
-export async function explanationFor(session: SessionState, moduleId: string, tracer: Tracer, recs = ranked(session)): Promise<Explanation | null> {
+/**
+ * The explanation for one module. `withNudge` adds the student's performance nudge (spec 23) as a watch-out; only
+ * the explanation panel asks for it, because chat replies are stored as messages and a nudge, which is derived
+ * from marks, must not outlive the student withdrawing consent.
+ */
+export async function explanationFor(
+  session: SessionState,
+  moduleId: string,
+  tracer: Tracer,
+  recs = ranked(session),
+  opts: { withNudge?: boolean } = {},
+): Promise<Explanation | null> {
   const module = catalogue.modules().find((m) => m.id === moduleId);
   const rec = recs.find((r) => r.moduleId === moduleId);
   if (!module || !rec) return null;
-  const key = `${profileHash(session.profile, session.weights)}:${moduleId}`;
+  const results = opts.withNudge ? repo.getResults(session.id) : null;
+  const nudge = results?.consent.granted ? nudgeFor(performanceFor(session), moduleId) : undefined;
+  // Explanations without a nudge share one cache entry; a nudged one is keyed by the results version too.
+  const key = `${profileHash(session.profile, session.weights)}:${moduleId}${nudge ? `:nudge:${results?.updatedAt}` : ''}`;
   const cached = explanationCache.get(key);
   if (cached) return cached;
   const explanation = await tracer.timed(
-    { actor: 'matcher', kind: 'agent', input: `explain ${module.code} (fit ${rec.fit})` },
-    () => explain(session.profile, module, rec, session.evidence, tracer),
+    { actor: 'matcher', kind: 'agent', input: `explain ${module.code} (fit ${rec.fit})${nudge ? ', with a performance nudge' : ''}` },
+    () => explain(session.profile, module, rec, session.evidence, tracer, nudge),
     (e) => ({ output: `${e.because.length} reasons, ${e.watchOuts.length} watch-outs`, verdict: null }),
   );
   explanationCache.set(key, explanation);
