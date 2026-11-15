@@ -118,7 +118,9 @@ export function ChatPanel({ variant, prefill = '', className, onAddCv }: ChatPan
             stickToBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 48;
           }}
           className={cx(
-            'min-h-0 flex-1 overflow-y-auto overscroll-contain outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-inset',
+            // While the card is pinned below, the conversation keeps at least its last line in view.
+            showConfirm ? 'min-h-16' : 'min-h-0',
+            'flex-1 overflow-y-auto overscroll-contain outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-inset',
             interview ? 'px-4 py-6 sm:px-8 sm:py-8' : 'px-4 py-5 sm:px-5',
           )}
         >
@@ -181,11 +183,6 @@ export function ChatPanel({ variant, prefill = '', className, onAddCv }: ChatPan
                   ))}
                 </motion.div>
               )}
-              {showConfirm && (
-                <motion.div key="confirm" {...ENTER}>
-                  <ConfirmProfileCard />
-                </motion.div>
-              )}
               {interview && recommendationsReady && !showConfirm && (
                 <motion.div
                   key="ready"
@@ -203,6 +200,19 @@ export function ChatPanel({ variant, prefill = '', className, onAddCv }: ChatPan
             {variant === 'advisor' && <EscalationTray scope="draft" />}
           </div>
         </div>
+
+        {/*
+          Issue 144: the "Here is what I heard" card is pinned below the conversation, not inside its scroll, and its own
+          body scrolls, so "That is me, show my modules" is always in view at 1440x900 and 390x844.
+        */}
+        <AnimatePresence>
+          {showConfirm && (
+            // Shrinkable, so the card gives way before the composer is pushed out of the panel.
+            <motion.div key="confirm" {...ENTER} className="flex min-h-0 shrink flex-col border-t border-line px-3 pt-3 sm:px-6">
+              <ConfirmProfileCard className="max-h-[30rem]" />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <p className="sr-only" aria-live="polite">
           {lastAssistant ? `${speakerName(lastAssistant.agent, persona)} replied: ${lastAssistant.content}` : ''}
@@ -397,7 +407,7 @@ function TurnView({
             className={cx(
               'rounded-[1.25rem] rounded-tl-md border border-line bg-surface whitespace-pre-wrap shadow-soft',
               prominent
-                ? 'px-5 py-4 text-[1.2rem] leading-snug font-medium tracking-tight sm:text-[1.35rem]'
+                ? 'px-5 py-4 text-lg leading-snug font-medium tracking-tight'
                 : 'px-5 py-3 text-base leading-relaxed',
             )}
           >

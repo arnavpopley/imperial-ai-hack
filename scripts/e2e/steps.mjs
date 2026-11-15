@@ -181,6 +181,37 @@ export const STEPS = [
       scope);
 
       await page.waitForElement({ css: 'h3', text: 'Here is what I heard' }, { desc: 'the "Here is what I heard" card' });
+      // Issue 144: the last line is short, the card's groups are filled in within 700ms, and the confirm button is on
+      // screen without any scrolling.
+      await sleep(700);
+      const heard = await page.eval(() => {
+        const card = [...document.querySelectorAll('section')].find((s) => s.querySelector('h3')?.innerText === 'Here is what I heard');
+        const button = [...(card?.querySelectorAll('button') ?? [])].find((b) => b.innerText.trim() === 'That is me, show my modules');
+        const rect = button?.getBoundingClientRect();
+        const bubbles = [...document.querySelectorAll('ol[aria-label="Conversation"] li p')];
+        const blank = [...(card?.querySelectorAll('h4') ?? [])].filter((h) => {
+          const group = h.parentElement;
+          return !group || Number(getComputedStyle(group).opacity) < 0.95 || !group.innerText.replace(h.innerText, '').trim();
+        });
+        // On screen and not clipped by a scrolling or rounded container: the button is what is drawn at its corners.
+        const drawn = (x, y) => button?.contains(document.elementFromPoint(x, y)) ?? false;
+        return {
+          lastLine: bubbles.at(-1)?.innerText ?? '',
+          visible: Boolean(
+            rect &&
+              rect.top >= 0 &&
+              rect.bottom <= window.innerHeight &&
+              drawn(rect.left + 4, rect.top + 4) &&
+              drawn(rect.right - 4, rect.bottom - 4),
+          ),
+          composer: Boolean(document.querySelector('form textarea')?.getBoundingClientRect().bottom <= window.innerHeight),
+          blank: blank.map((h) => h.innerText),
+        };
+      });
+      const words = heard.lastLine.trim().split(/\s+/).length;
+      if (words > 20) fail(`The interviewer's last line runs to ${words} words: "${heard.lastLine.slice(0, 120)}"`);
+      if (heard.blank.length) fail(`Card groups still blank after 700ms: ${heard.blank.join(', ')}`);
+      if (!heard.visible) fail('"That is me, show my modules" is not fully on screen without scrolling');
       // The live profile shows each item with the quote it came from (spec 14, screen 2).
       if (ctx.viewport === 'phone') await page.click({ css: 'label', text: { re: '^Your profile' } });
       const profile = await page.eval(() => document.querySelector('aside[aria-label="Live profile"]')?.textContent ?? '');
