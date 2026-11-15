@@ -512,9 +512,14 @@ export const STEPS = [
       const headline = await staff.text({ css: 'h3', within: card });
       await ctx.checkpoint(staff, 'dashboard');
       await staff.click({ css: 'button', text: { exact: 'Accept' }, within: card }, { desc: 'Accept on the counterfactual card' });
+      // A decided card collapses its actions to "Change decision"; an open one shows Accept pressed.
       const decided = (h) =>
         [...document.querySelectorAll('article')].some(
-          (a) => a.querySelector('h3')?.innerText === h && /Accepted/.test(a.innerText) && a.querySelector('button[aria-pressed="true"]')?.innerText.trim() === 'Accept',
+          (a) =>
+            a.querySelector('h3')?.innerText === h &&
+            /Accepted/.test(a.innerText) &&
+            ([...a.querySelectorAll('button')].some((b) => b.innerText.trim() === 'Change decision') ||
+              a.querySelector('button[aria-pressed="true"]')?.innerText.trim() === 'Accept'),
         );
       await staff.waitFor(decided, [headline], { desc: 'the card to show Accepted' });
       ctx.note(`accepted "${headline}"`);
