@@ -481,6 +481,8 @@ $$\Delta_\delta = \frac{1}{|S_m|} \sum_{s \in S_m} \left( \mathrm{Fit}_\delta(s,
 
 Return the top three changes by $\Delta_\delta$.
 
+Each card also reports the impact a module lead acts on: how many of $S_m$ would newly have the module in their top five eligible modules, and how many would rise to fit 70 or more. Only changes with $\Delta_\delta \ge 2$ get a card of their own; otherwise one summary card says "No single change makes a big difference" and names the main gap: the fit component (or, for style, the dimension) where the module falls furthest behind each student's top five. Cards use plain wording ("Move 20% of the marks from the exam to coursework", "Add teaching on X (about a tenth of the content)"), never internal units or 0-to-1 values. An oversubscribed module gets no counterfactual cards; its `DEMAND` card suggests managing demand instead, naming the best-fitting modules of the same type that still have places.
+
 Other insight kinds:
 - `OVERLOOKED`: average fit among the cohort is above the catalogue median, and shortlisting is below 20% of capacity.
 - `DEMAND`: projected demand against capacity.
