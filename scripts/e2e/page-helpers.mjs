@@ -72,15 +72,36 @@ export function installHelpers() {
     return Boolean(label && (label.control === el || label.contains(el)));
   }
 
+  /**
+   * True while `el` or an ancestor is mid-animation: a running Web Animation, or an inline opacity below 1, which
+   * is how Motion holds an element at its `initial` state and fades it in. (Opacity set by a class, such as a
+   * dimmed card, is not inline, so it does not count.)
+   */
+  function animating(el) {
+    for (const a of document.getAnimations()) {
+      const target = a.effect?.target;
+      if (a.playState === 'running' && target instanceof Element && target.contains(el)) return true;
+    }
+    for (let p = el; p && p !== document.documentElement; p = p.parentElement) {
+      const inline = p.style?.opacity;
+      if (inline !== undefined && inline !== '' && Number(inline) < 1) return true;
+    }
+    return false;
+  }
+
   async function prepare(spec) {
     const el = one(spec);
     if (!el) return null;
     el.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' });
+    // Settled means: no entrance animation still pending or running on it or an ancestor, and the same rect for
+    // three frames running. Motion renders an entering element in its initial state (for example opacity 0,
+    // 24px lower) for a frame or two before animating, so two equal frames alone can be the start, not the end.
     let prev = null;
-    for (let i = 0; i < 60; i += 1) {
+    let steady = 0;
+    for (let i = 0; i < 90 && steady < 3; i += 1) {
       await frame();
       const r = el.getBoundingClientRect();
-      if (prev && same(prev, r)) break;
+      steady = prev && same(prev, r) && !animating(el) ? steady + 1 : 0;
       prev = r;
     }
     const r = el.getBoundingClientRect();

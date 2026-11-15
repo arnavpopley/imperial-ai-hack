@@ -136,7 +136,7 @@ export function ModuleDetailScreen() {
                 {scored ? <ScoreRing value={rec.fit} dimmed={dimmed} delay={0.15} /> : <NoScoreRing />}
                 {scored && (
                   <span className="grid justify-items-start gap-1">
-                    <Badge tone={dimmed ? 'neutral' : FIT_BAND_TONE[fitBand(rec.fit)]}>
+                    <Badge tone={dimmed ? 'neutral' : FIT_BAND_TONE[fitBand(rec.fit)]} wrap>
                       {FIT_BAND_LABELS[fitBand(rec.fit)]} · {rec.rank === 1 ? 'your best match' : `ranked #${rec.rank}`}
                     </Badge>
                     {/* After the fit band, so it labels the score claim it describes. */}

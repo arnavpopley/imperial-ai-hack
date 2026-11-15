@@ -393,7 +393,7 @@ function TracePanel({
           {(Object.keys(VERDICT_META) as Verdict[]).map((v) =>
             verdicts[v] ? (
               <li key={v} className="flex">
-                <Badge tone={VERDICT_META[v].tone} size="md" icon={VERDICT_META[v].icon}>
+                <Badge tone={VERDICT_META[v].tone} size="md" icon={VERDICT_META[v].icon} wrap>
                   <span className="tabular-nums">{verdicts[v]}</span> {noun(verdicts[v]!, 'safety check')}{' '}
                   {VERDICT_META[v].label.toLowerCase()}
                 </Badge>

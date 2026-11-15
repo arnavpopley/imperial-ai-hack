@@ -325,7 +325,7 @@ function DerivedByBadge({ derivedBy }: { derivedBy: Module['derivedBy'] }) {
   // Tags the analyst agent derived are AI-written; a staff edit is a person's.
   const staff = derivedBy === 'staff-edit';
   return (
-    <Badge tone={staff ? 'success' : 'ai'} icon={staff ? 'user' : 'sparkle'}>
+    <Badge tone={staff ? 'success' : 'ai'} icon={staff ? 'user' : 'sparkle'} wrap>
       {staff ? 'Edited by staff' : 'Derived by the analyst agent'}
     </Badge>
   );
