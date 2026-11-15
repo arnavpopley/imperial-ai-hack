@@ -2,7 +2,7 @@
 // how it answers the AI on Campus brief. Flat and spacious, with gentle motion that never stops the reader:
 // drifting shapes behind the hero, photos that change on their own, and a slow photo strip.
 import { AnimatePresence, motion, useReducedMotion, type Variants } from 'motion/react';
-import { useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { buttonClass } from '../../components/Button.tsx';
 import { cx } from '../../components/cx.ts';
@@ -17,6 +17,16 @@ const RISE: Variants = {
 };
 const STAGGER: Variants = { shown: { transition: { staggerChildren: 0.08 } } };
 const IN_VIEW = { initial: 'hidden', whileInView: 'shown', viewport: { once: true, amount: 0.2 } } as const;
+
+/** Set by the hero's Pause motion button: stops the slideshow, the photo strip and the drifting shapes. */
+const MotionPaused = createContext(false);
+
+/** True when the page should hold still: the reader asked for reduced motion, or pressed Pause motion. */
+function useStill(): boolean {
+  const reduce = useReducedMotion();
+  const paused = useContext(MotionPaused);
+  return Boolean(reduce) || paused;
+}
 
 interface Photo {
   src: string;
@@ -85,84 +95,95 @@ interface LandingScreenProps {
 
 export function LandingScreen({ resumeTo }: LandingScreenProps) {
   const cta = resumeTo ? { to: resumeTo, label: 'Continue where you left off' } : { to: paths.start, label: 'Get started' };
+  const [paused, setPaused] = useState(false);
 
   return (
-    <div className="grid gap-24 pb-8 sm:gap-32">
-      <Hero cta={cta} />
-      <PhotoStrip />
+    <MotionPaused.Provider value={paused}>
+      <div className="grid gap-24 pb-8 sm:gap-32">
+        <Hero cta={cta} paused={paused} onTogglePaused={() => setPaused((p) => !p)} />
+        <PhotoStrip />
 
-      <section className="mx-auto grid w-full max-w-6xl items-center gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
-        <motion.div {...IN_VIEW} variants={STAGGER}>
-          <motion.h2 variants={RISE} className="text-3xl font-bold tracking-tight text-balance sm:text-4xl">
-            A three-minute chat instead of a 200-page handbook
-          </motion.h2>
-          <motion.p variants={RISE} className="mt-4 text-lg text-muted">
-            You talk, it listens, and the catalogue reorders itself around you.
-          </motion.p>
-          <motion.ul variants={STAGGER} className="mt-8 grid gap-5">
-            {HIGHLIGHTS.map((h) => (
-              <motion.li key={h.title} variants={RISE} className="flex gap-4">
-                <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-brand-soft text-brand">
-                  <Icon name={h.icon} size={22} />
-                </span>
-                <span>
-                  <span className="block text-lg font-semibold">{h.title}</span>
-                  <span className="text-muted">{h.text}</span>
-                </span>
-              </motion.li>
-            ))}
-          </motion.ul>
-        </motion.div>
-        <motion.div {...IN_VIEW} variants={RISE}>
-          <HeroDemo />
-        </motion.div>
-      </section>
+        <section className="mx-auto grid w-full max-w-6xl items-center gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+          <motion.div {...IN_VIEW} variants={STAGGER}>
+            <motion.h2 variants={RISE} className="text-3xl font-bold tracking-tight text-balance sm:text-4xl">
+              A three-minute chat instead of a 200-page handbook
+            </motion.h2>
+            <motion.p variants={RISE} className="mt-4 text-lg text-muted">
+              You talk, it listens, and the catalogue reorders itself around you.
+            </motion.p>
+            <motion.ul variants={STAGGER} className="mt-8 grid gap-5">
+              {HIGHLIGHTS.map((h) => (
+                <motion.li key={h.title} variants={RISE} className="flex gap-4">
+                  <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-brand-soft text-brand">
+                    <Icon name={h.icon} size={22} />
+                  </span>
+                  <span>
+                    <span className="block text-lg font-semibold">{h.title}</span>
+                    <span className="text-muted">{h.text}</span>
+                  </span>
+                </motion.li>
+              ))}
+            </motion.ul>
+          </motion.div>
+          <motion.div {...IN_VIEW} variants={RISE}>
+            <HeroDemo />
+          </motion.div>
+        </section>
 
-      <FeatureRow
-        photo={{ src: '/images/tutor-one-to-one.jpg', alt: 'A tutor talking with a student' }}
-        title="A person when it matters"
-        text="If a question needs a human, like a rule exception or a worry, the advisor drafts a note for staff. You check it before it goes."
-        link={{ to: '/staff', label: 'See the staff side' }}
-      />
-      <FeatureRow
-        flip
-        photo={{ src: '/images/robotics-lab.jpg', alt: 'Students building a robot in a workshop' }}
-        title="Grounded in the real catalogue"
-        text="Modules, descriptions and prerequisites come from the department’s published pages. The AI explains them; it never makes up a module or changes a score."
-        link={{ to: '/trace', label: 'How it works' }}
-      />
+        <FeatureRow
+          photo={{ src: '/images/tutor-one-to-one.jpg', alt: 'A tutor talking with a student' }}
+          title="A person when it matters"
+          text="If a question needs a human, like a rule exception or a worry, the advisor drafts a note for staff. You check it before it goes."
+          link={{ to: '/staff', label: 'See the staff side' }}
+        />
+        <FeatureRow
+          flip
+          photo={{ src: '/images/robotics-lab.jpg', alt: 'Students building a robot in a workshop' }}
+          title="Grounded in the real catalogue"
+          text="Modules, descriptions and prerequisites come from the department’s published pages. The AI explains them; it never makes up a module or changes a score."
+          link={{ to: '/trace', label: 'How it works' }}
+        />
 
-      <Challenge />
+        <Challenge />
 
-      <motion.section
-        {...IN_VIEW}
-        variants={RISE}
-        className="relative overflow-hidden rounded-[2rem] bg-brand px-6 py-16 text-center text-on-brand sm:px-12 sm:py-20"
-      >
-        <DriftingShapes tone="on-brand" />
-        <h2 className="relative text-3xl font-bold tracking-tight text-balance sm:text-5xl">Ready to pick your modules?</h2>
-        <p className="relative mx-auto mt-4 max-w-md text-lg">Start with a quick chat, or look around with an example student first.</p>
-        <div className="relative mt-9 flex flex-wrap justify-center gap-3">
-          <Link
-            to={cta.to}
-            className="inline-flex h-14 items-center gap-2 rounded-full bg-accent px-8 text-base font-bold text-on-accent transition-transform hover:scale-[1.03]"
-          >
-            {cta.label}
-            <Icon name="arrow-right" size={18} />
-          </Link>
-          <Link
-            to={paths.demo}
-            className="inline-flex h-14 items-center gap-2 rounded-full px-7 text-base font-bold ring-2 ring-on-brand/60 transition-colors hover:bg-on-brand/10"
-          >
-            See the demo
-          </Link>
-        </div>
-      </motion.section>
-    </div>
+        <motion.section
+          {...IN_VIEW}
+          variants={RISE}
+          className="relative overflow-hidden rounded-[2rem] bg-brand px-6 py-16 text-center text-on-brand sm:px-12 sm:py-20"
+        >
+          <DriftingShapes tone="on-brand" />
+          <h2 className="relative text-3xl font-bold tracking-tight text-balance sm:text-5xl">Ready to pick your modules?</h2>
+          <p className="relative mx-auto mt-4 max-w-md text-lg">Start with a quick chat, or look around with an example student first.</p>
+          <div className="relative mt-9 flex flex-wrap justify-center gap-3">
+            <Link
+              to={cta.to}
+              className="inline-flex h-14 items-center gap-2 rounded-full bg-accent px-8 text-base font-bold text-on-accent transition-transform hover:scale-[1.03]"
+            >
+              {cta.label}
+              <Icon name="arrow-right" size={18} />
+            </Link>
+            <Link
+              to={paths.demo}
+              className="inline-flex h-14 items-center gap-2 rounded-full px-7 text-base font-bold ring-2 ring-on-brand/60 transition-colors hover:bg-on-brand/10"
+            >
+              See the demo
+            </Link>
+          </div>
+        </motion.section>
+      </div>
+    </MotionPaused.Provider>
   );
 }
 
-function Hero({ cta }: { cta: { to: string; label: string } }) {
+function Hero({
+  cta,
+  paused,
+  onTogglePaused,
+}: {
+  cta: { to: string; label: string };
+  paused: boolean;
+  onTogglePaused: () => void;
+}) {
   return (
     <section className="relative -mx-4 -mt-8 overflow-hidden px-4 pt-14 pb-4 sm:-mx-6 sm:px-6 sm:pt-20 lg:-mx-8 lg:px-8">
       <DriftingShapes tone="brand" />
@@ -205,6 +226,18 @@ function Hero({ cta }: { cta: { to: string; label: string } }) {
         </div>
         <motion.div variants={RISE}>
           <PhotoCycle photos={HERO_PHOTOS} />
+          {/* Moving content needs a way to stop it (WCAG 2.2.2): one button holds the whole page still. */}
+          <div className="mt-8 flex justify-end">
+            <button
+              type="button"
+              onClick={onTogglePaused}
+              aria-pressed={paused}
+              className="inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold text-muted ring-1 ring-line transition-colors hover:bg-surface-2 hover:text-ink"
+            >
+              <Icon name={paused ? 'play' : 'pause'} size={14} />
+              {paused ? 'Play motion' : 'Pause motion'}
+            </button>
+          </div>
         </motion.div>
       </motion.div>
     </section>
@@ -213,7 +246,7 @@ function Hero({ cta }: { cta: { to: string; label: string } }) {
 
 /** Photos that change on their own every few seconds, with a crossfade. Still under reduced motion. */
 function PhotoCycle({ photos }: { photos: readonly Photo[] }) {
-  const reduce = useReducedMotion();
+  const reduce = useStill();
   const [index, setIndex] = useState(0);
   useEffect(() => {
     if (reduce) return;
@@ -252,10 +285,11 @@ function PhotoCycle({ photos }: { photos: readonly Photo[] }) {
 
 /** A slow, endless strip of campus photos. Two copies of the row, so the loop has no seam. */
 function PhotoStrip() {
+  const still = useStill();
   const row = [...STRIP_PHOTOS, ...STRIP_PHOTOS];
   return (
     <div aria-hidden="true" className="-mx-4 overflow-hidden sm:-mx-6 lg:-mx-8">
-      <div className="flex w-max animate-marquee gap-4 hover:[animation-play-state:paused]">
+      <div className={cx('flex w-max animate-marquee gap-4 hover:[animation-play-state:paused]', still && '[animation-play-state:paused]')}>
         {row.map((p, i) => (
           <img
             key={`${p.src}-${i}`}
@@ -350,7 +384,7 @@ function Challenge() {
 
 /** Soft shapes that drift slowly and endlessly behind a section; still under reduced motion. */
 function DriftingShapes({ tone }: { tone: 'brand' | 'on-brand' }) {
-  const reduce = useReducedMotion();
+  const reduce = useStill();
   const shapes = [
     { className: 'top-10 left-[6%] size-24 rounded-[2rem]', x: [0, 30, 0], y: [0, 20, 0], rotate: [0, 25, 0], duration: 18 },
     { className: 'top-1/3 right-[8%] size-16 rounded-full', x: [0, -24, 0], y: [0, 30, 0], rotate: [0, 0, 0], duration: 14 },
@@ -364,8 +398,8 @@ function DriftingShapes({ tone }: { tone: 'brand' | 'on-brand' }) {
         <motion.span
           key={i}
           className={cx('absolute', s.className, fill[i % fill.length])}
-          animate={reduce ? undefined : { x: s.x, y: s.y, rotate: s.rotate }}
-          transition={{ duration: s.duration, repeat: Infinity, ease: 'easeInOut' }}
+          animate={reduce ? { x: 0, y: 0, rotate: 0 } : { x: s.x, y: s.y, rotate: s.rotate }}
+          transition={reduce ? { duration: 0.6 } : { duration: s.duration, repeat: Infinity, ease: 'easeInOut' }}
         />
       ))}
     </div>
