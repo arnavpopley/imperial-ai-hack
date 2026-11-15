@@ -133,7 +133,7 @@ export function AskModulePanel({ sessionId, moduleId, moduleTitle, className }: 
           <li className="text-[13px] text-muted">Pick a question to start, or write your own.</li>
         )}
         <AnimatePresence initial={false}>
-          {turns.map((turn) => (
+          {turns.map((turn, index) => (
             <motion.li
               key={turn.id}
               initial={reduce ? false : { opacity: 0, y: 8 }}
@@ -165,7 +165,21 @@ export function AskModulePanel({ sessionId, moduleId, moduleTitle, className }: 
                 />
               )}
               {turn.status === 'done' && turn.answer && sourceUrl && (
-                <ClaimCheck kind="answer" text={turn.answer} sourceUrl={sourceUrl} className="max-w-[92%]" />
+                // The source is a short link, never a raw URL in the answer; the checking plan is a full bar on the
+                // first answer and a small icon after it, so a few answers do not stack up the same box (#113).
+                <div className="flex max-w-[92%] flex-wrap items-start gap-2">
+                  <a
+                    href={sourceUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex h-7 items-center gap-1 rounded-full border border-line px-2.5 text-[12px] font-medium text-brand hover:border-brand/50 hover:bg-brand-soft/50"
+                  >
+                    Public module page
+                    <Icon name="external" size={12} />
+                    <span className="sr-only">(opens in a new tab)</span>
+                  </a>
+                  <ClaimCheck kind="answer" text={turn.answer} sourceUrl={sourceUrl} compact={index > 0} className={index > 0 ? undefined : 'basis-full'} />
+                </div>
               )}
               {turn.status === 'error' && (
                 <div role="alert" className="flex flex-wrap items-center gap-2 rounded-xl bg-fit-low/8 px-3 py-2 text-[13px]">
