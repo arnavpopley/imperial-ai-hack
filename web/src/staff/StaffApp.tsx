@@ -79,7 +79,7 @@ export function StaffApp() {
 function StaffLayout({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
   const gap = sectionFor(pathname) === 'escalations' ? 'gap-4' : 'gap-8';
-  return <div className={`grid grid-cols-1 ${gap} [&_:is(a,button,input,select,textarea,summary,[tabindex])]:scroll-mt-24`}>{children}</div>;
+  return <div className={`grid grid-cols-1 ${gap} [&_:is(a,button,input,select,textarea,summary,[tabindex])]:scroll-mt-24 [&_:is(a,button,input,select,textarea,summary,[tabindex])]:scroll-mb-28`}>{children}</div>;
 }
 
 const SECTIONS = [
