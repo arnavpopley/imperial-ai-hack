@@ -129,6 +129,10 @@ describe('knowledge agent on the published details (offline)', () => {
     const answer = ask('IEX-SCIPOLICY', 'What are the office hours?');
     expect(answer).toContain('does not publish office hours');
     expect(answer).not.toContain('85 hours');
+    const dropIn = ask('IEX-SCIPOLICY', 'What are the drop-in hours?');
+    expect(dropIn).toContain('does not publish office hours');
+    expect(dropIn).not.toContain('85 hours');
+    expect(ask('IEX-SCIPOLICY', 'How many hours of study?')).toContain('85 hours');
   });
 
   it('treats only notes that say when something is due as deadlines', () => {

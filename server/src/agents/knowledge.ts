@@ -134,6 +134,8 @@ const titles = (items: { title: string; author?: string }[]) => items.map((i) =>
 /** Requirement text that describes expected background, rather than credit rules or I-Explore attendance. */
 const backgroundFacts = (f: Facts) => f.requirements.filter((r) => r.label === 'Pre-requisites' || r.label === 'Additional Information' || !r.label);
 
+const OFFICE_HOURS = /\b(?:office hours?|drop-in)\b/i;
+
 const QUESTION_RULES: [RegExp, (f: Facts) => RuleAnswer][] = [
   [
     /\b(who\b.*\b(teach\w*|lectur\w*|runs?|leads?|convene\w*)|lecturers?|module lead\w*|convenor|professor|tutor)\b/i,
@@ -144,10 +146,10 @@ const QUESTION_RULES: [RegExp, (f: Facts) => RuleAnswer][] = [
             decline: `The public page for ${f.code} does not name a lecturer or module leader, and its description and record do not cover that. The full page is at ${f.sourceUrl}.`,
           },
   ],
-  // Office hours are never published; checked before study hours, so "office hours" is not answered with study time.
-  [/\boffice hours?\b|\bdrop-in\b/i, (f) => ({ decline: `The public page for ${f.code} does not publish office hours. The full page is at ${f.sourceUrl}.` })],
+  // Office hours are never published, and a question about them is never answered with study time.
+  [OFFICE_HOURS, (f) => ({ decline: `The public page for ${f.code} does not publish office hours. The full page is at ${f.sourceUrl}.` })],
   [
-    /\b((?<!office )hours?|contact time|time commitment|independent study|self[- ]study|private study|how much time)\b/i,
+    /^(?!.*\b(?:office hours?|drop-in)\b).*\b(hours?|contact time|time commitment|independent study|self[- ]study|private study|how much time)\b/i,
     (f) =>
       f.hours
         ? `The public page says: ${f.hours.statements.join(' ')}`
