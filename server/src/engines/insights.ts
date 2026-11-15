@@ -660,24 +660,34 @@ const isCounterfactualSummary = (insight: Insight): boolean =>
 /** Ids counterfactual cards had before they carried their change: `<module>:COUNTERFACTUAL:<rank>`. */
 const RANKED_COUNTERFACTUAL_ID = /:COUNTERFACTUAL:(\d+)$/;
 
+/** The change a card describes: its engine headline up to the impact, for example "Move 20% of the marks …". */
+const changeWording = (card: Insight): string => card.headline.slice(0, card.headline.indexOf(': ') + 1);
+
+export interface StoredDecisions {
+  /** The staff decision for each current card id. */
+  decisions: Map<string, InsightDecision>;
+  /** Rows under the old rank-based ids. They can never be shown again, so the caller deletes them once read. */
+  legacyIds: string[];
+}
+
 /**
- * The staff decision for each card, by id. Counterfactual cards used to be numbered by rank; a decision
- * recorded under such an id carries over to the change-based id only when it is safe: the rank matches the
- * card's position among the current change cards and the stored uplift is the same, so it is the same change.
+ * The staff decision for each card, by id. Counterfactual cards used to be numbered by rank. A decision
+ * recorded under such an id carries over to the change-based id only when the stored card names the same
+ * change in the engine's wording, with the same uplift; each old row is used at most once, and every old row
+ * is then handed back for deletion, so the conversion happens once. A decision under the new id always wins.
+ * `cards` must be the engine's own output, before the Insights agent rewords it.
  */
-export function storedDecisions(cards: readonly Insight[], stored: readonly Insight[]): Map<string, InsightDecision> {
-  const decided = new Map(stored.map((insight) => [insight.id, insight.decision]));
-  const ranked = new Map(
-    stored.flatMap((insight) => {
-      const rank = RANKED_COUNTERFACTUAL_ID.exec(insight.id)?.[1];
-      return rank === undefined || insight.decision === 'pending' ? [] : [[Number(rank), insight] as const];
-    }),
-  );
-  cards
-    .filter((card) => card.kind === 'COUNTERFACTUAL' && !isCounterfactualSummary(card))
-    .forEach((card, i) => {
-      const legacy = ranked.get(i + 1);
-      if (!decided.has(card.id) && legacy && legacy.upliftPoints === card.upliftPoints) decided.set(card.id, legacy.decision);
-    });
-  return decided;
+export function storedDecisions(cards: readonly Insight[], stored: readonly Insight[]): StoredDecisions {
+  const decisions = new Map(stored.map((insight) => [insight.id, insight.decision]));
+  const legacy = stored.filter((insight) => RANKED_COUNTERFACTUAL_ID.test(insight.id));
+  const unused = legacy.filter((insight) => insight.decision !== 'pending');
+  for (const card of cards) {
+    if (card.kind !== 'COUNTERFACTUAL' || isCounterfactualSummary(card) || decisions.has(card.id)) continue;
+    const wording = changeWording(card);
+    const match = unused.findIndex((old) => wording !== '' && old.headline.startsWith(wording) && old.upliftPoints === card.upliftPoints);
+    if (match < 0) continue;
+    const [old] = unused.splice(match, 1);
+    if (old) decisions.set(card.id, old.decision);
+  }
+  return { decisions, legacyIds: legacy.map((insight) => insight.id) };
 }

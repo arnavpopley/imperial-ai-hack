@@ -327,21 +327,36 @@ describe('storedDecisions', () => {
   const [maths, thermo] = cards;
 
   it('keeps decisions by id', () => {
-    const decided = storedDecisions(cards, [{ ...maths!, decision: 'noted' }]);
-    expect(decided.get(maths!.id)).toBe('noted');
+    const { decisions, legacyIds } = storedDecisions(cards, [{ ...maths!, decision: 'noted' }]);
+    expect(decisions.get(maths!.id)).toBe('noted');
+    expect(legacyIds).toEqual([]);
   });
 
-  it('carries a decision from an older rank-based id when the rank and the uplift match', () => {
-    const legacy = { ...thermo!, id: 'target:COUNTERFACTUAL:2', decision: 'accepted' as const };
-    expect(storedDecisions(cards, [legacy]).get(thermo!.id)).toBe('accepted');
+  it('carries a decision from an older rank-based id that names the same change, and hands the old row back', () => {
+    // Rank 1 under the old ids, but the change is the thermodynamics one: matched by change, not by rank.
+    const legacy = { ...thermo!, id: 'target:COUNTERFACTUAL:1', decision: 'accepted' as const };
+    const { decisions, legacyIds } = storedDecisions(cards, [legacy]);
+    expect(decisions.get(thermo!.id)).toBe('accepted');
+    expect(decisions.has(maths!.id)).toBe(false);
+    expect(legacyIds).toEqual(['target:COUNTERFACTUAL:1']);
   });
 
-  it('carries nothing when the uplift differs, so a decision never lands on a different change', () => {
-    const legacy = { ...thermo!, id: 'target:COUNTERFACTUAL:2', upliftPoints: 1.4, decision: 'accepted' as const };
-    expect(storedDecisions(cards, [legacy]).has(thermo!.id)).toBe(false);
-    // A decision already stored under the new id wins over a legacy one.
-    const both = [legacy, { ...thermo!, decision: 'dismissed' as const }, { ...legacy, upliftPoints: thermo!.upliftPoints }];
-    expect(storedDecisions(cards, both).get(thermo!.id)).toBe('dismissed');
+  it('carries nothing to a different change, even with the same rank and uplift', () => {
+    const legacy = { ...maths!, id: 'target:COUNTERFACTUAL:1', headline: 'Move 20% of the marks from the exam to coursework: +5.0 fit points', decision: 'accepted' as const };
+    const { decisions, legacyIds } = storedDecisions(cards, [legacy]);
+    expect(decisions.has(maths!.id)).toBe(false);
+    // Still handed back, so it is deleted and never matches a later card.
+    expect(legacyIds).toEqual(['target:COUNTERFACTUAL:1']);
+  });
+
+  it('uses each old row once, and lets a decision under the new id win', () => {
+    const differentUplift = { ...thermo!, id: 'target:COUNTERFACTUAL:2', upliftPoints: 1.4, decision: 'accepted' as const };
+    expect(storedDecisions(cards, [differentUplift]).decisions.has(thermo!.id)).toBe(false);
+    const both = [{ ...thermo!, id: 'target:COUNTERFACTUAL:2', decision: 'accepted' as const }, { ...thermo!, decision: 'dismissed' as const }];
+    expect(storedDecisions(cards, both).decisions.get(thermo!.id)).toBe('dismissed');
+    const twin = { ...thermo!, id: 'other:COUNTERFACTUAL:topics.thermodynamics-energy=0.3' };
+    const once = storedDecisions([thermo!, twin], [{ ...thermo!, id: 'target:COUNTERFACTUAL:1', decision: 'noted' as const }]).decisions;
+    expect([once.get(thermo!.id), once.get(twin.id)]).toEqual(['noted', undefined]);
   });
 });
 

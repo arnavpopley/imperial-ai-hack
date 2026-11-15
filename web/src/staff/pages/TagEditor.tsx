@@ -1,7 +1,7 @@
 // Screen 9: staff correct a module's derived fields beside the analyst's rationale (spec 10.4).
-import { parseSuggestedEdit, SKILL_IDS, TOPIC_IDS } from '@modulematch/shared';
+import { formatSuggestedEdit, parseSuggestedEdit, SKILL_IDS, TOPIC_IDS } from '@modulematch/shared';
 import type { Module, ModuleDemand, Pathway, SuggestedEdit } from '@modulematch/shared';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { api } from '../../api.ts';
 import { DiffSummary } from '../components/DiffSummary.tsx';
@@ -96,6 +96,19 @@ function TagEditorForm({
   // An accepted insight's change starts in the draft, unsaved, so it shows as a change to review.
   const [draft, setDraft] = useState<DerivedDraft>(() => applySuggestedEdit(draftFrom(module), suggested));
   const [save, setSave] = useState<SaveState>({ status: 'idle' });
+
+  // A suggestion that arrives after the form mounted (for example when browser history restores the link) is
+  // applied on top of the current draft. One that leaves the URL after a save or discard changes nothing.
+  const suggestionKey = suggested ? formatSuggestedEdit(suggested) : '';
+  const appliedKey = useRef(suggestionKey);
+  useEffect(() => {
+    if (suggestionKey === appliedKey.current) return;
+    appliedKey.current = suggestionKey;
+    if (!suggested) return;
+    setDraft((d) => applySuggestedEdit(d, suggested));
+    setSave({ status: 'idle' });
+    // `suggested` is the parsed form of `suggestionKey`, so the key alone says when it changed.
+  }, [suggestionKey]);
 
   const baseline = useMemo(() => draftFrom(saved), [saved]);
   const diff = useMemo(() => diffDraft(baseline, draft), [baseline, draft]);

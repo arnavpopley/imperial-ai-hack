@@ -103,6 +103,14 @@ describe('insights', () => {
     expect(stored?.decision).toBe('accepted');
     expect(repo.setInsightDecision('missing', 'noted', db)).toBeNull();
   });
+
+  it('deleteInsights removes only the given cards', () => {
+    const base: Insight = { ...(fx.fixtureInsights[0] as Insight), moduleId: 'DEL-TEST', decision: 'pending' };
+    repo.upsertInsights([{ ...base, id: 'DEL-TEST:COUNTERFACTUAL:1' }, { ...base, id: 'DEL-TEST:CLASH:1' }], db);
+    repo.deleteInsights(['DEL-TEST:COUNTERFACTUAL:1'], db);
+    repo.deleteInsights([], db);
+    expect(repo.listInsights('DEL-TEST', db).map((i) => i.id)).toEqual(['DEL-TEST:CLASH:1']);
+  });
 });
 
 describe('trace, modules, slots, cohort and eval runs', () => {

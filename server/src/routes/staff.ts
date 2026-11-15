@@ -49,12 +49,14 @@ export const staffRoutes = new Hono()
     if (!module) return c.json({ error: 'module not found' }, 404);
     const built = buildInsights(module, ctx);
     // Stored decisions carry over by id, including those recorded under the older rank-based counterfactual ids.
-    const decided = storedDecisions(built, repo.listInsights(module.id));
+    const { decisions, legacyIds } = storedDecisions(built, repo.listInsights(module.id));
     const cards: Insight[] = await Promise.all(
-      built.map(async (i) => ({ ...(await wordInsight(i)), decision: decided.get(i.id) ?? 'pending' })),
+      built.map(async (i) => ({ ...(await wordInsight(i)), decision: decisions.get(i.id) ?? 'pending' })),
     );
     const current = cards.filter((i) => i.cohortSize >= MIN_COHORT);
     repo.upsertInsights(current);
+    // The old rows have been read once; removing them stops a later card from inheriting their decision.
+    repo.deleteInsights(legacyIds);
     // Only cards the current calculation still produces are shown, in the engine's order (most useful first);
     // stored decisions carry over by id.
     const order = new Map(current.map((i, n) => [i.id, n]));
