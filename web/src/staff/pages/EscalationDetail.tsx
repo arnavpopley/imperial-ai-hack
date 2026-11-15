@@ -201,15 +201,27 @@ function ExceptionDetails({ headingId, request }: { headingId: string; request: 
           ) : (
             <ul className="grid gap-1.5">
               {rows.map((row, i) => (
-                // Plain labels only (issue 107); the full sentence sits behind the row's tooltip.
-                <li key={`${row.code}-${i}`} title={row.detail} className="rounded-xl border border-line bg-surface px-3 py-1">
-                  <span className="font-medium">{row.label}</span>
-                  {row.prerequisiteId && (
-                    <span className="text-muted">
-                      {' '}
-                      · missing <span className="text-ink">{named(row.prerequisiteId)}</span>
-                    </span>
-                  )}
+                // Plain labels only (issue 107). The full rule sentence opens on click, tap or Enter, so the numbers
+                // behind a rule (the credit total and cap, for example) stay reachable without a mouse.
+                <li key={`${row.code}-${i}`} className="rounded-xl border border-line bg-surface px-3 py-1">
+                  <details className="group">
+                    <summary className={`flex cursor-pointer list-none items-baseline gap-2 rounded [&::-webkit-details-marker]:hidden ${focusRing}`}>
+                      <span className="min-w-0 flex-1">
+                        <span className="font-medium">{row.label}</span>
+                        {row.prerequisiteId && (
+                          <span className="text-muted">
+                            {' '}
+                            · missing <span className="text-ink">{named(row.prerequisiteId)}</span>
+                          </span>
+                        )}
+                      </span>
+                      <span className="shrink-0 text-xs font-medium text-brand">
+                        <span className="group-open:hidden">Details</span>
+                        <span className="hidden group-open:inline">Hide</span>
+                      </span>
+                    </summary>
+                    <p className="mt-1 pb-1 text-xs leading-relaxed text-muted">{row.detail}</p>
+                  </details>
                 </li>
               ))}
             </ul>
