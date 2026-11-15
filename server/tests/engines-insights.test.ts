@@ -205,6 +205,24 @@ describe('insight cards', () => {
     expect(card?.upliftPoints).toBe(5);
   });
 
+  it('never lets a small part of the group be worked out from the others (spec 20.4)', () => {
+    // Five keen students newly reach the top five; a sixth, interested in policy and ethics, has it there already.
+    const policy = makeProfile({
+      studentId: 'policy',
+      interests: { 'policy-ethics': 1 },
+      style: { ...makeProfile().style, mathsComfort: 0.2 },
+    });
+    const ctx = { ...context(0), modules: [target, ...rivals], cohort: [...interested(5), policy] };
+    const [maths] = counterfactuals(target, ctx);
+    const parts = [maths!.newlyTopModules, maths!.alreadyTopModules, maths!.groupSize - maths!.newlyTopModules - maths!.alreadyTopModules];
+    expect(parts.some((n) => n >= 1 && n <= 4)).toBe(true);
+    const [card] = buildInsights(target, ctx);
+    const text = `${card!.headline} ${card!.detail}`;
+    // With the group of 6 published, an exact 5 beside "fewer than 5 already do" would pin the other at 1.
+    expect(text).not.toMatch(/\b[1-5] more of them|\b[1-4] already do|fewer than 5/);
+    expect(text).toContain('some of them would newly have it');
+  });
+
   it('hides changes under two points and keeps the ones above', () => {
     // A light style weight: easing the maths is worth under two points, adding thermodynamics still more.
     const ctx = { ...context(6), weights: { ...DEFAULT_WEIGHTS, style: 0.03 } };
@@ -275,7 +293,13 @@ describe('insight cards', () => {
   it('flags an overlooked module: above-median fit, under 20% of capacity shortlisted', () => {
     const card = overlooked(target, context(6, [['target']]));
     expect(card).toMatchObject({ id: 'target:OVERLOOKED:1', kind: 'OVERLOOKED', cohortSize: 9 });
-    expect(card?.detail).toContain('1% of its 100 places');
+    // One shortlist is not counted out loud, nor given as a share of the places (spec 20.4).
+    expect(card?.headline).toContain('but fewer than 5 shortlists');
+    expect(card?.detail).toContain('Fewer than 5 students shortlisted it, out of its 100 places.');
+    expect(card?.detail).not.toMatch(/1%|\b1 student/);
+    // Five or more are counted, with their share of the places.
+    const five = Array.from({ length: 5 }, () => ['target']);
+    expect(overlooked(target, context(6, five))?.detail).toContain('Only 5 students shortlisted it, 5% of its 100 places.');
     const popular = Array.from({ length: 20 }, () => ['target']);
     expect(overlooked(target, context(6, popular))).toBeNull();
   });

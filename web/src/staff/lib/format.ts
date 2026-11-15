@@ -1,5 +1,5 @@
 // Small presentation helpers shared by the staff screens.
-import { LIKELY_CLASH_THRESHOLD, taxonomy } from '@modulematch/shared';
+import { CAPACITY_LABELS, LIKELY_CLASH_THRESHOLD, taxonomy } from '@modulematch/shared';
 import type { CapacityStatus, ClashLabel } from '@modulematch/shared';
 
 /** Keyboard focus ring used by every interactive staff control. */
@@ -37,12 +37,8 @@ export function clashLabel(probability: number): ClashLabel {
 export type { CapacityStatus } from '@modulematch/shared';
 export { NEAR_CAPACITY, capacityStatus } from '@modulematch/shared';
 
-export const CAPACITY_LABEL: Record<CapacityStatus, string> = {
-  uncapped: 'No capacity limit',
-  within: 'Within capacity',
-  near: 'Near capacity',
-  over: 'Over capacity',
-};
+/** The same words as the student's demand chip. */
+export const CAPACITY_LABEL: Record<CapacityStatus, string> = CAPACITY_LABELS;
 
 const relative = new Intl.RelativeTimeFormat('en-GB', { numeric: 'auto' });
 const absolute = new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
