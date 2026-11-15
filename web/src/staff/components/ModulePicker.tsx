@@ -122,7 +122,8 @@ export function ModulePicker({ modules }: { modules: StaffModuleRow[] }) {
           {query.trim() ? `No modules match “${query}” in this view.` : 'No modules in this view.'}
         </p>
       ) : (
-        <div className="max-h-80 overflow-x-hidden overflow-y-auto overscroll-contain p-2 lg:max-h-[calc(100dvh-18rem)]">
+        // scroll-pt keeps a row scrolled into view clear of its sticky group heading.
+        <div className="max-h-80 scroll-pt-10 overflow-x-hidden overflow-y-auto overscroll-contain p-2 lg:max-h-[calc(100dvh-18rem)]">
           {groups.map((group) => (
             <section key={group.label} aria-label={group.label} className="grid gap-1">
               {(grouped || groups.length > 1) && (
