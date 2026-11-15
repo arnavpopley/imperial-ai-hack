@@ -62,7 +62,8 @@ const YEAR_OF: Record<YearValue, YearOfStudy> = { '1': 1, '2': 2, '3': 3, '4': 4
 const PROMISES: readonly { icon: IconName; text: string }[] = [
   { icon: 'chat', text: 'Your words, your scores' },
   { icon: 'sliders', text: 'You set the weights' },
-  { icon: 'lock', text: 'No grades or health questions' },
+  // Spec 20.2 and 23: marks are kept only through the consented upload, which can be deleted at any time.
+  { icon: 'lock', text: 'Marks only if you choose · never health' },
 ];
 
 export function OnboardScreen() {

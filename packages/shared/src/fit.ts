@@ -13,3 +13,18 @@ export function combineFit(sub: Recommendation['sub'], weights: Weights): number
     weights.interest * sub.interest + wG * (sub.goal ?? 0) + weights.style * sub.style + weights.breadth * sub.breadth;
   return Math.round((100 * sum) / total);
 }
+
+/** How good a fit is, in words. One scale for the student app, the explanations and the staff console (issue #105). */
+export type FitBand = 'strong' | 'good' | 'partial' | 'weak';
+
+/** The lowest fit in each band; anything below `partial` is weak. */
+export const FIT_BAND_FLOORS = { strong: 70, good: 50, partial: 35 } as const;
+
+export function fitBand(fit: number): FitBand {
+  if (fit >= FIT_BAND_FLOORS.strong) return 'strong';
+  if (fit >= FIT_BAND_FLOORS.good) return 'good';
+  if (fit >= FIT_BAND_FLOORS.partial) return 'partial';
+  return 'weak';
+}
+
+export const FIT_BAND_LABELS: Record<FitBand, string> = { strong: 'Strong fit', good: 'Good fit', partial: 'Partial fit', weak: 'Weak fit' };
