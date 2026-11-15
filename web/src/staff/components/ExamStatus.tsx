@@ -3,7 +3,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { ExamStatus } from '../lib/examForm.ts';
 import { CheckIcon, PencilIcon, SendIcon, ShieldIcon, SparkIcon } from './icons.tsx';
-import { Button } from './ui.tsx';
+import { Button } from '../../components/Button.tsx';
 
 const CHIP: Record<ExamStatus, { label: string; className: string; Icon: typeof CheckIcon }> = {
   unsaved: { label: 'Not saved yet', className: 'bg-surface-2 text-muted ring-line-strong', Icon: PencilIcon },

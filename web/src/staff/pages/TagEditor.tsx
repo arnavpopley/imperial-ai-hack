@@ -8,7 +8,9 @@ import { DiffSummary } from '../components/DiffSummary.tsx';
 import { Rationale, countReviewFlags } from '../components/Rationale.tsx';
 import { WeightMapEditor, WeightSlider } from '../components/WeightEditor.tsx';
 import type { Option } from '../components/WeightEditor.tsx';
-import { Button, ErrorState, LoadingState, Panel } from '../components/ui.tsx';
+import { Panel } from '../components/ui.tsx';
+import { Button } from '../../components/Button.tsx';
+import { ErrorState, LoadingState } from '../../components/StateViews.tsx';
 import { AlertIcon, CheckIcon } from '../components/icons.tsx';
 import { useResource } from '../hooks/useResource.ts';
 import { applySuggestedEdit, changeCount, diffDraft, draftFrom, editBody } from '../lib/derivedDraft.ts';
@@ -58,15 +60,15 @@ export function TagEditor() {
     [setParams],
   );
 
-  if (catalogue.status === 'loading') return <LoadingState label="Loading module tags" rows={4} />;
+  if (catalogue.status === 'loading') return <LoadingState label="Loading module tags" />;
   if (catalogue.status === 'error')
-    return <ErrorState title="Could not load the module catalogue" error={catalogue.error} onRetry={reloadCatalogue} />;
+    return <ErrorState title="Could not load the module catalogue" message={catalogue.error.message} onRetry={reloadCatalogue} />;
   const module = catalogue.data.find((m) => m.id === summary.moduleId);
   if (!module)
     return (
       <ErrorState
         title="This module is missing from the catalogue"
-        error={new Error(`No catalogue record for ${summary.moduleId}.`)}
+        message={`No catalogue record for ${summary.moduleId}.`}
         onRetry={reloadCatalogue}
       />
     );

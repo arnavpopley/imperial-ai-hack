@@ -11,7 +11,9 @@ import type { MoveDirection } from '../components/ExamQuestionCard.tsx';
 import { CohortOnlyNote, ExamStatusChip, PublishDialog, UnpublishDialog } from '../components/ExamStatus.tsx';
 import { FeedbackPreview } from '../components/FeedbackPreview.tsx';
 import { AlertIcon, CheckIcon, ExamIcon, InfoIcon, PencilIcon, PlusIcon, SendIcon, SparkIcon, UndoIcon } from '../components/icons.tsx';
-import { Button, ErrorState, LoadingState, Panel } from '../components/ui.tsx';
+import { Panel } from '../components/ui.tsx';
+import { Button } from '../../components/Button.tsx';
+import { ErrorState, LoadingState } from '../../components/StateViews.tsx';
 import { useResource } from '../hooks/useResource.ts';
 import {
   EXAM_LABEL_FIELD,
@@ -48,13 +50,13 @@ function ExamWorkspace({ moduleId }: { moduleId: string }) {
   if (state.status === 'loading')
     return (
       <ExamIntro>
-        <LoadingState label="Loading the exam feedback form" rows={3} />
+        <LoadingState label="Loading the exam feedback form" />
       </ExamIntro>
     );
   if (state.status === 'error')
     return (
       <ExamIntro>
-        <ErrorState title="Could not load the exam feedback form" error={state.error} onRetry={reload} />
+        <ErrorState title="Could not load the exam feedback form" message={state.error.message} onRetry={reload} />
       </ExamIntro>
     );
   return <ExamFormWorkspace moduleId={moduleId} initial={state.data} />;

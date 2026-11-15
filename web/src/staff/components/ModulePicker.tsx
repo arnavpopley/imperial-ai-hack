@@ -23,6 +23,7 @@ import { byCohortFigure, isCohortVisible } from '../lib/privacy.ts';
 import { DemandMiniBar } from './DemandGauge.tsx';
 import { SearchIcon, ShieldIcon } from './icons.tsx';
 import { Segmented } from './ui.tsx';
+import { Select } from '../../components/Select.tsx';
 
 const SORTS = {
   strong: { label: `Good fit or better (${GOOD_FIT}+)`, compare: byCohortFigure(goodFitShare) },
@@ -99,18 +100,18 @@ export function ModulePicker({ modules }: { modules: StaffModuleSummary[] }) {
           <label htmlFor={sortId} className="text-muted">
             Sort by
           </label>
-          <select
+          <Select
             id={sortId}
             value={sort}
             onChange={(e) => isSortKey(e.target.value) && setSort(e.target.value)}
-            className={`min-w-0 flex-1 rounded-lg border border-line bg-surface px-2 py-1.5 text-sm ${focusRing}`}
+            wrapperClassName="flex-1"
           >
             {Object.entries(SORTS).map(([key, s]) => (
               <option key={key} value={key}>
                 {s.label}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
         <p className="text-xs text-muted">
           % = share of the cohort with a good fit or better ({GOOD_FIT}+) · bars = fit spread, 0 to 100
@@ -129,7 +130,7 @@ export function ModulePicker({ modules }: { modules: StaffModuleSummary[] }) {
           {groups.map((group) => (
             <section key={group.label} aria-label={group.label} className="grid gap-1">
               {(grouped || groups.length > 1) && (
-                <h3 className="sticky top-0 z-[1] flex items-baseline justify-between bg-surface/95 px-3.5 pt-3 pb-1 text-xs font-semibold tracking-[0.08em] text-muted uppercase backdrop-blur">
+                <h3 className="sticky top-0 z-[1] flex items-baseline justify-between bg-surface px-3.5 pt-3 pb-1 text-xs font-semibold tracking-[0.08em] text-muted uppercase">
                   {group.label}
                   <span className="font-normal tabular-nums">{group.rows.length}</span>
                 </h3>

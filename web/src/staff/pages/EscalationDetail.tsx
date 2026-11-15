@@ -5,8 +5,9 @@ import type { ExceptionRequest, StaffEscalation } from '@modulematch/shared';
 import { useEffect, useId, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { ESCALATION_TYPES, StatusBadge } from '../components/EscalationBadges.tsx';
-import { Button, EmptyState } from '../components/ui.tsx';
-import { AlertIcon, ArrowLeftIcon, CheckIcon, HeartIcon, InboxIcon, XIcon } from '../components/icons.tsx';
+import { Button } from '../../components/Button.tsx';
+import { EmptyState } from '../../components/StateViews.tsx';
+import { AlertIcon, ArrowLeftIcon, CheckIcon, HeartIcon, XIcon } from '../components/icons.tsx';
 import { Avatar } from '../../components/Avatar.tsx';
 import { escalationTitle } from '../../components/escalationTitle.ts';
 import { useModuleLookup } from '../hooks/useModuleLookup.ts';
@@ -40,7 +41,7 @@ export function EscalationDetail() {
         // Keyed so a half-written reply never carries over to another student's case.
         <EscalationCase key={escalation.id} escalation={escalation} />
       ) : (
-        <EmptyState icon={<InboxIcon className="size-6" />} title="Escalation not found">
+        <EmptyState icon="inbox" title="Escalation not found">
           It may have been removed. Pick another from the queue.
         </EmptyState>
       )}

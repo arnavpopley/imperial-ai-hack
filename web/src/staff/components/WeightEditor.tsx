@@ -2,7 +2,8 @@
 import { useId, useState } from 'react';
 import { focusRing, weight } from '../lib/format.ts';
 import { PlusIcon, XIcon } from './icons.tsx';
-import { Button } from './ui.tsx';
+import { Button } from '../../components/Button.tsx';
+import { Select } from '../../components/Select.tsx';
 
 /** Starting weight for a newly added key, matching the counterfactual "add a topic at 0.3" (spec 9.3). */
 const NEW_WEIGHT = 0.3;
@@ -125,11 +126,11 @@ export function WeightMapEditor({
           <label htmlFor={selectId} className="sr-only">
             Add a {noun}
           </label>
-          <select
+          <Select
             id={selectId}
             value={adding}
             onChange={(e) => setAdding(e.target.value)}
-            className={`min-w-0 flex-1 rounded-lg border border-line bg-surface px-2 py-1.5 text-sm sm:max-w-xs ${focusRing}`}
+            wrapperClassName="flex-1 sm:max-w-xs"
           >
             <option value="">Add a {noun}…</option>
             {available.map((o) => (
@@ -137,7 +138,7 @@ export function WeightMapEditor({
                 {o.label}
               </option>
             ))}
-          </select>
+          </Select>
           <Button onClick={add} disabled={!adding}>
             <PlusIcon />
             Add

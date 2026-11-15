@@ -1,11 +1,11 @@
 // Spec 20.4 and 9.3: staff views are aggregate only, and nothing is shown for a cohort under five.
 import { MIN_COHORT } from '@modulematch/shared';
 import { ShieldIcon } from './icons.tsx';
-import { EmptyState } from './ui.tsx';
+import { EmptyState } from '../../components/StateViews.tsx';
 
 export function PrivacyHidden() {
   return (
-    <EmptyState icon={<ShieldIcon className="size-6" />} title={`Cohort under ${MIN_COHORT}: hidden for privacy`}>
+    <EmptyState icon="shield" title={`Cohort under ${MIN_COHORT}: hidden for privacy`}>
       Fewer than {MIN_COHORT} students sit behind this view, so it is withheld to keep individuals unidentifiable.
     </EmptyState>
   );
