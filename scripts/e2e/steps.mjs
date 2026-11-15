@@ -23,7 +23,7 @@ const SLIDER_ANSWER = { maths: 0.7, coding: 0.85 };
 
 /** First match wins, so the more specific topics come first. */
 const TOPICS = [
-  ['love', /lose track of time|made you lose/i],
+  ['love', /enjoyed most|lose track of time|made you lose/i],
   ['avoid', /avoid|rather not|least|dislike|steer clear/i],
   ['timetable', /\bdays?\b|\btimes\b|keep free|mornings?|evenings?/i],
   ['breadth', /outside (your|the) degree|language|business|the arts|other facult|breadth/i],
@@ -144,9 +144,11 @@ export const STEPS = [
       await page.goto(`${ctx.web}/`);
       const theme = await page.eval(() => document.documentElement.dataset.theme);
       if (theme !== ctx.theme) fail(`Expected the ${ctx.theme} theme from the system setting, got ${theme}`);
-      await page.waitForElement({ css: 'a', text: 'Find my modules' });
+      // The landing call to action: "Get started" since the flat redesign (#173), "Find my modules" before it.
+      const startCta = { css: 'a', text: { re: '^(get started|find my modules)' } };
+      await page.waitForElement(startCta);
       await ctx.checkpoint(page, 'landing');
-      await page.click({ css: 'a', text: 'Find my modules' });
+      await page.click(startCta);
       await pathIs(page, '/start');
       await page.waitForElement({ css: 'button[type="submit"]', text: 'Start the interview' });
       const form = await page.text({ css: 'form[aria-labelledby="onboard-heading"]' });

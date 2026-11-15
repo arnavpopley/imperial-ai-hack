@@ -17,8 +17,8 @@ export interface PlanStep {
 
 /** Spec 10.2 quick-mode plan. Questions 4 and 6 also cover the applied and workload dimensions. */
 export const QUICK_PLAN: PlanStep[] = [
-  { id: 'love', slots: ['interest'], question: 'Which topics or lectures made you lose track of time?', widget: null, always: true },
-  { id: 'avoid', slots: ['interest'], question: 'And what would you avoid if you could?', widget: null, always: true },
+  { id: 'love', slots: ['interest'], question: 'Which topics or lectures have you enjoyed most so far?', widget: null, always: true },
+  { id: 'avoid', slots: ['interest'], question: 'And which topics did you find hardest or least enjoyable, the ones you would avoid if you could?', widget: null, always: true },
   { id: 'career', slots: ['pathways'], question: 'What would you like to be doing after you graduate? "Not sure yet" is a fine answer.', widget: null },
   {
     id: 'assessment',
@@ -158,6 +158,8 @@ Rules:
 - Do not recommend modules. That is another agent's job.
 - Reflect only what the student actually said. Never state facts about them they did not give (not "Python is
   clearly your strength" unless they said so).
+- If the student says a topic was hard, a struggle or not for them, do not call it a favourite or something they
+  enjoy; acknowledge it neutrally. If they say it was hard but they enjoyed it, reflect both.
 - Ask exactly one question: the suggested next question's topic, in your own words. Never add a second question.
   Reply with only your message to the student.`;
 

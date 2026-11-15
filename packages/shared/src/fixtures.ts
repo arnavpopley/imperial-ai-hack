@@ -178,7 +178,7 @@ export const fixtureSession: SessionState = {
   profile: fixtureProfile,
   evidence: fixtureEvidence,
   messages: [
-    { id: 'm-1', sessionId: SESSION_ID, role: 'assistant', agent: 'interviewer', content: 'Which lectures made you lose track of time?', at: NOW },
+    { id: 'm-1', sessionId: SESSION_ID, role: 'assistant', agent: 'interviewer', content: 'Which topics or lectures have you enjoyed most so far?', at: NOW },
     { id: 'm-2', sessionId: SESSION_ID, role: 'student', agent: null, content: 'I lost track of time in the wind tunnel lab.', at: NOW },
   ],
   weights: DEFAULT_WEIGHTS,
