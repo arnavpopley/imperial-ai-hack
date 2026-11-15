@@ -6,7 +6,7 @@ import { NavLink, Outlet, useLocation, useMatch } from 'react-router';
 import { cx } from '../../components/cx.ts';
 import { Icon, type IconName } from '../../components/Icon.tsx';
 import { ModeChip } from '../../components/ModeChip.tsx';
-import { useFeedbackCount } from '../results/ResultsProvider.tsx';
+import { useAwaitingCount, useFeedbackCount } from '../results/ResultsProvider.tsx';
 import { paths } from '../routes.ts';
 import { useReadySession } from '../state/SessionProvider.tsx';
 import { yourDataPath } from '../yourdata/paths.ts';
@@ -42,10 +42,12 @@ export function StudentShell() {
   const onInterview = useMatch(paths.interview) !== null;
   const onModule = useMatch('/modules/:moduleId') !== null;
   const shortlistCount = session.shortlist.length;
-  // The exam feedback tab appears once there is feedback, and stays while the student is on the page.
+  // The exam feedback tab appears once there is feedback, or a published exam waiting for the student's question
+  // marks, and stays while the student is on the page. Its badge counts only the feedback.
   const feedbackCount = useFeedbackCount();
+  const awaitingCount = useAwaitingCount();
   const onFeedback = useMatch(paths.feedback) !== null;
-  const tabs = TABS.filter((tab) => tab.to !== paths.feedback || feedbackCount > 0 || onFeedback);
+  const tabs = TABS.filter((tab) => tab.to !== paths.feedback || feedbackCount > 0 || awaitingCount > 0 || onFeedback);
 
   const openAdvisor = useCallback(
     (prefill = '') => setAdvisor((current) => ({ open: true, prefill, opened: current.opened + 1 })),

@@ -22,9 +22,7 @@ export function LiveEvalPanel() {
   if (run === undefined) return <p className="text-sm text-muted">Loading the live-model evaluation…</p>;
   if (run === null)
     return (
-      <p className="text-sm text-muted">
-        No live-model run yet. Run <code className="font-mono">npm run eval:live</code>.
-      </p>
+      <p className="text-sm text-muted">No live-model evaluation has been published for this build.</p>
     );
 
   const { groups, misses, met } = summarise(run);
@@ -104,21 +102,24 @@ export function LiveEvalPanel() {
       {misses.length > 0 && (
         <div className="grid gap-1.5">
           <p className="text-xs font-semibold tracking-[0.1em] text-muted uppercase">Misses, left visible</p>
-          {/* minmax(0, 1fr): a one-line reason never widens the page; it truncates instead. */}
-          <ul className="grid grid-cols-1 gap-1.5 text-sm">
+          {/* minmax(0, 1fr): a long title or reason wraps inside the panel and never widens the page. */}
+          <ul className="grid grid-cols-1 gap-2.5 text-sm">
             {misses.map((m) => (
-              // One line each; tapping, clicking or pressing Enter on the row opens the full reason.
-              <li key={`${m.group}-${m.case}`}>
-                <details className="group">
-                  <summary className="flex min-w-0 cursor-pointer list-none items-center gap-2 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-brand [&::-webkit-details-marker]:hidden">
-                    <Icon name="x" size={13} className="shrink-0 text-fit-low" />
-                    <span className="shrink-0 font-medium">{m.case}</span>
-                    <span className="hidden shrink-0 text-xs text-muted sm:inline">{m.group}</span>
-                    {m.note && <span className="min-w-0 flex-1 truncate text-muted group-open:invisible">{m.note}</span>}
-                    {m.note && <Icon name="chevron-down" size={14} className="ml-auto shrink-0 text-muted transition-transform group-open:rotate-180" />}
-                  </summary>
-                  {m.note && <p className="mt-1 ml-5 text-muted">{m.note}</p>}
-                </details>
+              <li key={`${m.group}-${m.case}`} className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] gap-x-2">
+                <Icon name="x" size={13} className="mt-1 text-fit-low" />
+                <div className="min-w-0">
+                  <p>
+                    <span className="font-medium">{m.title}</span> <span className="text-xs text-muted">{m.group}</span>
+                  </p>
+                  {m.reason && <p className="text-muted">{m.reason}</p>}
+                  {/* The judge's own words, in full, for anyone who wants to check the verdict. */}
+                  {m.note && m.note !== m.reason && (
+                    <details className="mt-0.5 text-xs">
+                      <summary className="cursor-pointer text-muted hover:text-ink">Details</summary>
+                      <p className="mt-1 text-muted">{m.note}</p>
+                    </details>
+                  )}
+                </div>
               </li>
             ))}
           </ul>

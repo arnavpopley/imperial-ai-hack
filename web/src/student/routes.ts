@@ -37,3 +37,13 @@ export const OPEN_RESULTS_STATE = { openResults: true } as const;
 export function wantsResultsPanel(state: unknown): boolean {
   return typeof state === 'object' && state !== null && 'openResults' in state && state.openResults === true;
 }
+
+/**
+ * Opens the "Your results" panel straight on an upload that adds to the marks already shared, for example question
+ * marks for an exam whose feedback is waiting (issue #108). Nothing already stored is removed.
+ */
+export const ADD_MARKS_STATE = { openResults: true, addMarks: true } as const;
+
+export function wantsAddMarks(state: unknown): boolean {
+  return wantsResultsPanel(state) && typeof state === 'object' && state !== null && 'addMarks' in state && state.addMarks === true;
+}

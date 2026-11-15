@@ -186,6 +186,24 @@ describe('student preview', () => {
     expect(overall).not.toContain('Most of the marks');
   });
 
+  it('only lists modules taught later than the exam’s own module', () => {
+    const levelled = [
+      { ...mod('dyn', { 'solid-mechanics-materials': 0.5 }), level: 2 },
+      { ...mod('year-1', { 'solid-mechanics-materials': 0.9 }), level: 1 },
+      { ...mod('year-2', { 'solid-mechanics-materials': 0.9 }), level: 2 },
+      { ...mod('year-3', { 'solid-mechanics-materials': 0.6 }), level: 3 },
+    ] as Module[];
+    expect(affectedModules('dyn', ['solid-mechanics-materials'], levelled).map((a) => a.moduleId)).toEqual(['year-3']);
+  });
+
+  it('never doubles the full stop when a mistake already ends with one', () => {
+    const draft = draftFromForm(form);
+    draft.questions[1]!.commonMistakes = ['No sketch.'];
+    const advice = previewFeedback({ draft, weakIndex: 1, moduleId: 'fluids-2', catalogue })!.feedback.weakPoints[0]!.advice;
+    expect(advice).toContain('most often: no sketch.');
+    expect(advice).not.toContain('..');
+  });
+
   it('only counts main topics and never lists the module itself', () => {
     const affected = affectedModules('fluids-2', ['mathematics-modelling', 'fluid-mechanics'], catalogue);
     expect(affected.map((a) => a.moduleId)).not.toContain('fluids-2');

@@ -944,6 +944,17 @@ export const ExamFormSaveBody = ExamFeedbackForm.omit({ id: true, moduleId: true
 export const ExamFormDraftBody = z.object({ examLabel: z.string().min(1), notes: z.string().min(1).max(20000) });
 
 /** Feedback for one student on one exam, from the examiner's form and the student's own question marks. */
+/**
+ * A published exam whose feedback the student cannot get yet: they shared a mark for the module, but no question
+ * marks that match the examiner's questions (issue #108). Says nothing about anyone else's marks.
+ */
+export const ExamAwaitingMarks = z.object({
+  moduleId: z.string(),
+  examLabel: z.string(),
+  /** The question ids the examiner's form uses, so the student knows what their mark sheet needs to show. */
+  questionIds: z.array(z.string()),
+});
+
 export const TailoredFeedback = z.object({
   moduleId: z.string(),
   examLabel: z.string(),

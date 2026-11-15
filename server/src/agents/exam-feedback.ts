@@ -22,11 +22,11 @@ type DraftContent = Pick<ExamFeedbackForm, 'questions' | 'generalComments'>;
 const TOPIC_KEYWORDS: Record<string, RegExp> = {
   'fluid-mechanics': /\b(fluid|flow|boundary layer|navier|stokes|bernoulli|reynolds|viscous|pipe|nozzle|compressible|mach|lift|drag|couette|poiseuille|turbulen)/i,
   'thermodynamics-energy': /\b(thermo|entropy|enthalpy|cycle|turbine|boiler|refrigerat|heat|rankine|brayton|otto|diesel|combustion|psychrometr|steam)/i,
-  'solid-mechanics-materials': /\b(stress|strain|mohr|beam|buckling|yield|plastic|elastic|fracture|cylinder|failure criteri|tresca|von mises|material|rigid body|vibration|kinematic|collision|impact)/i,
-  'mathematics-modelling': /\b(pde|differential equation|separation of variables|fourier|eigen|integral|derivation|derive|dimensional analysis|scaling|analytical)/i,
+  'solid-mechanics-materials': /\b(stress|strain|mohr|beam|buckling|yield|plastic|elastic|fracture|cylinder|failure criteri|tresca|von mises|material|rigid body|vibration|kinematic|collision|impact|free-body|moment)/i,
+  'mathematics-modelling': /\b(pde|differential equation|equation|separation of variables|fourier|eigen|integral|derivation|derive|dimensional analysis|scaling|analytical|coordinates)/i,
   'computational-simulation': /\b(finite difference|finite volume|numerical|discreti[sz]|convergence|iterative|interpolat|mesh|simulation)/i,
   'programming-software': /\b(python|code|coding|program|algorithm|function|loop|array)/i,
-  'control-robotics': /\b(control|feedback|pid|transfer function|robot|stability)/i,
+  'control-robotics': /\b(control|feedback|pid|transfer function|robot|stability|damp|natural frequenc|oscillat)/i,
   'electronics-embedded': /\b(circuit|microcontroller|sensor|voltage|current|op-?amp|embedded)/i,
   'statistics-data': /\b(statistic|probability|regression|variance|distribution|data)/i,
   'design-manufacturing': /\b(design|manufactur|tolerance|safety factor)/i,
@@ -37,6 +37,44 @@ const POINTER = /\b(revis|review|practi[cs]e|re-?read|rework|work through|look a
 /** Sentences that open with an instruction ("Revise ...", "Work through ...") are revision pointers whatever else they say. */
 const IMPERATIVE = /^\s*(revise|review|practi[cs]e|re-?read|rework|work through|look at|make|sketch|check|read|try|redo)\b/i;
 const GOOD = /\b(good|best|strong(est)?|excellent|top) (answers?|scripts?|candidates?|solutions?)\b|\banswers? that\b/i;
+
+/**
+ * Labels examiners put before a list ("Common mistakes:", "Revise:"). They are removed before the text fills a field,
+ * since the form and the feedback templates add their own (issue #109).
+ */
+const LABEL =
+  /^\s*(?:common\s+mistakes?|typical\s+mistakes?|mistakes?|errors?|(?:good|best|strong)\s+answers?|revision(?:\s+pointers?)?|pointers?|revise|work\s+through|general(?:\s+comments?)?)\s*[:\u2013\u2014-]\s*/i;
+/** Who made a mistake ("Many students", "Students often"): dropped, so the item says what went wrong. */
+const MISTAKE_SUBJECT = /^\s*(?:(?:many|most|some|several|a few|few)(?:\s+(?:students|candidates|scripts))?|(?:students|candidates)(?:\s+(?:often|frequently|commonly))?)\s+/i;
+/** Who wrote the good answer ("Best answers", "Strong scripts"): dropped, so the field reads as what good answers did. */
+const GOOD_SUBJECT = /^\s*(?:the\s+)?(?:good|best|strong(?:est)?|excellent|top)\s+(?:answers?|scripts?|candidates?|solutions?)\s+/i;
+/** Lines that only say the notes are synthetic sample data: kept out of the general comments students would read. */
+const BANNER = /^(?:synthetic|invented|generated|sample data)\b|\bnot a real\b/i;
+
+const capitalise = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
+/** A list item: no label, no trailing punctuation, a capital first letter. */
+const item = (t: string) => capitalise(t.replace(LABEL, '').trim().replace(/[\s.;,:]+$/, ''));
+/** One mistake sentence can list several, split on semicolons ("Common mistakes: a; b"). */
+const mistakeItems = (sentence: string) =>
+  sentence.replace(LABEL, '').split(/;\s*/).map((part) => item(part.replace(MISTAKE_SUBJECT, ''))).filter(Boolean);
+/** "Best answers drew a diagram." becomes "Drew a diagram.", so a template can say "Good answers drew a diagram." */
+const goodText = (sentence: string) => {
+  const t = item(sentence.replace(LABEL, '').replace(GOOD_SUBJECT, ''));
+  return t ? `${t}.` : '';
+};
+
+/**
+ * Topics for one question, with the module's own topics as the prior: keywords pick among the topics the module
+ * teaches, strongest first, and a question that names none of them gets the module's main topics.
+ */
+function questionTopics(text: string, module: Module): string[] {
+  const own = Object.entries(module.topics)
+    .filter(([, w]) => w > 0)
+    .sort((a, b) => b[1] - a[1])
+    .map(([t]) => t);
+  const matched = own.filter((t) => TOPIC_KEYWORDS[t]?.test(text));
+  return (matched.length ? matched : mainTopics(module).slice(0, 2)).slice(0, 3);
+}
 
 /** Makes question ids unique within a form (student marks refer to them), keeping the first and suffixing repeats. */
 export function uniqueIds(questions: ExamQuestion[]): ExamQuestion[] {
@@ -55,7 +93,11 @@ const mainTopics = (module: Module) =>
     .sort((a, b) => b[1] - a[1])
     .map(([t]) => t);
 
-/** Offline draft: splits the notes on "Q1", "Question 2" and so on, and sorts each question's sentences by cue words. */
+/**
+ * Offline draft: splits the notes on "Q1", "Question 2" and so on, and sorts each question's sentences by cue words.
+ * Labels and "Many students" style subjects are stripped so fields hold plain items, topics come from the module's
+ * own topics, and sample-data banners stay out of the general comments.
+ */
 export function heuristicDraft(notes: string, module: Module): DraftContent {
   const clean = stripInjection(notes).text;
   const parts = clean.split(/(?=\bQ(?:uestion)?\s*\.?\s*\d{1,2}[a-z]?\b)/i);
@@ -74,21 +116,21 @@ export function heuristicDraft(notes: string, module: Module): DraftContent {
     const label = `${id}: ${firstLine.slice(0, 80) || 'Question'}`;
     const kind = (s: string) =>
       IMPERATIVE.test(s) ? 'pointer' : GOOD.test(s) ? 'good' : MISTAKE.test(s) ? 'mistake' : POINTER.test(s) ? 'pointer' : null;
-    const good = all.filter((s) => kind(s) === 'good');
-    const mistakes = all.filter((s) => kind(s) === 'mistake');
-    const pointers = all.filter((s) => kind(s) === 'pointer');
-    const topics = Object.entries(TOPIC_KEYWORDS).filter(([, re]) => re.test(body)).map(([t]) => t);
     return {
       id,
       label,
       maxMarks,
-      topics: topics.length ? topics.slice(0, 3) : mainTopics(module).slice(0, 1),
-      whatGoodAnswersDid: good.join(' '),
-      commonMistakes: mistakes,
-      revisionPointers: pointers,
+      topics: questionTopics(body, module),
+      whatGoodAnswersDid: all.filter((s) => kind(s) === 'good').map(goodText).filter(Boolean).join(' '),
+      commonMistakes: all.filter((s) => kind(s) === 'mistake').flatMap(mistakeItems),
+      revisionPointers: all.filter((s) => kind(s) === 'pointer').map(item).filter(Boolean),
     };
   });
-  return { questions: uniqueIds(questions), generalComments: preamble };
+  const general = sentences(preamble)
+    .map((s) => s.trim())
+    .filter((s) => s && !BANNER.test(s))
+    .join(' ');
+  return { questions: uniqueIds(questions), generalComments: general };
 }
 
 const DRAFT_SYSTEM = `You help an examiner turn their marking notes into a structured exam feedback form for students.

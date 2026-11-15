@@ -240,7 +240,8 @@ export function previewFeedback({
   const mistakes = cleanList(weak.q.commonMistakes);
   const pointers = cleanList(weak.q.revisionPointers);
   const adviceParts = [
-    mistakes.length > 0 && `The examiner saw these mistakes most often: ${mistakes.map(lowerInitial).join('; ')}.`,
+    mistakes.length > 0 &&
+      `The examiner saw these mistakes most often: ${mistakes.map((m) => lowerInitial(m.replace(/[\s.;,:]+$/, ''))).join('; ')}.`,
     weak.q.whatGoodAnswersDid.trim() && `Good answers ${lowerFirst(weak.q.whatGoodAnswersDid.trim())}`,
   ].filter(Boolean);
 
@@ -296,14 +297,18 @@ function lowerFirst(text: string): string {
   return lowerInitial(sentence);
 }
 
-/** Later modules that list this one as a prerequisite or weight a weak topic as a main topic. */
+/**
+ * Later modules that list this one as a prerequisite or weight a weak topic as a main topic. Only modules taught at
+ * a higher level than this one count: an earlier year's module cannot build on this exam (issue #109).
+ */
 export function affectedModules(
   moduleId: string,
   topics: readonly string[],
   catalogue: readonly Module[],
 ): TailoredFeedback['affectsModules'] {
+  const level = catalogue.find((m) => m.id === moduleId)?.level;
   return catalogue
-    .filter((m) => m.id !== moduleId)
+    .filter((m) => m.id !== moduleId && (level === undefined || m.level > level))
     .map((m) => {
       const shared = topics.filter((t) => (m.topics[t] ?? 0) >= MAIN_TOPIC_WEIGHT);
       const prereq = m.prerequisites.includes(moduleId);

@@ -24,6 +24,8 @@ export interface Agent {
   gradient: string;
   /** Text colour for the "never" line. */
   tone: string;
+  /** The badge when the models are off, if not "Template (offline)": an agent with no template says so. */
+  offlineLabel?: string;
 }
 
 export const AGENTS: readonly Agent[] = [
@@ -122,6 +124,8 @@ export const AGENTS: readonly Agent[] = [
     never: 'reads your marks without your consent.',
     gradient: 'from-module-8 to-mode-recommend',
     tone: 'text-module-8',
+    // Reading a PDF or photo needs the model; offline, students paste the text and a parser reads it.
+    offlineLabel: 'Off (offline)',
   },
   {
     id: 'examFeedback',

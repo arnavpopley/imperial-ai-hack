@@ -1,9 +1,13 @@
 // The latest live-model evaluation run (GET /api/eval/live), as the "How it works" page shows it.
 import type { EvalRun } from '@modulematch/shared';
 
-export interface LiveEvalRun extends EvalRun {
+type Detail = EvalRun['results'][number]['details'][number];
+
+export interface LiveEvalRun extends Omit<EvalRun, 'results'> {
   /** Absent on runs written before the script recorded its models. */
   models?: { smart: string; fast: string; light: string; judge: string };
+  /** Failing cases also carry a human title and a one-line reason, added by the server (issue #115). */
+  results: (Omit<EvalRun['results'][number], 'details'> & { details: (Detail & { title?: string; reason?: string })[] })[];
 }
 
 /** "claude-opus-5-5" -> "Opus 5.5"; anything else is shown as given. */
@@ -40,7 +44,9 @@ export function summarise(run: LiveEvalRun) {
     ok: r.total > 0 && r.passed / r.total >= r.target,
   }));
   const misses = run.results.flatMap((r) =>
-    r.details.filter((d) => !d.pass).map((d) => ({ group: groupLabel(r.name), case: d.case, note: d.note ?? '' })),
+    r.details
+      .filter((d) => !d.pass)
+      .map((d) => ({ group: groupLabel(r.name), case: d.case, title: d.title ?? d.case, reason: d.reason ?? d.note ?? '', note: d.note ?? '' })),
   );
   return { groups, misses, met: groups.filter((g) => g.ok).length };
 }

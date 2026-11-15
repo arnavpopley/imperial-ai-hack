@@ -2,6 +2,7 @@
 import { Hono } from 'hono';
 import { moduleSummary } from '../agents/knowledge.ts';
 import { catalogue, moduleTitle } from '../agents/session.ts';
+import { evalSnapshot } from '../bootstrap.ts';
 import { programmeInfo, rawModule } from '../db/catalogue.ts';
 import * as repo from '../db/repo.ts';
 import { demandSignals } from '../engines/index.ts';
@@ -20,4 +21,5 @@ export const sharedRoutes = new Hono()
   .get('/programmes', (c) => c.json(programmeInfo()))
   .get('/societies', (c) => c.json(catalogue.societies()))
   .get('/trace/:sessionId', (c) => c.json(repo.listTraceEvents(c.req.param('sessionId'))))
-  .get('/eval/latest', (c) => c.json(repo.latestEvalRun()));
+  // The latest stored run, or else the committed snapshot, so a freshly seeded database still shows results (#115).
+  .get('/eval/latest', (c) => c.json(repo.latestEvalRun() ?? evalSnapshot()));
