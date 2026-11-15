@@ -79,6 +79,37 @@ const quoteOf = (sentence: string) => sentence.trim().slice(0, 200);
 /** Words that make a sentence state a preference rather than just name a module, as in "the CFD coursework". */
 const PREFERENCE = /\b(prefer\w*|rather|instead|over|than|like|love|enjoy|happier|better|best|fine|keen|definitely|please|more|less|hate|dislike|avoid|dread)\b/;
 
+const SOLO = /\b(alone|solo|on my own|independent(ly)?|by myself|individual(ly)?)\b/;
+const TEAM = /\b(team|group|together|collaborat\w*)\b/;
+
+/**
+ * Team or solo, from one lower-cased sentence. The main clause decides: the clause before "though" or "if necessary"
+ * ("more productive solo, though I can handle group work" is solo) and the clause after "but" ("I don't mind group
+ * work but I prefer working alone" is solo). The other clause only softens it. When both options are in the main
+ * clause, a dislike just before one of them decides; otherwise the first named wins ("group work over working alone").
+ */
+function groupPreference(s: string): number | null {
+  const but = s.split(/\bbut\b/);
+  const concessive = s.split(/\b(?:though|although|if (?:i have to|necessary|needed))\b/);
+  let [main, other] = but.length > 1 ? [but.slice(1).join(' '), but[0]!] : [concessive[0]!, concessive.slice(1).join(' ')];
+  if (!SOLO.test(main) && !TEAM.test(main)) [main, other] = [s, ''];
+  const solo = SOLO.test(main);
+  const team = TEAM.test(main);
+  const disliked = (re: RegExp) => {
+    const at = main.search(re);
+    return DISLIKE.test(main.slice(Math.max(0, at - 25), at + 25).split(/[,;]/).find((part) => re.test(part)) ?? '');
+  };
+  if (solo && team) {
+    const teamDisliked = disliked(TEAM);
+    const soloDisliked = disliked(SOLO);
+    if (teamDisliked !== soloDisliked) return teamDisliked ? 0.2 : 0.8;
+    return main.search(TEAM) < main.search(SOLO) ? 0.8 : 0.2;
+  }
+  if (solo) return disliked(SOLO) ? 0.8 : TEAM.test(other) ? 0.3 : 0.2;
+  if (team) return disliked(TEAM) ? 0.2 : SOLO.test(other) ? 0.7 : 0.8;
+  return null;
+}
+
 function styleCues(sentence: string, targetSlots: string[]): ExtractedUpdate[] {
   const out: ExtractedUpdate[] = [];
   const add = (slot: string, value: number, confidence = 0.7) =>
@@ -99,22 +130,8 @@ function styleCues(sentence: string, targetSlots: string[]): ExtractedUpdate[] {
   else if (/\bexams?\b/.test(s) && !/\b(coursework|projects?)\b/.test(s)) add('style.examPreference', DISLIKE.test(s) ? 0.15 : 0.85);
   else if (/\b(coursework|projects?|assignments?)\b/.test(s) && !/\bexams?\b/.test(s)) add('style.examPreference', DISLIKE.test(s) ? 0.8 : 0.2);
   // "More productive solo, though I can handle group work": a solo preference with a concession stays solo.
-  // The main clause says which they prefer; a concession after "though" only softens it, so "more productive solo,
-  // though I can handle group work" is solo and "I prefer group work though I can work alone" is team.
-  const SOLO = /\b(alone|solo|on my own|independent(ly)?|by myself|individual(ly)?)\b/;
-  const TEAM = /\b(team|group|together|collaborat\w*)\b/;
-  const [main = s, concession = ''] = s.split(/\b(?:though|although|but|if (?:i have to|necessary|needed))\b/);
-  const mainSolo = SOLO.test(main);
-  const mainTeam = TEAM.test(main);
-  if (mainSolo && mainTeam) {
-    // Both named in one clause ("group work over working alone"): the first named is preferred, unless it is disliked
-    // ("I hate group work, I prefer working alone").
-    const teamFirst = (main.search(TEAM) < main.search(SOLO)) !== DISLIKE.test(main);
-    add('style.groupPreference', teamFirst ? 0.8 : 0.2);
-  } else if (mainSolo) add('style.groupPreference', TEAM.test(concession) ? 0.3 : 0.2);
-  else if (mainTeam && !mainSolo) add('style.groupPreference', DISLIKE.test(main) ? 0.2 : SOLO.test(concession) ? 0.7 : 0.8);
-  else if (SOLO.test(s) && !TEAM.test(s)) add('style.groupPreference', 0.2);
-  else if (TEAM.test(s) && !SOLO.test(s)) add('style.groupPreference', DISLIKE.test(s) ? 0.2 : 0.8);
+  const group = groupPreference(s);
+  if (group !== null) add('style.groupPreference', group);
   // "Building robots" names a topic; it only reads as a hands-on preference when the question asked about it.
   const applied = asked('style.appliedPreference') ? /\b(hands-on|applied|practical|real[- ]world|build(ing)?|make things)\b/ : /\b(hands-on|practical|real[- ]world)\b/;
   if (applied.test(s)) add('style.appliedPreference', DISLIKE.test(s) ? 0.2 : 0.85);

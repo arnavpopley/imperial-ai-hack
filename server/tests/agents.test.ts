@@ -79,6 +79,9 @@ describe('extractor', () => {
     expect(group('Team work please, but a lighter workload this year.')).toBe(0.8);
     expect(group('I prefer group work over working alone.')).toBe(0.8);
     expect(group('I hate group work, I prefer working alone.')).toBe(0.2);
+    expect(group("I don't mind group work but I prefer working alone.")).toBe(0.3);
+    expect(group("I'd rather not work alone.")).toBe(0.8);
+    expect(group('I prefer working in a team, and a heavy workload is fine.')).toBe(0.8);
   });
 
   it('reads typed comfort phrases when no slider values were sent', async () => {
