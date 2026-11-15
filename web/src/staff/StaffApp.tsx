@@ -1,4 +1,5 @@
-// Staff console (WS5, spec 14 screens 8 to 11): module-lead dashboard, tag editor, timetabling and escalations.
+// Staff console (WS5, spec 14 screens 8 to 11, and spec 23): module-lead dashboard, tag editor, exam feedback,
+// timetabling and escalations.
 import { motion } from 'motion/react';
 import type { ReactNode } from 'react';
 import { Link, Route, Routes, useLocation } from 'react-router';
@@ -8,6 +9,7 @@ import { EmptyState } from './components/ui.tsx';
 import { focusRing } from './lib/format.ts';
 import { EscalationDetail } from './pages/EscalationDetail.tsx';
 import { EscalationPlaceholder, EscalationsPage } from './pages/EscalationsPage.tsx';
+import { ExamFeedbackPage } from './pages/ExamFeedbackPage.tsx';
 import { FeedbackPage } from './pages/FeedbackPage.tsx';
 import { ModuleDashboard } from './pages/ModuleDashboard.tsx';
 import { FirstModuleRedirect, ModuleLayout, ModulesPage } from './pages/ModulesPage.tsx';
@@ -43,6 +45,7 @@ export function StaffApp() {
             <Route path="modules/:moduleId" element={<ModuleLayout />}>
               <Route index element={<ModuleDashboard />} />
               <Route path="tags" element={<TagEditor />} />
+              <Route path="exam" element={<ExamFeedbackPage />} />
             </Route>
           </Route>
           <Route path="timetable" element={<TimetablePage />} />
