@@ -411,14 +411,17 @@ async function finishInterviewTurn(turn: Turn) {
   await turn.emit({ type: 'done', messageId: note.id, widget: null });
 }
 
-/** A guarantee question about one module: no promise, then its pathway relevance and fit (outcomes.ts). */
-async function guaranteeTurn(turn: Turn, moduleId: string, resume: PlanStep | null = null) {
+/**
+ * A guarantee question: no promise, then its module's pathway relevance and fit when one is named (outcomes.ts).
+ * Mid-interview it ends by asking the pending question again; `widget` keeps the summary card when shown.
+ */
+async function guaranteeTurn(turn: Turn, moduleId: string | null, resume: PlanStep | null = null, widget: Widget = null) {
   const { session } = turn;
-  const module = catalogue.modules().find((m) => m.id === moduleId) ?? null;
-  const rec = ranked(session).find((r) => r.moduleId === moduleId) ?? null;
+  const module = moduleId ? (catalogue.modules().find((m) => m.id === moduleId) ?? null) : null;
+  const rec = module ? (ranked(session).find((r) => r.moduleId === module.id) ?? null) : null;
   const answer = guaranteeReply(module, catalogue.pathways(), rec, hasFitSignal(session.profile));
-  turn.tracer.record({ actor: 'supervisor', kind: 'agent', input: `guarantee question about ${module?.code ?? moduleId}`, output: 'answered without a promise, from module data', verdict: null });
-  await say(turn, 'supervisor', resume ? `${answer}\n\nBack to the interview: ${resume.question}` : answer, resume?.widget ?? null);
+  turn.tracer.record({ actor: 'supervisor', kind: 'agent', input: `guarantee question${module ? ` about ${module.code}` : ''}`, output: 'answered without a promise, from module data', verdict: null });
+  await say(turn, 'supervisor', resume ? `${answer}\n\nBack to the interview: ${resume.question}` : answer, resume?.widget ?? widget);
 }
 
 // ---------- entry point ----------
@@ -485,11 +488,15 @@ async function runTurn(sessionId: string, body: SendMessageBody, emit: Emit): Pr
   if (intent.intent === 'rule_exception_request') return ruleExceptionTurn(turn, intent.moduleIds);
   // Spec 10.5: a question asking for a guaranteed job or grade is told plainly that none is promised. With a
   // module named, the reply is what the module data says; otherwise the routed answer follows the statement.
+  // During the interview the reply asks the pending question again (or keeps the summary card), as for any
+  // turn that is not an answer.
   const guarantee = !body.structured && asksForGuarantee(turn.text);
   const named = intent.moduleIds[0] ?? null;
+  if (guarantee && session.mode === 'INTERVIEW') {
+    const card: Widget = session.interview.finished ? { kind: 'confirm-profile', fields: [] } : null;
+    return guaranteeTurn(turn, named, pending, card);
+  }
   if (session.mode === 'INTERVIEW' && !session.interview.finished) {
-    if (guarantee && named && isModuleQuestion(turn.text, intent.moduleIds)) return guaranteeTurn(turn, named, pending);
-    if (guarantee && isModuleQuestion(turn.text, intent.moduleIds)) turn.preface = NO_GUARANTEE;
     // Spec 10.1: intent first, deterministically. Only an answer goes to the interviewer and the extractor, so
     // a request to stop or a question about modules never becomes profile evidence or uses up a question.
     if (!body.structured && wantsToFinishInterview(turn.text)) return finishInterviewTurn(turn);

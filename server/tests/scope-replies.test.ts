@@ -6,7 +6,8 @@ import { QUICK_PLAN } from '../src/agents/interviewer.ts';
 import { asksForGuarantee, NO_GUARANTEE } from '../src/agents/outcomes.ts';
 import { createApp } from '../src/app.ts';
 import { seedIfEmpty } from '../src/bootstrap.ts';
-import { scopeRedirect } from '../src/guardrails/g1-scope.ts';
+import { scopeCheck, scopeRedirect } from '../src/guardrails/g1-scope.ts';
+import { createTracer } from '../src/trace/tracer.ts';
 import * as repo from '../src/db/repo.ts';
 
 const app = createApp();
@@ -35,9 +36,25 @@ describe('asksForGuarantee', () => {
     }
   });
 
-  it('leaves ordinary career questions alone', () => {
-    for (const text of ['Which modules are relevant to a career in robotics?', 'I want a job in robotics after I graduate', 'How is Mechatronics 3A assessed?']) {
+  it('leaves ordinary career questions and remarks alone', () => {
+    for (const text of ['Which modules are relevant to a career in robotics?', 'I want a job in robotics after I graduate', 'How is Mechatronics 3A assessed?', 'Add Mechatronics 3A to my shortlist; I know it does not guarantee a job']) {
       expect(asksForGuarantee(text), text).toBe(false);
+    }
+  });
+});
+
+describe('scopeCheck request forms', () => {
+  const ctx = { mode: 'RECOMMEND' as const, tracer: createTracer('t', () => {}) };
+
+  it('catches ordinary ways of asking for coursework or an application to be written', async () => {
+    for (const text of ['I need help to solve my homework', 'I want you to write my essay on turbulence.', 'Help me with my lab report', 'Could someone draft my personal statement?']) {
+      expect((await scopeCheck(text, ctx)).verdict, text).toBe('block');
+    }
+  });
+
+  it('leaves pasted work and ordinary answers in scope', async () => {
+    for (const text of ['Here is my CV: I improved the robotics society application process.', 'I enjoyed writing the CFD coursework report last year.']) {
+      expect((await scopeCheck(text, ctx)).verdict, text).toBe('pass');
     }
   });
 });
@@ -72,6 +89,29 @@ describe('scope and guarantee replies (routes)', () => {
     const id = await session(true);
     const { text } = await chat(id, 'Will any of these get me a first?');
     expect(text.startsWith(NO_GUARANTEE)).toBe(true);
+  });
+
+  it('adds a module when the request only mentions guarantees', async () => {
+    const id = await session(true);
+    await chat(id, 'Add Mechatronics 3A to my shortlist; I know it does not guarantee a job');
+    expect(repo.getSession(id)!.shortlist).toContain('MECH60018');
+  });
+
+  it('answers an unnamed guarantee question mid-interview and re-asks the question', async () => {
+    const id = await session(false);
+    const { text } = await chat(id, 'Will any of these get me a first?');
+    expect(text.startsWith(NO_GUARANTEE)).toBe(true);
+    expect(text).toContain(`Back to the interview: ${QUICK_PLAN[0]!.question}`);
+    expect(repo.getSession(id)!.interview.questionsAsked).toBe(1);
+  });
+
+  it('keeps the summary card after a guarantee question once the interview has finished', async () => {
+    const id = await session(false);
+    const { interview } = repo.getSession(id)!;
+    repo.updateSession(id, { interview: { ...interview, finished: true } });
+    const { events, text } = await chat(id, 'Will Mechatronics 3A get me a job?');
+    expect(text.startsWith(NO_GUARANTEE)).toBe(true);
+    expect(events.find((e) => e.type === 'done')).toMatchObject({ widget: { kind: 'confirm-profile' } });
   });
 
   it('answers a guarantee question mid-interview without storing it, then re-asks the question', async () => {

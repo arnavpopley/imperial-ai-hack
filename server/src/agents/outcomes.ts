@@ -5,7 +5,8 @@ import type { Module, Pathway, Recommendation } from '@modulematch/shared';
 
 /**
  * "Will taking X get me a job at Y?", "Is this module a guaranteed first?", "Can this help me get hired?".
- * The question must ask whether something leads to an outcome, not just mention a job or a grade.
+ * It must be a question that asks whether something leads to an outcome, not just mention a job, a grade or
+ * the word "guarantee" ("Add CFD; I know it does not guarantee a job" is a shortlist request).
  */
 const GUARANTEE: RegExp[] = [
   /\bguarantee(s|d)?\b/i,
@@ -13,8 +14,11 @@ const GUARANTEE: RegExp[] = [
   /\b(will|would|am) i\b.{0,30}\b(get|be) (a job|hired|employed|a first|a 2:1|a distinction)\b/i,
 ];
 
+/** A question: it ends with "?" or opens with an auxiliary ("will…", "is…"), so a remark about guarantees is not one. */
+const QUESTION = /\?\s*$|^\s*(will|would|does|do|did|can|could|is|are|am|should)\b/i;
+
 export function asksForGuarantee(text: string): boolean {
-  return GUARANTEE.some((pattern) => pattern.test(text));
+  return QUESTION.test(text) && GUARANTEE.some((pattern) => pattern.test(text));
 }
 
 /** Said first, every time: no outcome is promised. */

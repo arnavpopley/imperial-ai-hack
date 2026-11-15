@@ -6,15 +6,28 @@ import type { InputContext, StageResult } from './types.ts';
 /** What an out-of-scope request is, so the redirect can say who does help with it (issue #67). */
 export type ScopeTopic = 'writing' | 'academic-work' | 'other';
 
-/** A request to do something: "can you …", "please …", "help me …", or the message opening with the verb. */
-const request = (action: string): RegExp =>
-  new RegExp(String.raw`(?:^\s*|\b(?:can|could|would|will) (?:you|u)\b.{0,15}?|\bplease\b.{0,10}?|\bhelp me\b.{0,10}?|\bi need (?:you|someone) to\b.{0,10}?)\b(?:to )?` + action, 'i');
+/**
+ * A request to do something: "can you …", "please …", "help me …", "I need help to …", "I want you to …", or the
+ * message opening with the verb. Pasted work that merely contains the verb is not a request.
+ */
+const REQUEST = [
+  String.raw`^\s*`,
+  String.raw`\b(?:can|could|would|will) (?:you|u|someone|somebody)\b.{0,15}?`,
+  String.raw`\bplease\b.{0,10}?`,
+  String.raw`\bhelp me\b.{0,10}?`,
+  String.raw`\bi (?:need|want|would like|'d like) (?:you|someone|somebody|help|a hand)\b.{0,10}?`,
+].join('|');
+const request = (action: string): RegExp => new RegExp(String.raw`(?:${REQUEST})\b(?:to )?` + action, 'i');
+
+/** The coursework a student might ask to have done for them. */
+const COURSEWORK = String.raw`(essay|homework|coursework|assignment|problem sheet|exam|lab report|dissertation|thesis)`;
 
 const OUT_OF_SCOPE: { topic: ScopeTopic; pattern: RegExp }[] = [
   // Asking for an application document to be written. Sharing a CV to mine for interests stays in scope, so only a
   // request ("can you", "please", "help me", or an opening imperative) counts.
   { topic: 'writing', pattern: request(String.raw`(write|draft|rewrite|proofread|redo|fix|polish|improve)\b.{0,30}\b(my|a|an|the)\b.{0,20}\b(cover letter|cv|resume|résumé|personal statement|motivation letter|job application)\b`) },
-  { topic: 'academic-work', pattern: request(String.raw`(write|do|finish|solve|answer)\b.{0,30}\b(my|the|this)\b.{0,20}\b(essay|homework|coursework|assignment|problem sheet|exam|lab report|dissertation|thesis)\b`) },
+  { topic: 'academic-work', pattern: request(String.raw`(write|do|finish|solve|answer)\b.{0,30}\b(my|the|this)\b.{0,20}\b${COURSEWORK}\b`) },
+  { topic: 'academic-work', pattern: new RegExp(String.raw`\bhelp (?:me )?(?:with|on) (?:my|the|this)\b.{0,20}\b${COURSEWORK}\b`, 'i') },
   { topic: 'other', pattern: /\b(weather|recipe|football|lottery|crypto|bitcoin|horoscope)\b/i },
   { topic: 'other', pattern: /\bwho (won|is the president)\b/i },
   { topic: 'other', pattern: /\b(write|generate)\b.{0,20}\b(a poem|a story|a song|code for|a script)\b/i },
