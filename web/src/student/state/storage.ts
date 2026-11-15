@@ -18,3 +18,24 @@ export function writeStoredSessionId(id: string | null): void {
     // Without storage the session still works; it just will not resume after a reload.
   }
 }
+
+const DISMISSED_DRAFT_KEY = 'modulematch.dismissedDraft';
+
+/** The summary of the escalation draft the student dismissed in this session, so it stays dismissed on reload. */
+export function readDismissedDraft(sessionId: string): string | null {
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(DISMISSED_DRAFT_KEY) ?? 'null') as { sessionId?: unknown; summary?: unknown } | null;
+    return stored?.sessionId === sessionId && typeof stored.summary === 'string' ? stored.summary : null;
+  } catch {
+    return null;
+  }
+}
+
+export function writeDismissedDraft(sessionId: string, summary: string | null): void {
+  try {
+    if (summary === null) window.localStorage.removeItem(DISMISSED_DRAFT_KEY);
+    else window.localStorage.setItem(DISMISSED_DRAFT_KEY, JSON.stringify({ sessionId, summary }));
+  } catch {
+    // Without storage a dismissed draft only stays dismissed until the page reloads.
+  }
+}

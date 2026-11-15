@@ -1,6 +1,6 @@
 // Supervisor (spec 10.1): owns the mode, routes each student turn to one agent, and raises escalations.
 // It is a deterministic state machine plus one intent classification. Every step is traced.
-import { confidenceLabel, type Message, type SendMessageBody, type SessionState, type SseEvent, type Weights } from '@modulematch/shared';
+import { confidenceLabel, MORE_QUESTIONS, STARTER_QUESTIONS, type Message, type SendMessageBody, type SessionState, type SseEvent, type Weights } from '@modulematch/shared';
 import { randomUUID } from 'node:crypto';
 import * as repo from '../db/repo.ts';
 import { SCOPE_REDIRECT } from '../guardrails/g1-scope.ts';
@@ -12,11 +12,11 @@ import { answerCatalogueQuestion } from './catalogue.ts';
 import { draftComplaint, draftLowConfidence, draftRuleException, draftWellbeing } from './escalation.ts';
 import { extract, mergeUpdates } from './extractor.ts';
 import { classifyIntent, needsClarification } from './intent.ts';
-import { askNext, nextQuestion, reflect, studentTurn, unfilledSlots, whatIHeard, type Widget } from './interviewer.ts';
+import { answeredSteps, askNext, nextQuestion, reflect, studentTurn, unfilledSlots, whatIHeard, type Widget } from './interviewer.ts';
 import { emitWords, type ChatMessage } from './llm.ts';
 import { alternativesTo, holdPosition } from './matcher.ts';
 import { matchModules, MAX_SUGGESTIONS } from './module-match.ts';
-import { checkShortlist } from '../engines/index.ts';
+import { checkShortlist, hasFitSignal } from '../engines/index.ts';
 import { applyShortlistEdit, catalogue, enterExplain, explanationFor, leaveExplain, moduleTitle, precomputeTopExplanations, ranked, rulesForProfile, saveProfile, setMode, syncPlanMode, timetableView, tracerSink } from './session.ts';
 import { describeTimetable, explainTimetable } from './timetabler.ts';
 
@@ -456,15 +456,25 @@ async function runTurn(sessionId: string, body: SendMessageBody, emit: Emit): Pr
 export function confirmProfile(session: SessionState): { tracer: Tracer; lowConfidence: boolean } {
   const tracer = createTracer(session.id, tracerSink);
   if (session.mode === 'ONBOARD') setMode(session, 'INTERVIEW', tracer, 'programme and year entered');
+  // Finished means the interviewer ran out of questions; confirming before that is a skip.
+  const interviewed = session.interview.finished;
   session.interview = { ...session.interview, finished: true, confirmed: true, targetSlots: [] };
   repo.updateSession(session.id, { interview: session.interview });
   setMode(session, 'RECOMMEND', tracer, 'profile confirmed or interview skipped');
   const lowConfidence = confidenceLabel(session.profile.completeness) === 'low';
-  if (lowConfidence) {
-    // Spec 8.6: low confidence greys the scores and the Supervisor proposes returning to the interview.
+  // Spec 8.6 and 11.1: a personal tutor is offered only when confidence is still low after a full interview,
+  // never on a skip; a skip is offered more questions instead.
+  const offerTutor = lowConfidence && interviewed;
+  const tutor = offerTutor ? ', or ask for a personal tutor to help' : '';
+  if (!hasFitSignal(session.profile)) {
+    // Cold start: nothing to score yet, so the catalogue is in a starter order without fit scores.
     repo.addMessage(
-      message(session.id, 'assistant', 'I do not know enough about you yet, so these scores are rough. Answer a few more questions for better matches, or ask for a personal tutor to help.', 'supervisor'),
+      message(session.id, 'assistant', `I do not know what you enjoy yet, so your modules are in a starter order without fit scores: your year's modules first, then the ones students like you shortlist. Answer ${STARTER_QUESTIONS} quick questions for real matches${tutor}.`, 'supervisor'),
     );
+  } else if (lowConfidence) {
+    repo.addMessage(message(session.id, 'assistant', `I do not know enough about you yet, so these scores are rough. Answer a few more questions for better matches${tutor}.`, 'supervisor'));
+  }
+  if (offerTutor) {
     const draft = draftLowConfidence(session.profile, 'the profile is less than half complete after the interview.');
     session.escalationDraft = draft;
     repo.updateSession(session.id, { escalationDraft: draft });
@@ -477,7 +487,18 @@ export function confirmProfile(session: SessionState): { tracer: Tracer; lowConf
 /** Student agrees to return to the interview from RECOMMEND (spec 12). */
 export function resumeInterview(session: SessionState): void {
   const tracer = createTracer(session.id, tracerSink);
-  session.interview = { ...session.interview, finished: false, confirmed: false, budget: session.interview.questionsAsked + 2 };
-  repo.updateSession(session.id, { interview: session.interview });
+  // The mode machine decides first: from PLAN, say, the interview cannot reopen (refused and traced).
   setMode(session, 'INTERVIEW', tracer, 'low confidence and student agrees');
+  if (session.mode !== 'INTERVIEW') return;
+  // A student who skipped gets STARTER_QUESTIONS, one who answered some gets MORE_QUESTIONS. Questions they
+  // skipped are asked again, and the first one is posted now so the chat does not wait on a stale question.
+  const more = hasFitSignal(session.profile) ? MORE_QUESTIONS : STARTER_QUESTIONS;
+  const askedSteps = answeredSteps(session);
+  const reopened = { ...session.interview, finished: false, confirmed: false, askedSteps, targetSlots: [], budget: session.interview.questionsAsked + more };
+  const next = nextQuestion({ ...session, interview: reopened }, askedSteps);
+  session.interview = next
+    ? { ...reopened, questionsAsked: reopened.questionsAsked + 1, askedSteps: [...askedSteps, next.step.id], targetSlots: next.targetSlots }
+    : reopened;
+  repo.updateSession(session.id, { interview: session.interview });
+  if (next) repo.addMessage(message(session.id, 'assistant', `${more} quick questions, then I can rank your modules properly. ${next.step.question}`, 'interviewer'));
 }

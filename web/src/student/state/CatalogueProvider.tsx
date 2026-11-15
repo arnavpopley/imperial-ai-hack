@@ -38,14 +38,31 @@ interface CatalogueValue {
   /** Eligible modules first, each group ordered by live fit. */
   ranked: RankedModule[];
   byId: ReadonlyMap<string, RankedModule>;
+  /** False while the profile has nothing to score (ranking 'starter', spec 8.6): fit numbers and ranks are hidden. */
+  scored: boolean;
 }
 
 const CatalogueContext = createContext<CatalogueValue | null>(null);
 
-/** Eligible first (spec 8.7 keeps ineligible modules listed, greyed), then by fit, then by id for stability. */
-function order(a: Recommendation & { fit: number }, b: Recommendation & { fit: number }): number {
+export type Ordered = Recommendation & { fit: number; position: number };
+
+/**
+ * Eligible first (spec 8.7 keeps ineligible modules listed, greyed), then by fit. Equal fits keep the server's
+ * order, which breaks ties by id, or is the starter order when there is nothing to score.
+ */
+function order(a: Ordered, b: Ordered): number {
   if (a.eligible !== b.eligible) return a.eligible ? -1 : 1;
-  return b.fit - a.fit || a.moduleId.localeCompare(b.moduleId);
+  return b.fit - a.fit || a.position - b.position;
+}
+
+/** 1-based ranks where equal fits in the same group share a rank (1, 2, 2, 4), so a tie never looks ranked. */
+export function sharedRanks(list: readonly Ordered[]): number[] {
+  const ranks: number[] = [];
+  list.forEach((r, index) => {
+    const previous = list[index - 1];
+    ranks.push(previous && previous.fit === r.fit && previous.eligible === r.eligible ? ranks[index - 1]! : index + 1);
+  });
+  return ranks;
 }
 
 const sameWeights = (a: Weights, b: Weights) =>
@@ -112,22 +129,21 @@ export function CatalogueProvider({ children }: { children: ReactNode }) {
   }, [save]);
 
   const ranked = useMemo(() => {
-    const list = recs.data?.recommendations ?? [];
+    const list = (recs.data?.recommendations ?? []).map((r, position) => ({ ...r, position }));
     const baseline = list
       .map((r) => ({ ...r, fit: combineFit(r.sub, DEFAULT_WEIGHTS) }))
       .sort(order)
       .map((r) => r.moduleId);
-    return list
-      .map((r) => ({ ...r, fit: combineFit(r.sub, weights) }))
-      .sort(order)
-      .map(
-        (r, index): RankedModule => ({
-          ...r,
-          module: moduleById.get(r.moduleId),
-          rank: index + 1,
-          rankShift: baseline.indexOf(r.moduleId) - index,
-        }),
-      );
+    const live = list.map((r) => ({ ...r, fit: combineFit(r.sub, weights) })).sort(order);
+    const ranks = sharedRanks(live);
+    return live.map(
+      ({ position: _position, ...r }, index): RankedModule => ({
+        ...r,
+        module: moduleById.get(r.moduleId),
+        rank: ranks[index]!,
+        rankShift: baseline.indexOf(r.moduleId) - index,
+      }),
+    );
   }, [recs.data, weights, moduleById]);
 
   const byId = useMemo(() => new Map(ranked.map((r) => [r.moduleId, r])), [ranked]);
@@ -142,6 +158,7 @@ export function CatalogueProvider({ children }: { children: ReactNode }) {
       saveState,
       ranked,
       byId,
+      scored: recs.data?.ranking !== 'starter',
     }),
     [recs, weights, setWeight, resetWeights, saveState, ranked, byId],
   );

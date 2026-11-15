@@ -96,3 +96,20 @@ export function ScoreRing({ value, size = 'md', dimmed = false, delay = 0, class
     </div>
   );
 }
+
+/** In place of the ring when there is nothing to score yet (no interests or pathway, spec 8.6). */
+export function NoScoreRing({ size = 'md', className }: { size?: 'md' | 'lg'; className?: string }) {
+  const px = size === 'lg' ? 104 : 64;
+  return (
+    <div
+      role="img"
+      aria-label="No fit score yet"
+      className={cx('grid shrink-0 place-items-center rounded-full border-4 border-dashed border-surface-2 text-muted', className)}
+      style={{ width: px, height: px }}
+    >
+      <span aria-hidden="true" className={cx('font-semibold', size === 'lg' ? 'text-3xl' : 'text-lg')}>
+        –
+      </span>
+    </div>
+  );
+}

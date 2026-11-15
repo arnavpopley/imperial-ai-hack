@@ -4,7 +4,7 @@ import type { EscalationDraft, SessionState } from '@modulematch/shared';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { api } from '../../api.ts';
 import { errorMessage } from '../../components/StateViews.tsx';
-import { readStoredSessionId, writeStoredSessionId } from './storage.ts';
+import { readDismissedDraft, readStoredSessionId, writeDismissedDraft, writeStoredSessionId } from './storage.ts';
 
 export type CreateSessionInput = Parameters<typeof api.createSession>[0];
 export type SessionStatus = 'loading' | 'none' | 'ready' | 'error';
@@ -111,6 +111,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const forget = useCallback(() => {
     writeStoredSessionId(null);
+    writeDismissedDraft('', null);
     setResumeId(null);
     setSession(null);
     setOfferedDraft(null);
@@ -120,12 +121,16 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const serverDraft = session?.escalationDraft ?? null;
-  const draft = offeredDraft ?? (serverDraft && serverDraft.summary !== dismissedSummary ? serverDraft : null);
+  // A dismissal is remembered for the session, so the stored draft does not come back on every reload.
+  const dismissed = dismissedSummary ?? (sessionId ? readDismissedDraft(sessionId) : null);
+  const draft = offeredDraft ?? (serverDraft && serverDraft.summary !== dismissed ? serverDraft : null);
 
   const dismissDraft = useCallback(() => {
     setOfferedDraft(null);
-    if (draft) setDismissedSummary(draft.summary);
-  }, [draft]);
+    if (!draft) return;
+    setDismissedSummary(draft.summary);
+    if (sessionId) writeDismissedDraft(sessionId, draft.summary);
+  }, [draft, sessionId]);
 
   const value = useMemo<SessionContextValue>(
     () => ({
