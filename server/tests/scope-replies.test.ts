@@ -37,7 +37,7 @@ describe('asksForGuarantee', () => {
   });
 
   it('leaves ordinary career questions and remarks alone', () => {
-    for (const text of ['Which modules are relevant to a career in robotics?', 'I want a job in robotics after I graduate', 'How is Mechatronics 3A assessed?', 'Add Mechatronics 3A to my shortlist; I know it does not guarantee a job']) {
+    for (const text of ['Which modules are relevant to a career in robotics?', 'I want a job in robotics after I graduate', 'How is Mechatronics 3A assessed?', 'Add Mechatronics 3A to my shortlist; I know it does not guarantee a job', 'What I want is hands-on robotics, not a guaranteed job.']) {
       expect(asksForGuarantee(text), text).toBe(false);
     }
   });

@@ -15,10 +15,12 @@ const GUARANTEE: RegExp[] = [
 ];
 
 /**
- * A question: it ends with "?" or opens like one ("will…", "is…", "which…"), punctuation or not, so a remark
- * about guarantees is not one.
+ * A question: it ends with "?" or opens like one, punctuation or not: an auxiliary ("will…", "is…"), or a
+ * question word followed by one or by what is asked about ("which modules…", "how will…"). So a remark about
+ * guarantees ("What I want is hands-on work, not a guaranteed job") is not one.
  */
-const QUESTION = /\?\s*$|^\s*(will|would|does|do|did|can|could|is|are|am|should|which|what|how|why|who)\b/i;
+const AUX = String.raw`(?:will|would|does|do|did|can|could|is|are|am|should)`;
+const QUESTION = new RegExp(String.raw`\?\s*$|^\s*${AUX}\b|^\s*(?:which|what|how|why|who)\s+(?:${AUX}|modules?|electives?|courses?|options?|ones?)\b`, 'i');
 
 export function asksForGuarantee(text: string): boolean {
   return QUESTION.test(text) && GUARANTEE.some((pattern) => pattern.test(text));
