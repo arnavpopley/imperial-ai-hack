@@ -95,7 +95,7 @@ export const AGENTS: readonly Agent[] = [
     tier: 'smart',
     tools: ['search_modules', 'get_module', 'compare_modules'],
     does: 'Searches the whole catalogue in a tool loop.',
-    never: 'names a module the tools did not return.',
+    never: 'names a module code that is not in the catalogue.',
     gradient: 'from-module-2 to-mode-plan',
     tone: 'text-module-2',
   },

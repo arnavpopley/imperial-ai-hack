@@ -163,7 +163,7 @@ function wide(): FlowLayout {
       id: 'staff-reply',
       step: 4,
       dashed: true,
-      d: `M610 ${lower + 56} V${lower + 80} H1122 V${cy + 28}`,
+      d: `M${nodes.staff.x + nodes.staff.w / 2} ${lower + 56} V${lower + 80} H1122 V${cy + 28}`,
     },
     { id: 'insights-agent', step: 2, d: `M${nodes.insights.x} ${lowerMid} H${right(nodes.insightsAgent)}` },
     { id: 'insights-staff', step: 3, d: `M${nodes.insightsAgent.x} ${lowerMid} H${right(nodes.staff)}` },
