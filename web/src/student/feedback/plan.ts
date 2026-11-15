@@ -1,44 +1,71 @@
-// Pure helpers for the exam feedback page: lost-mark bars and the revision checklist kept in localStorage.
+// Pure helpers for the exam feedback page: the per-question chart, worst-exam-first order, and the revision
+// checklist kept in localStorage.
 import type { ModuleResult, TailoredFeedback } from '@modulematch/shared';
 
-export interface LostMarksRow {
+/** One question on the exam chart: what the student scored and lost, and whether it is one of the weak points. */
+export interface QuestionBar {
   questionId: string;
-  lost: number;
-  /** The question's maximum, from the student's own mark sheet, when it shows one. */
-  maxMarks: number | null;
-  /** Bar width for the lost marks, 0 to 1: of the question's maximum, or of the largest loss when that is unknown. */
-  lostShare: number;
-  /** Bar width for the marks scored, 0 to 1, when the maximum is known. */
+  /** The question's subject, when known, such as "Boundary layers and the Blasius solution". */
+  label: string;
+  mark: number;
+  maxMarks: number;
+  /** Bar widths, 0 to 1, of the question's maximum. They never add up to more than 1. */
   scoredShare: number;
+  lostShare: number;
+  weak: boolean;
 }
 
 /** Question ids match as the server matches them: ignoring case and surrounding spaces ("q1" is "Q1"). */
 const sameQuestion = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
 
-/** One bar per weak point, joining the student's question marks for the same exam when they exist. */
-export function lostMarksRows(weakPoints: TailoredFeedback['weakPoints'], result: ModuleResult | undefined): LostMarksRow[] {
-  const largest = Math.max(0, ...weakPoints.map((w) => w.lostMarks));
-  return weakPoints.map((w) => {
-    const question = result?.questionMarks.find((q) => sameQuestion(q.questionId, w.questionId));
-    if (question && question.maxMarks > 0) {
-      const lost = Math.min(w.lostMarks, question.maxMarks);
+/**
+ * Every question the student has a mark for, for the chart: all of their uploaded question marks, including any the
+ * examiner's form does not cover, plus any the server sent that the mark sheet lacks. Labels come from the server's
+ * questions, then the weak points.
+ */
+export function questionBars(feedback: TailoredFeedback, result: ModuleResult | undefined): QuestionBar[] {
+  const fromServer = feedback.questions ?? [];
+  const uploaded = (result?.questionMarks ?? []).map((q) => ({
+    ...q,
+    label: fromServer.find((s) => sameQuestion(s.questionId, q.questionId))?.label ?? '',
+  }));
+  const source = [...uploaded, ...fromServer.filter((s) => !uploaded.some((u) => sameQuestion(u.questionId, s.questionId)))];
+  return source
+    .filter((q) => q.maxMarks > 0)
+    .map((q) => {
+      const weakPoint = feedback.weakPoints.find((w) => sameQuestion(w.questionId, q.questionId));
+      const scored = Math.min(Math.max(q.mark, 0), q.maxMarks);
       return {
-        questionId: w.questionId,
-        lost: w.lostMarks,
-        maxMarks: question.maxMarks,
-        lostShare: lost / question.maxMarks,
-        scoredShare: Math.min(question.mark, question.maxMarks - lost) / question.maxMarks,
+        questionId: q.questionId,
+        label: q.label || weakPoint?.label || '',
+        mark: q.mark,
+        maxMarks: q.maxMarks,
+        scoredShare: scored / q.maxMarks,
+        lostShare: (q.maxMarks - scored) / q.maxMarks,
+        weak: weakPoint !== undefined,
       };
-    }
-    return {
-      questionId: w.questionId,
-      lost: w.lostMarks,
-      maxMarks: null,
-      lostShare: largest > 0 ? w.lostMarks / largest : 0,
-      scoredShare: 0,
-    };
-  });
+    });
 }
+
+/** The student's overall mark on the exam, from the feedback or their own results. */
+export const examMark = (feedback: TailoredFeedback, result: ModuleResult | undefined): number | null =>
+  feedback.mark ?? result?.mark ?? null;
+
+/** Share of the paper's marks lost, 0 to 1: from the questions when known, otherwise from the overall mark. */
+export function examGap(bars: readonly QuestionBar[], mark: number | null): number {
+  const total = bars.reduce((sum, b) => sum + b.maxMarks, 0);
+  if (total > 0) return bars.reduce((sum, b) => sum + b.lostShare * b.maxMarks, 0) / total;
+  return mark === null ? 0 : (100 - mark) / 100;
+}
+
+/** Most room to improve first; ties keep their original order. */
+export function byGap<T extends { gap: number }>(items: readonly T[]): T[] {
+  return items.map((item, index) => ({ item, index })).sort((a, b) => b.item.gap - a.item.gap || a.index - b.index).map((x) => x.item);
+}
+
+/** A stable element id for an exam's card, so the summary strip can jump to it. */
+export const examAnchor = (moduleId: string, examLabel: string) =>
+  `exam-${`${moduleId}-${examLabel}`.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`;
 
 /** "Q3" stays "Q3"; "q3" or "3" read as "Question 3". */
 export function questionLabel(questionId: string): string {
