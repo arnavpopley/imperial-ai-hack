@@ -35,7 +35,7 @@ export const QUICK_PLAN: PlanStep[] = [
   {
     id: 'team',
     slots: ['style.groupPreference', 'style.workloadTolerance'],
-    question: 'Do you work best alone or in a team? And how heavy a workload feels right?',
+    question: 'Do you prefer working alone or in a team? And would you rather a lighter, average or heavy workload?',
     widget: null,
   },
   { id: 'breadth', slots: ['breadthAppetite'], question: 'Would you like something outside your degree, like a language, business or the arts?', widget: null },
@@ -54,7 +54,7 @@ const FOLLOW_UPS: Record<string, string> = {
   'style.examPreference': 'If you could choose, would you rather sit an exam or hand in a piece of coursework?',
   'style.appliedPreference': 'Do you prefer understanding why something works, or using it to build something?',
   'style.groupPreference': 'Think of your best group project. Did you enjoy the team side of it?',
-  'style.workloadTolerance': 'Some modules are much heavier than others. How much do you want to take on this year?',
+  'style.workloadTolerance': 'Some modules take far more hours than others. Would you rather a lighter, average or heavy workload this year?',
   'style.mathsComfort': 'How do you feel about modules with lots of derivations and maths?',
   'style.codingComfort': 'How do you feel about modules where most of the work is coding?',
   breadthAppetite: 'Would a module from another faculty interest you, or would you rather stay focused?',
