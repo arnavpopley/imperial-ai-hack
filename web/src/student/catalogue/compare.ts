@@ -8,7 +8,8 @@ export const MIN_COMPARE = 2;
 
 /** Each compared module keeps a letter and a colour, so its values read across every row. */
 export const COMPARE_LETTERS = ['A', 'B', 'C'] as const;
-export const COMPARE_DOT = ['bg-module-1', 'bg-module-2', 'bg-module-3'] as const;
+// Module hues that no fit factor uses (issue 137): blue, teal, violet and gold mean factors in the same drawer.
+export const COMPARE_DOT = ['bg-module-6', 'bg-module-8', 'bg-module-3'] as const;
 
 /** Adds or removes a module, keeping the order of selection; a fourth module is not added. */
 export function toggleCompare(selected: readonly string[], moduleId: string): string[] {
