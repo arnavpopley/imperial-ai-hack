@@ -1,6 +1,6 @@
 // Offline agent behaviour: extraction, merge rules, interview planning and explanations (spec 10).
 import { DEFAULT_WEIGHTS, type Evidence, type SessionState } from '@modulematch/shared';
-import { fixtureModules, fixtureProfile, fixtureSession } from '@modulematch/shared/fixtures';
+import { fixtureModules, fixtureProfile, fixtureSession, fixtureTimetable } from '@modulematch/shared/fixtures';
 import { describe, expect, it } from 'vitest';
 import { extract, extractByCues, grounded, mergeUpdates, plausible } from '../src/agents/extractor.ts';
 import { classifyByRules } from '../src/agents/intent.ts';
@@ -8,6 +8,7 @@ import { nextQuestion, QUICK_PLAN, reflect, unfilledSlots, whatIHeard } from '..
 import { explainByRules } from '../src/agents/matcher.ts';
 import { canTransition } from '../src/agents/modes.ts';
 import { decisionReply, draftRuleException, reasonFrom, thirdPerson } from '../src/agents/escalation.ts';
+import { describeTimetable } from '../src/agents/timetabler.ts';
 
 const PATHWAYS = ['aerospace-motorsport', 'robotics-automation', 'startup-founder'];
 const emptyProfile = {
@@ -174,6 +175,36 @@ describe('extractor', () => {
     });
   });
 
+  it('keeps half a day free for "Wednesday afternoons", not the whole day', () => {
+    const slots = ['timetablePrefs.avoidDays', 'timetablePrefs.earliestStart'];
+    const updates = extractByCues('Keep Wednesday afternoons free for sport, and nothing before 10am please.', slots, PATHWAYS);
+    const { profile } = mergeUpdates(emptyProfile, updates, { sessionId: 's', turnId: 't' });
+    expect(profile.timetablePrefs).toEqual({ avoidDays: [], avoidHalfDays: ['wed-pm'], earliestStart: '10:00' });
+    const mixed = extractByCues('Fridays and Monday mornings, if you can.', slots, PATHWAYS);
+    expect(mergeUpdates(emptyProfile, mixed, { sessionId: 's', turnId: 't' }).profile.timetablePrefs).toMatchObject({
+      avoidDays: ['fri'],
+      avoidHalfDays: ['mon-am'],
+    });
+    // Both halves of one day are kept, however they are phrased.
+    for (const text of ['Keep Monday mornings and Monday afternoons free.', 'Monday morning and afternoon, please.']) {
+      expect(extractByCues(text, slots, PATHWAYS)).toContainEqual(
+        expect.objectContaining({ slot: 'timetablePrefs.avoidHalfDays', value: ['mon-am', 'mon-pm'] }),
+      );
+    }
+    // A later half-day answer narrows an earlier whole day, and a whole day absorbs its half days.
+    const narrowed = mergeUpdates(
+      emptyProfile,
+      extractByCues('Keep Wednesdays free. Actually, only Wednesday afternoons.', slots, PATHWAYS),
+      { sessionId: 's', turnId: 't' },
+    );
+    expect(narrowed.profile.timetablePrefs).toMatchObject({ avoidDays: [], avoidHalfDays: ['wed-pm'] });
+    const widened = mergeUpdates(narrowed.profile, extractByCues('All of Wednesday, please.', slots, PATHWAYS), { sessionId: 's', turnId: 't' });
+    expect(widened.profile.timetablePrefs).toMatchObject({ avoidDays: ['wed'], avoidHalfDays: [] });
+    // "No preference" clears both.
+    const cleared = mergeUpdates(profile, extractByCues('No, anytime is fine.', slots, PATHWAYS), { sessionId: 's', turnId: 't' });
+    expect(cleared.profile.timetablePrefs).toMatchObject({ avoidDays: [], avoidHalfDays: [] });
+  });
+
   it('writes one evidence row per applied update', () => {
     const { evidence, profile } = mergeUpdates(emptyProfile, [{ slot: 'style.groupPreference', value: 0.8, quote: 'team', confidence: 0.7 }], { sessionId: 's', turnId: 't' });
     expect(profile.style.groupPreference).toBe(0.8);
@@ -253,6 +284,22 @@ describe('matcher explanations', () => {
     expect(explanation.because.every((b) => b.evidenceId || b.moduleField)).toBe(true);
     expect(explanation.because[0]?.evidenceId).toBe('ev-1');
     expect(DEFAULT_WEIGHTS.interest).toBeGreaterThan(0);
+  });
+});
+
+describe('timetabler wording', () => {
+  it('says when no swap keeps kept-free time free', () => {
+    const [swap] = fixtureTimetable.swaps;
+    if (!swap) throw new Error('expected a fixture swap');
+    const title = (id: string) => id;
+    expect(describeTimetable(fixtureTimetable.clashes, [swap], title)).not.toContain('kept-free');
+    expect(describeTimetable(fixtureTimetable.clashes, [{ ...swap, keepFreeConflicts: 2 }], title)).toContain(
+      'No swap keeps all your kept-free time free; this one has 2 sessions in it.',
+    );
+    // A later clash's swap that keeps the time free is offered instead of an earlier one that does not.
+    const mixed = describeTimetable(fixtureTimetable.clashes, [{ ...swap, keepFreeConflicts: 1 }, { ...swap, withModuleId: 'FREE' }], title);
+    expect(mixed).toContain('for FREE');
+    expect(mixed).not.toContain('No swap keeps');
   });
 });
 

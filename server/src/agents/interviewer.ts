@@ -77,6 +77,20 @@ export function unfilledSlots(profile: StudentProfile, evidence: Evidence[]): st
 const slotFilled = (slot: string, gaps: string[], evidence: Evidence[]) =>
   slot.startsWith('timetablePrefs') ? evidence.some((e) => e.slot.startsWith('timetablePrefs')) : !gaps.includes(slot);
 
+/**
+ * The asked steps that got an answer: at least one of their slots now has evidence. A step the student
+ * skipped or talked past is dropped, so it can be asked again rather than lost.
+ */
+export function answeredSteps(session: SessionState): string[] {
+  const { profile, evidence } = session;
+  const slotsOf = (id: string) => QUICK_PLAN.find((step) => step.id === id)?.slots ?? (id.startsWith('follow:') ? [id.slice('follow:'.length)] : []);
+  // "interest" covers interest:<topic>, and "timetablePrefs" its sub-fields; a pathway skip answers "pathways".
+  const answered = (slot: string) =>
+    (slot === 'pathways' && profile.pathwaysSkipped) ||
+    evidence.some((e) => e.slot === slot || e.slot.startsWith(`${slot}:`) || e.slot.startsWith(`${slot}.`) || (slot === 'pathways' && e.slot === 'pathwaysSkipped'));
+  return session.interview.askedSteps.filter((id) => slotsOf(id).some(answered));
+}
+
 export interface NextQuestion {
   step: PlanStep;
   /** Slots the question targets, passed to the extractor on the next turn. */
@@ -94,6 +108,17 @@ export function nextQuestion(session: SessionState, askedStepIds: string[]): Nex
   if (planned) return { step: planned, targetSlots: planned.slots };
   const gap = gaps.find((slot) => !askedStepIds.includes(`follow:${slot}`));
   return gap ? followUp(gap) : null;
+}
+
+/**
+ * The question the student has been asked and not yet answered: the latest asked step while the interview is
+ * open. A turn that is not an answer (a question about modules, an off-topic message) ends by asking it again.
+ */
+export function pendingStep(session: SessionState): PlanStep | null {
+  const { interview } = session;
+  const id = interview.askedSteps.at(-1);
+  if (interview.finished || !id) return null;
+  return QUICK_PLAN.find((step) => step.id === id) ?? (id.startsWith('follow:') ? followUp(id.slice('follow:'.length)).step : null);
 }
 
 /** The targeted follow-up question for one slot. */
@@ -133,7 +158,10 @@ Rules:
   sexuality, disability, or finances. If the student volunteers any of these,
   say it will not be stored and move on.
 - Do not recommend modules. That is another agent's job.
-- Ask about the suggested next question's topic, in your own words. Reply with only your message to the student.`;
+- Reflect only what the student actually said. Never state facts about them they did not give (not "Python is
+  clearly your strength" unless they said so).
+- Ask exactly one question: the suggested next question's topic, in your own words. Never add a second question.
+  Reply with only your message to the student.`;
 
 /**
  * Streams the interviewer's next message: a reflection plus the question. Offline, the plan's wording is
@@ -192,6 +220,12 @@ export function whatIHeard(profile: StudentProfile, pathwayTitles: Record<string
     .filter(([, v]) => v < 0.3)
     .map(([t]) => topicLabel(t));
   const lean = (v: number | null, low: string, high: string) => (v === null ? 'not answered yet' : v >= 0.6 ? high : v <= 0.4 ? low : 'a mix');
+  const { avoidDays, avoidHalfDays = [], earliestStart } = profile.timetablePrefs;
+  const keepFree = [
+    ...avoidDays.map((d) => DAY_NAMES[d] ?? d),
+    ...avoidHalfDays.map((h) => `${DAY_NAMES[h.slice(0, 3)] ?? h} ${h.endsWith('-am') ? 'morning' : 'afternoon'}`),
+    ...(earliestStart ? [`before ${earliestStart}`] : []),
+  ];
   return [
     'Here is what I heard:',
     `• Interested in: ${interests.join(', ') || 'nothing specific yet'}`,
@@ -200,9 +234,7 @@ export function whatIHeard(profile: StudentProfile, pathwayTitles: Record<string
     `• Assessment: ${lean(profile.style.examPreference, 'coursework and projects', 'exams')}; style: ${lean(profile.style.appliedPreference, 'theory', 'applied')}; working: ${lean(profile.style.groupPreference, 'alone', 'in a team')}`,
     `• Maths comfort ${pct(profile.style.mathsComfort)}, coding comfort ${pct(profile.style.codingComfort)}, workload ${pct(profile.style.workloadTolerance)}`,
     `• Outside your degree: ${lean(profile.breadthAppetite, 'rather not', 'keen')}`,
-    profile.timetablePrefs.avoidDays.length || profile.timetablePrefs.earliestStart
-      ? `• Keep free: ${[...profile.timetablePrefs.avoidDays.map((d) => DAY_NAMES[d] ?? d), profile.timetablePrefs.earliestStart ? `before ${profile.timetablePrefs.earliestStart}` : null].filter(Boolean).join(', ')}`
-      : null,
+    keepFree.length ? `• Keep free: ${keepFree.join(', ')}` : null,
     'Is that right? Confirm it, or tell me what to change.',
   ]
     .filter((line): line is string => line !== null)

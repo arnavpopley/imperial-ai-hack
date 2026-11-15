@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { firstModule } from '../components/ModulePicker.tsx';
 import { groupRows, hasOffers, inView, shortlistFigure, shortlistLabel, strongFitShare } from './moduleList.ts';
-import type { StaffModuleRow } from './moduleList.ts';
+import type { StaffModuleSummary } from '@modulematch/shared';
 
-const row = (moduleId: string, patch: Partial<StaffModuleRow> = {}): StaffModuleRow => ({
+const row = (moduleId: string, patch: Partial<StaffModuleSummary> = {}): StaffModuleSummary => ({
   moduleId,
   code: moduleId,
   title: `Module ${moduleId}`,

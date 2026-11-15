@@ -1,14 +1,16 @@
 // Spec 9.3: insights engine for module leads. Every number in an insight card comes from here; the
 // Insights agent only words them. Privacy (spec 20.4): nothing is reported for a cohort under MIN_COHORT.
-import { MIN_COHORT, STYLE_SLOTS, TOPIC_IDS } from '@modulematch/shared';
+import { counterfactualInsightId, MIN_COHORT, STYLE_SLOTS, TOPIC_IDS } from '@modulematch/shared';
 import type {
   Insight,
+  InsightDecision,
   InsightKind,
   Module,
   ModuleDemand,
   ProgrammeRules,
   Slot,
   StudentProfile,
+  SuggestedEdit,
   TopicId,
   Weights,
 } from '@modulematch/shared';
@@ -449,7 +451,18 @@ function isOversubscribed(module: Module, ctx: InsightContext): boolean {
   return module.capacity !== null && shortlisted > module.capacity && shortlisted >= MIN_COHORT;
 }
 
-function counterfactualCard(module: Module, ctx: InsightContext, counterfactual: Counterfactual, n: number): Insight {
+/** The change as the tag editor would make it: the field and the value it ends up at. */
+export function suggestedEditFor(module: Module, change: ModuleChange): SuggestedEdit {
+  switch (change.kind) {
+    case 'add-topic':
+      return { group: 'topics', key: change.topic, value: change.weight };
+    case 'shift-demand':
+      return { group: 'demand', key: change.field, value: clamp01(module.demand[change.field] + change.delta) };
+  }
+}
+
+/** One card per change worth acting on. Its id carries the change, so a decision stays with that change. */
+function counterfactualCard(module: Module, ctx: InsightContext, counterfactual: Counterfactual): Insight {
   const { groupSize: size, newlyTopModules: newly, alreadyTopModules: already, crossStrongFit: crossing } = counterfactual;
   const points = counterfactual.uplift.toFixed(1);
   const top = ctx.rules ? `${TOP_MODULES_WORDS} eligible modules` : `${TOP_MODULES_WORDS} modules`;
@@ -464,7 +477,7 @@ function counterfactualCard(module: Module, ctx: InsightContext, counterfactual:
           ? `${crossing} of the ${size} interested students would reach fit ${STRONG_FIT}`
           : `+${points} fit points on average for ${size} interested students`;
   return {
-    id: insightId(module.id, 'COUNTERFACTUAL', n),
+    id: counterfactualInsightId(module.id, suggestedEditFor(module, counterfactual.change)),
     moduleId: module.id,
     kind: 'COUNTERFACTUAL',
     headline: `${counterfactual.description}: ${impact}`,
@@ -505,7 +518,7 @@ export function counterfactualInsights(module: Module, ctx: InsightContext): Ins
   if (isOversubscribed(module, ctx)) return [];
   const tested = counterfactuals(module, ctx);
   const meaningful = tested.filter((counterfactual) => counterfactual.uplift >= MEANINGFUL_UPLIFT);
-  if (meaningful.length > 0) return meaningful.map((counterfactual, i) => counterfactualCard(module, ctx, counterfactual, i + 1));
+  if (meaningful.length > 0) return meaningful.map((counterfactual) => counterfactualCard(module, ctx, counterfactual));
   const summary = summaryCard(module, ctx, tested);
   return summary ? [summary] : [];
 }
@@ -625,11 +638,78 @@ export function clashInsights(module: Module, ctx: InsightContext): Insight[] {
     });
 }
 
-/** Every insight card for one module, each awaiting a staff decision (spec 10.7). */
+/**
+ * Every insight card for one module, each awaiting a staff decision (spec 10.7). Cards most worth a module
+ * lead's time come first: changes that would raise fit, then demand (including what to do when a module is
+ * full), then overlooked, then timetable clashes, and the summary card last, since it says no single change
+ * is worth making.
+ */
 export function buildInsights(module: Module, ctx: InsightContext): Insight[] {
+  const counterfactualCards = counterfactualInsights(module, ctx);
   return [
-    ...counterfactualInsights(module, ctx),
-    ...[overlooked(module, ctx), demand(module, ctx)].filter((insight) => insight !== null),
+    ...counterfactualCards.filter((insight) => !isCounterfactualSummary(insight)),
+    ...[demand(module, ctx), overlooked(module, ctx)].filter((insight) => insight !== null),
     ...clashInsights(module, ctx),
+    ...counterfactualCards.filter(isCounterfactualSummary),
   ];
+}
+
+const isCounterfactualSummary = (insight: Insight): boolean =>
+  insight.kind === 'COUNTERFACTUAL' && insight.upliftPoints === null;
+
+/** Ids counterfactual cards had before they carried their change: `<module>:COUNTERFACTUAL:<rank>`. */
+const RANKED_COUNTERFACTUAL_ID = /:COUNTERFACTUAL:(\d+)$/;
+
+/** The change a card describes: its engine headline up to the impact, for example "Move 20% of the marks …". */
+const changeWording = (card: Insight): string => card.headline.slice(0, card.headline.indexOf(': ') + 1);
+
+export interface StoredDecisions {
+  /** The staff decision for each current card id. */
+  decisions: Map<string, InsightDecision>;
+  /** Old rank-based rows whose decision has now moved to a change-based id: the caller deletes them. */
+  consumedIds: string[];
+}
+
+/**
+ * The staff decision for each card, by id. Counterfactual cards used to be numbered by rank (`…:1`), so a
+ * decision recorded under such an id is converted once, to the change-based id of the same change:
+ * - first by the change itself: the old headline starts with the card's engine wording, with the same uplift;
+ * - otherwise, for an old headline the Insights agent reworded (it matches no current card's wording), by
+ *   the same rank among the change cards and the same uplift.
+ * Each old row moves at most once and is then handed back for deletion, so it can never mark a later card.
+ * Rows that match nothing are kept, still hidden, until they can be matched. A decision already stored under
+ * the new id always wins. `cards` must be the engine's own output, before the Insights agent rewords it.
+ */
+export function storedDecisions(cards: readonly Insight[], stored: readonly Insight[]): StoredDecisions {
+  const decisions = new Map(stored.map((insight) => [insight.id, insight.decision]));
+  const changeCards = cards.filter((card) => card.kind === 'COUNTERFACTUAL' && !isCounterfactualSummary(card));
+  const wordings = changeCards.map(changeWording).filter((wording) => wording !== '');
+  const unused = stored.filter((insight) => RANKED_COUNTERFACTUAL_ID.test(insight.id) && insight.decision !== 'pending');
+  const consumedIds: string[] = [];
+  const take = (cardId: string, index: number) => {
+    const [old] = unused.splice(index, 1);
+    if (!old) return;
+    decisions.set(cardId, old.decision);
+    consumedIds.push(old.id);
+  };
+  const open = changeCards.filter((card) => !decisions.has(card.id));
+  // By the change itself.
+  for (const card of open) {
+    const wording = changeWording(card);
+    const match = unused.findIndex((old) => wording !== '' && old.headline.startsWith(wording) && old.upliftPoints === card.upliftPoints);
+    if (match >= 0) take(card.id, match);
+  }
+  // Reworded rows only: same rank and same uplift.
+  for (const card of open) {
+    if (decisions.has(card.id)) continue;
+    const rank = String(changeCards.indexOf(card) + 1);
+    const match = unused.findIndex(
+      (old) =>
+        RANKED_COUNTERFACTUAL_ID.exec(old.id)?.[1] === rank &&
+        old.upliftPoints === card.upliftPoints &&
+        !wordings.some((wording) => old.headline.startsWith(wording)),
+    );
+    if (match >= 0) take(card.id, match);
+  }
+  return { decisions, consumedIds };
 }

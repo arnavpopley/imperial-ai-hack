@@ -1,5 +1,5 @@
 // What happens after a staff decision on an insight card, and why a module may have no cards at all.
-import { MIN_COHORT } from '@modulematch/shared';
+import { formatSuggestedEdit, MIN_COHORT, suggestedEditOf } from '@modulematch/shared';
 import type { Insight, InsightKind } from '@modulematch/shared';
 
 export interface Outcome {
@@ -35,9 +35,20 @@ export function outcomeOf(insight: Pick<Insight, 'kind' | 'decision'>): Outcome 
 export const isSummaryCard = (insight: Pick<Insight, 'kind' | 'upliftPoints'>): boolean =>
   insight.kind === 'COUNTERFACTUAL' && insight.upliftPoints === null;
 
-/** A counterfactual change the tag editor can make, so an accepted card links to it. */
-export const canEditTags = (insight: Pick<Insight, 'kind' | 'upliftPoints' | 'decision'>): boolean =>
-  insight.decision === 'accepted' && insight.kind === 'COUNTERFACTUAL' && !isSummaryCard(insight);
+/** Query parameter that carries a suggested edit into the tag editor. */
+export const EDIT_PARAM = 'edit';
+
+/**
+ * Where an accepted counterfactual card sends the module lead: the tag editor, opened with the card's change
+ * already in the draft. Null for any card without a change to make (other kinds, the summary, or pending).
+ */
+export function tagEditorLink(insight: Pick<Insight, 'id' | 'moduleId' | 'kind' | 'decision'>): string | null {
+  if (insight.decision !== 'accepted' || insight.kind !== 'COUNTERFACTUAL') return null;
+  const edit = suggestedEditOf(insight.id);
+  if (!edit) return null;
+  const query = new URLSearchParams({ [EDIT_PARAM]: formatSuggestedEdit(edit) });
+  return `/staff/modules/${encodeURIComponent(insight.moduleId)}/tags?${query.toString()}`;
+}
 
 /**
  * Why a module has no cards. The engine always writes a counterfactual card (or, over capacity, a demand

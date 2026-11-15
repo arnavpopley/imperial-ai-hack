@@ -2,7 +2,8 @@
 // changes instead of guessing. Unlike `npm run eval` it calls the API, so it costs money: about $1-2 per run.
 // Usage: `npm run eval:live` (needs ANTHROPIC_API_KEY). Results go to data/eval-live-latest.json.
 // `npm run eval:live -- --hard-cases` runs only the extraction hard cases (about 20 Haiku calls, a few cents) and
-// prints them without overwriting the saved run.
+// prints them without overwriting the saved run. `npm run eval:live -- --interview` likewise runs only the
+// interview routing cases (issue #56: three chat turns through the real Supervisor, well under $1).
 import { DEFAULT_WEIGHTS, schemas, type Evidence, type EvalResult, type StudentProfile } from '@modulematch/shared';
 import { randomUUID } from 'node:crypto';
 import { existsSync, writeFileSync } from 'node:fs';
@@ -25,6 +26,8 @@ import { guardedText, HARD_CASES, scoreHardCase } from './eval-hard-cases.ts';
 const envFile = resolve(REPO_ROOT, '.env');
 if (existsSync(envFile)) process.loadEnvFile(envFile);
 delete process.env.MODULEMATCH_OFFLINE;
+// The interview cases run real chat turns; they get a private in-memory database, never the app's own.
+process.env.DATABASE_PATH = ':memory:';
 if (!isLive()) throw new Error('The live eval needs ANTHROPIC_API_KEY (in .env or the environment).');
 
 type Detail = EvalResult['details'][number];
@@ -292,6 +295,7 @@ function readSlot(profile: StudentProfile, slot: string): unknown {
   if (slot.startsWith('interest:')) return profile.interests[slot.slice('interest:'.length)] ?? null;
   if (slot.startsWith('style.')) return profile.style[slot.slice('style.'.length) as keyof StudentProfile['style']];
   if (slot === 'timetablePrefs.avoidDays') return profile.timetablePrefs.avoidDays;
+  if (slot === 'timetablePrefs.avoidHalfDays') return profile.timetablePrefs.avoidHalfDays ?? [];
   if (slot === 'timetablePrefs.earliestStart') return profile.timetablePrefs.earliestStart;
   return profile[slot as keyof StudentProfile] ?? null;
 }
@@ -365,8 +369,60 @@ async function grounding(): Promise<EvalResult> {
   return result('Live: grounded explanations', 0.8, details);
 }
 
+/** One chat turn through the real routes: its SSE events and the streamed reply text. */
+async function chatTurn(app: { request: (path: string, init?: RequestInit) => Response | Promise<Response> }, id: string, content: string) {
+  const res = await app.request(`/api/sessions/${id}/messages`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ content }) });
+  const events = (await res.text())
+    .split('\n')
+    .filter((l) => l.startsWith('data: '))
+    .map((l) => schemas.SseEvent.parse(JSON.parse(l.slice(6))));
+  return { events, text: events.flatMap((e) => (e.type === 'token' ? [e.text] : [])).join('') };
+}
+
+/**
+ * Issue #56, from the live transcript: mid-interview, "skip the rest" ends the interview, and questions about
+ * modules are answered from the catalogue without becoming evidence, without using up a question, and without
+ * the reply claiming things about the student. Each case runs in a fresh Year 3 session.
+ */
+async function interviewRouting(): Promise<EvalResult> {
+  const { createApp } = await import('../server/src/app.ts');
+  const { seedIfEmpty } = await import('../server/src/bootstrap.ts');
+  const repo = await import('../server/src/db/repo.ts');
+  seedIfEmpty();
+  const app = createApp();
+  const fresh = async () => {
+    const res = await app.request('/api/sessions', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ programme: 'MEng Mechanical Engineering', yearOfStudy: 3 }) });
+    return schemas.SessionState.parse(await res.json());
+  };
+  const details: Detail[] = [];
+
+  const skip = await fresh();
+  await chatTurn(app, skip.id, 'skip the rest, show me my modules');
+  const skipped = repo.getSession(skip.id)!;
+  details.push({ case: 'skip the rest, show me my modules', pass: skipped.mode === 'RECOMMEND' && skipped.interview.confirmed, note: `mode ${skipped.mode}` });
+
+  for (const question of ['Will taking Mechatronics 3A get me a job at Boston Dynamics?', 'Which modules use Python?']) {
+    const before = await fresh();
+    const { text } = await chatTurn(app, before.id, question);
+    const after = repo.getSession(before.id)!;
+    // The catalogue agent falls back to the rules answer when the model fails; a live pass needs the model's.
+    const byModel = repo.listTraceEvents(before.id).some((e) => e.actor === 'catalogue' && e.output.startsWith('model answer'));
+    const problems = [
+      byModel ? '' : 'answered by the rules fallback, not the model',
+      after.evidence.length > 0 ? `stored ${after.evidence.map((e) => e.slot).join(', ')}` : '',
+      after.interview.questionsAsked !== before.interview.questionsAsked ? 'used up a question' : '',
+      after.mode !== 'INTERVIEW' ? `left the interview (${after.mode})` : '',
+      /\b(your|you have a) (clear |real )?strength\b|\bclearly (your|you)\b/i.test(text) ? 'claimed a fact about the student' : '',
+      text.includes('Back to the interview:') ? '' : 'did not return to the pending question',
+    ].filter(Boolean);
+    details.push({ case: question, pass: problems.length === 0, note: problems.join('; ') || text.slice(0, 160) });
+  }
+  return result('Live: interview routing', 1, details);
+}
+
 const started = Date.now();
 const hardCasesOnly = process.argv.includes('--hard-cases');
+const interviewOnly = process.argv.includes('--interview');
 // The models are recorded with the results, so the "How it works" page can say which models this run measured.
 const run: LiveEvalRun = {
   id: randomUUID(),
@@ -374,9 +430,11 @@ const run: LiveEvalRun = {
   models: { smart: modelId('smart'), fast: modelId('fast'), light: modelId('light'), judge: JUDGE_MODEL },
   results: hardCasesOnly
     ? [await liveHardCases()]
-    : [await moduleKnowledge(), await moduleDetails(), await honesty(), await liveExtraction(), await liveHardCases(), await liveGuardrails(), await grounding()],
+    : interviewOnly
+      ? [await interviewRouting()]
+      : [await moduleKnowledge(), await moduleDetails(), await honesty(), await liveExtraction(), await liveHardCases(), await liveGuardrails(), await grounding(), await interviewRouting()],
 };
-if (!hardCasesOnly) writeFileSync(dataPath('eval-live-latest.json'), `${JSON.stringify(run, null, 2)}\n`);
+if (!hardCasesOnly && !interviewOnly) writeFileSync(dataPath('eval-live-latest.json'), `${JSON.stringify(run, null, 2)}\n`);
 
 for (const r of run.results) {
   const rate = r.total ? r.passed / r.total : 0;

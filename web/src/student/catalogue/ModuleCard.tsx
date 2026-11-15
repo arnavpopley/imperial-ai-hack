@@ -12,14 +12,18 @@ import { NudgeNote } from '../results/NudgeNote.tsx';
 import { useNudge } from '../results/ResultsProvider.tsx';
 import { paths } from '../routes.ts';
 import type { RankedModule } from '../state/CatalogueProvider.tsx';
+import { useReferenceData } from '../state/ReferenceDataProvider.tsx';
+import { DemandChip } from './DemandChip.tsx';
 import { ExceptionChip } from './ExceptionChip.tsx';
-import { ScoreRing } from './ScoreRing.tsx';
+import { NoScoreRing, ScoreRing } from './ScoreRing.tsx';
 import { ShortlistButton } from './ShortlistButton.tsx';
 
 interface ModuleCardProps {
   item: RankedModule;
   /** Low profile confidence greys every score (spec 8.6). */
   lowConfidence: boolean;
+  /** False when there is nothing to score yet: no fit number, rank or sub-scores are shown. */
+  scored: boolean;
   shortlisted: boolean;
   pending: boolean;
   onToggleShortlist: () => void;
@@ -33,13 +37,16 @@ interface ModuleCardProps {
 /** Cards after this many enter together, so a long list does not trickle in. */
 const STAGGER_LIMIT = 8;
 
-export function ModuleCard({ item, lowConfidence, shortlisted, pending, onToggleShortlist, onAsk, listRef, index }: ModuleCardProps) {
+export function ModuleCard({ item, lowConfidence, scored, shortlisted, pending, onToggleShortlist, onAsk, listRef, index }: ModuleCardProps) {
   const { module, eligible } = item;
   const title = module?.title ?? item.moduleId;
   const dimmed = lowConfidence || !eligible;
+  const { compulsory } = item;
   const { reduce, transition } = useMotionTokens();
   // From the student's own marks, when shared: a gentle note beside the score, never a change to it.
   const nudge = useNudge(item.moduleId);
+  // Cohort demand beside the score, never part of it.
+  const demand = useReferenceData().demandById.get(item.moduleId);
   const delay = Math.min(index, STAGGER_LIMIT) * 0.05;
 
   return (
@@ -56,8 +63,14 @@ export function ModuleCard({ item, lowConfidence, shortlisted, pending, onToggle
       >
         <div className="flex gap-4 sm:gap-6">
           <div className="flex flex-col items-center gap-1.5">
-            <ScoreRing value={item.fit} dimmed={dimmed} delay={delay + 0.1} />
-            <RankShift rank={item.rank} shift={item.rankShift} />
+            {scored ? (
+              <>
+                <ScoreRing value={item.fit} dimmed={dimmed} delay={delay + 0.1} />
+                <RankShift rank={item.rank} shift={item.rankShift} />
+              </>
+            ) : (
+              <NoScoreRing />
+            )}
           </div>
 
           <div className="min-w-0 flex-1">
@@ -73,6 +86,8 @@ export function ModuleCard({ item, lowConfidence, shortlisted, pending, onToggle
                     </span>
                   )}
                   {item.exception && <ExceptionChip decision={item.exception} />}
+                  {/* Above the stretched card link, so hovering shows where the count comes from. */}
+                  {demand && <DemandChip signal={demand} className="relative z-10" />}
                 </div>
                 <h3 className={cx('mt-1.5 text-[17px] leading-snug font-semibold tracking-tight', !eligible && 'text-muted')}>
                   <Link
@@ -94,11 +109,12 @@ export function ModuleCard({ item, lowConfidence, shortlisted, pending, onToggle
                 shortlisted={shortlisted}
                 pending={pending}
                 onToggle={onToggleShortlist}
+                compulsory={compulsory}
                 className="relative z-10 max-sm:hidden"
               />
             </div>
 
-            <SubScoreBars sub={item.sub} variant="compact" dimmed={dimmed} className="mt-4 max-w-lg" />
+            {scored && <SubScoreBars sub={item.sub} variant="compact" dimmed={dimmed} className="mt-4 max-w-lg" />}
 
             {nudge && <NudgeNote nudge={nudge} className="mt-3 max-w-lg" />}
 
@@ -127,6 +143,7 @@ export function ModuleCard({ item, lowConfidence, shortlisted, pending, onToggle
               shortlisted={shortlisted}
               pending={pending}
               onToggle={onToggleShortlist}
+              compulsory={compulsory}
               className="relative z-10 mt-4 w-full sm:hidden"
             />
           </div>

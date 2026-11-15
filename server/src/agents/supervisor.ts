@@ -1,6 +1,6 @@
 // Supervisor (spec 10.1): owns the mode, routes each student turn to one agent, and raises escalations.
 // It is a deterministic state machine plus one intent classification. Every step is traced.
-import { confidenceLabel, type Message, type SendMessageBody, type SessionState, type SseEvent, type Weights } from '@modulematch/shared';
+import { confidenceLabel, STARTER_QUESTIONS, type Message, type SendMessageBody, type SessionState, type SseEvent, type Weights } from '@modulematch/shared';
 import { randomUUID } from 'node:crypto';
 import * as repo from '../db/repo.ts';
 import { SCOPE_REDIRECT } from '../guardrails/g1-scope.ts';
@@ -11,19 +11,19 @@ import { createTracer, type Tracer } from '../trace/tracer.ts';
 import { answerCatalogueQuestion } from './catalogue.ts';
 import { draftComplaint, draftLowConfidence, draftRuleException, draftWellbeing } from './escalation.ts';
 import { extract, mergeUpdates } from './extractor.ts';
-import { classifyIntent, needsClarification } from './intent.ts';
-import { askNext, followUp, nextQuestion, reflect, studentTurn, unfilledSlots, whatIHeard, type Widget } from './interviewer.ts';
+import { classifyIntent, isModuleQuestion, needsClarification, wantsToFinishInterview } from './intent.ts';
+import { answeredSteps, askNext, followUp, nextQuestion, pendingStep, reflect, studentTurn, unfilledSlots, whatIHeard, type PlanStep, type Widget } from './interviewer.ts';
 import { emitWords, type ChatMessage } from './llm.ts';
 import { alternativesTo, holdPosition } from './matcher.ts';
 import { matchModules, MAX_SUGGESTIONS } from './module-match.ts';
-import { checkModuleEligibility, checkShortlist } from '../engines/index.ts';
+import { checkModuleEligibility, checkShortlist, hasFitSignal } from '../engines/index.ts';
 import { applyShortlistEdit, catalogue, enterExplain, explanationFor, leaveExplain, moduleTitle, precomputeTopExplanations, ranked, rulesForProfile, saveProfile, setMode, syncPlanMode, timetableView, tracerSink } from './session.ts';
 import { describeTimetable, explainTimetable } from './timetabler.ts';
 
 export type Emit = (event: SseEvent) => Promise<void>;
 
 /** Modes in which the catalogue agent answers; ESCALATED waits for staff. */
-const CATALOGUE_MODES = new Set<SessionState['mode']>(['RECOMMEND', 'EXPLAIN', 'PLAN']);
+const CATALOGUE_MODES = new Set<SessionState['mode']>(['INTERVIEW', 'RECOMMEND', 'EXPLAIN', 'PLAN']);
 
 const COMPLAINT =/\b(complain\w*|complaint|unfair|this advisor is (useless|wrong|bad)|report (this|a problem))\b/i;
 
@@ -207,7 +207,11 @@ async function explainTurn(turn: Turn, moduleIds: string[]) {
 }
 
 /** Cross-catalogue questions ("which modules use Python?"): the catalogue agent searches with tools, read-only. */
-async function catalogueTurn(turn: Turn, moduleIds: string[]) {
+/**
+ * Answers a catalogue question from the grounded tools. Mid-interview (`resume` is the unanswered step), the
+ * answer ends by asking that step's question again, with its widget, in the same message.
+ */
+async function catalogueTurn(turn: Turn, moduleIds: string[], resume: PlanStep | null = null) {
   const { session, tracer } = turn;
   if (!CATALOGUE_MODES.has(session.mode)) {
     return say(turn, 'supervisor', 'I can search the catalogue again once your request to staff has been answered. You can still browse it on the catalogue page.');
@@ -216,10 +220,18 @@ async function catalogueTurn(turn: Turn, moduleIds: string[]) {
   await tracer.timed(
     { actor: 'catalogue', kind: 'agent', input: `catalogue question in ${session.mode}` },
     () =>
-      reply(turn, 'catalogue', async (onToken) => {
-        outcome = await answerCatalogueQuestion(turn.text, moduleIds, session, tracer, onToken);
-        return outcome.text;
-      }),
+      reply(
+        turn,
+        'catalogue',
+        async (onToken) => {
+          outcome = await answerCatalogueQuestion(turn.text, moduleIds, session, tracer, onToken);
+          if (!resume) return outcome.text;
+          const back = `\n\nBack to the interview: ${resume.question}`;
+          onToken(back);
+          return `${outcome.text}${back}`;
+        },
+        resume?.widget ?? null,
+      ),
     () => ({ output: outcome ? `${outcome.source} answer after ${outcome.toolCalls} tool call(s)` : 'no answer', verdict: null }),
   );
 }
@@ -371,6 +383,27 @@ async function editProfileTurn(turn: Turn) {
   }
 }
 
+/**
+ * "Skip the rest" in the chat does what the Skip to modules button does (confirmProfile): the interview ends and
+ * the session moves to RECOMMEND. The note confirmProfile stores, if any, is streamed as this turn's reply.
+ */
+async function finishInterviewTurn(turn: Turn) {
+  const { session } = turn;
+  const from = session.mode;
+  const known = new Set(repo.getSession(session.id)?.messages.map((m) => m.id));
+  confirmProfile(session);
+  if (session.mode !== from) await turn.emit({ type: 'mode', mode: session.mode, from });
+  if (session.escalationDraft) await turn.emit({ type: 'escalation', draft: session.escalationDraft, escalation: null });
+  // recommendations_ready shows the chat's "See my modules" link, so the student can go straight there.
+  await turn.emit({ type: 'recommendations_ready', count: ranked(session).length });
+  const note = repo.getSession(session.id)?.messages.find((m) => m.role === 'assistant' && !known.has(m.id));
+  if (!note) return say(turn, 'supervisor', 'No problem, that is the end of the questions. Your modules are ranked on the catalogue page.');
+  const pending: Promise<void>[] = [];
+  emitWords(note.content, (t) => pending.push(turn.emit({ type: 'token', text: t, agent: note.agent ?? 'supervisor' })));
+  await Promise.all(pending);
+  await turn.emit({ type: 'done', messageId: note.id, widget: null });
+}
+
 // ---------- entry point ----------
 
 /** One turn at a time per session, so concurrent tabs cannot overwrite each other's profile changes. */
@@ -410,7 +443,9 @@ async function runTurn(sessionId: string, body: SendMessageBody, emit: Emit): Pr
     await say(turn, 'supervisor', WELLBEING_NOTICE);
     return offerDraft(turn, draftWellbeing(session.profile));
   }
-  if (guarded.action === 'redirect') return say(turn, 'supervisor', SCOPE_REDIRECT);
+  // Mid-interview an off-topic turn uses up nothing: the redirect asks the unanswered question again.
+  const pending = session.mode === 'INTERVIEW' ? pendingStep(session) : null;
+  if (guarded.action === 'redirect') return say(turn, 'supervisor', pending ? `${SCOPE_REDIRECT}\n\n${pending.question}` : SCOPE_REDIRECT, pending?.widget ?? null);
   if (session.mode === 'ONBOARD') await changeMode(turn, 'INTERVIEW', 'programme and year entered');
 
   const intent = await tracer.timed(
@@ -427,7 +462,14 @@ async function runTurn(sessionId: string, body: SendMessageBody, emit: Emit): Pr
     return offerDraft(turn, draftWellbeing(session.profile));
   }
   if (intent.intent === 'rule_exception_request') return ruleExceptionTurn(turn, intent.moduleIds);
-  if (session.mode === 'INTERVIEW' && !session.interview.finished) return interviewTurn(turn, body.structured);
+  if (session.mode === 'INTERVIEW' && !session.interview.finished) {
+    // Spec 10.1: intent first, deterministically. Only an answer goes to the interviewer and the extractor, so
+    // a request to stop or a question about modules never becomes profile evidence or uses up a question.
+    if (!body.structured && wantsToFinishInterview(turn.text)) return finishInterviewTurn(turn);
+    if (!body.structured && isModuleQuestion(turn.text, intent.moduleIds)) return catalogueTurn(turn, intent.moduleIds, pending);
+    return interviewTurn(turn, body.structured);
+  }
+  if (session.mode === 'INTERVIEW' && !body.structured && wantsToFinishInterview(turn.text)) return finishInterviewTurn(turn);
   if (session.mode === 'INTERVIEW') return correctSummaryTurn(turn);
   if (needsClarification(intent)) {
     return say(turn, 'supervisor', 'Do you want me to explain a module, change what matters most to you, edit your shortlist, or check your timetable?');
@@ -459,15 +501,25 @@ async function runTurn(sessionId: string, body: SendMessageBody, emit: Emit): Pr
 export function confirmProfile(session: SessionState): { tracer: Tracer; lowConfidence: boolean } {
   const tracer = createTracer(session.id, tracerSink);
   if (session.mode === 'ONBOARD') setMode(session, 'INTERVIEW', tracer, 'programme and year entered');
+  // Finished means the interviewer ran out of questions; confirming before that is a skip.
+  const interviewed = session.interview.finished;
   session.interview = { ...session.interview, finished: true, confirmed: true, targetSlots: [] };
   repo.updateSession(session.id, { interview: session.interview });
   setMode(session, 'RECOMMEND', tracer, 'profile confirmed or interview skipped');
   const lowConfidence = confidenceLabel(session.profile.completeness) === 'low';
-  if (lowConfidence) {
-    // Spec 8.6: low confidence greys the scores and the Supervisor proposes returning to the interview.
+  // Spec 8.6 and 11.1: a personal tutor is offered only when confidence is still low after a full interview,
+  // never on a skip; a skip is offered more questions instead.
+  const offerTutor = lowConfidence && interviewed;
+  const tutor = offerTutor ? ', or ask for a personal tutor to help' : '';
+  if (!hasFitSignal(session.profile)) {
+    // Cold start: nothing to score yet, so the catalogue is in a starter order without fit scores.
     repo.addMessage(
-      message(session.id, 'assistant', 'I do not know enough about you yet, so these scores are rough. Answer a few more questions for better matches, or ask for a personal tutor to help.', 'supervisor'),
+      message(session.id, 'assistant', `I do not know what you enjoy yet, so your modules are in a starter order without fit scores: your year's modules first, then the ones students like you shortlist. Answer ${STARTER_QUESTIONS} quick questions for real matches${tutor}.`, 'supervisor'),
     );
+  } else if (lowConfidence) {
+    repo.addMessage(message(session.id, 'assistant', `I do not know enough about you yet, so these scores are rough. Answer a few more questions for better matches${tutor}.`, 'supervisor'));
+  }
+  if (offerTutor) {
     const draft = draftLowConfidence(session.profile, 'the profile is less than half complete after the interview.');
     session.escalationDraft = draft;
     repo.updateSession(session.id, { escalationDraft: draft });
@@ -490,7 +542,10 @@ export function resumeInterview(session: SessionState): void {
   const tracer = createTracer(session.id, tracerSink);
   if (session.mode === 'PLAN' || session.mode === 'ESCALATED') setMode(session, 'RECOMMEND', tracer, 'returning to the interview for two more questions');
   if (!setMode(session, 'INTERVIEW', tracer, 'low confidence and student agrees') && session.mode !== 'INTERVIEW') return;
-  session.interview = { ...session.interview, finished: false, confirmed: false, budget: session.interview.questionsAsked + RESUME_BUDGET };
+  // A student who skipped has nothing to score yet, so gets STARTER_QUESTIONS; steps that never got an answer
+  // (skipped or talked past) are asked again rather than lost.
+  const budget = hasFitSignal(session.profile) ? RESUME_BUDGET : STARTER_QUESTIONS;
+  session.interview = { ...session.interview, finished: false, confirmed: false, askedSteps: answeredSteps(session), budget: session.interview.questionsAsked + budget };
   const found = nextQuestion(session, session.interview.askedSteps);
   // The question goes in as a stored message, which cannot carry a widget, so a slider step is asked as its text follow-up.
   const gaps = unfilledSlots(session.profile, session.evidence);
@@ -501,7 +556,7 @@ export function resumeInterview(session: SessionState): void {
     repo.updateSession(session.id, { interview: session.interview });
     return;
   }
-  tracer.record({ actor: 'interviewer', kind: 'agent', input: `gaps: ${gaps.join(', ') || 'none'}; budget ${RESUME_BUDGET}`, output: `asked ${next.step.id}`, verdict: null });
+  tracer.record({ actor: 'interviewer', kind: 'agent', input: `gaps: ${gaps.join(', ') || 'none'}; budget ${budget}`, output: `asked ${next.step.id}`, verdict: null });
   repo.addMessage(message(session.id, 'assistant', next.step.question, 'interviewer'));
   session.interview = {
     ...session.interview,

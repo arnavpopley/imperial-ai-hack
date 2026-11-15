@@ -14,13 +14,12 @@ import {
   type RecommendationsResponse,
   type SessionState,
   type StudentProfile,
-  type SwapSuggestion,
   type TimetableView,
 } from '@modulematch/shared';
 import { randomUUID } from 'node:crypto';
 import { loadModuleResources, loadPathways, loadSocieties, rulesFor } from '../db/catalogue.ts';
 import * as repo from '../db/repo.ts';
-import { buildTimetable, checkShortlist, completeness, findClashes, performanceView, profileHash, rankModules, suggestSwaps } from '../engines/index.ts';
+import { checkShortlist, completeness, coreInPlan, hasFitSignal, performanceView, planTimetable, profileHash, rankModules, starterOrder } from '../engines/index.ts';
 import type { Tracer } from '../trace/tracer.ts';
 import { explain } from './matcher.ts';
 import { canTransition, restingModeFor } from './modes.ts';
@@ -139,8 +138,12 @@ export function exceptionDecisions(session: SessionState): Map<string, Exception
  */
 export function ranked(session: SessionState): Recommendation[] {
   const completed = new Set(session.profile.completedModuleIds);
+  const modules = catalogue.modules();
   const decisions = exceptionDecisions(session);
-  const all = rankModules(session.profile, catalogue.modules(), session.weights, rulesForProfile(session.profile), session.exceptions)
+  const scored = rankModules(session.profile, modules, session.weights, rulesForProfile(session.profile), session.exceptions);
+  // Spec 8.6 cold start: with nothing to score, a starter order instead of a list of identical fits.
+  const ordered = hasFitSignal(session.profile) ? scored : starterOrder(scored, modules, session.profile.yearOfStudy, cohortPopularity(session.profile));
+  const all = ordered
     .filter((r) => !completed.has(r.moduleId))
     .map((r) => {
       const exception = decisions.get(r.moduleId);
@@ -149,12 +152,24 @@ export function ranked(session: SessionState): Recommendation[] {
   return [...all.filter((r) => r.eligible), ...all.filter((r) => !r.eligible)];
 }
 
+/** How many synthetic cohort students in the student's programme and year shortlisted each module. */
+function cohortPopularity(profile: StudentProfile): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const student of repo.listCohort()) {
+    if (student.profile.programme !== profile.programme || student.profile.yearOfStudy !== profile.yearOfStudy) continue;
+    for (const id of new Set(student.shortlist)) counts.set(id, (counts.get(id) ?? 0) + 1);
+  }
+  return counts;
+}
+
 export function recommendationsResponse(session: SessionState): RecommendationsResponse {
   return {
     weights: session.weights,
     confidence: confidenceLabel(session.profile.completeness),
     completeness: session.profile.completeness,
+    ranking: hasFitSignal(session.profile) ? 'fit' : 'starter',
     recommendations: ranked(session),
+    coreModuleIds: coreInPlan(rulesForProfile(session.profile), session.profile),
   };
 }
 
@@ -164,22 +179,9 @@ export function timetableView(session: SessionState, recs = ranked(session)): Ti
   const rules = rulesForProfile(session.profile);
   // Approved rule exceptions apply to the plan and to every swap the engine checks (spec 11.1).
   const check = (shortlist: readonly string[]) => checkShortlist(shortlist, session.profile, modules, rules, session.exceptions);
-  const clashes = findClashes(session.shortlist, slots);
-  const seen = new Set<string>();
-  const swaps: SwapSuggestion[] = [];
-  for (const clash of clashes) {
-    for (const swap of suggestSwaps(session.profile, session.shortlist, clash, recs, slots, { modules, rules, check })) {
-      const key = `${swap.replaceModuleId}->${swap.withModuleId}`;
-      if (!seen.has(key)) {
-        seen.add(key);
-        swaps.push(swap);
-      }
-    }
-  }
   return {
-    grids: buildTimetable(session.shortlist, slots),
-    clashes,
-    swaps,
+    // Core modules, clashes against them, swaps and kept-free time all come from the timetable engine (spec 9.2).
+    ...planTimetable(session.profile, session.shortlist, recs, slots, { modules, rules, check }),
     rules: check(session.shortlist),
   };
 }

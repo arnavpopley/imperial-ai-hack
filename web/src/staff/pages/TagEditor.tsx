@@ -1,7 +1,8 @@
 // Screen 9: staff correct a module's derived fields beside the analyst's rationale (spec 10.4).
-import { SKILL_IDS, TOPIC_IDS } from '@modulematch/shared';
-import type { Module, ModuleDemand, Pathway } from '@modulematch/shared';
-import { useMemo, useState } from 'react';
+import { formatSuggestedEdit, parseSuggestedEdit, SKILL_IDS, TOPIC_IDS } from '@modulematch/shared';
+import type { Module, ModuleDemand, Pathway, SuggestedEdit } from '@modulematch/shared';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router';
 import { api } from '../../api.ts';
 import { DiffSummary } from '../components/DiffSummary.tsx';
 import { Rationale, countReviewFlags } from '../components/Rationale.tsx';
@@ -10,10 +11,11 @@ import type { Option } from '../components/WeightEditor.tsx';
 import { Button, ErrorState, LoadingState, Panel } from '../components/ui.tsx';
 import { AlertIcon, CheckIcon } from '../components/icons.tsx';
 import { useResource } from '../hooks/useResource.ts';
-import { changeCount, diffDraft, draftFrom, editBody } from '../lib/derivedDraft.ts';
+import { applySuggestedEdit, changeCount, diffDraft, draftFrom, editBody } from '../lib/derivedDraft.ts';
 import type { DerivedDraft, DraftDiff, WeightField } from '../lib/derivedDraft.ts';
-import { focusRing, humanise, plural, skillLabel, topicLabel } from '../lib/format.ts';
+import { focusRing, humanise, plural, skillLabel, topicLabel, weight } from '../lib/format.ts';
 import { errorMessage } from '../lib/errors.ts';
+import { EDIT_PARAM } from '../lib/insights.ts';
 import { useStaffData } from '../StaffData.tsx';
 import { useModuleOutlet } from './ModulesPage.tsx';
 
@@ -36,6 +38,25 @@ const SKILL_OPTIONS: Option[] = SKILL_IDS.map((id) => ({ id, label: skillLabel(i
 export function TagEditor() {
   const { summary } = useModuleOutlet();
   const { catalogue, reloadCatalogue } = useStaffData();
+  // "Make this change in the tag editor" on an accepted insight card passes its change here.
+  const [params, setParams] = useSearchParams();
+  const editParam = params.get(EDIT_PARAM) ?? '';
+  // Once a suggestion is saved or discarded it leaves the URL, so a refresh does not bring it back. Only that
+  // suggestion: if history has since brought a newer one into the URL, the newer one stays.
+  const settleSuggestion = useCallback(
+    (settled: string) =>
+      setParams(
+        (current) => {
+          const now = parseSuggestedEdit(current.get(EDIT_PARAM) ?? '');
+          if (!now || formatSuggestedEdit(now) !== settled) return current;
+          const next = new URLSearchParams(current);
+          next.delete(EDIT_PARAM);
+          return next;
+        },
+        { replace: true },
+      ),
+    [setParams],
+  );
 
   if (catalogue.status === 'loading') return <LoadingState label="Loading module tags" rows={4} />;
   if (catalogue.status === 'error')
@@ -49,18 +70,50 @@ export function TagEditor() {
         onRetry={reloadCatalogue}
       />
     );
-  // Keyed so switching modules starts a fresh draft.
-  return <TagEditorForm key={module.id} module={module} />;
+  // Keyed so switching modules starts a fresh draft. The suggestion is read when the form mounts, so clearing
+  // it from the URL later leaves the draft as it is.
+  return (
+    <TagEditorForm
+      key={module.id}
+      module={module}
+      suggested={parseSuggestedEdit(editParam)}
+      onSuggestionSettled={settleSuggestion}
+    />
+  );
 }
 
 type SaveState = { status: 'idle' } | { status: 'saving' } | { status: 'saved' } | { status: 'error'; message: string };
 
-function TagEditorForm({ module }: { module: Module }) {
+function TagEditorForm({
+  module,
+  suggested,
+  onSuggestionSettled,
+}: {
+  module: Module;
+  suggested: SuggestedEdit | null;
+  onSuggestionSettled: (settled: string) => void;
+}) {
   const { replaceModule } = useStaffData();
   const pathways = useResource('pathways', api.pathways);
   const [saved, setSaved] = useState<Module>(module);
-  const [draft, setDraft] = useState<DerivedDraft>(() => draftFrom(module));
+  // An accepted insight's change starts in the draft, unsaved, so it shows as a change to review.
+  const [draft, setDraft] = useState<DerivedDraft>(() => applySuggestedEdit(draftFrom(module), suggested));
   const [save, setSave] = useState<SaveState>({ status: 'idle' });
+
+  // A suggestion that arrives after the form mounted (for example when browser history restores the link) is
+  // applied on top of the current draft. One that leaves the URL after a save or discard changes nothing.
+  // While a save is in flight the form stays locked, and the suggestion waits until the response has landed.
+  const suggestionKey = suggested ? formatSuggestedEdit(suggested) : '';
+  const appliedKey = useRef(suggestionKey);
+  const inFlight = save.status === 'saving';
+  useEffect(() => {
+    if (inFlight || suggestionKey === appliedKey.current) return;
+    appliedKey.current = suggestionKey;
+    if (!suggested) return;
+    setDraft((d) => applySuggestedEdit(d, suggested));
+    setSave({ status: 'idle' });
+    // `suggested` is the parsed form of `suggestionKey`, so the key alone says when it changed.
+  }, [suggestionKey, inFlight]);
 
   const baseline = useMemo(() => draftFrom(saved), [saved]);
   const diff = useMemo(() => diffDraft(baseline, draft), [baseline, draft]);
@@ -87,6 +140,8 @@ function TagEditorForm({ module }: { module: Module }) {
   const editWeights = (field: WeightField) => (value: Record<string, number>) => edit({ [field]: value });
 
   const submit = async () => {
+    // The suggestion already in the draft is the one this save settles, whatever the URL holds by the end.
+    const inThisSave = appliedKey.current;
     setSave({ status: 'saving' });
     try {
       const updated = await api.staff.editDerived(module.id, editBody(draft, diff));
@@ -95,6 +150,7 @@ function TagEditorForm({ module }: { module: Module }) {
       setDraft(draftFrom(updated));
       replaceModule(updated);
       setSave({ status: 'saved' });
+      if (inThisSave) onSuggestionSettled(inThisSave);
     } catch (e) {
       setSave({ status: 'error', message: errorMessage(e) });
     }
@@ -111,6 +167,16 @@ function TagEditorForm({ module }: { module: Module }) {
           void submit();
         }}
       >
+        {suggested && save.status !== 'saved' && (
+          <p role="status" className="flex items-start gap-2 rounded-2xl bg-brand-soft px-4 py-3 text-sm">
+            <CheckIcon className="mt-0.5 size-4 shrink-0 text-brand" />
+            <span>
+              <span className="font-medium">Filled in from the insight you accepted:</span>{' '}
+              {labelFor(suggested.group, suggested.key)} set to {weight(suggested.value)}. Nothing is saved until you
+              review the change and save it.
+            </span>
+          </p>
+        )}
         <fieldset disabled={saving} className="grid min-w-0 grid-cols-1 gap-5 transition-opacity disabled:opacity-60">
           <legend className="sr-only">Derived fields</legend>
           <Panel title="Topics" description="What the module covers. Only taxonomy topics can be added.">
@@ -189,6 +255,7 @@ function TagEditorForm({ module }: { module: Module }) {
               disabled={changes === 0 || saving}
               onClick={() => {
                 setDraft(baseline);
+                if (suggestionKey) onSuggestionSettled(suggestionKey);
                 setSave({ status: 'idle' });
               }}
             >
