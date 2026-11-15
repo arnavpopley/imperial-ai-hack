@@ -302,7 +302,7 @@ export const fixtureTimetable: TimetableView = {
     { day: 'fri', from: '00:00', to: '23:59', reason: 'day' },
   ],
   keepFreeConflicts: [],
-  ects: { core: 0, elective: 5, iExplore: 5, max: 60 },
+  ects: { core: 0, elective: 5, iExplore: 5, max: 60, electiveRequired: 25, iExploreRequired: true },
   rules: { ok: true, violations: [], warnings: [] },
 };
 
