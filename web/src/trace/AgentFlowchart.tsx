@@ -3,7 +3,7 @@
 import { motion, useInView, useReducedMotion } from 'motion/react';
 import { useEffect, useId, useRef, useState } from 'react';
 import { cx } from '../components/cx.ts';
-import { GROUP_LABELS, LAYOUTS, NODES, type FlowNode, type GroupId, type NodeId } from './flow.ts';
+import { GROUP_LABELS, LAYOUTS, NODES, type FlowNode, type GroupId, type NodeId, type UsedId } from './flow.ts';
 
 const NODE_BY_ID = new Map(NODES.map((n) => [n.id, n]));
 const STEP_SECONDS = 0.7;
@@ -24,7 +24,7 @@ function useWide(): boolean {
 
 interface AgentFlowchartProps {
   /** Steps used in the selected session's trace; they are drawn highlighted. */
-  seen?: ReadonlySet<NodeId>;
+  seen?: ReadonlySet<UsedId>;
 }
 
 export function AgentFlowchart({ seen }: AgentFlowchartProps) {
@@ -87,6 +87,7 @@ export function AgentFlowchart({ seen }: AgentFlowchartProps) {
                 strokeWidth={2}
                 strokeDasharray={edge.dashed ? '6 6' : undefined}
                 markerEnd={`url(#${markerId})`}
+                markerStart={edge.twoWay ? `url(#${markerId})` : undefined}
                 className="stroke-line-strong"
                 initial={{ opacity: 0 }}
                 animate={inView ? { opacity: 1 } : undefined}
@@ -160,12 +161,15 @@ export function AgentFlowchart({ seen }: AgentFlowchartProps) {
           <li>{text('student')}</li>
           <li>Input safety checks run on the message: {list(['g1', 'g2', 'g3', 'g4'])}</li>
           <li>{text('supervisor')}</li>
-          <li>One agent handles the turn: {list(['interviewer', 'extractor', 'matcher', 'timetabler'])}</li>
-          <li>Agents call engines for every number: {list(['scoring', 'rules', 'timetable', 'insights'])}</li>
+          <li>One agent handles the turn: {list(['interviewer', 'extractor', 'matcher', 'timetabler', 'catalogue'])}</li>
+          <li>Agents call engines for every number: {list(['scoring', 'rules', 'timetable', 'catalogueTools'])}</li>
           <li>Output safety checks run on the reply: {list(['g5', 'g6', 'g7', 'g8'])}</li>
           <li>{text('reply')}</li>
           <li>
             Branch: {text('escalation')} {text('staff')}
+          </li>
+          <li>
+            Staff side: {text('insights')} {text('insightsAgent')}
           </li>
         </ol>
       </details>
@@ -199,8 +203,8 @@ interface FlowNodeShapeProps {
 }
 
 function FlowNodeShape({ node, box, index, inView, active, lit, dimmed, onActivate }: FlowNodeShapeProps) {
-  const big = !node.group;
-  const escalation = node.id === 'escalation' || node.id === 'staff';
+  const big = node.kind !== undefined;
+  const escalation = node.kind === 'handoff';
   return (
     <motion.g
       role="button"
