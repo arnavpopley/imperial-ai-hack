@@ -1,6 +1,7 @@
 // Every AI agent in ModuleMatch, as data for the "How it works" roster and the landing page. Each entry mirrors the
 // code: the model tier is the one the agent passes to server/src/agents/llm.ts (or the env var its script reads), the
 // tools are the ones it calls, and "never" is a rule the code enforces.
+import type { BadgeTone } from '../components/Badge.tsx';
 import type { IconName } from '../components/Icon.tsx';
 import type { UsedId } from './flow.ts';
 
@@ -183,11 +184,14 @@ export const AUDIENCES: readonly { id: Audience; label: string }[] = [
   { id: 'offline', label: 'Offline' },
 ];
 
-/** The model behind each tier (server/src/agents/llm.ts defaults), and what it is used for. */
-export const TIERS: Record<Tier, { model: string; use: string; chip: string }> = {
-  smart: { model: 'Opus 5.5', use: 'What students read', chip: 'bg-brand/12 text-brand' },
-  fast: { model: 'Sonnet 5.5', use: 'Extraction', chip: 'bg-mode-explain/12 text-mode-explain' },
-  light: { model: 'Haiku 4.5', use: 'Intent and classifiers', chip: 'bg-mode-plan/12 text-mode-plan' },
+/**
+ * The model behind each tier (server/src/agents/llm.ts defaults), and what it is used for. Every model is AI, so the
+ * badge tones only tell the tiers apart.
+ */
+export const TIERS: Record<Tier, { model: string; use: string; tone: BadgeTone }> = {
+  smart: { model: 'Opus 5.5', use: 'What students read', tone: 'brand' },
+  fast: { model: 'Sonnet 5.5', use: 'Extraction', tone: 'ai' },
+  light: { model: 'Haiku 4.5', use: 'Intent and classifiers', tone: 'info' },
 };
 
 /** The evaluation judge (MODEL_JUDGE): grades the agents in the live evals, never talks to a student. */

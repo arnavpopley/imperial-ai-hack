@@ -4,11 +4,12 @@ import type { Evidence } from '@modulematch/shared';
 import { motion, useReducedMotion } from 'motion/react';
 import { Link, useParams } from 'react-router';
 import { api } from '../../api.ts';
+import { Badge } from '../../components/Badge.tsx';
 import { buttonClass } from '../../components/Button.tsx';
 import { ConfidenceBadge } from '../../components/ConfidenceBadge.tsx';
 import { cx } from '../../components/cx.ts';
 import { decisionsKey } from '../../components/exceptions.ts';
-import { FIT_BAND_LABELS, fitBand } from '../../components/FitScore.tsx';
+import { FIT_BAND_LABELS, FIT_BAND_TONE, fitBand } from '../../components/FitScore.tsx';
 import { Icon } from '../../components/Icon.tsx';
 import { ModuleTypeChip } from '../../components/ModuleTypeChip.tsx';
 import { Provenance, ProvenanceLegend } from '../../components/Provenance.tsx';
@@ -130,20 +131,23 @@ export function ModuleDetailScreen() {
               <ModuleTypeChip variant={module.type} />
               {rec && <ConfidenceBadge variant={rec.confidence} />}
               {rec?.exception && <ExceptionChip decision={rec.exception} />}
-              {rec && scored && <Provenance kind="code" />}
               {rec && scored && (
-                <span className="text-2xs font-medium text-muted">
+                <Badge tone={dimmed ? 'neutral' : FIT_BAND_TONE[fitBand(rec.fit)]}>
                   {FIT_BAND_LABELS[fitBand(rec.fit)]} · {rec.rank === 1 ? 'your best match' : `ranked #${rec.rank}`}
-                </span>
+                </Badge>
               )}
+              {/* After the fit band, so it labels the score claim it describes. */}
+              {rec && scored && <Provenance kind="code" />}
             </div>
             <h1 className="mt-2 text-title text-balance">
               {module.title}
             </h1>
-            <ul className="mt-3 flex flex-wrap gap-1.5 text-2xs font-medium" aria-label="Module facts">
+            {/* Plain facts, not pills (issue #141): code · department · level · credits · terms. */}
+            <ul className="mt-3 flex flex-wrap gap-x-2 gap-y-1 text-xs text-muted" aria-label="Module facts">
               {facts.map((fact, i) => (
-                <li key={`${i}-${fact}`} className={cx('rounded-full bg-surface-2 px-2.5 py-1 text-muted', i === 0 && 'font-mono')}>
-                  {fact}
+                <li key={`${i}-${fact}`} className="flex items-center gap-2">
+                  {i > 0 && <span aria-hidden="true">·</span>}
+                  <span className={cx(i === 0 && 'font-mono')}>{fact}</span>
                 </li>
               ))}
             </ul>

@@ -1,20 +1,20 @@
 // Status chip, privacy note and the publish confirmation for the exam feedback form (spec 23).
 import { useEffect, useId, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import { Badge, type BadgeTone } from '../../components/Badge.tsx';
 import { Provenance } from '../../components/Provenance.tsx';
 import type { ExamStatus } from '../lib/examForm.ts';
-import { CheckIcon, PencilIcon, SendIcon, ShieldIcon, SparkIcon } from './icons.tsx';
+import { CheckIcon, PencilIcon, SendIcon, ShieldIcon } from './icons.tsx';
 import { Button } from '../../components/Button.tsx';
 
-const CHIP: Record<ExamStatus, { label: string; className: string; Icon: typeof CheckIcon }> = {
-  unsaved: { label: 'Not saved yet', className: 'bg-surface-2 text-muted ring-line-strong', Icon: PencilIcon },
-  draft: { label: 'Draft', className: 'bg-fit-mid/12 text-ink ring-fit-mid/40', Icon: PencilIcon },
-  'ai-draft': { label: 'AI draft', className: '', Icon: SparkIcon },
-  published: { label: 'Published', className: 'bg-fit-high/10 text-fit-high ring-fit-high/35', Icon: CheckIcon },
+/** The shared Badge (issue #141). The AI draft is the app-wide AI chip (issue #138), the one violet on this page. */
+const CHIP: Record<Exclude<ExamStatus, 'ai-draft'>, { label: string; tone: BadgeTone; Icon: typeof CheckIcon }> = {
+  unsaved: { label: 'Not saved yet', tone: 'neutral', Icon: PencilIcon },
+  draft: { label: 'Draft', tone: 'warning', Icon: PencilIcon },
+  published: { label: 'Published', tone: 'success', Icon: CheckIcon },
 };
 
 export function ExamStatusChip({ status }: { status: ExamStatus }) {
-  // An AI draft is shown with the app-wide AI chip (issue #138), the one place violet appears on this page.
   if (status === 'ai-draft')
     return (
       <span className="inline-flex">
@@ -22,13 +22,12 @@ export function ExamStatusChip({ status }: { status: ExamStatus }) {
         <Provenance kind="ai" label="AI draft" />
       </span>
     );
-  const { label, className, Icon } = CHIP[status];
+  const { label, tone, Icon } = CHIP[status];
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ring-1 ${className}`}>
-      <Icon className="size-3.5" />
+    <Badge tone={tone} size="md" icon={<Icon className="size-3.5" />}>
       <span className="sr-only">Status: </span>
       {label}
-    </span>
+    </Badge>
   );
 }
 

@@ -10,6 +10,7 @@ import { WeightMapEditor, WeightSlider } from '../components/WeightEditor.tsx';
 import type { Option } from '../components/WeightEditor.tsx';
 import { Panel } from '../components/ui.tsx';
 import { Button } from '../../components/Button.tsx';
+import { Badge } from '../../components/Badge.tsx';
 import { ErrorState, LoadingState } from '../../components/StateViews.tsx';
 import { AlertIcon, CheckIcon } from '../components/icons.tsx';
 import { useResource } from '../hooks/useResource.ts';
@@ -178,7 +179,7 @@ function TagEditorForm({
         <p ref={statusRef} tabIndex={-1} className="-mb-2 text-right text-sm outline-none" aria-live="polite">
           {save.status === 'saved' && changes === 0 ? (
             <span className="inline-flex items-center gap-1.5 text-fit-high">
-              <CheckIcon /> Saved. Tags are now derived by staff-edit.
+              <CheckIcon /> Saved. These tags are now marked as edited by staff.
             </span>
           ) : changes === 0 && !saving ? (
             <span className="text-muted">All changes saved</span>
@@ -321,14 +322,11 @@ function TagEditorForm({
 }
 
 function DerivedByBadge({ derivedBy }: { derivedBy: Module['derivedBy'] }) {
+  // Tags the analyst agent derived are AI-written; a staff edit is a person's.
   const staff = derivedBy === 'staff-edit';
   return (
-    <span
-      className={`rounded-full px-2 py-0.5 font-mono text-2xs font-medium ${
-        staff ? 'bg-fit-high/10 text-fit-high' : 'bg-brand-soft text-brand'
-      }`}
-    >
-      derivedBy: {derivedBy}
-    </span>
+    <Badge tone={staff ? 'success' : 'ai'} icon={staff ? 'user' : 'sparkle'}>
+      {staff ? 'Edited by staff' : 'Derived by the analyst agent'}
+    </Badge>
   );
 }

@@ -1,4 +1,5 @@
 import { FIT_BAND_LABELS, fitBand, type FitBand } from '@modulematch/shared';
+import type { BadgeTone } from './Badge.tsx';
 import { cx } from './cx.ts';
 import type { MeterTone } from './Meter.tsx';
 
@@ -12,6 +13,9 @@ export const FIT_BAND_TEXT: Record<FitBand, string> = {
   partial: 'text-fit-mid',
   weak: 'text-fit-low',
 };
+
+/** Badge tone per band, for a fit band chip. */
+export const FIT_BAND_TONE: Record<FitBand, BadgeTone> = { strong: 'success', good: 'success', partial: 'warning', weak: 'danger' };
 
 /** Meter tone per band, for bars beside a fit. */
 export const FIT_BAND_METER: Record<FitBand, MeterTone> = { strong: 'high', good: 'high', partial: 'mid', weak: 'low' };

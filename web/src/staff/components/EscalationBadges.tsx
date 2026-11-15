@@ -1,61 +1,48 @@
-// Escalation type and status badges. Each type routes to one staff queue (spec 11.1).
+// Escalation type and status badges. Each type routes to one staff queue (spec 11.1). Both are the shared Badge
+// (issue #141): one radius, sentence case, the shared tones.
 import type { EscalationStatus, EscalationType } from '@modulematch/shared';
 import type { ComponentType, SVGProps } from 'react';
+import { Badge, type BadgeTone } from '../../components/Badge.tsx';
 import { CheckIcon, CompassIcon, GavelIcon, HeartIcon, MessageIcon } from './icons.tsx';
 
 type IconComponent = ComponentType<Omit<SVGProps<SVGSVGElement>, 'children'>>;
 
-export const ESCALATION_TYPES: Record<
-  EscalationType,
-  { label: string; queue: string; Icon: IconComponent; tone: string }
-> = {
-  RULE_EXCEPTION: { label: 'Rule exception', queue: 'Senior Tutor', Icon: GavelIcon, tone: 'bg-brand-soft text-brand' },
-  LOW_CONFIDENCE: {
-    label: 'Low confidence',
-    queue: 'Personal tutor',
-    Icon: CompassIcon,
-    tone: 'bg-mode-explain/10 text-mode-explain',
-  },
-  WELLBEING: { label: 'Wellbeing', queue: 'Student support', Icon: HeartIcon, tone: 'bg-mode-plan/10 text-mode-plan' },
-  COMPLAINT: { label: 'Complaint', queue: 'Admin', Icon: MessageIcon, tone: 'bg-clash-likely/10 text-clash-likely' },
+/** Violet is kept for AI-written content (issue #138), so a low-confidence case is amber, a caution. */
+export const ESCALATION_TYPES: Record<EscalationType, { label: string; queue: string; Icon: IconComponent; tone: BadgeTone }> = {
+  RULE_EXCEPTION: { label: 'Rule exception', queue: 'Senior Tutor', Icon: GavelIcon, tone: 'brand' },
+  LOW_CONFIDENCE: { label: 'Low confidence', queue: 'Personal tutor', Icon: CompassIcon, tone: 'warning' },
+  WELLBEING: { label: 'Wellbeing', queue: 'Student support', Icon: HeartIcon, tone: 'info' },
+  COMPLAINT: { label: 'Complaint', queue: 'Admin', Icon: MessageIcon, tone: 'danger' },
 };
 
 export function TypeBadge({ type }: { type: EscalationType }) {
   const t = ESCALATION_TYPES[type];
   return (
-    <span
-      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap ${t.tone}`}
-    >
-      <t.Icon className="size-3.5" />
+    <Badge tone={t.tone} size="md" icon={<t.Icon className="size-3.5" />}>
       {t.queue}
       <span className="sr-only">, {t.label}</span>
-    </span>
+    </Badge>
   );
 }
 
-const STATUS_LABEL: Record<EscalationStatus, string> = {
-  open: 'Open',
-  claimed: 'Claimed',
-  resolved: 'Resolved',
+const STATUS: Record<EscalationStatus, { label: string; tone: BadgeTone }> = {
+  open: { label: 'Open', tone: 'warning' },
+  claimed: { label: 'Claimed', tone: 'brand' },
+  resolved: { label: 'Resolved', tone: 'success' },
 };
 
-const STATUS_TONE: Record<EscalationStatus, string> = {
-  open: 'border-fit-mid/50 text-ink',
-  claimed: 'border-brand/50 text-brand',
-  resolved: 'border-fit-high/40 text-fit-high',
-};
-
+/** Status as an outlined badge: a dot while the case is live, a tick once it is resolved. */
 export function StatusBadge({ status }: { status: EscalationStatus }) {
+  const s = STATUS[status];
   return (
-    <span
-      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium whitespace-nowrap ${STATUS_TONE[status]}`}
+    <Badge
+      tone={s.tone}
+      variant="outline"
+      size="md"
+      dot={status !== 'resolved'}
+      icon={status === 'resolved' ? <CheckIcon className="size-3.5" /> : undefined}
     >
-      {status === 'resolved' ? (
-        <CheckIcon className="size-3.5" />
-      ) : (
-        <span aria-hidden="true" className={`size-1.5 rounded-full ${status === 'open' ? 'bg-fit-mid' : 'bg-brand'}`} />
-      )}
-      {STATUS_LABEL[status]}
-    </span>
+      {s.label}
+    </Badge>
   );
 }

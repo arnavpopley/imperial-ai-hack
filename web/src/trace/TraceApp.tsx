@@ -4,6 +4,7 @@ import type { EvalRun, TraceEvent, TraceKind, Verdict } from '@modulematch/share
 import { motion } from 'motion/react';
 import { useCallback, useEffect, useId, useMemo, useState, type ReactNode } from 'react';
 import { api } from '../api.ts';
+import { Badge, type BadgeTone } from '../components/Badge.tsx';
 import { CountUp } from '../components/CountUp.tsx';
 import { cx } from '../components/cx.ts';
 import { Icon, type IconName } from '../components/Icon.tsx';
@@ -34,11 +35,12 @@ const KIND_META: Record<TraceKind, { label: string; icon: IconName; dot: string 
   escalation: { label: 'Handed to staff', icon: 'lifebuoy', dot: 'bg-mode-escalated text-on-brand' },
 };
 
-const VERDICT_META: Record<Verdict, { label: string; className: string }> = {
-  pass: { label: 'Passed', className: 'bg-fit-high/15 text-fit-high' },
-  redact: { label: 'Redacted', className: 'bg-fit-mid/15 text-fit-mid' },
-  block: { label: 'Blocked', className: 'bg-fit-low/15 text-fit-low' },
-  escalate: { label: 'Escalated', className: 'bg-mode-escalated/15 text-mode-escalated' },
+// Blocked and escalated share the danger tone, so the icon tells them apart as well as the label.
+const VERDICT_META: Record<Verdict, { label: string; tone: BadgeTone; icon: IconName }> = {
+  pass: { label: 'Passed', tone: 'success', icon: 'check' },
+  redact: { label: 'Redacted', tone: 'warning', icon: 'eye-off' },
+  block: { label: 'Blocked', tone: 'danger', icon: 'ban' },
+  escalate: { label: 'Escalated', tone: 'danger', icon: 'user' },
 };
 
 /** What each evaluation measures, in plain words. Unknown names fall back to the raw name. */
@@ -267,9 +269,9 @@ function EvalCard({ result: r, index }: { result: EvalRun['results'][number]; in
           <span className={cx('text-4xl font-semibold tracking-tight', ok ? 'text-fit-high' : 'text-fit-low')}>
             <CountUp value={pct} suffix="%" />
           </span>
-          <span className={cx('rounded-full px-2.5 py-1 text-xs font-semibold', ok ? 'bg-fit-high/15 text-fit-high' : 'bg-fit-low/15 text-fit-low')}>
+          <Badge tone={ok ? 'success' : 'danger'} size="md">
             {ok ? 'Meets target' : 'Below target'}
-          </span>
+          </Badge>
         </p>
         <div
           className="relative h-2.5 rounded-full bg-surface-2"
@@ -383,14 +385,18 @@ function TracePanel({
 
       {events.length > 0 && (
         <ul className="flex flex-wrap gap-2 text-sm" aria-label="Summary">
-          <li className="rounded-full bg-surface-2 px-3.5 py-1.5">
-            <span className="font-semibold tabular-nums">{events.length}</span> {noun(events.length, 'event')}
+          <li className="flex">
+            <Badge size="md">
+              <span className="tabular-nums">{events.length}</span> {noun(events.length, 'event')}
+            </Badge>
           </li>
           {(Object.keys(VERDICT_META) as Verdict[]).map((v) =>
             verdicts[v] ? (
-              <li key={v} className={cx('rounded-full px-3.5 py-1.5', VERDICT_META[v].className)}>
-                <span className="font-semibold tabular-nums">{verdicts[v]}</span> {noun(verdicts[v]!, 'safety check')}{' '}
-                {VERDICT_META[v].label.toLowerCase()}
+              <li key={v} className="flex">
+                <Badge tone={VERDICT_META[v].tone} size="md" icon={VERDICT_META[v].icon}>
+                  <span className="tabular-nums">{verdicts[v]}</span> {noun(verdicts[v]!, 'safety check')}{' '}
+                  {VERDICT_META[v].label.toLowerCase()}
+                </Badge>
               </li>
             ) : null,
           )}
@@ -438,9 +444,9 @@ function Timeline({ events }: { events: TraceEvent[] }) {
                 <span className="font-semibold capitalize">{e.actor}</span>
                 <span className="text-xs text-muted">{kind.label}</span>
                 {e.verdict && (
-                  <span className={cx('rounded-full px-2.5 py-0.5 text-xs font-semibold', VERDICT_META[e.verdict].className)}>
+                  <Badge tone={VERDICT_META[e.verdict].tone} icon={VERDICT_META[e.verdict].icon}>
                     {VERDICT_META[e.verdict].label}
-                  </span>
+                  </Badge>
                 )}
                 <span className="ml-auto font-mono text-xs text-muted">
                   {new Date(e.at).toLocaleTimeString()} · {e.latencyMs} ms
