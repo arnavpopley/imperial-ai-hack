@@ -43,8 +43,14 @@ export function CapacityBackupPanel({ backups, titleFor }: CapacityBackupPanelPr
     }
   };
 
-  // The rows come from the last timetable response; until the next one lands, drop any that the shortlist has
-  // already settled (the backup added, or the pick removed), so no button acts on a stale suggestion.
+  // The rows were worked out for the shortlist as it was when this timetable response arrived. Once the shortlist
+  // changes, every row may be out of date (canAdd in particular), so all of them wait for the next response.
+  const shortlistKey = shortlist.shortlist.join(',');
+  const [received, setReceived] = useState({ backups, shortlistKey });
+  if (received.backups !== backups) setReceived({ backups, shortlistKey });
+  const stale = received.backups === backups && received.shortlistKey !== shortlistKey;
+
+  // Rows the shortlist has already settled (the backup added, or the pick removed) are dropped at once.
   const live = backups.filter(
     (b) => shortlist.isShortlisted(b.replaceModuleId) && !shortlist.isShortlisted(b.withModuleId),
   );
@@ -58,6 +64,11 @@ export function CapacityBackupPanel({ backups, titleFor }: CapacityBackupPanelPr
       <p className="mt-0.5 text-[12px] text-muted">
         From the synthetic cohort’s shortlists. Popular modules can run out of places; your fit scores are unchanged.
       </p>
+      {stale && (
+        <p role="status" className="mt-1 text-[12px] text-muted">
+          Checking these against your updated shortlist…
+        </p>
+      )}
       <ul className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-2">
         {live.map((backup) => (
           <BackupItem
@@ -66,7 +77,7 @@ export function CapacityBackupPanel({ backups, titleFor }: CapacityBackupPanelPr
             titleFor={titleFor}
             shortlist={shortlist}
             busy={active === rowKey(backup)}
-            locked={active !== null}
+            locked={active !== null || stale}
             runOne={runOne}
           />
         ))}
