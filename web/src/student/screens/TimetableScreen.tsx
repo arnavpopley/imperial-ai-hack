@@ -196,7 +196,7 @@ function TimetableBody({ view, onChanged, refreshing, stale }: TimetableBodyProp
 
         <section aria-labelledby="clash-heading">
           {/* With no clash the plan check says so; the heading stays for screen readers and the demo check. */}
-          <h2 id="clash-heading" className={cx('mb-2 text-sm font-semibold', view.clashes.length === 0 && 'sr-only')}>
+          <h2 id="clash-heading" className={cx('mb-2 text-subheading', view.clashes.length === 0 && 'sr-only')}>
             {view.clashes.length === 0 ? 'No clashes' : `${view.clashes.length} clash${view.clashes.length > 1 ? 'es' : ''} to resolve`}
           </h2>
           <ul className="grid grid-cols-[minmax(0,1fr)] gap-3">
@@ -224,7 +224,7 @@ function TimetableBody({ view, onChanged, refreshing, stale }: TimetableBodyProp
 
         <section aria-labelledby="shortlist-heading" className="rounded-card border border-line bg-surface p-4 shadow-soft">
           <div className="mb-2 flex items-baseline justify-between">
-            <h2 id="shortlist-heading" className="text-sm font-semibold">
+            <h2 id="shortlist-heading" className="text-subheading">
               Your plan
             </h2>
           </div>

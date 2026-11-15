@@ -52,7 +52,7 @@ export function SocietiesPanel({ onSeen, onClose }: SocietiesPanelProps) {
         </button>
       </div>
       <div>
-        <h2 id={headingId} className="text-xl font-semibold tracking-tight">
+        <h2 id={headingId} className="text-heading">
           Societies and clubs
         </h2>
         <p className="mt-1 text-sm text-muted">Picked from the interests you have shared so far.</p>

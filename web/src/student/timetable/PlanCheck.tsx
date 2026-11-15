@@ -23,7 +23,7 @@ export function PlanCheck({ view, titleFor }: { view: TimetableView; titleFor: (
   return (
     <section aria-labelledby="plan-check-heading" className="rounded-card border border-line bg-surface p-4 shadow-soft">
       <div className="mb-3 flex items-baseline justify-between gap-3">
-        <h2 id="plan-check-heading" className="flex items-center gap-2 text-sm font-semibold">
+        <h2 id="plan-check-heading" className="flex items-center gap-2 text-subheading">
           <Icon name="shield" size={15} className="text-brand" />
           Plan check
         </h2>

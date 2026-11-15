@@ -173,7 +173,7 @@ function EmptyFeedback() {
       className="grid justify-items-center gap-6 rounded-panel border border-dashed border-line-strong px-5 py-10 text-center sm:px-10"
     >
       <div className="grid justify-items-center gap-2">
-        <h2 id="empty-feedback" className="text-xl font-semibold tracking-tight">
+        <h2 id="empty-feedback" className="text-heading">
           No exam feedback yet
         </h2>
         <p className="max-w-md text-sm text-muted">

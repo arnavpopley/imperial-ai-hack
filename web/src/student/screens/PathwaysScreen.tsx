@@ -41,7 +41,7 @@ export function PathwaysScreen() {
 
       <section aria-labelledby="choose-heading">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-          <h2 id="choose-heading" className="text-sm font-semibold">
+          <h2 id="choose-heading" className="text-subheading">
             Choose your pathways{' '}
             <span className="font-normal text-muted tabular-nums">
               ({selected.length} of {MAX_PATHWAYS})
@@ -122,7 +122,7 @@ export function PathwaysScreen() {
 
       {selected.length > 0 && (
         <section aria-labelledby="progress-heading" className="grid grid-cols-1 gap-3">
-          <h2 id="progress-heading" className="text-sm font-semibold">
+          <h2 id="progress-heading" className="text-subheading">
             Your progress
           </h2>
           {/* The row is always filled (issue 117): one pathway takes it all with its skills open beside it, two
