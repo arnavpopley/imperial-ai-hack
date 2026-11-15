@@ -88,6 +88,12 @@ function ExamIntro({ status, children }: { status?: ExamStatus; children: ReactN
  */
 const unsavedDrafts = new Map<string, ExamDraft>();
 
+// A reload or closed tab would lose those drafts too, so the browser asks first while any remain, including
+// drafts for modules whose editor is not on screen.
+window.addEventListener('beforeunload', (e) => {
+  if (unsavedDrafts.size > 0) e.preventDefault();
+});
+
 type Busy = 'idle' | 'saving' | 'publishing';
 type Notice = { tone: 'success' | 'error'; text: string } | null;
 
@@ -135,14 +141,6 @@ function ExamFormWorkspace({ moduleId, initial }: { moduleId: string; initial: E
     if (dirty && draft) unsavedDrafts.set(moduleId, draft);
     else unsavedDrafts.delete(moduleId);
   }, [dirty, draft, moduleId]);
-
-  // A reload or closed tab would lose the in-memory copy too, so ask first.
-  useEffect(() => {
-    if (!dirty) return;
-    const warn = (e: BeforeUnloadEvent) => e.preventDefault();
-    window.addEventListener('beforeunload', warn);
-    return () => window.removeEventListener('beforeunload', warn);
-  }, [dirty]);
   const issueFor = (field: string) => (showIssues ? issues.find((i) => i.field === field)?.message : undefined);
 
   if (!draft)
