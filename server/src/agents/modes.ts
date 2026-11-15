@@ -5,7 +5,8 @@ const TRANSITIONS: Record<Mode, Mode[]> = {
   ONBOARD: ['INTERVIEW'],
   INTERVIEW: ['RECOMMEND', 'ESCALATED'],
   RECOMMEND: ['EXPLAIN', 'INTERVIEW', 'PLAN', 'ESCALATED'],
-  EXPLAIN: ['RECOMMEND', 'PLAN'],
+  // An escalation can be sent from another tab while an explanation is being written.
+  EXPLAIN: ['RECOMMEND', 'PLAN', 'ESCALATED'],
   PLAN: ['EXPLAIN', 'RECOMMEND', 'ESCALATED'],
   ESCALATED: ['RECOMMEND'],
 };

@@ -63,6 +63,7 @@ stateDiagram-v2
   INTERVIEW --> ESCALATED: guardrail trigger
   RECOMMEND --> ESCALATED: rule exception or low confidence
   PLAN --> ESCALATED: clash with no valid swap
+  EXPLAIN --> ESCALATED: escalation sent during an explanation
   ESCALATED --> RECOMMEND: staff responds
 ```
 

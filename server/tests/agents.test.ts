@@ -149,6 +149,7 @@ describe('mode machine', () => {
     expect(canTransition('PLAN', 'EXPLAIN')).toBe(true);
     expect(canTransition('EXPLAIN', 'PLAN')).toBe(true);
     expect(canTransition('ESCALATED', 'PLAN')).toBe(false);
+    expect(canTransition('EXPLAIN', 'ESCALATED')).toBe(true);
   });
 });
 

@@ -40,6 +40,17 @@ describe('matchModules for a removal (pool = the shortlist)', () => {
     expect(matchModules('remove Thermodynamics 3A', modules, ['MECH60011']).matched).toEqual(['MECH60011']);
   });
 
+  it('never borrows a word from another mention to expand an exact title', () => {
+    expect(matchModules('remove Machine Learning and Dynamics', modules, ['MECH70025', MACHINE_DYNAMICS])).toEqual({
+      matched: ['MECH70025', DYNAMICS],
+      suggestions: [MACHINE_DYNAMICS],
+    });
+  });
+
+  it('keeps an exact code even when a shortlisted title shares the words around it', () => {
+    expect(matchModules('remove machine MECH50008 vibrations', modules, [MACHINE_DYNAMICS, DYNAMICS]).matched).toEqual([DYNAMICS]);
+  });
+
   it('acts on a shortlisted module that shares two title words', () => {
     expect(matchModules('remove the dynamics and control one', modules, [ROBOT_DYNAMICS])).toEqual({ matched: [ROBOT_DYNAMICS], suggestions: [] });
   });

@@ -166,19 +166,23 @@ describe('plan mode follows the shortlist', () => {
     expect(repo.getSession(id)?.mode).toBe('RECOMMEND');
   });
 
-  it('leaves a session that went to ESCALATED during the explanation where it is', async () => {
+  it('enters ESCALATED when an escalation is sent during a PLAN explanation, and stays there', async () => {
     const id = await recommendingSession();
     await shortlist(id, 'MECH60009', 'add');
     await shortlist(id, 'MECH60018', 'add');
-    const stale = repo.getSession(id);
-    if (!stale) throw new Error('expected the session');
+    const turnCopy = repo.getSession(id);
+    if (!turnCopy) throw new Error('expected the session');
     const tracer = createTracer(id, tracerSink);
-    expect(enterExplain(stale, tracer, 'student asked why')).toBe('PLAN');
-    // The student sends an escalation in another tab while the explanation is being written.
-    repo.updateSession(id, { mode: 'ESCALATED' });
+    expect(enterExplain(turnCopy, tracer, 'student asked why')).toBe('PLAN');
 
-    expect(leaveExplain(stale, tracer, 'explanation given')).toBeNull();
+    // The student sends an escalation from another tab while the explanation is being written.
+    const sent = await app.request(`/api/sessions/${id}/escalations`, send('POST', { type: 'LOW_CONFIDENCE', summary: 'Please help me choose.' }));
+    expect(sent.status).toBe(201);
     expect(repo.getSession(id)?.mode).toBe('ESCALATED');
+
+    expect(leaveExplain(turnCopy, tracer, 'explanation given')).toBeNull();
+    expect(repo.getSession(id)?.mode).toBe('ESCALATED');
+    expect(modeEvents(id).slice(-2)).toEqual(['PLAN -> EXPLAIN: student asked why', 'EXPLAIN -> ESCALATED: escalation sent']);
   });
 });
 
