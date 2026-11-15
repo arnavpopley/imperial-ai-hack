@@ -2,6 +2,7 @@
 
 A personalised module catalogue for Imperial students, built at the Imperial AI Hackathon (14–15 November 2026) for Track 05, the Reply Challenge: AI on Campus.
 
+- **Result:** 2nd place in Track 05 (Reply Challenge: AI on Campus), winning a £200 voucher and merch. The judges liked the idea and how it follows a student's whole timeline.
 - **Live demo:** https://modulematch.vercel.app
 - **Repo:** https://github.com/arnavpopley/imperial-ai-hack
 
