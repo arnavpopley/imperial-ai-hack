@@ -19,6 +19,8 @@ interface Mention {
   id: string;
   kind: 'code' | 'title';
   span: Span;
+  /** The module's full title after its code ("MECH70015 Computational Fluid Dynamics"): part of the same mention. */
+  titleSpan?: Span;
 }
 
 export interface ModuleMatch {
@@ -37,11 +39,15 @@ function exactMentions(said: readonly string[], modules: readonly Module[]): Men
   const found: Mention[] = [];
   const take = (m: Module, kind: Mention['kind'], label: string) => {
     const words = tokens(label);
-    if (words.length === 0 || found.some((f) => f.id === m.id)) return;
+    if (words.length === 0) return;
     for (let i = 0; i + words.length <= said.length; i++) {
       if (words.every((w, k) => said[i + k] === w && !used[i + k])) {
+        // Use up the words even when the code already named this module, so "MECH70015 Computational
+        // Fluid Dynamics" leaves no "Dynamics" behind for a shorter title.
         for (let k = 0; k < words.length; k++) used[i + k] = true;
-        found.push({ id: m.id, kind, span: [i, i + words.length] });
+        const earlier = found.find((f) => f.id === m.id);
+        if (earlier) earlier.titleSpan = [i, i + words.length];
+        else found.push({ id: m.id, kind, span: [i, i + words.length] });
         return;
       }
     }
@@ -90,15 +96,20 @@ export function matchModules(text: string, modules: readonly Module[], pool: rea
     const keys = keyWords(id);
     return new Set(said.slice(start, end).filter((w) => keys.has(w)));
   };
+  const mentions = exactMentions(said, modules);
+  // Words that name a module by code (with its title) are settled, so they suggest nothing else.
+  const open = said.map((w, i) =>
+    mentions.some((m) => m.kind === 'code' && [m.span, m.titleSpan].some((span) => span && span[0] <= i && i < span[1])) ? '' : w,
+  );
   const scored = pool
     .filter((id) => byId.has(id))
-    .map((id) => ({ id, hits: Math.max(0, ...runs(said, titleOf(id)).map((span) => hitsIn(id, span).size)) }))
+    .map((id) => ({ id, hits: Math.max(0, ...runs(open, titleOf(id)).map((span) => hitsIn(id, span).size)) }))
     .filter((c) => c.hits > 0)
     .sort((a, b) => b.hits - a.hits);
 
   const matched: string[] = [];
   let unsettled = false;
-  for (const mention of exactMentions(said, modules)) {
+  for (const mention of mentions) {
     if (mention.kind === 'code') {
       matched.push(mention.id);
       continue;

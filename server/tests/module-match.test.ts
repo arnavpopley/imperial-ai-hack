@@ -47,6 +47,10 @@ describe('matchModules for a removal (pool = the shortlist)', () => {
     });
   });
 
+  it('reads a code followed by its own title as one module', () => {
+    expect(matchModules('remove MECH70015 Computational Fluid Dynamics', modules, [DYNAMICS])).toEqual({ matched: ['MECH70015'], suggestions: [] });
+  });
+
   it('keeps an exact code even when a shortlisted title shares the words around it', () => {
     expect(matchModules('remove machine MECH50008 vibrations', modules, [MACHINE_DYNAMICS, DYNAMICS]).matched).toEqual([DYNAMICS]);
   });
