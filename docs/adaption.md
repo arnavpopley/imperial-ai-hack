@@ -110,8 +110,9 @@ G2 redaction (`server/src/guardrails/g2-redaction.ts`):
 
 - **Clause-level cut.** A matching sentence now loses only its sensitive clauses when it splits cleanly at ", but",
   " but " or "; ". So "I have ADHD … but I enjoy electronics" keeps "I enjoy electronics." A clause that points back to
-  the disclosure ("it", "that", "so", "which" …) goes with it. If the match spans a clause break, or the kept text still
-  matches, the whole sentence goes.
+  the disclosure ("it", "that", "so", "which" …) goes with it. The whole sentence still goes if the match spans a clause
+  break, if the kept text still matches a pattern, or if the kept text has a sensitive word (medication, doctor, therapy,
+  grades, money, visa and so on). So "I have ADHD; I take medication daily" is removed entirely.
 - **New patterns** for disclosures found in the Adaption rows: "due to health reasons", "my anxiety", "a source of
   anxiety", "extended time on exams" or "reasonable adjustments", and a GPA ("aiming for a 3.8"). The sentence splitter
   no longer breaks at a decimal point.
@@ -123,7 +124,10 @@ the last two prompt rules, and **30/32** after. Both remaining failures are Haik
 and a start time it still reads into "noon until five". The guard now catches that start time.
 
 The full stress runs above were made before the grounding fix, the clock-time guard and the last two prompt rules, to
-stay within budget. They therefore slightly understate the "after" numbers.
+stay within budget. They therefore slightly understate the "after" numbers. Two more caveats. First, the recorded runs
+compared interest values only; the script now also requires the `dislike` flag to match, because that flag decides
+whether merging lowers an interest. Second, the recorded "before" run already used the new G2 health patterns, but cut
+whole sentences. `baseline.ts` now freezes main's patterns and its verbatim-only grounding as well.
 
 ## 4. What a fine-tuned extraction model would replace
 

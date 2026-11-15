@@ -25,6 +25,7 @@ const PATTERNS: Record<SensitiveCategory, RegExp[]> = {
     /\b(due to|because of|for) (my )?(health|medical|mental health) (reasons|issues|problems)\b/i,
     /\b(source of|gives me|give me|get) (anxiety|panic attacks?)\b/i,
     /\b(extra|extended) time (on|in|for) (exams?|tests?)\b|\breasonable adjustments?\b/i,
+    /\b(i take|i'?m on|i'?m taking|taking) (my )?(medication|meds|medicine|pills|antidepressants|inhaler)\b/i,
   ],
   protected: [
     /\b(i'?m|i am|as an?|being an?)\s+(a\s+)?(muslim|christian|jewish|hindu|sikh|buddhist|atheist|catholic)\b/i,
@@ -60,6 +61,17 @@ export const categoriesIn = (text: string) => (Object.keys(PATTERNS) as Sensitiv
 
 /** Sentences with their terminators, like types.ts `sentences`, but a decimal point ("a 3.8 GPA") does not end one. */
 const SENTENCE = /(?:[^.!?\n]|\.(?=\d))+[.!?]*\s*/g;
+
+/**
+ * Words that make a clause kept next to a disclosure unsafe even when no pattern matches ("I have ADHD; I take
+ * medication daily"). Then the whole sentence goes, as before the clause cut.
+ */
+const SENTENCE_HINT_WORDS = [
+  'medic\\w*', 'meds', 'pills?', 'therap\\w*', 'diagnos\\w*', 'condition', 'disab\\w*', 'symptoms?', 'treatment', 'doctors?',
+  'hospital', 'gp', 'counsell?\\w*', 'mental', 'health', 'flare-?ups?', 'grades?', 'marks?', 'scored', 'gpa', 'results?',
+  'loans?', 'debt', 'afford', 'money', 'bursary', 'rent', 'pray\\w*', 'religio\\w*', 'faith', 'visa', 'ethnic\\w*', 'home country',
+];
+const SENSITIVE_HINT = new RegExp(`\\b(${SENTENCE_HINT_WORDS.join('|')})\\b`, 'i');
 
 /** Clause boundaries a disclosure can be cut at: ", but", " but " and "; ". "And" and "so" are not, as they tie clauses together. */
 const CLAUSE_BREAK = /(,\s*but\s+|;\s*|\s+but\s+)/i;
@@ -105,7 +117,7 @@ export function redactByPattern(text: string): { text: string; categories: Sensi
     hits.forEach((c) => found.add(c));
     const rest = redactClauses(sentence);
     // Belt and braces: what is kept must itself be clean.
-    return rest && categoriesIn(rest).length === 0 ? rest : '';
+    return rest && categoriesIn(rest).length === 0 && !SENSITIVE_HINT.test(rest) ? rest : '';
   });
   return { text: kept.join('').trim(), categories: [...found] };
 }

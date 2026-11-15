@@ -58,7 +58,8 @@ function strength(value: unknown): Omit<LabelUpdate, 'slot'> | null {
 const textOf = (value: unknown) => norm(Array.isArray(value) ? value.join(' ') : value && typeof value === 'object' ? JSON.stringify(value) : String(value));
 
 /** Maps one free-form update onto the whitelist, or returns null when its meaning is not clear. */
-export function repairUpdate(u: { slot?: unknown; value?: unknown; dislike?: unknown }): LabelUpdate | null {
+export function repairUpdate(u: { slot?: unknown; value?: unknown; dislike?: unknown } | null): LabelUpdate | null {
+  if (!u || typeof u !== 'object') return null;
   const slot = String(u.slot ?? '');
   const value = u.value;
   if (isAllowedSlot(slot) && schemas.slotValueSchema(slot)!.safeParse(value).success) {
@@ -118,13 +119,13 @@ export function repairRow(row: Row): { row: ParsedRow; kept: number; dropped: st
   const parts = splitPrompt(row.prompt);
   const step = parts && stepFor(parts.question);
   if (!parts || !step) return null;
-  const raw = (JSON.parse(row.completion) as { updates: { slot?: unknown; value?: unknown; dislike?: unknown }[] }).updates;
+  const raw = (JSON.parse(row.completion) as { updates: ({ slot?: unknown; value?: unknown; dislike?: unknown } | null)[] }).updates;
   const updates: LabelUpdate[] = [];
   const dropped: string[] = [];
   for (const u of raw) {
     const fixed = repairUpdate(u);
     if (fixed && !updates.some((x) => x.slot === fixed.slot)) updates.push(fixed);
-    else dropped.push(String(u.slot));
+    else dropped.push(u && typeof u === 'object' ? String(u.slot) : JSON.stringify(u));
   }
   if (updates.length === 0) return null;
   const completion = JSON.stringify({ updates });

@@ -81,6 +81,12 @@ describe('extractor', () => {
     expect(keep('style.codingComfort', 0.75, 'My syntax is usually correct.')).toBe(false);
     expect(keep('timetablePrefs.avoidDays', [], 'I avoid all social commitments.')).toBe(false);
     expect(keep('interest:fluid-mechanics', 0.9, 'Anything about wind.')).toBe(true);
+    // A short answer to the question that asked for the slot needs no keyword; a long one must name it.
+    expect(keep('style.groupPreference', 0.8, 'Yes, really enjoyed it.', ['style.groupPreference'])).toBe(true);
+    expect(keep('style.workloadTolerance', 0.7, "I'm more productive solo, though I can handle group work if necessary.", ['style.groupPreference', 'style.workloadTolerance'])).toBe(false);
+    for (const text of ['No lectures earlier than 10 please.', 'Nothing before ten.', "Not before nine o'clock."]) {
+      expect(keep('timetablePrefs.earliestStart', '10:00', text, ['timetablePrefs.earliestStart'])).toBe(true);
+    }
   });
 
   it('reads a slider answer as comfort only, never as an interest', async () => {

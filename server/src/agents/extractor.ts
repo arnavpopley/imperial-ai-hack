@@ -306,7 +306,11 @@ const WORDS: Record<string, RegExp> = {
   pathwaysSkipped: /\b(not sure|no idea|don'?t know|undecided|haven'?t decided|no clue|unsure)\b/i,
 };
 /** A clock time a start could be read from: "10am", "9:30", "before 10", "nine o'clock". "Noon until five" is not one. */
-const CLOCK_TIME = /\b(\d{1,2}(:\d{2})?\s*(am|a\.m\.)|\d{1,2}:\d{2}|(before|after|until|from|not till)\s+\d{1,2}|(\d{1,2}|seven|eight|nine|ten|eleven) o'?clock)\b/i;
+const HOUR = '(\\d{1,2}|seven|eight|nine|ten|eleven|twelve)';
+const CLOCK_TIME = new RegExp(
+  `\\b(\\d{1,2}(:\\d{2})?\\s*(am|a\\.m\\.)|\\d{1,2}:\\d{2}|(before|after|until|till|from|earlier than|later than|start(ing)? at)\\s+${HOUR}|${HOUR} o'?clock)\\b`,
+  'i',
+);
 const WEEKDAY = /\b(mon|tues?|wed(nes)?|thur?s?|fri)(day)?s?\b/i;
 
 /** True when the student's words could state this update (spec 10.3: only extract what the student actually said). */
@@ -326,7 +330,10 @@ export function plausible(u: ExtractedUpdate, text: string, targetSlots: string[
   if (u.slot === 'pathwaysSkipped') return u.value === true && WORDS.pathwaysSkipped!.test(text);
   if (u.slot === 'breadthAppetite') return asked('breadthAppetite') || /\b(outside|other (subjects?|departments?|fields?)|minor|electives?|languages?|business|arts?|humanities|interdisciplinary|breadth|broaden)\b/i.test(text);
   const words = WORDS[u.slot];
-  return words ? words.test(text) : true;
+  if (!words) return true;
+  // A short answer to the question that asked for this slot ("Yes, really enjoyed it") needs no keyword; a longer
+  // answer must name the preference, so "solo, though I can handle group work" does not also set a workload.
+  return words.test(text) || (asked(u.slot) && (text.match(/[a-z']+/gi)?.length ?? 0) <= 8);
 }
 
 /** Drops text-derived updates the student's words do not support. */

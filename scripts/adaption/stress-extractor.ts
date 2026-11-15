@@ -130,7 +130,8 @@ async function run(row: (typeof rows)[number]) {
   for (const slot of new Set([...reference.keys(), ...ours.keys()])) {
     const a = reference.get(slot);
     const b = ours.get(slot);
-    const type = !b ? 'missing' : !a ? 'extra' : agrees(a.value, b.value) ? null : 'value';
+    // For an interest the dislike flag matters as much as the value: it decides whether merging lowers the interest.
+    const type = !b ? 'missing' : !a ? 'extra' : agrees(a.value, b.value) && Boolean(a.dislike) === Boolean(b.dislike) ? null : 'value';
     src.total++;
     if (!type) {
       bump(kindOf(slot), 'agree');

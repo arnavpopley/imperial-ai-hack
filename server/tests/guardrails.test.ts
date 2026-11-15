@@ -59,7 +59,9 @@ describe('G2 redaction', () => {
     'I have ADHD; it makes long exams hard.',
     'I have ADHD, but that is why I like coursework.',
     'I have ADHD so long exams are hard.',
-  ])('drops a clause that points back to the disclosure: "%s"', (input) => {
+    'I have ADHD; I take medication daily.',
+    'I have dyslexia, but my doctor says it is mild.',
+  ])('drops a clause that points back to, or adds to, the disclosure: "%s"', (input) => {
     expect(redactByPattern(input).text).toBe('');
   });
 
