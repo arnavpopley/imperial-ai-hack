@@ -469,8 +469,8 @@ function counterfactualCard(module: Module, ctx: InsightContext, counterfactual:
   const top = ctx.rules ? `${TOP_MODULES_WORDS} eligible modules` : `${TOP_MODULES_WORDS} modules`;
   // Spec 20.4: these counts split the published group, so with its size known one small part would give the others
   // away. Each split is shown exactly only when every part is zero or five or more; otherwise its parts read "some".
-  const [newlyShown, alreadyShown] = partitionCounts([newly, already, size - newly - already]);
-  const [crossingShown] = partitionCounts([crossing, size - crossing]);
+  const [newlyShown = null, alreadyShown = null] = partitionCounts([newly, already, size - newly - already]);
+  const [crossingShown = null] = partitionCounts([crossing, size - crossing]);
   const words = (shown: number | null) => (shown === null ? 'some' : String(shown));
   const [newlyText, alreadyText, crossingText] = [newlyShown, alreadyShown, crossingShown].map(words);
   const topSentence = `${newly > 0 ? (newlyShown === null ? 'some of them' : `${newlyText} more of them`) : 'none of them'} would newly have it in their ${top}${already > 0 ? ` (${alreadyText} already do)` : ''}`;
