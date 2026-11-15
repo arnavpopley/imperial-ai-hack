@@ -54,7 +54,7 @@ export function WeightSlider({
       </div>
       <div className="row-start-1 col-start-2 flex items-center justify-end gap-1 sm:row-auto sm:col-auto">
         {changed && (
-          <span className="rounded-full bg-brand-soft px-1.5 py-0.5 text-[11px] font-medium text-brand">
+          <span className="rounded-full bg-brand-soft px-1.5 py-0.5 text-2xs font-medium text-brand">
             {original === null ? 'new' : `was ${weight(original)}`}
           </span>
         )}

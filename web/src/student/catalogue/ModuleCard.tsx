@@ -1,4 +1,4 @@
-import { motion, useReducedMotion } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
 import type { Ref } from 'react';
 import { Link } from 'react-router';
 import { ConfidenceBadge } from '../../components/ConfidenceBadge.tsx';
@@ -6,6 +6,7 @@ import { cx } from '../../components/cx.ts';
 import { Icon } from '../../components/Icon.tsx';
 import { ModuleTypeChip } from '../../components/ModuleTypeChip.tsx';
 import { SubScoreBars } from '../../components/SubScoreBars.tsx';
+import { useMotionTokens } from '../../motion/tokens.ts';
 import { TERM_LABELS } from '../labels.ts';
 import { NudgeNote } from '../results/NudgeNote.tsx';
 import { useNudge } from '../results/ResultsProvider.tsx';
@@ -35,7 +36,7 @@ export function ModuleCard({ item, lowConfidence, shortlisted, pending, onToggle
   const { module, eligible } = item;
   const title = module?.title ?? item.moduleId;
   const dimmed = lowConfidence || !eligible;
-  const reduce = useReducedMotion();
+  const { reduce, transition } = useMotionTokens();
   // From the student's own marks, when shared: a gentle note beside the score, never a change to it.
   const nudge = useNudge(item.moduleId);
   const delay = Math.min(index, STAGGER_LIMIT) * 0.05;
@@ -46,7 +47,7 @@ export function ModuleCard({ item, lowConfidence, shortlisted, pending, onToggle
       <motion.div
         initial={reduce ? false : { opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, delay, ease: [0.2, 0.8, 0.2, 1] }}
+        transition={transition('lessonTransition', delay)}
         className={cx(
           'group relative rounded-card border bg-surface p-5 shadow-soft transition-[box-shadow,border-color] duration-200 hover:border-line-strong hover:shadow-lift sm:p-6',
           eligible ? 'border-line' : 'border-dashed border-line-strong bg-surface/70',
@@ -133,20 +134,29 @@ export function ModuleCard({ item, lowConfidence, shortlisted, pending, onToggle
   );
 }
 
+/**
+ * The rank, and how far the current weights moved it. A new shift rises in on the progress-update clock
+ * (300ms ease-out) and settles; under reduced motion it only fades.
+ */
 function RankShift({ rank, shift }: { rank: number; shift: number }) {
+  const { softEnter } = useMotionTokens();
+  const enter = softEnter('progressUpdate', 4);
   return (
-    <span className="flex items-center gap-1 text-[12px] font-semibold text-muted tabular-nums">
+    <span className="relative flex items-center gap-1 text-[12px] font-semibold text-muted tabular-nums">
       #{rank}
-      {shift !== 0 && (
-        <span
-          key={`${rank}-${shift}`}
-          className={cx('animate-rise inline-flex items-center', shift > 0 ? 'text-fit-high' : 'text-fit-low')}
-        >
-          <Icon name={shift > 0 ? 'arrow-up' : 'arrow-down'} size={11} />
-          {Math.abs(shift)}
-          <span className="sr-only">{shift > 0 ? ' places up' : ' places down'} against the default weights</span>
-        </span>
-      )}
+      <AnimatePresence mode="popLayout" initial={false}>
+        {shift !== 0 && (
+          <motion.span
+            key={`${rank}-${shift}`}
+            {...enter}
+            className={cx('inline-flex items-center', shift > 0 ? 'text-fit-high' : 'text-fit-low')}
+          >
+            <Icon name={shift > 0 ? 'arrow-up' : 'arrow-down'} size={11} />
+            {Math.abs(shift)}
+            <span className="sr-only">{shift > 0 ? ' places up' : ' places down'} against the default weights</span>
+          </motion.span>
+        )}
+      </AnimatePresence>
     </span>
   );
 }

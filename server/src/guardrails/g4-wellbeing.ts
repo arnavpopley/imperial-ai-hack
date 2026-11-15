@@ -32,7 +32,7 @@ export async function wellbeingCheck(text: string, _ctx: InputContext): Promise<
   let concern = anyMatch(WELLBEING, text);
   if (!concern && isLive()) {
     const result = await structured(Verdict, {
-      tier: 'fast',
+      tier: 'light',
       system: SYSTEM,
       messages: [{ role: 'user', content: asData('student', text) }],
       maxTokens: 100,

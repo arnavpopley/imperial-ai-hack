@@ -10,6 +10,8 @@ import { GuardrailNotice, type GuardrailVariant } from '../../components/Guardra
 import { Icon } from '../../components/Icon.tsx';
 import { errorMessage } from '../../components/StateViews.tsx';
 import { guardrailVariant } from '../chat/ChatProvider.tsx';
+import { ClaimCheck } from '../claimcheck/ClaimCheck.tsx';
+import { useReferenceData } from '../state/ReferenceDataProvider.tsx';
 
 const SUGGESTIONS = ['How is it assessed?', 'What do I need to know beforehand?', 'What will I build or do?'] as const;
 
@@ -44,6 +46,7 @@ export function AskModulePanel({ sessionId, moduleId, moduleTitle, className }: 
   const nextId = useRef(1);
   const logRef = useRef<HTMLOListElement>(null);
   const reduce = useReducedMotion();
+  const sourceUrl = useReferenceData().moduleById.get(moduleId)?.sourceUrl;
   const busy = turns.some((t) => t.status === 'streaming');
 
   // A new module starts a new conversation; leaving the page stops any reply in flight.
@@ -160,6 +163,9 @@ export function AskModulePanel({ sessionId, moduleId, moduleTitle, className }: 
                   answer={turn.answer}
                   question={turn.question}
                 />
+              )}
+              {turn.status === 'done' && turn.answer && sourceUrl && (
+                <ClaimCheck kind="answer" text={turn.answer} sourceUrl={sourceUrl} className="max-w-[92%]" />
               )}
               {turn.status === 'error' && (
                 <div role="alert" className="flex flex-wrap items-center gap-2 rounded-xl bg-fit-low/8 px-3 py-2 text-[13px]">

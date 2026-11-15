@@ -192,7 +192,7 @@ export function ConfirmProfileCard() {
 function Group({ title, wide = false, children }: { title: string; wide?: boolean; children: ReactNode }) {
   return (
     <div className={wide ? 'sm:col-span-2' : undefined}>
-      <h4 className="mb-2 text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">{title}</h4>
+      <h4 className="mb-2 text-2xs font-semibold tracking-[0.08em] text-muted uppercase">{title}</h4>
       {children}
     </div>
   );

@@ -29,7 +29,7 @@ that a swap only happens if the student confirms it. Reply with only the message
 
 export async function explainTimetable(summary: string, onToken: (text: string) => void): Promise<string> {
   const text = isLive()
-    ? await streamText({ tier: 'fast', system: SYSTEM, messages: [{ role: 'user', content: asData('clash-summary', summary) }], maxTokens: 300 }, () => {}).catch(() => summary)
+    ? await streamText({ tier: 'light', system: SYSTEM, messages: [{ role: 'user', content: asData('clash-summary', summary) }], maxTokens: 300 }, () => {}).catch(() => summary)
     : summary;
   emitWords(text, onToken);
   return text;

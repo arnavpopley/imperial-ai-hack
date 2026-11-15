@@ -241,7 +241,7 @@ function DerivedByBadge({ derivedBy }: { derivedBy: Module['derivedBy'] }) {
   const staff = derivedBy === 'staff-edit';
   return (
     <span
-      className={`rounded-full px-2 py-0.5 font-mono text-[11px] font-medium ${
+      className={`rounded-full px-2 py-0.5 font-mono text-2xs font-medium ${
         staff ? 'bg-fit-high/10 text-fit-high' : 'bg-brand-soft text-brand'
       }`}
     >

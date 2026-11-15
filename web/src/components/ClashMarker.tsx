@@ -45,7 +45,7 @@ export function ClashMarker({ variant, probability, compact = false, className }
       title={compact ? text : undefined}
       className={cx(
         'inline-flex items-center gap-1 rounded-full font-semibold whitespace-nowrap',
-        compact ? 'size-5 justify-center' : 'h-6 px-2 text-[11px]',
+        compact ? 'size-5 justify-center' : 'h-6 px-2 text-2xs',
         variantClass[variant],
         className,
       )}

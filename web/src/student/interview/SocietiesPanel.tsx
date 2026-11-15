@@ -6,6 +6,7 @@ import { Icon } from '../../components/Icon.tsx';
 import { Meter } from '../../components/Meter.tsx';
 import { SampleDataLabel } from '../../components/SampleDataLabel.tsx';
 import { Spinner } from '../../components/Spinner.tsx';
+import { useMotionTokens } from '../../motion/tokens.ts';
 import { useAsync } from '../hooks/useAsync.ts';
 import { useReadySession } from '../state/SessionProvider.tsx';
 
@@ -25,6 +26,9 @@ export function SocietiesPanel({ onSeen, onClose }: SocietiesPanelProps) {
   const names = new Map((societies.data ?? []).map((s) => [s.id, s.name]));
   const top = (matches.data ?? []).slice(0, SHOWN);
   const loaded = matches.data !== undefined;
+  const { softEnter, transition } = useMotionTokens();
+  /** Errors and the empty state arrive softly, with no shake or flash. */
+  const gentle = softEnter('answerFeedback', 4);
 
   useEffect(() => {
     if (loaded) onSeen();
@@ -59,16 +63,16 @@ export function SocietiesPanel({ onSeen, onClose }: SocietiesPanelProps) {
           <Spinner size={16} /> Finding your people…
         </p>
       ) : matches.error ? (
-        <p role="alert" className="flex flex-wrap items-center gap-2 text-[13px] text-fit-low">
+        <motion.p role="alert" {...gentle} className="flex flex-wrap items-center gap-2 text-[13px] text-fit-low">
           Societies did not load.
           <button type="button" onClick={matches.reload} className="font-semibold underline underline-offset-2">
             Retry
           </button>
-        </p>
+        </motion.p>
       ) : top.length === 0 ? (
-        <p className="rounded-2xl border border-dashed border-line px-4 py-3 text-[14px] text-muted">
+        <motion.p {...gentle} className="rounded-2xl border border-dashed border-line px-4 py-3 text-[14px] text-muted">
           Tell me a few interests first and matching societies will appear here.
-        </p>
+        </motion.p>
       ) : (
         <ul className="grid gap-3 sm:grid-cols-2">
           {top.map((match, i) => {
@@ -78,7 +82,7 @@ export function SocietiesPanel({ onSeen, onClose }: SocietiesPanelProps) {
                 key={match.societyId}
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.07, duration: 0.35, ease: [0.2, 0.8, 0.2, 1] }}
+                transition={transition('lessonTransition', i * 0.07)}
                 className="grid gap-2.5 rounded-2xl border border-line bg-surface p-4 shadow-soft"
               >
                 <div className="flex items-start justify-between gap-3">

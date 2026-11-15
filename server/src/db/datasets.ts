@@ -12,15 +12,77 @@ export const DATA_DIR = resolve(REPO_ROOT, 'data');
 
 const Note = z.string().min(1);
 
+/** The public page a published fact was copied from. */
+const PageUrl = z.url({ protocol: /^https$/ });
+
 /** One assessment component as published on the module page. */
 export const PublishedAssessment = z.object({
   type: z.enum(['examination', 'coursework', 'practical']),
   description: z.string(),
   weighting: S.Fraction,
+  /** Pass mark for this component as published, such as "40%" or "PF" (pass/fail). */
+  passMark: z.string().min(1).optional(),
+  /** True when the page says the component must be passed. */
+  mustPass: z.boolean().optional(),
+  /** Set only when the component comes from a page other than the module's sourceUrl (a BPES module outline). */
+  sourceUrl: PageUrl.optional(),
 });
 
 /** A weekly teaching time published on the module page (I-Explore and BPES modules publish these). */
 export const PublishedSlot = z.object({ day: S.Weekday, start: S.HHMM, end: S.HHMM });
+
+/** One sentence or line copied from a public page, with the page heading it sat under when that helps to read it. */
+export const PublishedFact = z.object({ label: z.string().min(1).optional(), text: z.string().min(1), sourceUrl: PageUrl });
+
+const Lines = z.array(z.string().min(1)).min(1);
+
+/** One reading-list entry as the library catalogue prints it; category is the list heading (Core, Supplementary...). */
+export const ReadingItem = z.object({
+  title: z.string().min(1),
+  author: z.string().min(1).optional(),
+  details: z.string().min(1).optional(),
+  category: z.string().min(1).optional(),
+});
+
+/**
+ * Published fields beyond the description, outcomes and weighted assessment (docs/knowledge-base.md). Every field is
+ * optional: it is present only when the public page publishes it, and it is never filled in by hand or by a model.
+ */
+export const PublishedDetails = z.object({
+  /** Set when the learning outcomes come from a page other than sourceUrl (the BPES module outlines). */
+  learningOutcomesSourceUrl: PageUrl.optional(),
+  /** "Module syllabus" or "Indicative core content". */
+  syllabus: z.object({ items: Lines, sourceUrl: PageUrl }).optional(),
+  /** "Teaching methods" or "Learning and teaching approach", one entry per paragraph. */
+  teaching: z.object({ paragraphs: Lines, sourceUrl: PageUrl }).optional(),
+  /** Sentences that state contact or study hours, copied verbatim; independentStudyHours only when stated as a number. */
+  hours: z
+    .object({
+      statements: Lines,
+      independentStudyHours: z.number().int().positive().optional(),
+      sourceUrl: PageUrl,
+    })
+    .optional(),
+  readingList: z.object({ items: z.array(ReadingItem).min(1), sourceUrl: PageUrl }).optional(),
+  /** Names published as the module's contact on the public page (I-Explore and Horizons pages only); never emails. */
+  moduleLeads: z
+    .object({ names: Lines, role: z.enum(['lecturer', 'field leader']), sourceUrl: PageUrl })
+    .optional(),
+  /** Published pre-requisite text, expected background, attendance requirements and credit restrictions. */
+  requirements: z.array(PublishedFact).min(1).optional(),
+  /** The rest of the assessment section: overall pass mark, grading method, zero-weight items, deadlines and notes. */
+  assessmentDetails: z
+    .object({
+      passMark: z.string().min(1).optional(),
+      gradingMethod: z.string().min(1).optional(),
+      formative: z.array(PublishedAssessment.omit({ weighting: true, sourceUrl: true })).min(1).optional(),
+      notes: z.array(PublishedFact).min(1).optional(),
+      sourceUrl: PageUrl,
+    })
+    .optional(),
+  /** Department and programme notes: delivery, who offers the module, credit rules, term dates. */
+  programmeNotes: z.array(PublishedFact).min(1).optional(),
+});
 
 /** A module as scraped from public pages, before the Module Analyst derives topics, skills and demand. */
 export const RawModule = S.Module.omit({
@@ -30,10 +92,12 @@ export const RawModule = S.Module.omit({
   demand: true,
   derivedBy: true,
   derivedRationale: true,
-}).extend({
-  assessment: z.array(PublishedAssessment),
-  publishedSlot: PublishedSlot.nullable(),
-});
+})
+  .extend({
+    assessment: z.array(PublishedAssessment),
+    publishedSlot: PublishedSlot.nullable(),
+  })
+  .extend(PublishedDetails.shape);
 
 export const RawModulesFile = z.object({ _note: Note, _assumptions: z.array(z.string()), modules: z.array(RawModule) });
 export const ModulesFile = z.object({ _note: Note, modules: z.array(S.Module) });
@@ -50,6 +114,8 @@ export const CohortStudent = z.object({ profile: S.StudentProfile, shortlist: z.
 export const CohortFile = z.object({ _note: Note, students: z.array(CohortStudent) });
 
 export type RawModule = z.infer<typeof RawModule>;
+export type PublishedDetails = z.infer<typeof PublishedDetails>;
+export type PublishedFact = z.infer<typeof PublishedFact>;
 export type CohortStudent = z.infer<typeof CohortStudent>;
 
 /** File names under data/. */
