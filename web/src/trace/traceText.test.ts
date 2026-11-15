@@ -12,7 +12,10 @@ describe('trace text', () => {
   it('labels a raw intent with the shared map and its confidence as a percentage', () => {
     expect(labelCodes('rule_exception_request (0.90)')).toBe('Rule exception request · 90% sure');
     expect(labelCodes('catalogue_question (1.00)')).toBe('Catalogue question · 100% sure');
+    expect(labelCodes('smalltalk (0.85)')).toBe('Small talk · 85% sure');
+    expect(labelCodes('wellbeing (0.90)')).toBe('Wellbeing · 90% sure');
     expect(labelCodes('check_rules (0.5)')).toBe('check_rules (0.5)');
+    expect(labelCodes('score (0.5)')).toBe('score (0.5)');
   });
 
   it('leaves module codes, guardrail names and unknown words alone', () => {

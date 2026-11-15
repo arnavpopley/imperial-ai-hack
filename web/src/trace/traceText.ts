@@ -16,7 +16,7 @@ const CODE_LABELS: Record<string, string> = {
  */
 export function labelCodes(text: string): string {
   return text
-    .replace(/\b([a-z]+(?:_[a-z]+)+) \((0(?:\.\d+)?|1(?:\.0+)?)\)/g, (raw, intent: string, confidence: string) =>
+    .replace(/\b([a-z]+(?:_[a-z]+)*) \((0(?:\.\d+)?|1(?:\.0+)?)\)/g, (raw, intent: string, confidence: string) =>
       intent in INTENT_LABELS ? intentLabel(intent as Intent, Number(confidence)) : raw,
     )
     .replace(/\b[A-Z]{2,}(?:_[A-Z]+)*\b/g, (code) => CODE_LABELS[code] ?? code)
