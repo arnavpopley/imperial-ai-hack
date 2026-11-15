@@ -6,10 +6,11 @@ import { FitHistogram } from '../components/FitHistogram.tsx';
 import { InsightCard } from '../components/InsightCard.tsx';
 import { PrivacyHidden } from '../components/PrivacyNote.tsx';
 import { EmptyState, ErrorState, LoadingState, Panel, StatTile } from '../components/ui.tsx';
-import { GaugeIcon, SparkIcon, TrendUpIcon, UsersIcon } from '../components/icons.tsx';
+import { GaugeIcon, ShieldIcon, TrendUpIcon, UsersIcon } from '../components/icons.tsx';
 import { CountUp } from '../../components/CountUp.tsx';
 import { useInsights } from '../hooks/useInsights.ts';
 import { CAPACITY_LABEL, capacityStatus, plural } from '../lib/format.ts';
+import { NO_INSIGHTS } from '../lib/insights.ts';
 import { useModuleOutlet } from './ModulesPage.tsx';
 
 export function ModuleDashboard() {
@@ -81,8 +82,8 @@ function InsightsSection({ moduleId }: { moduleId: string }) {
       return hidden > 0 ? (
         <PrivacyHidden />
       ) : (
-        <EmptyState icon={<SparkIcon className="size-6" />} title="No insights for this module yet">
-          The Insights agent writes cards after the cohort changes. Check back once more students have shortlisted.
+        <EmptyState icon={<ShieldIcon className="size-6" />} title={NO_INSIGHTS.title}>
+          {NO_INSIGHTS.body}
         </EmptyState>
       );
 

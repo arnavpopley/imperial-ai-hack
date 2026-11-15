@@ -1,17 +1,23 @@
 // Spec 9.3: counterfactual uplift, other insight kinds, cohort stats and the minimum-cohort privacy rule.
 import { DEFAULT_WEIGHTS } from '@modulematch/shared';
 import { describe, expect, it } from 'vitest';
+import { plainWording, sameNumbers } from '../src/agents/insights.ts';
 import {
   buildInsights,
   clashInsights,
   cohortStats,
+  counterfactualInsights,
   counterfactuals,
   demand,
   interestedButUnconvinced,
+  levelInWords,
+  mainGap,
+  MEANINGFUL_UPLIFT,
   overlooked,
+  shareInWords,
   type InsightContext,
 } from '../src/engines/index.ts';
-import { makeModule, makeProfile, makeSlot } from './engines-fixtures.ts';
+import { makeModule, makeProfile, makeRules, makeSlot } from './engines-fixtures.ts';
 
 // Interested in fluids and thermodynamics, uneasy with maths.
 const interested = (n: number) =>
@@ -50,22 +56,84 @@ describe('interestedButUnconvinced', () => {
   });
 });
 
+// Five modules the keen students rate at fit 41 (I = 0.5, L = 0.4): above the target's 38, below its 42 and 43.
+const rivals = Array.from({ length: 5 }, (_, i) =>
+  makeModule(`rival-${i}`, {
+    topics: { 'fluid-mechanics': 1, languages: 1 },
+    demand: { ...target.demand, mathsIntensity: 0.8 },
+  }),
+);
+
 describe('counterfactuals', () => {
-  it('returns positive uplifts only, best first', () => {
+  it('returns positive uplifts only, best first, in plain words', () => {
     const ctx = context(6);
-    const results = counterfactuals(target, ctx.cohort, ctx.weights, ctx.homeTopics);
+    const results = counterfactuals(target, ctx);
     // Lower maths 0.9 → 0.7: L = 0.5, fit 43 (+5). Add thermodynamics at 0.3: I = 1.3 / 2.3, fit 42 (+4).
     expect(results.map((c) => [c.change, c.uplift])).toEqual([
       [{ kind: 'shift-demand', field: 'mathsIntensity', delta: -0.2 }, 5],
       [{ kind: 'add-topic', topic: 'thermodynamics-energy', weight: 0.3 }, 4],
     ]);
     expect(results.every((c) => c.uplift > 0 && c.groupSize === 6)).toBe(true);
-    expect(results[0]?.description).toBe('Lower maths intensity from 0.90 to 0.70');
+    expect(results.map((c) => c.description)).toEqual([
+      'Ease the maths from very demanding to demanding',
+      'Add teaching on thermodynamics and energy (about a tenth of the content)',
+    ]);
+  });
+
+  it('counts students who would newly rank the module in their top five', () => {
+    const ctx = { ...context(6), modules: [target, ...rivals] };
+    const [maths, thermo] = counterfactuals(target, ctx);
+    expect(maths).toMatchObject({ newlyTopModules: 6, alreadyTopModules: 0, crossStrongFit: 0 });
+    expect(thermo).toMatchObject({ newlyTopModules: 6, alreadyTopModules: 0 });
+  });
+
+  it('counts only modules a student may take towards their top five', () => {
+    // Rules that allow the target alone: the rivals no longer compete, so the target is already in the top five.
+    const rules = makeRules({ allowedElectiveIds: ['target'] });
+    const ctx = { ...context(6), modules: [target, ...rivals], rules };
+    const [maths] = counterfactuals(target, ctx);
+    expect(maths).toMatchObject({ newlyTopModules: 0, alreadyTopModules: 6 });
+  });
+
+  it('counts students whose fit would reach 70', () => {
+    // I = 1, L = 0.3: fit 68. Lowering maths to 0.7 gives L = 0.5 and fit 73.
+    const focused = makeModule('focused', { topics: { 'fluid-mechanics': 1 }, demand: { ...target.demand } });
+    const students = Array.from({ length: 5 }, (_, i) =>
+      makeProfile({ studentId: `f-${i}`, interests: { 'fluid-mechanics': 1 }, style: { ...makeProfile().style, mathsComfort: 0.2 } }),
+    );
+    const ctx = { ...context(0), modules: [focused], cohort: students };
+    const [best] = counterfactuals(focused, ctx);
+    expect(best).toMatchObject({ change: { field: 'mathsIntensity' }, crossStrongFit: 5 });
   });
 
   it('is blocked for a group under five students', () => {
-    const ctx = context(4);
-    expect(counterfactuals(target, ctx.cohort, ctx.weights, ctx.homeTopics)).toEqual([]);
+    expect(counterfactuals(target, context(4))).toEqual([]);
+  });
+});
+
+describe('plain wording', () => {
+  it('names shares of the content and levels in words', () => {
+    expect(shareInWords(0.1)).toBe('about a tenth');
+    expect(shareInWords(0.3)).toBe('about a third');
+    expect(shareInWords(0.03)).toBe('a small part');
+    expect(levelInWords(0.9)).toBe('very demanding');
+    expect(levelInWords(0.6 - 0.2)).toBe('moderate');
+    expect(levelInWords(0.1)).toBe('very light');
+  });
+
+  it('describes exam changes as marks moving between exam and coursework', () => {
+    const results = counterfactuals({ ...target, demand: { ...target.demand, examShare: 0.6 } }, {
+      ...context(6),
+      cohort: interested(6).map((s) => ({ ...s, style: { ...s.style, examPreference: 0.2 } })),
+    });
+    expect(results.map((c) => c.description)).toContain('Move 20% of the marks from the exam to coursework');
+  });
+
+  it('puts no raw decimals or internal units in any card', () => {
+    const ctx = { ...context(6, Array.from({ length: 6 }, () => ['target', 'f1'])), modules: [target, ...rivals] };
+    const cards = [...buildInsights(target, ctx), ...buildInsights({ ...target, capacity: 5 }, ctx)];
+    expect(cards.length).toBeGreaterThan(2);
+    for (const card of cards) expect(plainWording(card), card.headline).toBe(true);
   });
 });
 
@@ -97,6 +165,60 @@ describe('insight cards', () => {
     expect(buildInsights(target, context(6))).toEqual(insights);
   });
 
+  it('leads with the top-five impact, alongside the average', () => {
+    const [card] = buildInsights(target, { ...context(6), modules: [target, ...rivals] });
+    expect(card?.headline).toBe(
+      'Ease the maths from very demanding to demanding: would move the module into the top five for 6 of the 6 interested students',
+    );
+    expect(card?.detail).toContain('average fit rises by 5.0 points');
+    expect(card?.upliftPoints).toBe(5);
+  });
+
+  it('hides changes under two points and keeps the ones above', () => {
+    // A light style weight: easing the maths is worth under two points, adding thermodynamics still more.
+    const ctx = { ...context(6), weights: { ...DEFAULT_WEIGHTS, style: 0.03 } };
+    const cards = counterfactualInsights(target, ctx);
+    expect(cards.map((card) => card.headline)).toEqual([expect.stringMatching(/^Add teaching on thermodynamics and energy/)]);
+    expect(cards.every((card) => (card.upliftPoints ?? 0) >= MEANINGFUL_UPLIFT)).toBe(true);
+  });
+
+  it('merges changes too small to act on into one summary card that names the main gap', () => {
+    // Exam share already matches the students and every other topic dilutes what they want: nothing helps.
+    const settled = makeModule('settled', {
+      topics: { 'fluid-mechanics': 1, 'thermodynamics-energy': 1, languages: 2 },
+      demand: { ...target.demand, examShare: 0.5 },
+    });
+    const students = interested(6).map((s) => ({ ...s, style: { ...makeProfile().style, examPreference: 0.5 } }));
+    const cards = counterfactualInsights(settled, { ...context(0), modules: [settled, ...rivals], cohort: students });
+    expect(cards).toHaveLength(1);
+    expect(cards[0]).toMatchObject({ id: 'settled:COUNTERFACTUAL:summary', kind: 'COUNTERFACTUAL', cohortSize: 6, upliftPoints: null });
+    expect(cards[0]?.headline).toBe('No single change makes a big difference; the main gap is topic match');
+    expect(cards[0]?.detail).toContain('None of the changes tested raises their fit.');
+  });
+
+  it('names the style dimension that holds the module back against the modules students rank higher', () => {
+    const examHeavy = makeModule('exam-heavy', { topics: { 'fluid-mechanics': 1, languages: 1 }, demand: { ...target.demand, examShare: 0.9 } });
+    const coursework = rivals.map((rival) => ({ ...rival, demand: { ...target.demand, examShare: 0.2 } }));
+    const students = Array.from({ length: 5 }, (_, i) =>
+      makeProfile({ studentId: `e-${i}`, interests: { 'fluid-mechanics': 1 }, style: { ...makeProfile().style, examPreference: 0.2 } }),
+    );
+    const ctx = { ...context(0), modules: [examHeavy, ...coursework], cohort: students };
+    expect(mainGap(examHeavy, students, ctx).short).toBe('the exam-heavy assessment');
+  });
+
+  it('gives an oversubscribed module demand management, not ways to raise fit', () => {
+    const full = { ...target, capacity: 5 };
+    const ctx = context(6, Array.from({ length: 6 }, () => ['target']));
+    const cards = buildInsights(full, ctx);
+    expect(cards.filter((card) => card.kind === 'COUNTERFACTUAL')).toEqual([]);
+    const card = cards.find((c) => c.kind === 'DEMAND');
+    expect(card?.headline).toBe('Oversubscribed: 6 shortlists for 5 places (120%). Manage demand rather than raise fit');
+    expect(card?.detail).toContain('add places or a second group');
+    expect(card?.detail).toMatch(/such as F\d Module f\d \(average fit \d+ for these students\) and F\d Module f\d \(\d+\)/);
+    // Near capacity is not oversubscribed: counterfactual cards still appear.
+    expect(buildInsights({ ...target, capacity: 6 }, ctx).some((c) => c.kind === 'COUNTERFACTUAL')).toBe(true);
+  });
+
   it('flags an overlooked module: above-median fit, under 20% of capacity shortlisted', () => {
     const card = overlooked(target, context(6, [['target']]));
     expect(card).toMatchObject({ id: 'target:OVERLOOKED:1', kind: 'OVERLOOKED', cohortSize: 9 });
@@ -125,5 +247,21 @@ describe('insight cards', () => {
     const shortlists = Array.from({ length: 4 }, () => ['target', 'f1']);
     const ctx = { ...context(4, shortlists), cohort: interested(4) };
     expect(buildInsights({ ...target, capacity: 4 }, ctx)).toEqual([]);
+  });
+});
+
+describe('Insights agent checks', () => {
+  const card = buildInsights(target, context(6))[0]!;
+
+  it('rejects a rewrite that changes a number', () => {
+    expect(sameNumbers(card, { headline: card.headline, detail: card.detail })).toBe(true);
+    expect(sameNumbers(card, { headline: card.headline.replace('5.0', '7.0'), detail: card.detail })).toBe(false);
+  });
+
+  it('rejects a rewrite that brings back internal units or raw 0-to-1 values', () => {
+    expect(plainWording({ headline: card.headline, detail: card.detail })).toBe(true);
+    expect(plainWording({ headline: 'Lower maths intensity from 0.90 to 0.70', detail: '' })).toBe(false);
+    expect(plainWording({ headline: 'Add thermodynamics at topic weight 0.3', detail: '' })).toBe(false);
+    expect(plainWording({ headline: 'Students with interest alignment of at least half', detail: '' })).toBe(false);
   });
 });

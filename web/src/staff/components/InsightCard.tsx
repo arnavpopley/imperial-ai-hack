@@ -1,11 +1,14 @@
 // One Insights-agent card (spec 9.3, 10.7): kind, headline, detail, cohort size and, for counterfactuals,
-// the average fit uplift. Staff accept, note or dismiss it; nothing changes until they do.
+// the average fit uplift. Staff accept, note or dismiss it; nothing changes until they do. Once decided, the
+// actions collapse into what happens next and who owns it.
 import type { Insight, InsightDecision, InsightKind } from '@modulematch/shared';
 import { AnimatePresence, motion } from 'motion/react';
-import { useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import type { ComponentType, SVGProps } from 'react';
+import { Link } from 'react-router';
 import type { StaffDecision } from '../hooks/useInsights.ts';
 import { focusRing, plural } from '../lib/format.ts';
+import { canEditTags, isSummaryCard, outcomeOf } from '../lib/insights.ts';
 import { CheckIcon, ChevronDownIcon, ClockAlertIcon, EyeIcon, NoteIcon, TrendUpIcon, UsersIcon, XIcon } from './icons.tsx';
 
 type IconComponent = ComponentType<Omit<SVGProps<SVGSVGElement>, 'children'>>;
@@ -46,7 +49,26 @@ export function InsightCard({
   const headingId = useId();
   const detailId = useId();
   const [expanded, setExpanded] = useState(false);
+  // Once decided, the actions collapse into what happens next; "Change decision" brings them back.
+  const [changing, setChanging] = useState(false);
+  const outcome = outcomeOf(insight);
+  const outcomeRef = useRef<HTMLDivElement>(null);
+  const justDecided = useRef(false);
   const uplift = insight.kind === 'COUNTERFACTUAL' ? insight.upliftPoints : null;
+
+  // The pressed button disappears with the actions, so keyboard focus moves to the outcome instead.
+  const decided = outcome !== null;
+  useEffect(() => {
+    if (!justDecided.current || !decided) return;
+    justDecided.current = false;
+    outcomeRef.current?.focus();
+  }, [decided, insight.decision]);
+
+  const decide = (decision: StaffDecision) => {
+    justDecided.current = true;
+    setChanging(false);
+    onDecide(decision);
+  };
 
   return (
     <article
@@ -60,7 +82,9 @@ export function InsightCard({
           <kind.Icon className="size-6" />
         </span>
         <div className="min-w-0">
-          <p className={`text-xs font-semibold tracking-[0.08em] uppercase ${kind.ink}`}>{kind.label}</p>
+          <p className={`text-xs font-semibold tracking-[0.08em] uppercase ${kind.ink}`}>
+            {isSummaryCard(insight) ? 'Counterfactual summary' : kind.label}
+          </p>
           <h3 id={headingId} className="mt-1 text-lg leading-snug font-semibold text-pretty">
             {insight.headline}
           </h3>
@@ -111,27 +135,62 @@ export function InsightCard({
             {saving ? 'Saving…' : state.label}
           </span>
         </div>
-        <div role="group" aria-label={`Decision on: ${insight.headline}`} className="flex flex-wrap gap-2">
-          {ACTIONS.map(({ decision, label, Icon, active }) => {
-            const pressed = insight.decision === decision;
-            return (
-              <button
-                key={decision}
-                type="button"
-                aria-pressed={pressed}
-                disabled={saving}
-                onClick={() => onDecide(decision)}
-                className={`inline-flex min-h-10 items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm font-medium transition-colors disabled:cursor-wait ${
-                  pressed ? active : 'border-line text-ink hover:bg-canvas'
-                } ${focusRing}`}
-              >
-                <Icon className="size-4" />
-                {label}
-              </button>
-            );
-          })}
-        </div>
+        {outcome && !changing ? (
+          <button
+            type="button"
+            onClick={() => setChanging(true)}
+            className={`inline-flex min-h-10 items-center rounded-xl px-3 py-2 text-sm font-medium text-brand hover:underline ${focusRing}`}
+          >
+            Change decision
+          </button>
+        ) : (
+          <div role="group" aria-label={`Decision on: ${insight.headline}`} className="flex flex-wrap gap-2">
+            {ACTIONS.map(({ decision, label, Icon, active }) => {
+              const pressed = insight.decision === decision;
+              return (
+                <button
+                  key={decision}
+                  type="button"
+                  aria-pressed={pressed}
+                  disabled={saving}
+                  onClick={() => decide(decision)}
+                  className={`inline-flex min-h-10 items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm font-medium transition-colors disabled:cursor-wait ${
+                    pressed ? active : 'border-line text-ink hover:bg-canvas'
+                  } ${focusRing}`}
+                >
+                  <Icon className="size-4" />
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
+      {outcome && !changing && (
+        <div
+          ref={outcomeRef}
+          tabIndex={-1}
+          className={`-mt-2 flex flex-wrap items-start justify-between gap-3 rounded-2xl px-4 py-3 text-sm outline-none ${
+            insight.decision === 'accepted' ? 'bg-fit-high/10' : 'bg-canvas'
+          }`}
+        >
+          <p className="flex items-start gap-2">
+            <CheckIcon className={`mt-0.5 size-4 shrink-0 ${insight.decision === 'accepted' ? 'text-fit-high' : 'text-muted'}`} />
+            <span>
+              <span className="font-medium">{outcome.title}.</span>
+              {outcome.owner && <span className="text-muted"> Owner: {outcome.owner}.</span>}
+            </span>
+          </p>
+          {canEditTags(insight) && (
+            <Link
+              to={`/staff/modules/${encodeURIComponent(insight.moduleId)}/tags`}
+              className={`rounded-lg font-medium text-brand hover:underline ${focusRing}`}
+            >
+              Open the tag editor
+            </Link>
+          )}
+        </div>
+      )}
       {error && (
         <p role="alert" className="text-sm text-fit-low">
           Could not save that decision, so it was undone. {error}
