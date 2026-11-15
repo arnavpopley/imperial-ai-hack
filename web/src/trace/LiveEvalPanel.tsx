@@ -106,11 +106,18 @@ export function LiveEvalPanel() {
           <p className="text-xs font-semibold tracking-[0.1em] text-muted uppercase">Misses, left visible</p>
           <ul className="grid gap-1.5 text-sm">
             {misses.map((m) => (
-              <li key={`${m.group}-${m.case}`} className="flex min-w-0 items-center gap-2" title={m.note}>
-                <Icon name="x" size={13} className="shrink-0 text-fit-low" />
-                <span className="shrink-0 font-medium">{m.case}</span>
-                <span className="hidden shrink-0 text-xs text-muted sm:inline">{m.group}</span>
-                {m.note && <span className="min-w-0 truncate text-muted">{m.note}</span>}
+              // One line each; tapping, clicking or pressing Enter on the row opens the full reason.
+              <li key={`${m.group}-${m.case}`}>
+                <details className="group">
+                  <summary className="flex min-w-0 cursor-pointer list-none items-center gap-2 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-brand [&::-webkit-details-marker]:hidden">
+                    <Icon name="x" size={13} className="shrink-0 text-fit-low" />
+                    <span className="shrink-0 font-medium">{m.case}</span>
+                    <span className="hidden shrink-0 text-xs text-muted sm:inline">{m.group}</span>
+                    {m.note && <span className="min-w-0 flex-1 truncate text-muted group-open:invisible">{m.note}</span>}
+                    {m.note && <Icon name="chevron-down" size={14} className="ml-auto shrink-0 text-muted transition-transform group-open:rotate-180" />}
+                  </summary>
+                  {m.note && <p className="mt-1 ml-5 text-muted">{m.note}</p>}
+                </details>
               </li>
             ))}
           </ul>
