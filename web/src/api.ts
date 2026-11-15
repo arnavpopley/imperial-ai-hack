@@ -2,6 +2,7 @@
 import { schemas } from '@modulematch/shared';
 import type {
   ClashPriority,
+  CompareView,
   CreateEscalationBody,
   DerivedEditBody,
   Escalation,
@@ -67,6 +68,8 @@ export const api = {
     call<ExplanationResponse>(`${s(id)}/modules/${encodeURIComponent(moduleId)}/explanation`),
   shortlist: (id: string, body: ShortlistBody) => call<SessionState>(`${s(id)}/shortlist`, { body }),
   timetable: (id: string) => call<TimetableView>(`${s(id)}/timetable`),
+  compare: (id: string, moduleIds: readonly string[]) =>
+    call<CompareView>(`${s(id)}/compare?ids=${moduleIds.map(encodeURIComponent).join(',')}`),
   escalate: (id: string, body: CreateEscalationBody) => call<Escalation>(`${s(id)}/escalations`, { body }),
   pathwayProgress: (id: string, pathwayId: string) =>
     call<PathwayProgress>(`${s(id)}/pathways/${encodeURIComponent(pathwayId)}/progress`),

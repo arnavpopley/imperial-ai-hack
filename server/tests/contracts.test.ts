@@ -71,6 +71,7 @@ describe('every route returns a valid response', () => {
     await check(`${s}/modules/${ids.module}/explanation`, undefined, S.ExplanationResponse);
     await check(`${s}/shortlist`, json({ moduleId: ids.module, action: 'add' }), S.SessionState);
     await check(`${s}/timetable`, undefined, S.TimetableView);
+    await check(`${s}/compare?ids=MECH60009,MECH60018`, undefined, S.CompareView);
     await check(`${s}/escalations`, json({ type: 'RULE_EXCEPTION', summary: 'x' }), S.Escalation);
     await check(`${s}/pathways/${ids.pathway}/progress`, undefined, S.PathwayProgress);
     await check(`${s}/societies`, undefined, S.SocietyMatch.array());

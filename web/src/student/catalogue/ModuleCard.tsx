@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'motion/react';
-import type { Ref } from 'react';
+import type { ReactNode, Ref } from 'react';
 import { Link } from 'react-router';
 import { ConfidenceBadge } from '../../components/ConfidenceBadge.tsx';
 import { cx } from '../../components/cx.ts';
@@ -28,6 +28,8 @@ interface ModuleCardProps {
   /** Opens the advisor about an ineligible module. */
   onAsk: (question: string) => void;
   listRef: Ref<HTMLLIElement>;
+  /** The "Compare" checkbox (issue 62), when the catalogue offers comparison. */
+  compareControl?: ReactNode;
   /** Position in the list when it first rendered, for the staggered entrance. */
   index: number;
 }
@@ -35,7 +37,7 @@ interface ModuleCardProps {
 /** Cards after this many enter together, so a long list does not trickle in. */
 const STAGGER_LIMIT = 8;
 
-export function ModuleCard({ item, lowConfidence, scored, shortlisted, pending, onToggleShortlist, onAsk, listRef, index }: ModuleCardProps) {
+export function ModuleCard({ item, lowConfidence, scored, shortlisted, pending, onToggleShortlist, onAsk, listRef, index, compareControl }: ModuleCardProps) {
   const { module, eligible } = item;
   const title = module?.title ?? item.moduleId;
   const dimmed = lowConfidence || !eligible;
@@ -131,6 +133,8 @@ export function ModuleCard({ item, lowConfidence, scored, shortlisted, pending, 
                 </button>
               </div>
             )}
+
+            {compareControl && <div className="relative z-10 mt-3">{compareControl}</div>}
 
             <ShortlistButton
               title={title}

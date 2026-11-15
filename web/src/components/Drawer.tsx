@@ -1,6 +1,7 @@
 // A slide-over panel built on the native modal <dialog>, which supplies the focus trap,
 // Escape to close and an inert page behind it.
 import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { cx } from './cx.ts';
 import { Icon } from './Icon.tsx';
 
 interface DrawerProps {
@@ -10,10 +11,14 @@ interface DrawerProps {
   subtitle?: ReactNode;
   /** Content rendered between the title and the close button. */
   headerExtra?: ReactNode;
+  /** md: a 30rem side panel. wide: up to 60rem, for side-by-side content such as a module comparison. */
+  size?: 'md' | 'wide';
+  /** Pinned below the scrolling content, for the panel's main actions. */
+  footer?: ReactNode;
   children: ReactNode;
 }
 
-export function Drawer({ open, onClose, title, subtitle, headerExtra, children }: DrawerProps) {
+export function Drawer({ open, onClose, title, subtitle, headerExtra, size = 'md', footer, children }: DrawerProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
 
@@ -33,7 +38,10 @@ export function Drawer({ open, onClose, title, subtitle, headerExtra, children }
         // A click on the dialog element itself is a click on the backdrop.
         if (event.target === event.currentTarget) onClose();
       }}
-      className="m-0 ml-auto h-dvh max-h-none w-full max-w-none bg-surface text-ink shadow-lift backdrop:bg-scrim open:animate-slide-in sm:w-[30rem] sm:border-l sm:border-line"
+      className={cx(
+        'm-0 ml-auto h-dvh max-h-none w-full max-w-none bg-surface text-ink shadow-lift backdrop:bg-scrim open:animate-slide-in sm:border-l sm:border-line',
+        size === 'wide' ? 'sm:w-[min(60rem,100vw)]' : 'sm:w-[30rem]',
+      )}
     >
       {open && (
         <div className="flex h-full flex-col">
@@ -54,6 +62,7 @@ export function Drawer({ open, onClose, title, subtitle, headerExtra, children }
             </button>
           </header>
           <div className="min-h-0 flex-1">{children}</div>
+          {footer && <footer className="border-t border-line px-5 py-3">{footer}</footer>}
         </div>
       )}
     </dialog>
