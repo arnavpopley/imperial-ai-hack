@@ -1,5 +1,14 @@
 {
-  "_note": "Illustrative programme rules, hand-written for ModuleMatch and not the official regulations. Year 3 follows the structure on the public ME3 module selection page: Professional Engineering Skills 3 (10 ECTS) and the Design, Make and Test project (20 ECTS) are core, one I-Explore module (5 ECTS) is compulsory, and the remaining 25 ECTS are a two-module core theme plus three electives, modelled here as 25 ECTS of electives chosen from allowedElectiveIds. allowedElectiveIds also lists the I-Explore options so they pass the allowed-module check; they do not count towards electiveEctsRequired. homeTopics estimates how much of each topic the earlier years of the programme already cover (spec 8.4).",
+  "_note": "Illustrative programme rules, hand-written for ModuleMatch and not the official regulations. Year 3 follows the structure on the public ME3 module selection page: Professional Engineering Skills 3 (10 ECTS) and the Design, Make and Test project (20 ECTS) are core, one I-Explore module (5 ECTS) is compulsory, and the remaining 25 ECTS are a two-module core theme plus three electives, modelled here as 25 ECTS of electives chosen from allowedElectiveIds. allowedElectiveIds also lists the I-Explore options so they pass the allowed-module check; they do not count towards electiveEctsRequired. homeTopics estimates how much of each topic the earlier years of the programme already cover (spec 8.4). Only Years 3 and 4 of MEng Mechanical Engineering have rules here. There are no rules for Years 1 and 2, or for any other programme: ModuleMatch does not invent them. For those, it says eligibility cannot be confirmed instead of allowing everything, and still applies levelCaps (issue 51).",
+  "levelCaps": {
+    "_note": "The highest module level open to each year of study, in the catalogue's own numbering (a module's level is the year it is taught in: 1 = first year, 4 = fourth year, FHEQ Levels 4 to 7). A rule entry that lists a module explicitly (core or allowed elective) overrides the cap. This is the general level structure of the degree, not a programme regulation.",
+    "byYear": {
+      "1": 1,
+      "2": 2,
+      "3": 3,
+      "4": 4
+    }
+  },
   "rules": [
     {
       "programme": "MEng Mechanical Engineering",

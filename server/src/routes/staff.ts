@@ -19,17 +19,19 @@ import { draftExamForm } from '../agents/exam-feedback.ts';
 import { wordInsight } from '../agents/insights.ts';
 import { clearSummaryCache } from '../agents/knowledge.ts';
 import { catalogue, clearExplanationCache, rulesForProfile, setMode, tracerSink } from '../agents/session.ts';
-import { rulesFor } from '../db/catalogue.ts';
 import * as repo from '../db/repo.ts';
-import { buildInsights, clashPriorities, cohortStats, feedbackJsonl, storedDecisions, summariseFeedback, type InsightContext } from '../engines/index.ts';
+import { buildInsights, checkProgrammeRules, clashPriorities, cohortStats, feedbackJsonl, storedDecisions, summariseFeedback, type InsightContext } from '../engines/index.ts';
 import { createTracer, type Tracer } from '../trace/tracer.ts';
 import { body } from './validate.ts';
 
-/** The synthetic cohort plus its programme's home topics, shared by every staff view. */
+/**
+ * The synthetic cohort plus its programme's home topics, shared by every staff view. The rules are the ones the
+ * students' own recommendations use (rulesForProfile), so the staff views and the students agree on eligibility.
+ */
 function insightContext(): InsightContext {
   const cohort = repo.listCohort();
   const first = cohort[0]?.profile;
-  const rules = first ? (rulesFor(first.programme, first.yearOfStudy) ?? rulesForProfile(first)) : undefined;
+  const rules = first ? rulesForProfile(first) : undefined;
   return {
     modules: catalogue.modules(),
     cohort: cohort.map((s) => s.profile),
@@ -46,9 +48,12 @@ function insightContext(): InsightContext {
  * How the cohort's programme year offers a module (StaffModuleSummary.offer). The staff module list leads with the
  * options, since a core or other-year module shows "0 shortlisted" whatever its fit.
  */
-function offerFor(module: Module, rules: ProgrammeRules): CohortOffer {
+function offerFor(module: Module, rules: ProgrammeRules): CohortOffer | undefined {
+  // Without rules for the cohort's year there is nothing to say (issue 51), so no offer is sent.
+  if (!rules.loaded) return undefined;
   if (rules.coreModuleIds.includes(module.id)) return 'core';
-  if (!rules.allowedElectiveIds.includes(module.id)) return 'not-offered';
+  // The same programme check as the students' recommendations, so the staff list and the students agree (issue 51).
+  if (checkProgrammeRules(module, rules).length > 0) return 'not-offered';
   return module.type === 'i-explore' ? 'i-explore' : 'elective';
 }
 
@@ -59,14 +64,14 @@ const staffTracer = () => createTracer('staff', tracerSink);
 export const staffRoutes = new Hono()
   .get('/modules', (c) => {
     const ctx = insightContext();
-    const first = ctx.cohort[0];
     // The synthetic cohort shares one programme and year, so its first student's rules are everyone's.
-    const rules = first ? rulesFor(first.programme, first.yearOfStudy) : null;
+    const rules = ctx.rules ?? null;
     const rows: StaffModuleSummary[] = ctx.modules.flatMap((m) => {
       const stats = cohortStats(m, ctx.cohort, ctx.shortlists, ctx.weights, ctx.homeTopics);
       // Below the minimum cohort nothing is shown for the module (spec 20.4).
       if (!stats) return [];
-      return [{ moduleId: m.id, code: m.code, title: m.title, type: m.type, capacity: m.capacity, ...stats, ...(rules && { offer: offerFor(m, rules) }) }];
+      const offer = rules ? offerFor(m, rules) : undefined;
+      return [{ moduleId: m.id, code: m.code, title: m.title, type: m.type, capacity: m.capacity, ...stats, ...(offer && { offer }) }];
     });
     return c.json(rows);
   })

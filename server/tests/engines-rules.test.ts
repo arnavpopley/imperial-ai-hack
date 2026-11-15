@@ -1,7 +1,7 @@
 // Spec 9.1: programme rules validator.
 import type { RulesResult } from '@modulematch/shared';
 import { describe, expect, it } from 'vitest';
-import { checkModuleEligibility, checkShortlist } from '../src/engines/index.ts';
+import { checkModuleEligibility, checkProgrammeRules, checkShortlist } from '../src/engines/index.ts';
 import { makeModule, makeProfile, makeRules } from './engines-fixtures.ts';
 
 const modules = [
@@ -59,6 +59,36 @@ describe('checkModuleEligibility', () => {
     expect(checkModuleEligibility('cfd', makeProfile(), modules, rules, [otherPrereq]).map((v) => v.code)).toEqual(['PREREQUISITE_MISSING']);
     const unknown = { moduleId: 'nope', waived: [{ code: 'NOT_ALLOWED' as const }] };
     expect(checkModuleEligibility('nope', profile, modules, rules, [unknown]).map((v) => v.code)).toEqual(['UNKNOWN_MODULE']);
+  });
+});
+
+describe('year-aware rules (issue 51)', () => {
+  const year1 = makeModule('y1-core', { type: 'core', level: 1, ects: 10 });
+  const year4 = makeModule('y4-elective', { level: 4 });
+  const iex = makeModule('iex-3', { type: 'i-explore', level: 3 });
+  const notLoaded = makeRules({ year: 1, loaded: false, maxModuleLevel: 1 });
+
+  it('without rules for the year, refuses modules above the level cap and cannot confirm the rest', () => {
+    expect(checkProgrammeRules(year4, notLoaded).map((v) => v.code)).toEqual(['ABOVE_YEAR_LEVEL']);
+    expect(checkProgrammeRules(iex, notLoaded).map((v) => v.code)).toEqual(['ABOVE_YEAR_LEVEL']);
+    const [unconfirmed] = checkProgrammeRules(year1, notLoaded);
+    expect(unconfirmed?.code).toBe('RULES_NOT_LOADED');
+    expect(unconfirmed?.message).toContain('rules for year 1');
+  });
+
+  it('with rules loaded, behaves as before and caps only modules the rules do not list', () => {
+    const loaded = makeRules({ allowedElectiveIds: ['y4-elective'], maxModuleLevel: 3 });
+    expect(checkProgrammeRules(year4, loaded)).toEqual([]);
+    expect(checkProgrammeRules(year4, { ...loaded, allowedElectiveIds: [] }).map((v) => v.code)).toEqual(['NOT_ALLOWED']);
+    expect(checkProgrammeRules(iex, loaded)).toEqual([]);
+    expect(checkProgrammeRules(iex, { ...loaded, maxModuleLevel: 2 }).map((v) => v.code)).toEqual(['ABOVE_YEAR_LEVEL']);
+  });
+
+  it('makes up no credit rules for a year without rules, and says so', () => {
+    const all = [year1, year4, iex];
+    const result = checkShortlist(['y1-core'], makeProfile(), all, { ...notLoaded, electiveEctsRequired: 99, maxEcts: 1, iExploreRequired: true });
+    expect(codes(result)).toEqual(['RULES_NOT_LOADED']);
+    expect(result.warnings.map((w) => w.code)).toContain('RULES_NOT_LOADED');
   });
 });
 

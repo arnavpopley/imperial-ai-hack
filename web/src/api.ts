@@ -14,6 +14,7 @@ import type {
   InsightDecisionBody,
   Module,
   ModuleDemandSignal,
+  ProgrammeInfo,
   ModuleSummary,
   CvResponse,
   ExamFeedbackForm,
@@ -118,6 +119,8 @@ export const api = {
   /** Short AI summary of a module's public description, cached on the server. */
   moduleSummary: (moduleId: string) => call<ModuleSummary>(`/modules/${encodeURIComponent(moduleId)}/summary`),
   pathways: () => call<Pathway[]>('/pathways'),
+  /** Which years of each programme have rules loaded (issue 51). */
+  programmes: () => call<ProgrammeInfo[]>('/programmes'),
   societies: () => call<Society[]>('/societies'),
   trace: (sessionId: string) => call<TraceEvent[]>(`/trace/${encodeURIComponent(sessionId)}`),
   latestEval: () => call<EvalRun | null>('/eval/latest'),

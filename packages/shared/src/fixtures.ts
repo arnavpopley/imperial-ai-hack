@@ -226,6 +226,13 @@ export const fixtureRecommendations: RecommendationsResponse = {
       confidence: 'high',
     }),
   ].sort((a, b) => b.fit - a.fit),
+  rules: {
+    programme: 'MEng Mechanical Engineering',
+    year: 3,
+    loaded: true,
+    maxModuleLevel: 3,
+    note: 'Illustrative MEng Mechanical Engineering rules for Year 3.',
+  },
 };
 
 const fitOf = (moduleId: string) => fixtureRecommendations.recommendations.find((r) => r.moduleId === moduleId)?.fit ?? 0;
