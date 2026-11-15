@@ -584,6 +584,30 @@ export const STEPS = [
     },
   },
   {
+    id: 'tour',
+    title: 'Video only: pathways and a side-by-side compare',
+    optional: true,
+    videoOnly: true,
+    async run(ctx) {
+      const page = ctx.student;
+      ctx.active = page;
+      await page.bringToFront();
+      await page.scrollTo('top');
+      await page.click(STUDENT_TAB('Pathways'));
+      await pathIs(page, '/pathways');
+      await sleep(2500);
+      await page.click(STUDENT_TAB('Catalogue'));
+      await pathIs(page, '/catalogue');
+      const tick = (index) => ({ css: 'input[type="checkbox"][aria-label^="Compare "]', index });
+      await page.click(tick(0), { desc: 'the first Compare tick' });
+      await page.click(tick(1), { desc: 'the second Compare tick' });
+      await page.click({ css: 'button', text: { re: '^Compare [0-9]' } }, { desc: 'the Compare button' });
+      await page.waitForElement({ css: 'dialog[open]' }, { desc: 'the compare drawer' });
+      await sleep(3000);
+      await page.click({ css: 'dialog[open] button:has([aria-label="Close"])' }, { desc: 'the compare drawer close button' });
+    },
+  },
+  {
     id: 'rule',
     title: 'Rule-break request: holds position, drafts escalation',
     async run(ctx) {
